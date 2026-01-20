@@ -17,3 +17,4 @@ Automat via GitHub Actions la fiecare push pe branch-ul `main`.
 - Hetzner CX22
 - Ubuntu 22.04
 - Nginx + Docker
+# Test deploy 20 янв 2026 г. 21:34:56
