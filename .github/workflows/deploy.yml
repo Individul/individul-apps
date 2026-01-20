@@ -47,9 +47,9 @@ jobs:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "portal/*"
+          source: "apps/portal/*"
           target: "/var/www/html/portal/"
-          strip_components: 1
+          strip_components: 2
 
       - name: Finalize on server
         uses: appleboy/ssh-action@v1.0.3
