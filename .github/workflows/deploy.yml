@@ -42,7 +42,11 @@ jobs:
       - name: Deploy to server
         run: |
           chmod +x scripts/deploy.sh
-          scp -r apps/ portal/ ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/deploy/
+          # Copy only built files, not node_modules
+          mkdir -p /tmp/deploy/apps/clasificare
+          cp -r apps/clasificare/dist /tmp/deploy/apps/clasificare/
+          cp -r portal/ /tmp/deploy/portal/
+          scp -r /tmp/deploy/* ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/deploy/
           scp scripts/deploy.sh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/deploy.sh
           ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "bash /tmp/deploy.sh"
 
