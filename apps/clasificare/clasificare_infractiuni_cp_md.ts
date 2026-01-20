@@ -1,0 +1,385 @@
+/**
+ * Clasificarea infracțiunilor din Codul Penal al Republicii Moldova
+ * conform articolului 16 CP RM
+ * 
+ * Generat pentru implementare în proiect
+ * Data: 2026-01-14
+ */
+
+export type CategorieInfractiune = 'U' | 'MPG' | 'G' | 'DG' | 'EG';
+
+export interface CategorieInfo {
+  cod: CategorieInfractiune;
+  denumire: string;
+  pedeapsaMax: string;
+  conditie?: string;
+}
+
+export interface Infractiune {
+  art: string;
+  alin: string;
+  cat: CategorieInfractiune;
+  max: string;
+}
+
+export const CATEGORII: Record<CategorieInfractiune, CategorieInfo> = {
+  U: { cod: 'U', denumire: 'Ușoară', pedeapsaMax: '≤2 ani' },
+  MPG: { cod: 'MPG', denumire: 'Mai puțin gravă', pedeapsaMax: '≤5 ani' },
+  G: { cod: 'G', denumire: 'Gravă', pedeapsaMax: '≤12 ani' },
+  DG: { cod: 'DG', denumire: 'Deosebit de gravă', pedeapsaMax: '>12 ani', conditie: 'Doar infracțiuni intenționate' },
+  EG: { cod: 'EG', denumire: 'Excepțional de gravă', pedeapsaMax: 'detențiune pe viață', conditie: 'Doar infracțiuni intenționate' }
+};
+
+// Toate infracțiunile din Codul Penal (Capitolele II-XVIII)
+export const INFRACTIUNI: Infractiune[] = [
+  // Cap. II - Contra vieții și sănătății (145-163)
+  {art:'145',alin:'1',cat:'DG',max:'15 ani'},{art:'145',alin:'2',cat:'EG',max:'viață'},
+  {art:'146',alin:'1',cat:'MPG',max:'5 ani'},{art:'147',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'148',alin:'1',cat:'G',max:'6 ani'},{art:'149',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'149',alin:'2',cat:'G',max:'6 ani'},{art:'150',alin:'1',cat:'G',max:'6 ani'},
+  {art:'150',alin:'2',cat:'G',max:'8 ani'},{art:'150',alin:'3',cat:'G',max:'10 ani'},
+  {art:'150^1',alin:'1',cat:'MPG',max:'3 ani'},{art:'150^1',alin:'2',cat:'G',max:'6 ani'},
+  {art:'151',alin:'1',cat:'G',max:'8 ani'},{art:'151',alin:'2',cat:'G',max:'12 ani'},
+  {art:'151',alin:'3',cat:'DG',max:'15 ani'},{art:'152',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'152',alin:'2',cat:'G',max:'7 ani'},{art:'153',alin:'1',cat:'U',max:'1 an'},
+  {art:'154',alin:'1',cat:'U',max:'2 ani'},{art:'155',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'155',alin:'2',cat:'MPG',max:'4 ani'},{art:'156',alin:'1',cat:'U',max:'1 an'},
+  {art:'157',alin:'1',cat:'U',max:'1 an'},{art:'157',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'157',alin:'3',cat:'G',max:'8 ani'},{art:'158',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'159',alin:'1',cat:'MPG',max:'3 ani'},{art:'159',alin:'2',cat:'G',max:'6 ani'},
+  {art:'160',alin:'1',cat:'MPG',max:'4 ani'},{art:'161',alin:'1',cat:'U',max:'1 an'},
+  {art:'162',alin:'1',cat:'G',max:'10 ani'},{art:'162',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'162',alin:'3',cat:'DG',max:'20 ani'},{art:'162^1',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'162^1',alin:'2',cat:'G',max:'10 ani'},{art:'163',alin:'1',cat:'MPG',max:'3 ani'},
+  
+  // Cap. III - Contra libertății, cinstei și demnității (164-169)
+  {art:'164',alin:'1',cat:'G',max:'7 ani'},{art:'164',alin:'2',cat:'G',max:'12 ani'},
+  {art:'164',alin:'3',cat:'DG',max:'15 ani'},{art:'165',alin:'1',cat:'G',max:'10 ani'},
+  {art:'165',alin:'2',cat:'DG',max:'15 ani'},{art:'165',alin:'3',cat:'DG',max:'20 ani'},
+  {art:'166',alin:'1',cat:'MPG',max:'3 ani'},{art:'166',alin:'2',cat:'G',max:'7 ani'},
+  {art:'166^1',alin:'1',cat:'G',max:'10 ani'},{art:'166^1',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'166^2',alin:'1',cat:'G',max:'6 ani'},{art:'166^2',alin:'2',cat:'G',max:'10 ani'},
+  {art:'166^2',alin:'3',cat:'DG',max:'15 ani'},{art:'167',alin:'1',cat:'G',max:'6 ani'},
+  {art:'167',alin:'2',cat:'DG',max:'15 ani'},{art:'168',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'168',alin:'2',cat:'G',max:'7 ani'},{art:'169',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'169',alin:'2',cat:'G',max:'6 ani'},
+  
+  // Cap. IV - Infracțiuni sexuale (171-175^1)
+  {art:'171',alin:'1',cat:'G',max:'7 ani'},{art:'171',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'171',alin:'3',cat:'EG',max:'viață'},{art:'172',alin:'1',cat:'G',max:'7 ani'},
+  {art:'172',alin:'2',cat:'DG',max:'15 ani'},{art:'172',alin:'3',cat:'EG',max:'viață'},
+  {art:'173',alin:'1',cat:'MPG',max:'5 ani'},{art:'173',alin:'2',cat:'G',max:'10 ani'},
+  {art:'173',alin:'3',cat:'DG',max:'20 ani'},{art:'174',alin:'1',cat:'U',max:'2 ani'},
+  {art:'174',alin:'2',cat:'MPG',max:'4 ani'},{art:'174',alin:'3',cat:'G',max:'7 ani'},
+  {art:'175',alin:'1',cat:'MPG',max:'3 ani'},{art:'175',alin:'2',cat:'G',max:'8 ani'},
+  {art:'175^1',alin:'1',cat:'G',max:'6 ani'},{art:'175^1',alin:'2',cat:'G',max:'8 ani'},
+  
+  // Cap. V - Contra drepturilor constituționale (176-185^4)
+  {art:'176',alin:'1',cat:'U',max:'2 ani'},{art:'176',alin:'2',cat:'G',max:'6 ani'},
+  {art:'176^1',alin:'1',cat:'MPG',max:'5 ani'},{art:'176^1',alin:'2',cat:'G',max:'7 ani'},
+  {art:'176^1',alin:'3',cat:'G',max:'10 ani'},{art:'177',alin:'1',cat:'U',max:'amendă'},
+  {art:'177',alin:'2',cat:'MPG',max:'3 ani'},{art:'178',alin:'1',cat:'U',max:'1 an'},
+  {art:'178',alin:'2',cat:'MPG',max:'3 ani'},{art:'179',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'179',alin:'2',cat:'MPG',max:'5 ani'},{art:'180',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'181',alin:'1',cat:'G',max:'6 ani'},{art:'181',alin:'2',cat:'G',max:'10 ani'},
+  {art:'181^1',alin:'1',cat:'G',max:'6 ani'},{art:'181^1',alin:'2',cat:'G',max:'10 ani'},
+  {art:'181^1',alin:'3',cat:'DG',max:'15 ani'},{art:'182',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'183',alin:'1',cat:'MPG',max:'4 ani'},{art:'184',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'184',alin:'2',cat:'G',max:'7 ani'},{art:'185',alin:'1',cat:'U',max:'2 ani'},
+  {art:'185',alin:'2',cat:'MPG',max:'5 ani'},{art:'185^1',alin:'1',cat:'U',max:'2 ani'},
+  {art:'185^2',alin:'1',cat:'U',max:'2 ani'},{art:'185^2',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'185^3',alin:'1',cat:'U',max:'2 ani'},{art:'185^4',alin:'1',cat:'U',max:'2 ani'},
+  
+  // Cap. VI - Contra patrimoniului (186-199^4)
+  {art:'186',alin:'1',cat:'U',max:'2 ani'},{art:'186',alin:'2',cat:'G',max:'6 ani'},
+  {art:'186',alin:'3',cat:'G',max:'9 ani'},{art:'186',alin:'4',cat:'G',max:'12 ani'},
+  {art:'187',alin:'1',cat:'MPG',max:'5 ani'},{art:'187',alin:'2',cat:'G',max:'9 ani'},
+  {art:'187',alin:'3',cat:'G',max:'12 ani'},{art:'187',alin:'4',cat:'DG',max:'15 ani'},
+  {art:'188',alin:'1',cat:'G',max:'8 ani'},{art:'188',alin:'2',cat:'G',max:'12 ani'},
+  {art:'188',alin:'3',cat:'DG',max:'15 ani'},{art:'189',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'189',alin:'2',cat:'G',max:'9 ani'},{art:'189',alin:'3',cat:'G',max:'12 ani'},
+  {art:'189',alin:'4',cat:'DG',max:'15 ani'},{art:'190',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'190',alin:'2',cat:'G',max:'7 ani'},{art:'190',alin:'3',cat:'G',max:'10 ani'},
+  {art:'190',alin:'4',cat:'DG',max:'15 ani'},{art:'191',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'191',alin:'2',cat:'G',max:'7 ani'},{art:'191',alin:'3',cat:'G',max:'12 ani'},
+  {art:'191',alin:'4',cat:'DG',max:'15 ani'},{art:'192',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'192',alin:'2',cat:'G',max:'8 ani'},{art:'193',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'193',alin:'2',cat:'G',max:'7 ani'},{art:'194',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'194',alin:'2',cat:'G',max:'8 ani'},{art:'195',alin:'1',cat:'U',max:'1 an'},
+  {art:'195^1',alin:'1',cat:'MPG',max:'4 ani'},{art:'195^1',alin:'2',cat:'G',max:'7 ani'},
+  {art:'195^1',alin:'3',cat:'G',max:'10 ani'},{art:'196',alin:'1',cat:'U',max:'2 ani'},
+  {art:'196',alin:'2',cat:'MPG',max:'5 ani'},{art:'197',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'197',alin:'2',cat:'G',max:'7 ani'},{art:'198',alin:'1',cat:'U',max:'1 an'},
+  {art:'199',alin:'1',cat:'U',max:'amendă'},{art:'199',alin:'2',cat:'U',max:'2 ani'},
+  {art:'199^1',alin:'1',cat:'MPG',max:'5 ani'},{art:'199^1',alin:'2',cat:'G',max:'7 ani'},
+  {art:'199^2',alin:'1',cat:'U',max:'2 ani'},{art:'199^2',alin:'2',cat:'MPG',max:'4 ani'},
+  {art:'199^3',alin:'1',cat:'U',max:'1 an'},{art:'199^3',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'199^4',alin:'1',cat:'MPG',max:'3 ani'},{art:'199^4',alin:'2',cat:'G',max:'6 ani'},
+  
+  // Cap. VII - Contra familiei și minorilor (201-209)
+  {art:'201',alin:'1',cat:'MPG',max:'4 ani'},{art:'201',alin:'2',cat:'G',max:'7 ani'},
+  {art:'201',alin:'3',cat:'G',max:'12 ani'},{art:'201',alin:'4',cat:'DG',max:'15 ani'},
+  {art:'201^1',alin:'1',cat:'U',max:'1 an'},{art:'201^1',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'201^2',alin:'1',cat:'U',max:'1 an'},{art:'202',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'203',alin:'1',cat:'U',max:'2 ani'},{art:'204',alin:'1',cat:'U',max:'1 an'},
+  {art:'205',alin:'1',cat:'MPG',max:'3 ani'},{art:'205',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'206',alin:'1',cat:'G',max:'12 ani'},{art:'206',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'206',alin:'3',cat:'EG',max:'viață'},{art:'206^1',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'206^1',alin:'2',cat:'G',max:'6 ani'},{art:'207',alin:'1',cat:'U',max:'2 ani'},
+  {art:'208',alin:'1',cat:'MPG',max:'5 ani'},{art:'208',alin:'2',cat:'G',max:'7 ani'},
+  {art:'208',alin:'3',cat:'G',max:'8 ani'},{art:'209',alin:'1',cat:'MPG',max:'5 ani'},
+  
+  // Cap. VIII - Contra sănătății publice (211-222^1)
+  {art:'211',alin:'1',cat:'U',max:'1 an'},{art:'211',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'211',alin:'3',cat:'G',max:'8 ani'},{art:'212',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'213',alin:'1',cat:'U',max:'2 ani'},{art:'213',alin:'2',cat:'G',max:'6 ani'},
+  {art:'213^1',alin:'1',cat:'MPG',max:'5 ani'},{art:'213^1',alin:'2',cat:'G',max:'10 ani'},
+  {art:'213^1',alin:'3',cat:'DG',max:'15 ani'},{art:'214',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'214',alin:'2',cat:'G',max:'10 ani'},{art:'214',alin:'3',cat:'DG',max:'15 ani'},
+  {art:'215',alin:'1',cat:'MPG',max:'3 ani'},{art:'215',alin:'2',cat:'G',max:'7 ani'},
+  {art:'217',alin:'1',cat:'MPG',max:'5 ani'},{art:'217',alin:'2',cat:'G',max:'10 ani'},
+  {art:'217^1',alin:'1',cat:'U',max:'2 ani'},{art:'218',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'219',alin:'1',cat:'MPG',max:'5 ani'},{art:'219^1',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'219^1',alin:'2',cat:'G',max:'7 ani'},{art:'219^2',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'219^2',alin:'2',cat:'G',max:'7 ani'},{art:'219^3',alin:'1',cat:'U',max:'2 ani'},
+  {art:'219^3',alin:'2',cat:'G',max:'6 ani'},{art:'220',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'220',alin:'2',cat:'G',max:'7 ani'},{art:'220',alin:'3',cat:'G',max:'10 ani'},
+  {art:'220^1',alin:'1',cat:'U',max:'2 ani'},{art:'220^1',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'220^1',alin:'3',cat:'G',max:'7 ani'},{art:'221',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'222',alin:'1',cat:'U',max:'2 ani'},{art:'222',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'222^1',alin:'1',cat:'MPG',max:'3 ani'},
+  
+  // Cap. IX - Infracțiuni ecologice (223-235)
+  {art:'223',alin:'1',cat:'MPG',max:'3 ani'},{art:'223',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'224',alin:'1',cat:'MPG',max:'3 ani'},{art:'225',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'225',alin:'2',cat:'MPG',max:'5 ani'},{art:'227',alin:'1',cat:'U',max:'2 ani'},
+  {art:'227',alin:'2',cat:'MPG',max:'5 ani'},{art:'228',alin:'1',cat:'U',max:'2 ani'},
+  {art:'228',alin:'2',cat:'MPG',max:'5 ani'},{art:'229',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'229',alin:'2',cat:'MPG',max:'5 ani'},{art:'229',alin:'3',cat:'G',max:'7 ani'},
+  {art:'230',alin:'1',cat:'MPG',max:'3 ani'},{art:'231',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'232',alin:'1',cat:'MPG',max:'3 ani'},{art:'232',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'233',alin:'1',cat:'U',max:'2 ani'},{art:'234',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'235',alin:'1',cat:'MPG',max:'3 ani'},{art:'235',alin:'2',cat:'G',max:'6 ani'},
+  
+  // Cap. X - Infracțiuni economice (236-258)
+  {art:'236',alin:'1',cat:'G',max:'10 ani'},{art:'236',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'237',alin:'1',cat:'G',max:'6 ani'},{art:'237',alin:'2',cat:'G',max:'10 ani'},
+  {art:'238',alin:'1',cat:'G',max:'6 ani'},{art:'238',alin:'2',cat:'G',max:'8 ani'},
+  {art:'239',alin:'1',cat:'G',max:'6 ani'},{art:'239',alin:'2',cat:'G',max:'8 ani'},
+  {art:'240',alin:'1',cat:'MPG',max:'4 ani'},{art:'240^1',alin:'1',cat:'U',max:'1 an'},
+  {art:'240^1',alin:'2',cat:'MPG',max:'4 ani'},{art:'240^1',alin:'3',cat:'G',max:'6 ani'},
+  {art:'241',alin:'1',cat:'G',max:'6 ani'},{art:'241',alin:'2',cat:'G',max:'10 ani'},
+  {art:'241^1',alin:'1',cat:'MPG',max:'3 ani'},{art:'243',alin:'1',cat:'G',max:'6 ani'},
+  {art:'243',alin:'2',cat:'G',max:'10 ani'},{art:'243',alin:'3',cat:'G',max:'12 ani'},
+  {art:'244',alin:'1',cat:'MPG',max:'3 ani'},{art:'244^1',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'244^1',alin:'2',cat:'G',max:'6 ani'},{art:'244^2',alin:'1',cat:'U',max:'2 ani'},
+  {art:'244^2',alin:'2',cat:'MPG',max:'5 ani'},{art:'245',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'246',alin:'1',cat:'MPG',max:'3 ani'},{art:'246^1',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'247',alin:'1',cat:'MPG',max:'4 ani'},{art:'248',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'248',alin:'2',cat:'G',max:'6 ani'},{art:'248',alin:'3',cat:'G',max:'10 ani'},
+  {art:'249',alin:'1',cat:'MPG',max:'5 ani'},{art:'250',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'251',alin:'1',cat:'MPG',max:'4 ani'},{art:'252',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'252',alin:'2',cat:'G',max:'6 ani'},{art:'253',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'254',alin:'1',cat:'U',max:'2 ani'},{art:'254^1',alin:'1',cat:'U',max:'amendă'},
+  {art:'255',alin:'1',cat:'MPG',max:'3 ani'},{art:'255',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'256',alin:'1',cat:'MPG',max:'3 ani'},{art:'256',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'256^1',alin:'1',cat:'U',max:'2 ani'},{art:'256^1',alin:'2',cat:'MPG',max:'4 ani'},
+  {art:'256^1',alin:'3',cat:'G',max:'10 ani'},{art:'257',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'258',alin:'1',cat:'MPG',max:'3 ani'},{art:'258',alin:'2',cat:'G',max:'7 ani'},
+  
+  // Cap. XI - Infracțiuni informatice (259-261^4)
+  {art:'259',alin:'1',cat:'U',max:'1 an'},{art:'259',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'260',alin:'1',cat:'MPG',max:'5 ani'},{art:'260',alin:'2',cat:'G',max:'10 ani'},
+  {art:'261',alin:'1',cat:'MPG',max:'5 ani'},{art:'261',alin:'2',cat:'G',max:'10 ani'},
+  {art:'261^1',alin:'1',cat:'MPG',max:'5 ani'},{art:'261^1',alin:'2',cat:'G',max:'10 ani'},
+  {art:'261^2',alin:'1',cat:'U',max:'2 ani'},{art:'261^3',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'261^4',alin:'1',cat:'MPG',max:'3 ani'},{art:'261^4',alin:'2',cat:'G',max:'7 ani'},
+  {art:'261^4',alin:'3',cat:'G',max:'10 ani'},
+  
+  // Cap. XII - Infracțiuni în transporturi (262-276)
+  {art:'262',alin:'1',cat:'MPG',max:'5 ani'},{art:'262',alin:'2',cat:'G',max:'10 ani'},
+  {art:'262',alin:'3',cat:'G',max:'12 ani'},{art:'263',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'263',alin:'2',cat:'G',max:'8 ani'},{art:'264',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'264',alin:'2',cat:'G',max:'10 ani'},{art:'264',alin:'3',cat:'G',max:'12 ani'},
+  {art:'264',alin:'4',cat:'DG',max:'15 ani'},{art:'264^1',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'264^1',alin:'2',cat:'G',max:'7 ani'},{art:'264^2',alin:'1',cat:'U',max:'1 an'},
+  {art:'264^2',alin:'2',cat:'MPG',max:'3 ani'},{art:'264^2',alin:'3',cat:'MPG',max:'5 ani'},
+  {art:'264^3',alin:'1',cat:'U',max:'2 ani'},{art:'264^3',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'264^3',alin:'3',cat:'G',max:'8 ani'},{art:'265',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'265',alin:'2',cat:'G',max:'8 ani'},{art:'266',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'266',alin:'2',cat:'G',max:'8 ani'},{art:'267',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'268',alin:'1',cat:'MPG',max:'3 ani'},{art:'268',alin:'2',cat:'G',max:'8 ani'},
+  {art:'269',alin:'1',cat:'G',max:'6 ani'},{art:'269',alin:'2',cat:'G',max:'12 ani'},
+  {art:'269^1',alin:'1',cat:'MPG',max:'5 ani'},{art:'269^2',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'270',alin:'1',cat:'G',max:'10 ani'},{art:'270',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'271',alin:'1',cat:'G',max:'10 ani'},{art:'271',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'272',alin:'1',cat:'U',max:'1 an'},{art:'272',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'273',alin:'1',cat:'U',max:'1 an'},{art:'274',alin:'1',cat:'U',max:'1 an'},
+  {art:'274',alin:'2',cat:'MPG',max:'3 ani'},{art:'275',alin:'1',cat:'U',max:'2 ani'},
+  {art:'276',alin:'1',cat:'MPG',max:'3 ani'},
+  
+  // Cap. XIII - Contra securității publice (278-302)
+  {art:'278',alin:'1',cat:'DG',max:'15 ani'},{art:'278',alin:'2',cat:'EG',max:'viață'},
+  {art:'278^1',alin:'1',cat:'G',max:'10 ani'},{art:'278^2',alin:'1',cat:'G',max:'8 ani'},
+  {art:'278^2',alin:'2',cat:'G',max:'10 ani'},{art:'278^3',alin:'1',cat:'G',max:'8 ani'},
+  {art:'278^4',alin:'1',cat:'G',max:'10 ani'},{art:'279',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'280',alin:'1',cat:'G',max:'10 ani'},{art:'280',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'281',alin:'1',cat:'U',max:'2 ani'},{art:'282',alin:'1',cat:'G',max:'10 ani'},
+  {art:'283',alin:'1',cat:'G',max:'12 ani'},{art:'283',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'284',alin:'1',cat:'DG',max:'15 ani'},{art:'284',alin:'2',cat:'G',max:'10 ani'},
+  {art:'284',alin:'3',cat:'EG',max:'viață'},{art:'285',alin:'1',cat:'G',max:'8 ani'},
+  {art:'285',alin:'2',cat:'MPG',max:'5 ani'},{art:'285',alin:'3',cat:'MPG',max:'3 ani'},
+  {art:'285^1',alin:'1',cat:'G',max:'7 ani'},{art:'286',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'286',alin:'2',cat:'G',max:'7 ani'},{art:'287',alin:'1',cat:'U',max:'1 an'},
+  {art:'287^1',alin:'1',cat:'G',max:'12 ani'},{art:'287^1',alin:'2',cat:'EG',max:'viață'},
+  {art:'287^2',alin:'1',cat:'G',max:'8 ani'},{art:'287^2',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'290',alin:'1',cat:'U',max:'2 ani'},{art:'290',alin:'2',cat:'G',max:'6 ani'},
+  {art:'290^1',alin:'1',cat:'MPG',max:'5 ani'},{art:'290^1',alin:'2',cat:'G',max:'10 ani'},
+  {art:'290^2',alin:'1',cat:'MPG',max:'4 ani'},{art:'290^2',alin:'2',cat:'G',max:'7 ani'},
+  {art:'290^3',alin:'1',cat:'G',max:'6 ani'},{art:'290^3',alin:'2',cat:'G',max:'10 ani'},
+  {art:'291',alin:'1',cat:'U',max:'2 ani'},{art:'291^1',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'292',alin:'1',cat:'U',max:'2 ani'},{art:'292',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'292',alin:'3',cat:'G',max:'10 ani'},{art:'293',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'293',alin:'2',cat:'G',max:'10 ani'},{art:'294',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'294',alin:'2',cat:'G',max:'8 ani'},{art:'295',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'295',alin:'2',cat:'G',max:'10 ani'},{art:'295',alin:'3',cat:'DG',max:'15 ani'},
+  {art:'296',alin:'1',cat:'MPG',max:'5 ani'},{art:'296',alin:'2',cat:'G',max:'10 ani'},
+  {art:'296',alin:'3',cat:'DG',max:'20 ani'},{art:'297',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'297',alin:'2',cat:'G',max:'6 ani'},{art:'298',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'299',alin:'1',cat:'MPG',max:'5 ani'},{art:'299',alin:'2',cat:'G',max:'8 ani'},
+  {art:'300',alin:'1',cat:'MPG',max:'3 ani'},{art:'300',alin:'2',cat:'G',max:'8 ani'},
+  {art:'301',alin:'1',cat:'G',max:'7 ani'},{art:'302',alin:'1',cat:'U',max:'2 ani'},
+  {art:'302',alin:'2',cat:'MPG',max:'4 ani'},
+  
+  // Cap. XIV - Contra justiției (303-323)
+  {art:'303',alin:'1',cat:'U',max:'2 ani'},{art:'303',alin:'2',cat:'MPG',max:'4 ani'},
+  {art:'304',alin:'1',cat:'MPG',max:'5 ani'},{art:'304',alin:'2',cat:'G',max:'7 ani'},
+  {art:'305',alin:'1',cat:'G',max:'6 ani'},{art:'305',alin:'2',cat:'G',max:'10 ani'},
+  {art:'306',alin:'1',cat:'U',max:'2 ani'},{art:'306',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'307',alin:'1',cat:'U',max:'2 ani'},{art:'307',alin:'2',cat:'MPG',max:'5 ani'},
+  {art:'307',alin:'3',cat:'G',max:'7 ani'},{art:'308',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'308',alin:'2',cat:'MPG',max:'5 ani'},{art:'309',alin:'1',cat:'U',max:'1 an'},
+  {art:'309',alin:'2',cat:'MPG',max:'3 ani'},{art:'310',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'310',alin:'2',cat:'MPG',max:'5 ani'},{art:'311',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'312',alin:'1',cat:'MPG',max:'5 ani'},{art:'313',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'313',alin:'2',cat:'G',max:'6 ani'},{art:'314',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'315',alin:'1',cat:'U',max:'2 ani'},{art:'315',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'316',alin:'1',cat:'U',max:'amendă'},{art:'317',alin:'1',cat:'U',max:'2 ani'},
+  {art:'318',alin:'1',cat:'MPG',max:'3 ani'},{art:'318',alin:'2',cat:'G',max:'6 ani'},
+  {art:'318',alin:'3',cat:'G',max:'8 ani'},{art:'319',alin:'1',cat:'U',max:'amendă'},
+  {art:'319',alin:'2',cat:'U',max:'2 ani'},{art:'320',alin:'1',cat:'U',max:'2 ani'},
+  {art:'321',alin:'1',cat:'U',max:'2 ani'},{art:'322',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'323',alin:'1',cat:'MPG',max:'3 ani'},
+  
+  // Cap. XV - Contra administrației publice (324-332^2)
+  {art:'324',alin:'1',cat:'U',max:'amendă'},{art:'324',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'324',alin:'3',cat:'G',max:'7 ani'},{art:'324',alin:'4',cat:'G',max:'10 ani'},
+  {art:'324',alin:'5',cat:'DG',max:'15 ani'},{art:'325',alin:'1',cat:'U',max:'amendă'},
+  {art:'325',alin:'2',cat:'MPG',max:'3 ani'},{art:'325',alin:'3',cat:'G',max:'6 ani'},
+  {art:'325',alin:'4',cat:'G',max:'9 ani'},{art:'325',alin:'5',cat:'G',max:'12 ani'},
+  {art:'325^1',alin:'1',cat:'G',max:'7 ani'},{art:'325^1',alin:'2',cat:'G',max:'10 ani'},
+  {art:'325^1',alin:'3',cat:'DG',max:'15 ani'},{art:'326',alin:'1',cat:'G',max:'6 ani'},
+  {art:'326',alin:'2',cat:'G',max:'8 ani'},{art:'327',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'327',alin:'2',cat:'G',max:'6 ani'},{art:'328',alin:'1',cat:'G',max:'6 ani'},
+  {art:'328',alin:'2',cat:'G',max:'10 ani'},{art:'329',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'329',alin:'2',cat:'G',max:'6 ani'},{art:'329',alin:'3',cat:'G',max:'10 ani'},
+  {art:'330',alin:'1',cat:'U',max:'2 ani'},{art:'330',alin:'2',cat:'G',max:'6 ani'},
+  {art:'330^1',alin:'1',cat:'G',max:'7 ani'},{art:'330^1',alin:'2',cat:'G',max:'10 ani'},
+  {art:'330^1',alin:'3',cat:'DG',max:'15 ani'},{art:'332',alin:'1',cat:'U',max:'2 ani'},
+  {art:'332',alin:'2',cat:'MPG',max:'4 ani'},{art:'332',alin:'3',cat:'G',max:'6 ani'},
+  {art:'332^1',alin:'1',cat:'MPG',max:'5 ani'},{art:'332^1',alin:'2',cat:'G',max:'10 ani'},
+  {art:'332^1',alin:'3',cat:'DG',max:'15 ani'},{art:'332^2',alin:'1',cat:'G',max:'6 ani'},
+  {art:'332^2',alin:'2',cat:'G',max:'9 ani'},
+  
+  // Cap. XVI - Corupția în sectorul privat (333-335^1)
+  {art:'333',alin:'1',cat:'U',max:'amendă'},{art:'333',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'333',alin:'3',cat:'G',max:'6 ani'},{art:'333',alin:'4',cat:'G',max:'10 ani'},
+  {art:'334',alin:'1',cat:'U',max:'amendă'},{art:'334',alin:'2',cat:'MPG',max:'3 ani'},
+  {art:'334',alin:'3',cat:'MPG',max:'5 ani'},{art:'334',alin:'4',cat:'G',max:'7 ani'},
+  {art:'335',alin:'1',cat:'MPG',max:'3 ani'},{art:'335',alin:'2',cat:'G',max:'6 ani'},
+  {art:'335',alin:'3',cat:'G',max:'10 ani'},{art:'335^1',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'335^1',alin:'2',cat:'G',max:'7 ani'},
+  
+  // Cap. XVII - Contra autorităților și securității statului (337-363)
+  {art:'337',alin:'1',cat:'DG',max:'20 ani'},{art:'338',alin:'1',cat:'DG',max:'20 ani'},
+  {art:'338^1',alin:'1',cat:'G',max:'10 ani'},{art:'339',alin:'1',cat:'G',max:'7 ani'},
+  {art:'339',alin:'2',cat:'G',max:'10 ani'},{art:'340',alin:'1',cat:'DG',max:'15 ani'},
+  {art:'340',alin:'2',cat:'DG',max:'20 ani'},{art:'341',alin:'1',cat:'DG',max:'20 ani'},
+  {art:'342',alin:'1',cat:'G',max:'6 ani'},{art:'342',alin:'2',cat:'G',max:'12 ani'},
+  {art:'342^1',alin:'1',cat:'G',max:'10 ani'},{art:'343',alin:'1',cat:'EG',max:'viață'},
+  {art:'344',alin:'1',cat:'DG',max:'20 ani'},{art:'344^1',alin:'1',cat:'MPG',max:'4 ani'},
+  {art:'344^1',alin:'2',cat:'G',max:'7 ani'},{art:'345',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'346',alin:'1',cat:'MPG',max:'3 ani'},{art:'346^1',alin:'1',cat:'G',max:'7 ani'},
+  {art:'346^1',alin:'2',cat:'G',max:'8 ani'},{art:'347',alin:'1',cat:'U',max:'1 an'},
+  {art:'347',alin:'2',cat:'MPG',max:'3 ani'},{art:'348',alin:'1',cat:'U',max:'2 ani'},
+  {art:'348',alin:'2',cat:'MPG',max:'5 ani'},{art:'348',alin:'3',cat:'G',max:'8 ani'},
+  {art:'349',alin:'1',cat:'MPG',max:'5 ani'},{art:'349',alin:'2',cat:'G',max:'10 ani'},
+  {art:'349',alin:'3',cat:'G',max:'12 ani'},{art:'361',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'361',alin:'2',cat:'G',max:'7 ani'},{art:'362',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'363',alin:'1',cat:'U',max:'2 ani'},
+  
+  // Cap. XVIII - Infracțiuni militare (364-388)
+  {art:'364',alin:'1',cat:'U',max:'2 ani'},{art:'364',alin:'2',cat:'G',max:'6 ani'},
+  {art:'364',alin:'3',cat:'G',max:'10 ani'},{art:'365',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'365',alin:'2',cat:'G',max:'8 ani'},{art:'365',alin:'3',cat:'DG',max:'13 ani'},
+  {art:'366',alin:'1',cat:'MPG',max:'5 ani'},{art:'366',alin:'2',cat:'G',max:'8 ani'},
+  {art:'366',alin:'3',cat:'G',max:'12 ani'},{art:'367',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'367',alin:'2',cat:'G',max:'7 ani'},{art:'367',alin:'3',cat:'G',max:'12 ani'},
+  {art:'368',alin:'1',cat:'MPG',max:'5 ani'},{art:'368',alin:'2',cat:'G',max:'7 ani'},
+  {art:'368',alin:'3',cat:'G',max:'12 ani'},{art:'369',alin:'1',cat:'G',max:'6 ani'},
+  {art:'369',alin:'2',cat:'G',max:'12 ani'},{art:'370',alin:'1',cat:'MPG',max:'3 ani'},
+  {art:'370',alin:'2',cat:'G',max:'8 ani'},{art:'371',alin:'1',cat:'U',max:'1 an'},
+  {art:'371',alin:'2',cat:'MPG',max:'3 ani'},{art:'371',alin:'3',cat:'G',max:'10 ani'},
+  {art:'372',alin:'1',cat:'MPG',max:'3 ani'},{art:'372',alin:'2',cat:'G',max:'7 ani'},
+  {art:'373',alin:'1',cat:'MPG',max:'5 ani'},{art:'373',alin:'2',cat:'G',max:'7 ani'},
+  {art:'374',alin:'1',cat:'MPG',max:'3 ani'},{art:'374',alin:'2',cat:'G',max:'7 ani'},
+  {art:'375',alin:'1',cat:'U',max:'2 ani'},{art:'375',alin:'2',cat:'G',max:'6 ani'},
+  {art:'375',alin:'3',cat:'G',max:'12 ani'},{art:'376',alin:'1',cat:'MPG',max:'5 ani'},
+  {art:'376',alin:'2',cat:'G',max:'10 ani'},{art:'377',alin:'1',cat:'DG',max:'15 ani'},
+  {art:'378',alin:'1',cat:'DG',max:'15 ani'},{art:'379',alin:'1',cat:'DG',max:'15 ani'},
+  {art:'380',alin:'1',cat:'G',max:'8 ani'},{art:'380',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'381',alin:'1',cat:'G',max:'10 ani'},{art:'381',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'382',alin:'1',cat:'G',max:'12 ani'},{art:'382',alin:'2',cat:'DG',max:'15 ani'},
+  {art:'383',alin:'1',cat:'G',max:'8 ani'},{art:'383',alin:'2',cat:'G',max:'10 ani'},
+  {art:'384',alin:'1',cat:'G',max:'10 ani'},{art:'385',alin:'1',cat:'G',max:'12 ani'},
+  {art:'385',alin:'2',cat:'DG',max:'15 ani'},{art:'386',alin:'1',cat:'G',max:'10 ani'},
+  {art:'386',alin:'2',cat:'DG',max:'15 ani'},{art:'387',alin:'1',cat:'G',max:'10 ani'},
+  {art:'387',alin:'2',cat:'DG',max:'15 ani'},{art:'388',alin:'1',cat:'G',max:'8 ani'},
+  {art:'388',alin:'2',cat:'G',max:'10 ani'}
+];
+
+/**
+ * Găsește categoria unei infracțiuni după articol și alineat
+ */
+export function getCategorie(articol: string, alineat: string): CategorieInfractiune | null {
+  const found = INFRACTIUNI.find(i => i.art === articol && i.alin === alineat);
+  return found ? found.cat : null;
+}
+
+/**
+ * Returnează informații complete despre o infracțiune
+ */
+export function getInfractiune(articol: string, alineat: string): (Infractiune & { categorieInfo: CategorieInfo }) | null {
+  const found = INFRACTIUNI.find(i => i.art === articol && i.alin === alineat);
+  if (!found) return null;
+  return { ...found, categorieInfo: CATEGORII[found.cat] };
+}
+
+/**
+ * Filtrează infracțiunile după categorie
+ */
+export function getByCategorie(categorie: CategorieInfractiune): Infractiune[] {
+  return INFRACTIUNI.filter(i => i.cat === categorie);
+}
+
+/**
+ * Returnează statistici despre clasificare
+ */
+export function getStatistici(): Record<CategorieInfractiune, number> {
+  return INFRACTIUNI.reduce((acc, i) => {
+    acc[i.cat] = (acc[i.cat] || 0) + 1;
+    return acc;
+  }, {} as Record<CategorieInfractiune, number>);
+}
+
+export default { CATEGORII, INFRACTIUNI, getCategorie, getInfractiune, getByCategorie, getStatistici };

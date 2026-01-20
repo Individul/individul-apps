@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--
+    Portal - Split Layout Landing Page
+
+    CONFIGURATION:
+    - Brand name: Edit "Portal" in .brand-name
+    - Title: Edit "Portal aplicații" in .hero-title
+    - Subtitle: Edit "Acces rapid la instrumentele disponibile." in .hero-subtitle
+    - App URLs: Edit href attributes in .app-card links (lines ~73, ~95)
+-->
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portal - Acces rapid la instrumentele disponibile">
+    <title>Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <span class="brand-name">Portal</span>
+                <nav class="header-nav">
+                    <a href="#despre" class="nav-link">Despre</a>
+                    <a href="#contact" class="nav-link">Contact</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <div class="split-layout">
+
+                <!-- Left Column: Text -->
+                <div class="split-left">
+                    <h1 class="hero-title">Portal aplicații</h1>
+                    <p class="hero-subtitle">Acces rapid la instrumentele disponibile.</p>
+
+                    <ul class="benefits-list">
+                        <li class="benefit-item">
+                            <svg class="benefit-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Interfață simplă și modernă</span>
+                        </li>
+                        <li class="benefit-item">
+                            <svg class="benefit-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Acces rapid, fără pași inutili</span>
+                        </li>
+                        <li class="benefit-item">
+                            <svg class="benefit-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Instrumente pentru lucru zilnic</span>
+                        </li>
+                    </ul>
+
+                    <p class="hero-note">Acesta este doar un instrument informativ.</p>
+                </div>
+
+                <!-- Right Column: App Cards -->
+                <div class="split-right">
+
+                    <!-- Card 1: Clasificare -->
+                    <a href="http://46.224.209.71/clasificare/" class="app-card">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="7" height="7"/>
+                                        <rect x="14" y="3" width="7" height="7"/>
+                                        <rect x="14" y="14" width="7" height="7"/>
+                                        <rect x="3" y="14" width="7" height="7"/>
+                                    </svg>
+                                </div>
+                                <div class="card-info">
+                                    <h2 class="card-title">Clasificare</h2>
+                                    <p class="card-description">Organizare și structurare a informațiilor.</p>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <span class="card-url">46.224.209.71/clasificare</span>
+                                <span class="card-btn">Deschide</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 2: PDF Toolbox -->
+                    <a href="http://46.224.209.71/pdf/" class="app-card">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <path d="M12 18v-6"/>
+                                        <path d="M9 15l3 3 3-3"/>
+                                    </svg>
+                                </div>
+                                <div class="card-info">
+                                    <h2 class="card-title">PDF Toolbox</h2>
+                                    <p class="card-description">Unește PDF-uri, șterge/extrage pagini.</p>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <span class="card-url">46.224.209.71/pdf</span>
+                                <span class="card-btn">Deschide</span>
+                            </div>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="copyright">© <span id="current-year"></span> Dumitru Prisăcaru</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

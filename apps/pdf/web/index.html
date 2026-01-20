@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Instrumente PDF online simple - Unește, șterge pagini și extrage pagini din fișierele tale PDF.">
+    <title>PDF Toolbox - Instrumente PDF Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: {
+                            50: '#F6F7F9',
+                            100: '#E8EAED',
+                            200: '#D1D4DB',
+                            300: '#B8BCC7',
+                            400: '#8F95A3',
+                            500: '#73788A',
+                            600: '#565B6B',
+                            700: '#434854',
+                            800: '#2F333C',
+                            900: '#1F2229',
+                        },
+                        primary: {
+                            50: '#E8EDF2',
+                            100: '#D0DCE6',
+                            200: '#B0C4D5',
+                            300: '#8AACC4',
+                            400: '#6491B3',
+                            500: '#4A7AA3',
+                            600: '#3B6489',
+                            700: '#2F5270',
+                            800: '#264059',
+                            900: '#1F3A5F',
+                        },
+                        success: {
+                            light: '#D1EAD9',
+                            DEFAULT: '#5B9E6F',
+                            dark: '#3D7A51',
+                        },
+                        error: {
+                            light: '#F0D4D4',
+                            DEFAULT: '#C45A5A',
+                            dark: '#9E3F3F',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)',
+                        'card-hover': '0 2px 6px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)',
+                        'input': '0 0 0 3px rgba(31, 58, 95, 0.1)',
+                    },
+                    borderRadius: {
+                        'card': '14px',
+                        'input': '8px',
+                    },
+                },
+            },
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #F6F7F9;
+            --color-card: #FFFFFF;
+            --color-primary: #1F3A5F;
+            --color-primary-hover: #2F5270;
+            --color-text: #2F333C;
+            --color-text-muted: #73788A;
+            --color-border: #E8EAED;
+            --color-success-light: #D1EAD9;
+            --color-success: #5B9E6F;
+            --color-error-light: #F0D4D4;
+            --color-error: #C45A5A;
+        }
+
+        .dark {
+            --color-bg: #1A1B1E;
+            --color-card: #25262B;
+            --color-primary: #4A7AA3;
+            --color-primary-hover: #6491B3;
+            --color-text: #E8EAED;
+            --color-text-muted: #8F95A3;
+            --color-border: #2F333C;
+            --color-success-light: #3D7A51;
+            --color-success: #5B9E6F;
+            --color-error-light: #9E3F3F;
+            --color-error: #C45A5A;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .dark body {
+            background-color: var(--color-bg);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #D1D4DB;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8BCC7;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #434854;
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #565B6B;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        .animate-slide-in {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .spinner {
+            border: 2.5px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Upload zone */
+        .upload-zone {
+            border: 2px dashed var(--color-border);
+            background-color: var(--color-card);
+            transition: all 0.2s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--color-primary);
+            background-color: var(--color-bg);
+        }
+
+        .upload-zone.drag-over {
+            border-color: var(--color-primary);
+            background-color: rgba(31, 58, 95, 0.05);
+        }
+
+        .dark .upload-zone.drag-over {
+            background-color: rgba(74, 122, 163, 0.1);
+        }
+
+        /* File item */
+        .file-item {
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            transition: all 0.15s ease;
+        }
+
+        .file-item:hover {
+            border-color: #B8BCC7;
+        }
+
+        .dark .file-item:hover {
+            border-color: #565B6B;
+        }
+
+        .file-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.99);
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .dark .toast {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--color-success);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--color-error);
+        }
+
+        .toast.info {
+            border-left: 3px solid var(--color-primary);
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-card {
+            background-color: var(--color-card);
+        }
+
+        /* Focus states */
+        .input-field {
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            transition: all 0.15s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(31, 58, 95, 0.1);
+        }
+
+        .dark .input-field:focus {
+            box-shadow: 0 0 0 3px rgba(74, 122, 163, 0.2);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-primary-hover);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            transition: all 0.15s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--color-text-muted);
+            background-color: var(--color-bg);
+        }
+
+        /* Tool card */
+        .tool-card {
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            transition: all 0.2s ease;
+        }
+
+        .tool-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            border-color: #D1D4DB;
+        }
+
+        .dark .tool-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            border-color: #565B6B;
+        }
+
+        /* Status messages */
+        .status-message {
+            border-radius: 8px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .status-message.success {
+            background-color: var(--color-success-light);
+            color: var(--color-success-dark, #3D7A51);
+        }
+
+        .status-message.error {
+            background-color: var(--color-error-light);
+            color: var(--color-error-dark, #9E3F3F);
+        }
+
+        .status-message.info {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        /* Page number badge */
+        .page-badge {
+            background-color: var(--color-bg);
+            color: var(--color-text-muted);
+            font-feature-settings: 'tnum';
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            height: 3px;
+            background-color: var(--color-border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--color-primary);
+            transition: width 0.3s ease;
+        }
+
+        /* Icon containers */
+        .icon-container {
+            background-color: var(--color-bg);
+            color: var(--color-primary);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Dark mode toggle -->
+    <button id="theme-toggle" class="fixed top-6 right-6 z-50 w-10 h-10 rounded-lg btn-secondary flex items-center justify-center" aria-label="Comută modul întunecat">
+        <svg class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM2.25 12a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H3a.75.75 0 01-.75-.75zM12 18.75a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25a.75.75 0 01.75-.75zM7.5 15a.75.75 0 01.75.75h2.25a.75.75 0 010 1.5H8.25A.75.75 0 017.5 15zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.25 15a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5h2.25a.75.75 0 01.75.75zM12 5.25a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5h-2.25A.75.75 0 0112 5.25z"/>
+        </svg>
+        <svg class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"/>
+        </svg>
+    </button>
+
+    <!-- Main Container -->
+    <div class="max-w-5xl mx-auto px-5 py-12 md:py-16">
+        <!-- Header -->
+        <header class="text-center mb-14">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl icon-container mb-5">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-semibold tracking-tight mb-3" style="color: var(--color-text);">
+                PDF Toolbox
+            </h1>
+            <p class="text-lg" style="color: var(--color-text-muted);">
+                Instrumente PDF online simple
+            </p>
+        </header>
+
+        <!-- Tool Cards -->
+        <div class="grid md:grid-cols-3 gap-5 mb-14">
+            <!-- Merge PDF Card -->
+            <div class="tool-card rounded-card p-6 cursor-pointer" onclick="openModal('merge')">
+                <div class="icon-container w-11 h-11 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.413 7.5l6.762 9v9H4.5v-9l6.762-9zm0 0L12 12.074M17.5 7.5l6.762 9v9H15.5v-9l6.762-9zm0 0L22 12.074"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-base mb-2" style="color: var(--color-text);">Unește PDF-uri</h3>
+                <p class="text-sm leading-relaxed" style="color: var(--color-text-muted);">
+                    Combină mai multe fișiere PDF într-un singur document. Reordonează fișierele înainte de unire.
+                </p>
+            </div>
+
+            <!-- Delete Pages Card -->
+            <div class="tool-card rounded-card p-6 cursor-pointer" onclick="openModal('delete')">
+                <div class="icon-container w-11 h-11 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-base mb-2" style="color: var(--color-text);">Șterge Pagini</h3>
+                <p class="text-sm leading-relaxed" style="color: var(--color-text-muted);">
+                    Elimină pagini specifice din PDF-ul tău specificând numerele paginilor sau intervale.
+                </p>
+            </div>
+
+            <!-- Extract Pages Card -->
+            <div class="tool-card rounded-card p-6 cursor-pointer" onclick="openModal('extract')">
+                <div class="icon-container w-11 h-11 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-base mb-2" style="color: var(--color-text);">Extrage Pagini</h3>
+                <p class="text-sm leading-relaxed" style="color: var(--color-text-muted);">
+                    Creează un PDF nou care conține doar paginile specificate din documentul tău.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-sm" style="color: var(--color-text-muted);">
+            <p>Toate procesările se fac pe server. Fișierele tale nu sunt stocate după procesare.</p>
+        </footer>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay fixed inset-0 z-40 hidden items-center justify-center p-4">
+        <!-- Modal Card -->
+        <div class="modal-card rounded-card shadow-card-hover w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: var(--color-border);">
+                <div>
+                    <h2 id="modal-title" class="font-semibold text-lg" style="color: var(--color-text);">Tool Name</h2>
+                    <p id="modal-description" class="text-sm mt-0.5" style="color: var(--color-text-muted);">Description</p>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5" style="color: var(--color-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="px-6 py-5 overflow-y-auto flex-1">
+                <!-- Upload Zone -->
+                <div id="upload-zone" class="upload-zone rounded-input p-8 text-center cursor-pointer mb-5">
+                    <svg class="w-10 h-10 mx-auto mb-3" style="color: var(--color-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <p class="text-sm font-medium mb-1" style="color: var(--color-text);">Trage fișierele PDF aici sau click pentru a încărca</p>
+                    <p class="text-xs" style="color: var(--color-text-muted);" id="upload-hint">Maximum 100 MB per file</p>
+                    <input type="file" id="file-input" class="hidden" accept="application/pdf">
+                </div>
+
+                <!-- File List (for merge) -->
+                <div id="file-list" class="space-y-2 mb-5 hidden">
+                    <!-- Files will be rendered here -->
+                </div>
+
+                <!-- Selected File Display (for delete/extract) -->
+                <div id="file-display" class="hidden mb-5">
+                    <div class="file-item rounded-input p-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <svg class="w-5 h-5 flex-shrink-0" style="color: var(--color-error);" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+                            </svg>
+                            <span class="text-sm truncate" id="selected-filename" style="color: var(--color-text);"></span>
+                        </div>
+                        <button onclick="clearSelectedFile()" class="text-red-500 hover:text-red-600 p-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pages Specification (for delete/extract) -->
+                <div id="pages-spec-container" class="mb-5 hidden">
+                    <label id="pages-spec-label" class="block text-sm font-medium mb-2" style="color: var(--color-text);">
+                        Paginile de șters
+                    </label>
+                    <input type="text" id="pages-spec-input" class="input-field w-full rounded-input px-4 py-2.5 text-sm" placeholder="ex: 1,3,5-7">
+                    <p class="text-xs mt-2" style="color: var(--color-text-muted);">
+                        Introdu numerele paginilor separate prin virgulă. Folosește cratima pentru intervale (ex: 1-5).
+                    </p>
+                </div>
+
+                <!-- Status Message -->
+                <div id="status-message" class="status-message hidden">
+                    <!-- Status content will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t flex items-center justify-between" style="border-color: var(--color-border);">
+                <button onclick="closeModal()" class="btn-secondary px-4 py-2 rounded-input text-sm font-medium">
+                    Anulează
+                </button>
+                <button id="action-btn" class="btn-primary px-5 py-2.5 rounded-input text-sm font-medium" disabled>
+                    Procesează
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="modal-card rounded-card p-8 text-center">
+            <div class="spinner w-10 h-10 mx-auto mb-4"></div>
+            <p id="loading-text" class="font-medium" style="color: var(--color-text);">Se procesează...</p>
+            <p class="text-sm mt-1" style="color: var(--color-text-muted);">Acest lucru poate dura câteva secunde</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

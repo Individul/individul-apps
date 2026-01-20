@@ -1,0 +1,3797 @@
+{
+  "codPenal": {
+    "tara": "Republica Moldova",
+    "versiune": "2025",
+    "totalIntrari": 315,
+    "categorii": {
+      "U": "Ușoară (≤2 ani sau fără închisoare)",
+      "MPG": "Mai puțin gravă (2-5 ani)",
+      "G": "Gravă (5-12 ani)",
+      "DG": "Deosebit de gravă (12-15 ani)",
+      "EG": "Excepțional de gravă (>15 ani sau detențiune pe viață)"
+    },
+    "articole": [
+      {
+        "numar": "145",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "146",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "147",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "148",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "149",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "150",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "150¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "151",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "152",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "155",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "156",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "157",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "158",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "159",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "160",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "162",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "163",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "164",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 13,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "164¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 0.5,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "165",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "165¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "166",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "166¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "167",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "167¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "168",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "169",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "169¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "171",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "172",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "173",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "174",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "175",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "175¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "176",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "176¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "177",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "177¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "178",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "179",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "180¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "181",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "181¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "181²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "181³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "182",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "183",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "184",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "185",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "185¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "185²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "185⁴",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "186",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "187",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "188",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "189",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "190",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "191",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "192",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "192¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "193",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "194",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "196",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "197",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "199",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "199¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "199²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "199³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "199⁴",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "201",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "201¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "205",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "206",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "206¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "207",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "208",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "208¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "208²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "209",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "211",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "212",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "213",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "214",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "214¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "215",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "216",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "217",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "217¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "217²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "217³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "217⁴",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "217⁵",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "217⁶",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "218",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "219",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "220",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "220¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "222",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "222¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "223",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "223¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "224",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "225",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "226",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "227",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "227¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "228",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "228¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "229",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "229¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "229²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "230",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "231",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "231¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "232",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "233",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "234",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "235",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "236",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "237",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "238",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "239",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "239¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "239²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "240",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "241¹",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "242",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "242¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "242²",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "242³",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "243",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "244",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "244¹",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "244²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "244³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "245",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "245¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "245¹⁰",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "245¹¹",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "245¹²",
+        "alineate": [
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "245¹³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "245²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "245³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "245⁴",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "245⁵",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "245⁶",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "245⁸",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "245⁹",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "246",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "246¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "246²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "247",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "248",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "6",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          },
+          {
+            "numar": "7",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "248¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "248²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "249",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2.5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "250¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "251",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "252",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "253",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "256",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "257",
+        "alineate": [
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "257¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "259",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "260",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "260¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "260²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "260³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "260⁴",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "260⁵",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "260⁶",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 9,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "260⁷",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "260⁸",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "261",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "261¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "262",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "263",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "264",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "6",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "264¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "264²",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "265",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "266",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "267",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "268",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "269",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "270",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "271",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "272",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "275",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "276",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "278",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "278¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 18,
+            "categorie": "EG"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "279",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "279¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 9,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "279²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "279³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "280",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "281",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "282",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 9,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "283",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "284",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "285",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "286",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "287",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "288",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "289",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "289¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "289²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "289³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "289⁴",
+        "alineate": [
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "290",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "291",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "292",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "293",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "295",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": 17,
+            "categorie": "EG"
+          },
+          {
+            "numar": "6",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "7",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "295¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "295²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          },
+          {
+            "numar": "3",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          },
+          {
+            "numar": "4",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "5",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "296",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "297",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "298",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "300",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "301",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "301¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "302",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          },
+          {
+            "numar": "2",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "303",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "303¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "306",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "307",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "308",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "309",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "310",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "311",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "312",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "313",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "314",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "315",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "316",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "317",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "318",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "319",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "320",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "320¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 4,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "321",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "322",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "323",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "324",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "324¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "325",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "325¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "326",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "326¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "327",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "328",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 0.5,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "329",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "330²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "332",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 6,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "332¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "332²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "333",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "334",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "335",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "335¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "337",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "338",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "338¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "338²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "338³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "339",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "340",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "340¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "341",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "342",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": null,
+            "categorie": "EG",
+            "detentiunePeViata": true
+          }
+        ]
+      },
+      {
+        "numar": "343",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 20,
+            "categorie": "EG"
+          }
+        ]
+      },
+      {
+        "numar": "344",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "345",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "346",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "346¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "346²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "347",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "349",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "351",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "352",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "352¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 1,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "352²",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "352³",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "354",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "356",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "360",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "361",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "362",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "362¹",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "364",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 3,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "365",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 13,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "367",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "368",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "369",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "370",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "371",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "372",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "373",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "374",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "375",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "376",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 5,
+            "categorie": "MPG"
+          }
+        ]
+      },
+      {
+        "numar": "377",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 2,
+            "categorie": "U"
+          }
+        ]
+      },
+      {
+        "numar": "378",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "379",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 12,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "380",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 8,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "381",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 7,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "382",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "383",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "384",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      },
+      {
+        "numar": "385",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "386",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "387",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 15,
+            "categorie": "DG"
+          }
+        ]
+      },
+      {
+        "numar": "388",
+        "alineate": [
+          {
+            "numar": "1",
+            "pedeapsaMaxima": 10,
+            "categorie": "G"
+          }
+        ]
+      }
+    ]
+  }
+}
