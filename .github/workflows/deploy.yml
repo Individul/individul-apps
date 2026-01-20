@@ -31,30 +31,34 @@ jobs:
           npm ci
           npm run build
 
-      - name: Copy files to server
+      - name: Copy Clasificare to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "apps/clasificare/dist/*,portal/*"
-          target: "/tmp/deploy/"
-          strip_components: 2
+          source: "apps/clasificare/dist/*"
+          target: "/var/www/html/clasificare/"
+          strip_components: 3
 
-      - name: Deploy on server
+      - name: Copy Portal to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "portal/*"
+          target: "/var/www/html/portal/"
+          strip_components: 1
+
+      - name: Finalize on server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p /var/www/html/portal /var/www/html/clasificare
-            rm -rf /var/www/html/portal/* /var/www/html/clasificare/*
-            # The files are in /tmp/deploy/ but flat structure due to strip_components
-            # We need to reorganize
-            mv /tmp/deploy/*.html /tmp/deploy/*.css /tmp/deploy/*.js /var/www/html/portal/ 2>/dev/null || true
-            mv /tmp/deploy/* /var/www/html/clasificare/ 2>/dev/null || true
-            # Also copy index.html to root
+            # Copy portal index to root
             cp /var/www/html/portal/index.html /var/www/html/index.html
             nginx -t && systemctl reload nginx
 
