@@ -32,20 +32,21 @@ jobs:
           npm run build
 
       - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\n\r ' | base64 -d > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to server
         run: |
           chmod +x scripts/deploy.sh
-          scp -i ~/.ssh/deploy_key -r apps/ portal/ ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/deploy/
-          scp -i ~/.ssh/deploy_key scripts/deploy.sh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/deploy.sh
-          ssh -i ~/.ssh/deploy_key ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "bash /tmp/deploy.sh"
+          scp -r apps/ portal/ ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/deploy/
+          scp scripts/deploy.sh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:/tmp/deploy.sh
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} "bash /tmp/deploy.sh"
 
       - name: Health check
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} \
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} \
             "curl -sf http://localhost/ > /dev/null && echo 'Portal: OK' || echo 'Portal: FAIL'"
