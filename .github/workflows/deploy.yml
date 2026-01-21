@@ -87,6 +87,104 @@ jobs:
             echo "PDF Toolbox directory:"
             ls -la /opt/pdf-toolbox 2>/dev/null || echo "Directory not found"
 
+      # ========== Deploy PDF Toolbox ==========
+      - name: Prepare PDF Toolbox directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p /opt/pdf-toolbox/app
+            mkdir -p /opt/pdf-toolbox/web/landing
+            mkdir -p /opt/pdf-toolbox/web
+
+      - name: Copy PDF Toolbox app files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/pdf/app/*"
+          target: "/opt/pdf-toolbox/app/"
+          strip_components: 3
+
+      - name: Copy PDF Toolbox web files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/pdf/web/*"
+          target: "/opt/pdf-toolbox/web/"
+          strip_components: 3
+
+      - name: Copy PDF Toolbox landing files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/pdf/web/landing/*"
+          target: "/opt/pdf-toolbox/web/landing/"
+          strip_components: 4
+
+      - name: Copy PDF Toolbox Dockerfile
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/pdf/Dockerfile,apps/pdf/requirements.txt"
+          target: "/opt/pdf-toolbox/"
+          strip_components: 2
+
+      - name: Build PDF Toolbox docker-compose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/pdf-toolbox
+            # Create docker-compose file
+            cat > docker-compose.yml << 'EOF'
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: pdf-toolbox-app
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+EOF
+            # Stop old container if exists
+            docker stop pdf-toolbox-app 2>/dev/null || true
+            docker rm pdf-toolbox-app 2>/dev/null || true
+            # Build and start
+            docker-compose build
+            docker-compose up -d
+            echo "=== PDF Toolbox started ==="
+            docker ps | grep pdf-toolbox
+            docker logs pdf-toolbox-app --tail=20
+
+      - name: Fix nginx for PDF Toolbox
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Remove old /pdf/ location if exists
+            sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
+            # Add new /pdf/ location pointing to port 8001
+            sed -i '/location \/clasificare/i\            location /pdf/ {\n                proxy_pass http://127.0.0.1:8001/;\n                proxy_set_header Host $host;\n                proxy_set_header X-Real-IP $remote_addr;\n                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n                proxy_set_header X-Forwarded-Proto $scheme;\n                client_max_body_size 100M;\n            }\n' /etc/nginx/sites-enabled/default
+            nginx -t && systemctl reload nginx
+            echo "=== Nginx reloaded ==="
+            curl -sf http://localhost/pdf/ && echo "PDF Toolbox: OK" || echo "PDF Toolbox: FAIL"
+
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
         with:
