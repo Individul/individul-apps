@@ -58,6 +58,10 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Fix any broken nginx config from previous deployments
+            # Remove wrongly placed locations
+            sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
+            sed -i '/location ~ \^\/api/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
             # Copy portal index to root
             cp /var/www/html/portal/index.html /var/www/html/index.html
             nginx -t && systemctl reload nginx
