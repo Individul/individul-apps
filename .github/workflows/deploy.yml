@@ -169,17 +169,27 @@ jobs:
             # Remove old /pdf/ and /api/ locations if exist
             sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
             sed -i '/location ~ \^\/api/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            # Create /pdf/ location block
-            printf '            location /pdf/ {\n                proxy_pass http://127.0.0.1:8001/;\n            }\n' > /tmp/pdf_location.conf
-            # Create /api/ location block for PDF endpoints
-            printf '            location ~ ^/api/(merge|delete-pages|extract-pages) {\n                proxy_pass http://127.0.0.1:8001;\n                client_max_body_size 100M;\n            }\n' > /tmp/api_location.conf
-            # Insert before clasificare location
-            sed -i '/location \/clasificare/r /tmp/pdf_location.conf' /etc/nginx/sites-enabled/default
-            sed -i '/location \/clasificare/r /tmp/api_location.conf' /etc/nginx/sites-enabled/default
+            # Use Python to insert locations before clasificare
+            python3 << 'PYEOF'
+with open('/etc/nginx/sites-enabled/default', 'r') as f:
+    lines = f.readlines()
+# Find clasificare location and insert PDF locations before it
+pdf_loc = '            location /pdf/ {\n                proxy_pass http://127.0.0.1:8001/;\n            }\n'
+api_loc = '            location ~ ^/api/(merge|delete-pages|extract-pages) {\n                proxy_pass http://127.0.0.1:8001;\n                client_max_body_size 100M;\n            }\n'
+new_lines = []
+for line in lines:
+    if 'location /clasificare' in line and 'location /pdf' not in ''.join(new_lines):
+        new_lines.append(pdf_loc)
+        new_lines.append(api_loc)
+    new_lines.append(line)
+with open('/etc/nginx/sites-enabled/default', 'w') as f:
+    f.writelines(new_lines)
+print('Updated nginx config')
+PYEOF
             nginx -t && systemctl reload nginx
             echo "=== Nginx reloaded ==="
+            grep -A2 "location /pdf" /etc/nginx/sites-enabled/default
             curl -sf http://localhost/pdf/ && echo "PDF Toolbox: OK" || echo "PDF Toolbox: FAIL"
-            curl -sf http://localhost/api/health && echo "PDF API: OK" || echo "PDF API: FAIL"
 
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
