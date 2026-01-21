@@ -62,6 +62,31 @@ jobs:
             cp /var/www/html/portal/index.html /var/www/html/index.html
             nginx -t && systemctl reload nginx
 
+      - name: Check PDF app status
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "=== Checking PDF app ==="
+            # Check nginx config for /pdf/
+            echo "Nginx /pdf/ location:"
+            grep -A 5 "location /pdf" /etc/nginx/sites-enabled/default || echo "No /pdf/ location found"
+            # Check containers
+            echo "Docker containers:"
+            docker ps -a | grep -E "pdf|PDF" || echo "No PDF containers found"
+            # Check ports
+            echo "Ports 8000-8001:"
+            netstat -tlnp | grep -E "8000|8001" || echo "Nothing on ports 8000-8001"
+            # Try to access PDF backend
+            echo "Testing PDF backend:"
+            curl -sf http://localhost:8000/health && echo "PDF on 8000: OK" || echo "PDF on 8000: FAIL"
+            curl -sf http://localhost:8001/health && echo "PDF on 8001: OK" || echo "PDF on 8001: FAIL"
+            # Check if /opt/pdf-toolbox exists
+            echo "PDF Toolbox directory:"
+            ls -la /opt/pdf-toolbox 2>/dev/null || echo "Directory not found"
+
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
         with:
