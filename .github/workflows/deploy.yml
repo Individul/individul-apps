@@ -58,6 +58,12 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Cleanup old PDF Toolbox containers and files
+            docker stop pdf-toolbox-app 2>/dev/null || true
+            docker rm pdf-toolbox-app 2>/dev/null || true
+            rm -rf /opt/pdf-toolbox
+            # Remove /pdf/ location from nginx config
+            sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
             # Copy portal index to root
             cp /var/www/html/portal/index.html /var/www/html/index.html
             nginx -t && systemctl reload nginx
