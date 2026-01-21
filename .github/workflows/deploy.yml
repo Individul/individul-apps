@@ -58,38 +58,11 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Fix any broken nginx config from previous deployments
-            # Remove wrongly placed locations
             sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
             sed -i '/location ~ \^\/api/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            # Copy portal index to root
+            sed -i '/location \/api\//,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
             cp /var/www/html/portal/index.html /var/www/html/index.html
             nginx -t && systemctl reload nginx
-
-      - name: Check PDF app status
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "=== Checking PDF app ==="
-            # Check nginx config for /pdf/
-            echo "Nginx /pdf/ location:"
-            grep -A 5 "location /pdf" /etc/nginx/sites-enabled/default || echo "No /pdf/ location found"
-            # Check containers
-            echo "Docker containers:"
-            docker ps -a | grep -E "pdf|PDF" || echo "No PDF containers found"
-            # Check ports
-            echo "Ports 8000-8001:"
-            netstat -tlnp | grep -E "8000|8001" || echo "Nothing on ports 8000-8001"
-            # Try to access PDF backend
-            echo "Testing PDF backend:"
-            curl -sf http://localhost:8000/health && echo "PDF on 8000: OK" || echo "PDF on 8000: FAIL"
-            curl -sf http://localhost:8001/health && echo "PDF on 8001: OK" || echo "PDF on 8001: FAIL"
-            # Check if /opt/pdf-toolbox exists
-            echo "PDF Toolbox directory:"
-            ls -la /opt/pdf-toolbox 2>/dev/null || echo "Directory not found"
 
       # ========== Deploy PDF Toolbox ==========
       - name: Prepare PDF Toolbox directory
@@ -151,17 +124,12 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/pdf-toolbox
-            # Create docker-compose file using printf
             printf '%s\n' 'version: "3.8"' 'services:' '  app:' '    build: .' '    container_name: pdf-toolbox-app' '    restart: unless-stopped' '    ports:' '      - "8001:8000"' '    environment:' '      - PYTHONUNBUFFERED=1' > docker-compose.yml
-            # Stop old container if exists
             docker stop pdf-toolbox-app 2>/dev/null || true
             docker rm pdf-toolbox-app 2>/dev/null || true
-            # Build and start
             docker-compose build
             docker-compose up -d
-            echo "=== PDF Toolbox started ==="
             docker ps | grep pdf-toolbox
-            docker logs pdf-toolbox-app --tail=20
 
       - name: Fix nginx for PDF Toolbox
         uses: appleboy/ssh-action@v1.0.3
@@ -170,16 +138,13 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Remove old /pdf/ and /api/ locations if exist
             sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
             sed -i '/location ~ \^\/api/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            # Create Python script using base64 to avoid YAML issues
-            echo "aW1wb3J0IHN5cwp3aXRoIG9wZW4oJy9ldGMvbmdpbngvc2l0ZXMtZW5hYmxlZC9kZWZhdWx0JywgJ3InKSBhcyBmOgogICAgbGluZXMgPSBmLnJlYWRsaW5lcygpCnBkZl9sb2MgPSAnICAgICAgICAgICBsb2NhdGlvbiAvcGRmLyB7XG4gICAgICAgICAgICAgICAgcHJveHlfcGFzcyBodHRwOi8vMTI3LjAuMC4xOjgwMDEvO1xuICAgICAgICAgICB9XG4nCmFwaV9sb2MgPSAnICAgICAgICAgICBsb2NhdGlvbiB+IF4vYXBpLyhtZXJnZXxkZWxldGUtcGFnZXN8ZXh0cmFjdC1wYWdlcykge1xuICAgICAgICAgICAgICAgHByb3h5X3Bhc3MgaHR0cDovLzEyNy4wLjAuMTo4MDAxO1xuICAgICAgICAgICAgICAgIGNsaWVudF9tYXhfYm9keV9zaXplIDEwME07XG4gICAgICAgICAgIH1cbicKbmV3X2xpbmVzID0gW10KZm9yIGxpbmUgaW4gbGluZXM6CiAgICBpZiAnbG9jYXRpb24gL2NsYXNpZmljYXJlJyBpbiBsaW5lIGFuZCAnbG9jYXRpb24gL3BkZicgbm90IGluICcnLmpvaW4obmV3X2xpbmVzKToKICAgICAgICBuZXdfbGluZXMuYXBwZW5kKHBkZl9sb2MpCiAgICAgICAgbmV3X2xpbmVzLmFwcGVuZChhcGlfbG9jKQogICAgbmV3X2xpbmVzLmFwcGVuZChsaW5lKQp3aXRoIG9wZW4oJy9ldGMvbmdpbngvc2l0ZXMtZW5hYmxlZC9kZWZhdWx0JywgJ3cnKSBhcyBmOgogICAgZi53cml0ZWxpbmVzKG5ld19saW5lcykKcHJpbnQoJ1VwZGF0ZWQgbmdpbnggY29uZmlnJyk=" | base64 -d > /tmp/fix_nginx.py
-            python3 /tmp/fix_nginx.py
+            sed -i '/location \/api\//,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
+            echo "aW1wb3J0IHN5cwp3aXRoIG9wZW4oJy9ldGMvbmdpbmcvc2l0ZXMtZW5hYmxlZC9kZWZhdWx0JywgJ3InKSBhcyBmOgogICAgbGluZXMgPSBmLnJlYWRsaW5lcygpCmFwaV9sb2MgPSAnICAgICAgICAgICBsb2NhdGlvbiAvYXBpLyB7XG4gICAgICAgICAgICAgICAgcHJveHlfcGFzcyBodHRwOi8vMTI3LjAuMC4xOjgwMDEvO1xuICAgICAgICAgICAgICAgIGNsaWVudF9tYXhfYm9keV9zaXplIDEwME07XG4gICAgICAgICAgIH1cbicKcGRmX2xvYyA9JyAgICAgICAgICAgbG9jYXRpb24gL3BkZi8ge1xuICAgICAgICAgICAgICAgIHByb3h5X3Bhc3MgaHR0cDovLzEyNy4wLjAuMTo4MDAxLztcbiAgICAgICAgICAgfVxuJwpuZXdfbGluZXMgPSBbXQpmb3IgbGluZSBpbiBsaW5lczoKICAgIGlmICdsb2NhdGlvbiAvY2xhc2lmaWNhcmUnIGluIGxpbmUgYW5kICdsb2NhdGlvbiAvYXBpJyBub3QgaW4gJycuam9pbihuZXdfbGluZXMpOgogICAgICAgIG5ld19saW5lcy5hcHBlbmQoYXBpX2xvYykKICAgIGlmICdsb2NhdGlvbiAvY2xhc2lmaWNhcmUnIGluIGxpbmUgYW5kICdsb2NhdGlvbiAvcGRmJyBub3QgaW4gJycuam9pbihuZXdfbGluZXMpOgogICAgICAgIG5ld19saW5lcy5hcHBlbmQocGRmX2xvYykKICAgIG5ld19saW5lcy5hcHBlbmQobGluZSkKd2l0aCBvcGVuKCcvZXRjL25naW54L3NpdGVzLWVuYWJsZWQvZGVmYXVsdCcsICd3JykgYXMgZjoKICAgIGYud3JpdGVsaW5lcyhuZXdfbGluZXMpCnByaW50KCdPSycp" | base64 -d > /tmp/fix.py
+            python3 /tmp/fix.py
             nginx -t && systemctl reload nginx
-            echo "=== Nginx reloaded ==="
-            grep -A2 "location /pdf" /etc/nginx/sites-enabled/default
-            curl -sf http://localhost/pdf/ && echo "PDF Toolbox: OK" || echo "PDF Toolbox: FAIL"
+            grep -A2 "location /pdf\|location /api" /etc/nginx/sites-enabled/default
 
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
