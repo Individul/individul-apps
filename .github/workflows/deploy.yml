@@ -136,11 +136,12 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Ștergem locațiile vechi dacă există (pentru a evita duplicate)
             sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            sed -i '/location ~ \^\/api/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
             sed -i '/location \/api\//,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            echo "aW1wb3J0IHN5cwp3aXRoIG9wZW4oJy9ldGMvbmdpbngvc2l0ZXMtZW5hYmxlZC9kZWZhdWx0JywgJ3InKSBhcyBmOgogICAgbGluZXMgPSBmLnJlYWRsaW5lcygpCmFwaV9sb2MgPSAnICAgICAgICBsb2NhdGlvbiAvYXBpLyB7ICAgICAgICAgICAgcHJveHlfcGFzcyBodHRwOi8vMTI3LjAuMC4xOjgwMDEvOyAgICAgICAgICAgIGNsaWVudF9tYXhfYm9keV9zaXplIDEwME07ICAgICAgIH0nCnBkZl9sb2MgPSAnICAgICAgICBsb2NhdGlvbiAvcGRmLyB7ICAgICAgICAgICAgcHJveHlfcGFzcyBodHRwOi8vMTI3LjAuMC4xOjgwMDEvOyAgICAgICB9JwpuZXdfbGluZXMgPSBbXQpmb3IgbGluZSBpbiBsaW5lczoKICAgIGlmICdsb2NhdGlvbiAvY2xhc2lmaWNhcmUnIGluIGxpbmUgYW5kICdsb2NhdGlvbiAvYXBpJyBub3QgaW4gJycuam9pbihuZXdfbGluZXMpOgogICAgICAgIG5ld19saW5lcy5hcHBlbmQoYXBpX2xvYykKICAgIGlmICdsb2NhdGlvbiAvY2xhc2lmaWNhcmUnIGluIGxpbmUgYW5kICdsb2NhdGlvbiAvcGRmJyBub3QgaW4gJycuam9pbihuZXdfbGluZXMpOgogICAgICAgIG5ld19saW5lcy5hcHBlbmQocGRmX2xvYykKICAgIG5ld19saW5lcy5hcHBlbmQobGluZSkKd2l0aCBvcGVuKCcvZXRjL25naW54L3NpdGVzLWVuYWJsZWQvZGVmYXVsdCcsICd3JykgYXMgZjoKICAgIGYud3JpdGVsaW5lcyhuZXdfbGluZXMpCnByaW50KCdPSycp" | base64 -d > /tmp/fix.py
-            python3 /tmp/fix.py
+            # Adăugăm locațiile /pdf/ și /api/ înainte de închiderea server block
+            sed -i '/^[[:space:]]*}[[:space:]]*$/i \            location /pdf/ {\n                proxy_pass http://127.0.0.1:8001/;\n            }\n            location /api/ {\n                proxy_pass http://127.0.0.1:8001/;\n                client_max_body_size 100M;\n            }\n' /etc/nginx/sites-enabled/default
+            # Verificăm și reîncărcăm nginx
             nginx -t && systemctl reload nginx
             grep -A2 "location /pdf\|location /api" /etc/nginx/sites-enabled/default
 
