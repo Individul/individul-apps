@@ -250,23 +250,24 @@ function App() {
    */
   const calculeazaFracțieDinTermen = (ani, luni, zile, fractie) => {
     const [numarator, numitor] = fractie.split('/').map(Number)
-    const raport = numarator / numitor
 
-    // Convertim totul în zile pentru calcul (1 an = 365 zile, 1 lună = 30 zile)
-    const zileTotale = ani * 365 + luni * 30 + zile
-    const zileFracțieTotal = Math.ceil(zileTotale * raport)
+    // Convertim totul în luni pentru calcul (1 an = 12 luni)
+    // Dacă zile > 15, considerăm o lună întreagă
+    const luniTotale = ani * 12 + luni + (zile >= 15 ? 1 : 0)
+    const luniFracțieTotal = Math.ceil((luniTotale * numarator) / numitor)
 
-    // Convertim înapoi în ani/luni/zile pentru afișare
-    const aniFracție = Math.floor(zileFracțieTotal / 365)
-    const ramas = zileFracțieTotal % 365
-    const luniFracție = Math.floor(ramas / 30)
-    const zileFracțieRamase = ramas % 30
+    // Convertim înapoi în ani/luni pentru afișare (fără zile reziduale)
+    const aniFracție = Math.floor(luniFracțieTotal / 12)
+    const luniFracție = luniFracțieTotal % 12
+
+    // Pentru zileTotale (folosit în alte calcule), folosim 30 zile/lună
+    const zileTotale = aniFracție * 365 + luniFracție * 30
 
     return {
       ani: aniFracție,
       luni: luniFracție,
-      zile: zileFracțieRamase,
-      zileTotale: zileFracțieTotal
+      zile: 0, // Nu mai avem zile reziduale
+      zileTotale: zileTotale
     }
   }
 

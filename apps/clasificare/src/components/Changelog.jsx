@@ -31,6 +31,15 @@ const CHANGE_TYPES = {
 // Istoricul modificărilor aplicației
 const CHANGELOG_DATA = [
   {
+    version: '1.2.2',
+    date: '23.01.2026',
+    title: 'Corectare calcul fracții - eliminare zile reziduale',
+    changes: [
+      { type: 'fix', text: 'Calculul fracțiilor folosește acum luni ca unitate de bază (1 an = 12 luni)' },
+      { type: 'fix', text: 'Eliminate zilele reziduale din afișarea fracțiilor (ex: 1/3 din 4 ani = 1 an 4 luni, nu 1 an 4 luni 2 zile)' }
+    ]
+  },
+  {
     version: '1.2.1',
     date: '18.01.2026',
     title: 'Corectare calcul arest preventiv',
