@@ -11,9 +11,9 @@ const CONFIG = {
     MAX_FILE_SIZE: 100 * 1024 * 1024,      // 100 MB
     MAX_MERGE_FILES: 20,
     API_ENDPOINTS: {
-        merge: '/api/merge',
-        delete: '/api/delete-pages',
-        extract: '/api/extract-pages'
+        merge: '/pdf/api/merge',
+        delete: '/pdf/api/delete-pages',
+        extract: '/pdf/api/extract-pages'
     }
 };
 

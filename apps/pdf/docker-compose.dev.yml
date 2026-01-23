@@ -1,0 +1,25 @@
+# Development docker-compose configuration
+# Use this for local development without Traefik and SSL
+# Run with: docker compose -f docker-compose.dev.yml up -d
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdf-toolbox-app
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8001:8000"  # Expose on port 8001 to match nginx routing
+    networks:
+      - pdf-net
+
+networks:
+  pdf-net:
+    driver: bridge
