@@ -186,12 +186,12 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Creează fișierul include pentru PM Tools
+            # Next.js uses basePath: '/pm' so no rewrite needed
             cat > /etc/nginx/pm-tools.conf << 'EOF'
             location = /pm {
                 return 301 /pm/;
             }
-            location /pm/ {
-                rewrite ^/pm/(.*)$ /$1 break;
+            location /pm {
                 proxy_pass http://127.0.0.1:3001;
                 proxy_http_version 1.1;
                 proxy_set_header Upgrade $http_upgrade;
