@@ -5,8 +5,8 @@ import { LinkSimple, SquareHalf } from "@phosphor-icons/react/dist/ssr"
 import { toast } from "sonner"
 import { AnimatePresence, motion } from "motion/react"
 
-import type { ProjectDetails, User } from "@/lib/data/project-details"
-import { fetchProject, type Project } from "@/lib/api/projects"
+import type { ProjectDetails, User, ProjectScope, KeyFeatures } from "@/lib/data/project-details"
+import { fetchProject, updateProject, type Project } from "@/lib/api/projects"
 import { getAvatarUrl } from "@/lib/assets/avatars"
 import { Breadcrumbs } from "@/components/projects/Breadcrumbs"
 import { ProjectHeader } from "@/components/projects/ProjectHeader"
@@ -151,6 +151,72 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
     }
   }, [])
 
+  // Save handlers for editable sections
+  const handleSaveScope = useCallback(async (scope: ProjectScope) => {
+    try {
+      await updateProject(projectId, {
+        scopeInScope: scope.inScope,
+        scopeOutOfScope: scope.outOfScope,
+      })
+      // Update local state
+      if (state.status === "ready") {
+        setState({
+          status: "ready",
+          project: {
+            ...state.project,
+            scope,
+          },
+        })
+      }
+      toast.success("Scope updated")
+    } catch (error) {
+      toast.error("Failed to update scope")
+      throw error
+    }
+  }, [projectId, state])
+
+  const handleSaveOutcomes = useCallback(async (outcomes: string[]) => {
+    try {
+      await updateProject(projectId, { outcomes })
+      if (state.status === "ready") {
+        setState({
+          status: "ready",
+          project: {
+            ...state.project,
+            outcomes,
+          },
+        })
+      }
+      toast.success("Outcomes updated")
+    } catch (error) {
+      toast.error("Failed to update outcomes")
+      throw error
+    }
+  }, [projectId, state])
+
+  const handleSaveKeyFeatures = useCallback(async (features: KeyFeatures) => {
+    try {
+      await updateProject(projectId, {
+        keyFeaturesP0: features.p0,
+        keyFeaturesP1: features.p1,
+        keyFeaturesP2: features.p2,
+      })
+      if (state.status === "ready") {
+        setState({
+          status: "ready",
+          project: {
+            ...state.project,
+            keyFeatures: features,
+          },
+        })
+      }
+      toast.success("Key features updated")
+    } catch (error) {
+      toast.error("Failed to update key features")
+      throw error
+    }
+  }, [projectId, state])
+
   const breadcrumbs = useMemo(
     () => [
       { label: "Projects", href: "/" },
@@ -236,9 +302,9 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
                   <TabsContent value="overview">
                     <div className="space-y-10">
                       <p className="text-sm leading-6 text-muted-foreground">{project.description}</p>
-                      <ScopeColumns scope={project.scope} />
-                      <OutcomesList outcomes={project.outcomes} />
-                      <KeyFeaturesColumns features={project.keyFeatures} />
+                      <ScopeColumns scope={project.scope} onSave={handleSaveScope} editable />
+                      <OutcomesList outcomes={project.outcomes} onSave={handleSaveOutcomes} editable />
+                      <KeyFeaturesColumns features={project.keyFeatures} onSave={handleSaveKeyFeatures} editable />
                       <TimelineGantt tasks={project.timelineTasks} />
                     </div>
                   </TabsContent>

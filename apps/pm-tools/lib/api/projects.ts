@@ -53,6 +53,13 @@ export type CreateProjectInput = {
   tags?: string[]
   members?: string[]
   clientId?: string
+  // Extended details
+  scopeInScope?: string[]
+  scopeOutOfScope?: string[]
+  outcomes?: string[]
+  keyFeaturesP0?: string[]
+  keyFeaturesP1?: string[]
+  keyFeaturesP2?: string[]
 }
 
 export type UpdateProjectInput = Partial<CreateProjectInput>
