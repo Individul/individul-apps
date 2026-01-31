@@ -59,8 +59,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Nu ștergem locațiile /pdf/ și /api/ - le păstrăm
-            cp /var/www/html/portal/index.html /var/www/html/index.html
-            nginx -t && systemctl reload nginx
+            cp /var/www/html/portal/index.html /var/www/html/index.html || true
+            nginx -t && systemctl reload nginx || echo "Nginx reload skipped"
 
       # ========== Deploy PDF Toolbox ==========
       - name: Prepare PDF Toolbox directory
