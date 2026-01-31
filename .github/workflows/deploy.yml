@@ -186,13 +186,11 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Șterge config vechi dacă există
-            sed -i '/location \/pm/,/^[[:space:]]*}/d' /etc/nginx/sites-enabled/default 2>/dev/null || true
-            # Inserează location /pm imediat după "server {"
-            sed -i '/server {/a \    location /pm {\n        proxy_pass http://127.0.0.1:3001;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection "upgrade";\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_cache_bypass $http_upgrade;\n    }' /etc/nginx/sites-enabled/default
+            # Copiază configurația nginx pentru PM Tools
+            cp /opt/pm-tools/nginx-pm-tools.conf /etc/nginx/sites-available/pm-tools
+            ln -sf /etc/nginx/sites-available/pm-tools /etc/nginx/sites-enabled/pm-tools
             nginx -t && systemctl reload nginx
-            curl -s http://localhost/pm | head -c 100
-            echo "PM Tools nginx configured"
+            echo "PM Tools nginx configured on subdomain"
 
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
