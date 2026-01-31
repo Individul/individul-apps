@@ -83,7 +83,7 @@ export function AppSidebar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-800 text-primary-foreground shadow-[inset_0_-5px_6.6px_0_rgba(0,0,0,0.25)]">
-              <img src="/logo-wrapper.png" alt="Logo" className="h-4 w-4" />
+              <img src="/pm/logo-wrapper.png" alt="Logo" className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold">Workspace</span>

@@ -10,16 +10,18 @@ type FileLinkRowProps = {
   className?: string
 }
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "/pm"
+
 export function getFileIcon(type: QuickLink["type"]) {
   switch (type) {
     case "pdf":
-      return { src: "/pdf.png", alt: "PDF" }
+      return { src: `${basePath}/pdf.png`, alt: "PDF" }
     case "zip":
-      return { src: "/zip.png", alt: "ZIP" }
+      return { src: `${basePath}/zip.png`, alt: "ZIP" }
     case "fig":
-      return { src: "/figma.png", alt: "Figma" }
+      return { src: `${basePath}/figma.png`, alt: "Figma" }
     default:
-      return { src: "/pdf.png", alt: "File" }
+      return { src: `${basePath}/pdf.png`, alt: "File" }
   }
 }
 

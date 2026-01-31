@@ -444,7 +444,7 @@ function PreferencesSettingsPane() {
                 <SettingRow label="Workspace" description="This is the name shown across the workspace.">
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-inner">
-                            <img src="/logo-wrapper.png" alt="Workspace" className="h-7 w-7" />
+                            <img src="/pm/logo-wrapper.png" alt="Workspace" className="h-7 w-7" />
                         </div>
                         <Input defaultValue={workspaceName} className="h-9 text-sm" />
                     </div>
