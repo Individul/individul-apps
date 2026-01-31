@@ -7,6 +7,7 @@ Monorepo pentru aplicațiile web personale.
 - **Portal** - Landing page cu split layout
 - **Clasificare** - Calculator Fracțiuni (React + Vite + Tailwind)
 - **PDF Toolbox** - Instrumente PDF (FastAPI + Docker)
+- **PM Tools** - Project Management Dashboard (Next.js + Docker)
 
 ## Deploy
 

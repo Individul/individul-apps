@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  pm-tools:
+    build: .
+    container_name: pm-tools
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production

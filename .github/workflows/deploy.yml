@@ -145,6 +145,54 @@ jobs:
             nginx -t && systemctl reload nginx
             grep -A2 "location /pdf\|location /api" /etc/nginx/sites-enabled/default
 
+      # ========== Deploy PM Tools ==========
+      - name: Prepare PM Tools directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p /opt/pm-tools
+
+      - name: Copy PM Tools files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/pm-tools/*"
+          target: "/opt/pm-tools/"
+          strip_components: 2
+
+      - name: Build and Deploy PM Tools
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/pm-tools
+            docker stop pm-tools 2>/dev/null || true
+            docker rm pm-tools 2>/dev/null || true
+            docker build -t pm-tools .
+            docker run -d --name pm-tools --restart unless-stopped -p 3001:3000 pm-tools
+            docker ps | grep pm-tools
+
+      - name: Configure nginx for PM Tools
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Verifică dacă locația /pm/ există deja
+            if ! grep -q "location /pm/" /etc/nginx/sites-enabled/default; then
+              # Adaugă locația /pm/ înainte de închiderea server block
+              sed -i '/^[[:space:]]*}[[:space:]]*$/i \            location /pm/ {\n                proxy_pass http://127.0.0.1:3001/pm/;\n                proxy_http_version 1.1;\n                proxy_set_header Upgrade $http_upgrade;\n                proxy_set_header Connection "upgrade";\n                proxy_set_header Host $host;\n                proxy_set_header X-Real-IP $remote_addr;\n                proxy_cache_bypass $http_upgrade;\n            }\n' /etc/nginx/sites-enabled/default
+            fi
+            nginx -t && systemctl reload nginx
+
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -153,3 +201,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             curl -sf http://localhost/ > /dev/null && echo 'Portal: OK' || echo 'Portal: FAIL'
+            curl -sf http://localhost/pm/ > /dev/null && echo 'PM Tools: OK' || echo 'PM Tools: FAIL'
