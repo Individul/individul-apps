@@ -44,7 +44,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 
 # Create startup script before switching user
-RUN printf '#!/bin/sh\nset -e\necho "=== PM Tools Startup ==="\necho "Working dir: $(pwd)"\necho "Prisma files:"\nls -la prisma/ 2>/dev/null || echo "No prisma dir"\necho "DATABASE_URL: $DATABASE_URL"\necho "Running db push..."\nnode node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate 2>&1 || echo "db push failed"\necho "Starting server..."\nexec node server.js\n' > /app/start.sh && \
+RUN printf '#!/bin/sh\nset -e\necho "=== PM Tools Startup ==="\necho "Waiting for database..."\nsleep 10\necho "Working dir: $(pwd)"\necho "Prisma files:"\nls -la prisma/ 2>/dev/null || echo "No prisma dir"\necho "DATABASE_URL: $DATABASE_URL"\necho "Running db push..."\nnode node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate 2>&1 || echo "db push failed"\necho "Starting server..."\nexec node server.js\n' > /app/start.sh && \
     chmod +x /app/start.sh && \
     chown nextjs:nodejs /app/start.sh
 
