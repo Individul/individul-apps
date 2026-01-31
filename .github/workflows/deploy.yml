@@ -207,15 +207,79 @@ jobs:
             echo "=== Waiting for database to be ready ==="
             sleep 15
 
-            echo "=== Checking prisma files in container ==="
-            docker exec pm-tools ls -la /app/prisma/ || echo "No prisma folder"
-            docker exec pm-tools ls -la /app/node_modules/prisma/ | head -5 || echo "No prisma CLI"
+            echo "=== Creating database tables manually ==="
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              CREATE TYPE client_status AS ENUM ('prospect', 'active', 'on_hold', 'completed', 'archived');
+              CREATE TYPE project_status AS ENUM ('backlog', 'planned', 'active', 'cancelled', 'completed');
+              CREATE TYPE priority AS ENUM ('urgent', 'high', 'medium', 'low');
+              CREATE TYPE task_status AS ENUM ('todo', 'in_progress', 'done');
+            " 2>/dev/null || echo "Types already exist"
 
-            echo "=== Checking DATABASE_URL ==="
-            docker exec pm-tools sh -c 'echo $DATABASE_URL'
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              CREATE TABLE IF NOT EXISTS clients (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                name TEXT NOT NULL,
+                status client_status DEFAULT 'active',
+                industry TEXT,
+                website TEXT,
+                location TEXT,
+                owner TEXT,
+                \"primaryContactName\" TEXT,
+                \"primaryContactEmail\" TEXT,
+                notes TEXT,
+                segment TEXT,
+                \"lastActivityLabel\" TEXT,
+                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
+              );
+            " && echo "Clients table created" || echo "Clients table may already exist"
 
-            echo "=== Syncing database schema with Prisma ==="
-            docker exec pm-tools sh -c "cd /app && node node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate" && echo "Schema sync complete" || echo "Schema sync failed"
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              CREATE TABLE IF NOT EXISTS projects (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                name TEXT NOT NULL,
+                description TEXT,
+                status project_status DEFAULT 'planned',
+                priority priority DEFAULT 'medium',
+                progress INTEGER DEFAULT 0,
+                \"startDate\" TIMESTAMP(3),
+                \"endDate\" TIMESTAMP(3),
+                \"typeLabel\" TEXT,
+                \"durationLabel\" TEXT,
+                tags TEXT[] DEFAULT '{}',
+                members TEXT[] DEFAULT '{}',
+                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+                \"clientId\" TEXT REFERENCES clients(id) ON DELETE SET NULL
+              );
+            " && echo "Projects table created" || echo "Projects table may already exist"
+
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              CREATE TABLE IF NOT EXISTS tasks (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                name TEXT NOT NULL,
+                status task_status DEFAULT 'todo',
+                assignee TEXT,
+                \"startDate\" TIMESTAMP(3),
+                \"endDate\" TIMESTAMP(3),
+                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+                \"projectId\" TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE
+              );
+            " && echo "Tasks table created" || echo "Tasks table may already exist"
+
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              CREATE TABLE IF NOT EXISTS workstreams (
+                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                name TEXT NOT NULL,
+                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+                \"projectId\" TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE
+              );
+            " && echo "Workstreams table created" || echo "Workstreams table may already exist"
+
+            echo "=== Verifying tables ==="
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "\\dt"
 
             echo "=== Final container status ==="
             docker-compose ps
