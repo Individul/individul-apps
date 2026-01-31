@@ -173,10 +173,24 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/pm-tools
-            docker-compose down || true
-            docker-compose build --no-cache
+            echo "=== Stopping containers ==="
+            docker-compose down --remove-orphans || true
+
+            echo "=== Removing old images ==="
+            docker rmi pm-tools_pm-tools pm-tools-pm-tools 2>/dev/null || true
+
+            echo "=== Building with no cache ==="
+            docker-compose build --no-cache --progress=plain 2>&1 | tail -50
+
+            echo "=== Starting containers ==="
             docker-compose up -d
+
+            echo "=== Container status ==="
             docker-compose ps
+
+            echo "=== Container logs ==="
+            sleep 5
+            docker-compose logs --tail=20 pm-tools
 
       - name: Configure nginx for PM Tools
         uses: appleboy/ssh-action@v1.0.3
