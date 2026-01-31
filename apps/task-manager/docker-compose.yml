@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: task-manager-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://taskmanager:secret@db:5432/taskmanager
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - ALLOWED_HOSTS=localhost,127.0.0.1,46.224.209.71
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3002,http://46.224.209.71
+      - DEBUG=false
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_URL=http://46.224.209.71/tasks-api/v1
+    container_name: task-manager-web
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://46.224.209.71/tasks-api/v1
+
+  db:
+    image: postgres:16-alpine
+    container_name: task-manager-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=taskmanager
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=taskmanager
+    volumes:
+      - task-manager-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskmanager"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  task-manager-data:
