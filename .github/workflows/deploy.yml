@@ -207,13 +207,21 @@ jobs:
             echo "=== Waiting for database to be ready ==="
             sleep 15
 
-            echo "=== Dropping old types if they exist ==="
+            echo "=== Dropping old tables and types ==="
             docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              DROP TABLE IF EXISTS workstreams CASCADE;
+              DROP TABLE IF EXISTS tasks CASCADE;
+              DROP TABLE IF EXISTS projects CASCADE;
+              DROP TABLE IF EXISTS clients CASCADE;
+              DROP TYPE IF EXISTS \"ClientStatus\" CASCADE;
+              DROP TYPE IF EXISTS \"ProjectStatus\" CASCADE;
+              DROP TYPE IF EXISTS \"Priority\" CASCADE;
+              DROP TYPE IF EXISTS \"TaskStatus\" CASCADE;
               DROP TYPE IF EXISTS client_status CASCADE;
               DROP TYPE IF EXISTS project_status CASCADE;
               DROP TYPE IF EXISTS priority CASCADE;
               DROP TYPE IF EXISTS task_status CASCADE;
-            " 2>/dev/null || echo "Old types dropped"
+            " 2>/dev/null || echo "Cleanup done"
 
             echo "=== Creating database types ==="
             docker exec pm-tools-db psql -U pmtools -d pmtools -c "
