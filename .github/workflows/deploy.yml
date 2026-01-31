@@ -186,19 +186,19 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "=== BEFORE ==="
-            grep -n "location" /etc/nginx/sites-enabled/default || true
-            echo "=== CLEANING ==="
+            echo "=== Current config ==="
+            cat /etc/nginx/sites-enabled/default
+            echo "=== Adding PM location ==="
             rm -f /etc/nginx/sites-enabled/pm-tools 2>/dev/null || true
-            sed -i '/location \/pm/,/^[[:space:]]*}/d' /etc/nginx/sites-enabled/default
-            echo "=== ADDING ==="
-            sed -i '/^}$/i \    location /pm/ {\n        proxy_pass http://127.0.0.1:3001/;\n        proxy_http_version 1.1;\n        proxy_set_header Host $host;\n    }' /etc/nginx/sites-enabled/default
-            echo "=== AFTER ==="
-            grep -n "location" /etc/nginx/sites-enabled/default || true
-            echo "=== TESTING ==="
-            nginx -t
-            systemctl reload nginx
-            curl -sI http://localhost/pm/ | head -5
+            # Șterge vechiul location /pm dacă există
+            sed -i '/location \/pm/,/}/d' /etc/nginx/sites-enabled/default 2>/dev/null || true
+            # Adaugă location /pm/ (aceeași metodă ca PDF)
+            sed -i '/^[[:space:]]*}[[:space:]]*$/i \            location /pm/ {\n                proxy_pass http://127.0.0.1:3001/;\n            }' /etc/nginx/sites-enabled/default
+            echo "=== After edit ==="
+            cat /etc/nginx/sites-enabled/default
+            nginx -t && systemctl reload nginx
+            echo "=== Test ==="
+            curl -s http://localhost/pm/ | head -c 100
 
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
