@@ -10,6 +10,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   category: string;
+  tags: string[];
   deadline: string | null;
   created_at: string;
   updated_at: string;
@@ -29,6 +30,7 @@ export interface CreateTaskInput {
   status?: TaskStatus;
   priority?: TaskPriority;
   category?: string;
+  tags?: string[];
   deadline?: string | null;
 }
 

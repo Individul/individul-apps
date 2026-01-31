@@ -25,6 +25,7 @@ services:
       context: ./frontend
       args:
         - NEXT_PUBLIC_API_URL=http://46.224.209.71/tasks-api/v1
+        - NEXT_PUBLIC_BASE_PATH=/tasks
     container_name: task-manager-web
     restart: unless-stopped
     ports:

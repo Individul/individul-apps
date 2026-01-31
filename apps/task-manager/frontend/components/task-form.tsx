@@ -41,12 +41,17 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const tagsString = formData.get("tags") as string;
+    const tags = tagsString
+      ? tagsString.split(",").map(t => t.trim()).filter(t => t.length > 0)
+      : [];
     const data = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       status: formData.get("status") as TaskStatus,
       priority: formData.get("priority") as TaskPriority,
       category: formData.get("category") as string,
+      tags,
       deadline: formData.get("deadline") as string || null,
     };
 
@@ -149,6 +154,16 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
               name="category"
               defaultValue={task?.category || ""}
               placeholder="e.g., Work, Personal, Shopping"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tags">Tags</Label>
+            <Input
+              id="tags"
+              name="tags"
+              defaultValue={task?.tags?.join(", ") || ""}
+              placeholder="e.g., urgent, frontend, bug (comma separated)"
             />
           </div>
 

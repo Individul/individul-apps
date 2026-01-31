@@ -27,6 +27,7 @@ class Task(models.Model):
         default=Priority.MEDIUM
     )
     category = models.CharField(max_length=100, blank=True)
+    tags = models.JSONField(default=list, blank=True)
     deadline = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
