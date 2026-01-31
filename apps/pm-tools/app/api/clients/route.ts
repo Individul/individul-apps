@@ -35,8 +35,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(clients)
   } catch (error) {
     console.error("Failed to fetch clients:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
-      { error: "Failed to fetch clients" },
+      { error: "Failed to fetch clients", details: errorMessage },
       { status: 500 }
     )
   }
@@ -64,8 +65,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(client, { status: 201 })
   } catch (error) {
     console.error("Failed to create client:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
-      { error: "Failed to create client" },
+      { error: "Failed to create client", details: errorMessage },
       { status: 500 }
     )
   }
