@@ -145,248 +145,30 @@ jobs:
             nginx -t && systemctl reload nginx
             grep -A2 "location /pdf\|location /api" /etc/nginx/sites-enabled/default
 
-      # ========== Deploy PM Tools ==========
-      - name: Prepare PM Tools directory
+      # ========== Cleanup PM Tools (if exists) ==========
+      - name: Remove PM Tools from server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p /opt/pm-tools
-
-      - name: Copy PM Tools files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "apps/pm-tools/*"
-          target: "/opt/pm-tools/"
-          strip_components: 2
-
-      - name: Build and Deploy PM Tools
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /opt/pm-tools
-            echo "=== Current images ==="
-            docker images | grep -E "pm-tools|REPOSITORY" || true
-
-            echo "=== Stopping and removing containers ==="
-            docker-compose down --remove-orphans || true
+            echo "=== Cleaning up PM Tools ==="
+            # Stop and remove PM Tools containers
+            cd /opt/pm-tools 2>/dev/null && docker-compose down --remove-orphans || true
             docker rm -f pm-tools pm-tools-db 2>/dev/null || true
 
-            echo "=== Removing old images ==="
+            # Remove PM Tools images
             docker rmi -f $(docker images -q "*pm-tools*") 2>/dev/null || true
-            docker rmi -f pm-tools_pm-tools pm-tools-pm-tools 2>/dev/null || true
 
-            echo "=== Pruning docker system ==="
-            docker system prune -f
+            # Remove PM Tools directory
+            rm -rf /opt/pm-tools
 
-            echo "=== Files in /opt/pm-tools ==="
-            ls -la /opt/pm-tools/
+            # Remove PM Tools nginx config
+            rm -f /etc/nginx/pm-tools.conf
+            sed -i '/include \/etc\/nginx\/pm-tools.conf/d' /etc/nginx/sites-enabled/default
 
-            echo "=== Building with no cache ==="
-            docker-compose build --no-cache 2>&1 | tail -100
-
-            echo "=== Starting containers ==="
-            docker-compose up -d
-
-            echo "=== Container status ==="
-            docker-compose ps
-            docker images | grep -E "pm-tools|REPOSITORY" || true
-
-            echo "=== Container logs ==="
-            sleep 10
-            docker-compose logs --tail=30 pm-tools
-
-            echo "=== Waiting for database to be ready ==="
-            sleep 15
-
-            echo "=== Dropping old tables and types ==="
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              DROP TABLE IF EXISTS workstreams CASCADE;
-              DROP TABLE IF EXISTS tasks CASCADE;
-              DROP TABLE IF EXISTS projects CASCADE;
-              DROP TABLE IF EXISTS clients CASCADE;
-              DROP TYPE IF EXISTS \"ClientStatus\" CASCADE;
-              DROP TYPE IF EXISTS \"ProjectStatus\" CASCADE;
-              DROP TYPE IF EXISTS \"Priority\" CASCADE;
-              DROP TYPE IF EXISTS \"TaskStatus\" CASCADE;
-              DROP TYPE IF EXISTS client_status CASCADE;
-              DROP TYPE IF EXISTS project_status CASCADE;
-              DROP TYPE IF EXISTS priority CASCADE;
-              DROP TYPE IF EXISTS task_status CASCADE;
-            " 2>/dev/null || echo "Cleanup done"
-
-            echo "=== Creating database types ==="
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              CREATE TYPE \"ClientStatus\" AS ENUM ('prospect', 'active', 'on_hold', 'completed', 'archived');
-              CREATE TYPE \"ProjectStatus\" AS ENUM ('backlog', 'planned', 'active', 'cancelled', 'completed');
-              CREATE TYPE \"Priority\" AS ENUM ('urgent', 'high', 'medium', 'low');
-              CREATE TYPE \"TaskStatus\" AS ENUM ('todo', 'in_progress', 'done');
-            " 2>/dev/null || echo "Types already exist"
-
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              CREATE TABLE IF NOT EXISTS clients (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-                name TEXT NOT NULL,
-                status \"ClientStatus\" DEFAULT 'active',
-                industry TEXT,
-                website TEXT,
-                location TEXT,
-                owner TEXT,
-                \"primaryContactName\" TEXT,
-                \"primaryContactEmail\" TEXT,
-                notes TEXT,
-                segment TEXT,
-                \"lastActivityLabel\" TEXT,
-                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
-              );
-            " && echo "Clients table created" || echo "Clients table may already exist"
-
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              CREATE TABLE IF NOT EXISTS projects (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-                name TEXT NOT NULL,
-                description TEXT,
-                status \"ProjectStatus\" DEFAULT 'planned',
-                priority \"Priority\" DEFAULT 'medium',
-                progress INTEGER DEFAULT 0,
-                \"startDate\" TIMESTAMP(3),
-                \"endDate\" TIMESTAMP(3),
-                \"typeLabel\" TEXT,
-                \"durationLabel\" TEXT,
-                tags TEXT[] DEFAULT '{}',
-                members TEXT[] DEFAULT '{}',
-                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"clientId\" TEXT REFERENCES clients(id) ON DELETE SET NULL,
-                \"scopeInScope\" TEXT[] DEFAULT '{}',
-                \"scopeOutOfScope\" TEXT[] DEFAULT '{}',
-                outcomes TEXT[] DEFAULT '{}',
-                \"keyFeaturesP0\" TEXT[] DEFAULT '{}',
-                \"keyFeaturesP1\" TEXT[] DEFAULT '{}',
-                \"keyFeaturesP2\" TEXT[] DEFAULT '{}'
-              );
-            " && echo "Projects table created" || echo "Projects table may already exist"
-
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              CREATE TABLE IF NOT EXISTS tasks (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-                name TEXT NOT NULL,
-                status \"TaskStatus\" DEFAULT 'todo',
-                assignee TEXT,
-                \"startDate\" TIMESTAMP(3),
-                \"endDate\" TIMESTAMP(3),
-                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"projectId\" TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE
-              );
-            " && echo "Tasks table created" || echo "Tasks table may already exist"
-
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              CREATE TABLE IF NOT EXISTS workstreams (
-                id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-                name TEXT NOT NULL,
-                \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"projectId\" TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE
-              );
-            " && echo "Workstreams table created" || echo "Workstreams table may already exist"
-
-            echo "=== Adding extended columns to projects table ==="
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"scopeInScope\" TEXT[] DEFAULT '{}';
-              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"scopeOutOfScope\" TEXT[] DEFAULT '{}';
-              ALTER TABLE projects ADD COLUMN IF NOT EXISTS outcomes TEXT[] DEFAULT '{}';
-              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"keyFeaturesP0\" TEXT[] DEFAULT '{}';
-              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"keyFeaturesP1\" TEXT[] DEFAULT '{}';
-              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"keyFeaturesP2\" TEXT[] DEFAULT '{}';
-            " 2>/dev/null || echo "Columns may already exist"
-
-            echo "=== Verifying tables ==="
-            docker exec pm-tools-db psql -U pmtools -d pmtools -c "\\dt"
-
-            echo "=== Final container status ==="
-            docker-compose ps
-            docker-compose logs --tail=20 pm-tools
-
-      - name: Configure nginx for PM Tools
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # Creează fișierul include pentru PM Tools
-            # Next.js uses basePath: '/pm' so no rewrite needed
-            cat > /etc/nginx/pm-tools.conf << 'EOF'
-            location = /pm {
-                return 301 /pm/;
-            }
-            location /pm {
-                proxy_pass http://127.0.0.1:3001;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
-            EOF
-
-            # Adaugă include în server block dacă nu există
-            if ! grep -q "include /etc/nginx/pm-tools.conf" /etc/nginx/sites-enabled/default; then
-              # Găsește linia cu "server {" și adaugă include pe linia următoare
-              sed -i '/server {/a\    include /etc/nginx/pm-tools.conf;' /etc/nginx/sites-enabled/default
-            fi
-
-            echo "=== Config check ==="
-            grep -E "include|location /pm" /etc/nginx/sites-enabled/default
-            cat /etc/nginx/pm-tools.conf
-            echo "=== Nginx test ==="
+            # Reload nginx
             nginx -t && systemctl reload nginx
-            echo "=== Curl test ==="
-            curl -sI http://localhost/pm/ | head -5
 
-      - name: Health check
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            sleep 10
-            echo "=== Container logs ==="
-            cd /opt/pm-tools && docker-compose logs --tail=30 pm-tools
-
-            echo ""
-            echo "=== Test direct to container port 3001 ==="
-            curl -s http://localhost:3001/ | head -c 200
-            echo ""
-            curl -s http://localhost:3001/api/health
-            echo ""
-            curl -s http://localhost:3001/api/clients | head -c 200
-            echo ""
-
-            echo ""
-            echo "=== Test through nginx ==="
-            curl -sf http://localhost/ > /dev/null && echo 'Portal: OK' || echo 'Portal: FAIL'
-            curl -sf http://localhost/pm/ > /dev/null && echo 'PM Tools: OK' || echo 'PM Tools: FAIL'
-            curl -s http://localhost/pm/api/health
-            echo ""
-            curl -sf http://localhost/pm/api/clients > /dev/null && echo 'PM Tools API Clients: OK' || echo 'PM Tools API Clients: FAIL'
-            curl -sf http://localhost/pm/api/projects > /dev/null && echo 'PM Tools API Projects: OK' || echo 'PM Tools API Projects: FAIL'
-
-            echo ""
-            echo "=== Check standalone files ==="
-            docker exec pm-tools ls -la /app/.next/server/app/api/ 2>/dev/null || echo "No /app/.next/server/app/api/ directory"
-            docker exec pm-tools ls -la /app/app/api/ 2>/dev/null || echo "No /app/app/api/ directory"
-
+            echo "PM Tools cleanup complete"
