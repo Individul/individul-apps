@@ -70,6 +70,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    // Log received dates for debugging
+    console.log("Creating project with dates:", {
+      startDate: body.startDate,
+      endDate: body.endDate,
+      parsedStartDate: body.startDate ? new Date(body.startDate).toISOString() : null,
+      parsedEndDate: body.endDate ? new Date(body.endDate).toISOString() : null,
+    })
+
     const project = await prisma.project.create({
       data: {
         name: body.name,
@@ -92,6 +100,13 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Log saved dates for debugging
+    console.log("Saved project dates:", {
+      id: project.id,
+      startDate: project.startDate?.toISOString(),
+      endDate: project.endDate?.toISOString(),
+    })
+
     return NextResponse.json(
       {
         ...project,
@@ -103,8 +118,9 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     console.error("Failed to create project:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
-      { error: "Failed to create project" },
+      { error: "Failed to create project", details: errorMessage },
       { status: 500 }
     )
   }

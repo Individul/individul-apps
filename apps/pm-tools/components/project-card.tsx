@@ -12,6 +12,14 @@ import { PriorityBadge } from "@/components/priority-badge"
 import { ProjectProgress } from "@/components/project-progress"
 import { useRouter } from "next/navigation"
 
+// Helper to ensure we have a Date object
+function toDate(value: Date | string | null | undefined): Date | null {
+  if (!value) return null
+  if (value instanceof Date) return value
+  const parsed = new Date(value)
+  return isNaN(parsed.getTime()) ? null : parsed
+}
+
 type ProjectCardProps = {
   project: Project
   actions?: ReactNode
@@ -62,7 +70,7 @@ function statusConfig(status: Project["status"]) {
 export function ProjectCard({ project, actions, variant = "list" }: ProjectCardProps) {
   const s = statusConfig(project.status)
   const assignee = project.members?.[0]
-  const dueDate = project.endDate
+  const dueDate = toDate(project.endDate)
   const avatarUrl = getAvatarUrl(assignee)
   const isBoard = variant === "board"
   const router = useRouter()

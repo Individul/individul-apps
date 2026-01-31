@@ -13,6 +13,14 @@ import { DEFAULT_VIEW_OPTIONS, type FilterChip, type ViewOptions } from "@/lib/v
 import { chipsToParams, paramsToChips } from "@/lib/url/filters"
 import { Skeleton } from "@/components/ui/skeleton"
 
+// Helper to get timestamp from Date or string
+function getTimestamp(date: Date | string | null | undefined): number {
+  if (!date) return 0
+  if (date instanceof Date) return date.getTime()
+  const parsed = new Date(date)
+  return isNaN(parsed.getTime()) ? 0 : parsed.getTime()
+}
+
 export function ProjectsContent() {
   const router = useRouter()
   const pathname = usePathname()
@@ -114,7 +122,7 @@ export function ProjectsContent() {
     // Ordering
     const sorted = list.slice()
     if (viewOptions.ordering === "alphabetical") sorted.sort((a, b) => a.name.localeCompare(b.name))
-    if (viewOptions.ordering === "date") sorted.sort((a, b) => (a.endDate?.getTime() || 0) - (b.endDate?.getTime() || 0))
+    if (viewOptions.ordering === "date") sorted.sort((a, b) => getTimestamp(a.endDate) - getTimestamp(b.endDate))
     return sorted
   }, [filters, viewOptions, projects])
 

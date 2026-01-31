@@ -3,8 +3,8 @@ export type Project = {
   name: string
   taskCount: number
   progress: number
-  startDate?: Date
-  endDate?: Date
+  startDate?: Date | string | null
+  endDate?: Date | string | null
   status: "backlog" | "planned" | "active" | "cancelled" | "completed"
   priority: "urgent" | "high" | "medium" | "low"
   tags: string[]
@@ -20,8 +20,8 @@ export type Project = {
     name: string
     assignee?: string | null
     status: "todo" | "in_progress" | "done"
-    startDate?: Date | null
-    endDate?: Date | null
+    startDate?: Date | string | null
+    endDate?: Date | string | null
   }>
 }
 

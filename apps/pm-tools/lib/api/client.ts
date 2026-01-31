@@ -32,19 +32,29 @@ export async function apiFetch<T>(
   return response.json()
 }
 
+// Convert Date objects to ISO strings for JSON serialization
+function serializeData(data: unknown): string {
+  return JSON.stringify(data, (key, value) => {
+    if (value instanceof Date) {
+      return value.toISOString()
+    }
+    return value
+  })
+}
+
 export const api = {
   get: <T>(endpoint: string) => apiFetch<T>(endpoint, { method: "GET" }),
 
   post: <T>(endpoint: string, data: unknown) =>
     apiFetch<T>(endpoint, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: serializeData(data),
     }),
 
   put: <T>(endpoint: string, data: unknown) =>
     apiFetch<T>(endpoint, {
       method: "PUT",
-      body: JSON.stringify(data),
+      body: serializeData(data),
     }),
 
   delete: <T>(endpoint: string) =>
