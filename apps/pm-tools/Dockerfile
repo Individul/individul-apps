@@ -23,7 +23,7 @@ RUN npx prisma generate
 
 RUN npm run build
 
-# Production image, copy all the files and run next
+# Production image - use next start instead of standalone
 FROM base AS runner
 RUN apk add --no-cache openssl
 WORKDIR /app
@@ -34,15 +34,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy the full build output and node_modules
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# Copy prisma CLI for migrations
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
 USER nextjs
 
@@ -51,5 +48,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run migrations and start server
-CMD node node_modules/prisma/build/index.js migrate deploy && node server.js
+# Run migrations and start with next start
+CMD npx prisma migrate deploy && npm run start

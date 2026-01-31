@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // Remove standalone for now to debug - run with next start
   basePath: '/pm',
   typescript: {
     ignoreBuildErrors: true,
