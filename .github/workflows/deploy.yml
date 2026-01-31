@@ -186,14 +186,40 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            rm -f /etc/nginx/sites-enabled/pm-tools 2>/dev/null || true
-            if grep -q "location /pm" /etc/nginx/sites-enabled/default; then
-              echo "PM location exists"
+            # Backup și editare manuală
+            cp /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/default.bak
+
+            # Creează fișier temporar cu location block
+            cat > /tmp/pm-loc.txt << 'LOCEOF'
+        location /pm {
+            proxy_pass http://127.0.0.1:3001;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+    LOCEOF
+
+            # Verifică și inserează dacă nu există
+            if ! grep -q "location /pm" /etc/nginx/sites-enabled/default; then
+              # Găsește linia cu "location /" și inserează înainte
+              LINE=$(grep -n "location / {" /etc/nginx/sites-enabled/default | head -1 | cut -d: -f1)
+              if [ -n "$LINE" ]; then
+                head -n $((LINE-1)) /etc/nginx/sites-enabled/default > /tmp/nginx-new.conf
+                cat /tmp/pm-loc.txt >> /tmp/nginx-new.conf
+                tail -n +$LINE /etc/nginx/sites-enabled/default >> /tmp/nginx-new.conf
+                mv /tmp/nginx-new.conf /etc/nginx/sites-enabled/default
+                echo "PM location inserted at line $LINE"
+              fi
             else
-              sed -i 's|location / {|location /pm { proxy_pass http://127.0.0.1:3001; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }\n    location / {|' /etc/nginx/sites-enabled/default
+              echo "PM location already exists"
             fi
-            nginx -t && systemctl reload nginx || true
-            echo "Done"
+
+            nginx -t && systemctl reload nginx
+            echo "Testing /pm:"
+            curl -sI http://localhost/pm | head -3
 
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
