@@ -50,5 +50,9 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Start standalone server (migrations will be run from workflow)
-CMD echo "Starting PM Tools standalone server..." && node server.js
+# Sync database schema and start server
+CMD echo "Starting PM Tools..." && \
+    echo "Syncing database schema..." && \
+    node node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate 2>&1 || echo "Schema sync warning" && \
+    echo "Starting Next.js standalone server..." && \
+    node server.js
