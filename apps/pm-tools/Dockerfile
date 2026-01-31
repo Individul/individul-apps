@@ -50,5 +50,9 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Start standalone server (skip migrations for now to debug)
-CMD echo "Starting PM Tools standalone server..." && node server.js
+# Run migrations and start standalone server
+CMD echo "Starting PM Tools..." && \
+    echo "Running Prisma migrations..." && \
+    node node_modules/prisma/build/index.js migrate deploy && \
+    echo "Starting Next.js standalone server..." && \
+    node server.js
