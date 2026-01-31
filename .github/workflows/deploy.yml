@@ -186,36 +186,31 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            python3 -c "
-            import re
-            with open('/etc/nginx/sites-enabled/default', 'r') as f:
-                content = f.read()
-
-            # Șterge location /pm vechi
-            content = re.sub(r'location /pm[^}]*}', '', content, flags=re.DOTALL)
-
-            # Adaugă location /pm după location /api/
-            pm_block = '''
+            # Creează fișierul include pentru PM Tools
+            cat > /etc/nginx/pm-tools.conf << 'EOF'
             location /pm/ {
                 proxy_pass http://127.0.0.1:3001/;
                 proxy_http_version 1.1;
-                proxy_set_header Host \$host;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
             }
-            '''
+            EOF
 
-            # Inserează înainte de ultima acoladă
-            if 'location /pm' not in content:
-                content = re.sub(r'(\n})(\s*\Z)', pm_block + r'\1\2', content)
+            # Adaugă include în server block dacă nu există
+            if ! grep -q "include /etc/nginx/pm-tools.conf" /etc/nginx/sites-enabled/default; then
+              # Găsește linia cu "server {" și adaugă include pe linia următoare
+              sed -i '/server {/a\    include /etc/nginx/pm-tools.conf;' /etc/nginx/sites-enabled/default
+            fi
 
-            with open('/etc/nginx/sites-enabled/default', 'w') as f:
-                f.write(content)
-
-            print('Done')
-            "
-            echo "Checking:"
-            grep -A2 "location /pm" /etc/nginx/sites-enabled/default || echo "NOT FOUND!"
+            echo "=== Config check ==="
+            grep -E "include|location /pm" /etc/nginx/sites-enabled/default
+            cat /etc/nginx/pm-tools.conf
+            echo "=== Nginx test ==="
             nginx -t && systemctl reload nginx
-            curl -s http://localhost/pm/ | head -c 100
+            echo "=== Curl test ==="
+            curl -sI http://localhost/pm/ | head -5
 
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
