@@ -204,11 +204,18 @@ jobs:
             sleep 10
             docker-compose logs --tail=30 pm-tools
 
+            echo "=== Waiting for database to be ready ==="
+            sleep 15
+
             echo "=== Running Prisma migrations ==="
-            docker exec pm-tools sh -c "cd /app && node node_modules/prisma/build/index.js migrate deploy" 2>&1 || echo "Migration failed or already applied"
+            docker exec pm-tools sh -c "node node_modules/prisma/build/index.js migrate deploy 2>&1" || {
+              echo "Migration failed! Trying direct push..."
+              docker exec pm-tools sh -c "node node_modules/prisma/build/index.js db push 2>&1" || echo "Push also failed"
+            }
 
             echo "=== Final container status ==="
             docker-compose ps
+            docker-compose logs --tail=20 pm-tools
 
       - name: Configure nginx for PM Tools
         uses: appleboy/ssh-action@v1.0.3
