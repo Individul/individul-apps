@@ -34,12 +34,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the full build output and node_modules
-COPY --from=builder /app/public ./public
+# Copy the full build output and node_modules (with correct ownership)
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 USER nextjs
 
@@ -48,5 +48,10 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run migrations and start with next start
-CMD npx prisma migrate deploy && npm run start
+# Run migrations and start with next start (with error handling)
+CMD set -e && \
+    echo "Starting PM Tools..." && \
+    echo "Running Prisma migrations..." && \
+    npx prisma migrate deploy && \
+    echo "Starting Next.js server..." && \
+    npm run start
