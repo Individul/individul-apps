@@ -207,19 +207,27 @@ jobs:
             echo "=== Waiting for database to be ready ==="
             sleep 15
 
-            echo "=== Creating database tables manually ==="
+            echo "=== Dropping old types if they exist ==="
             docker exec pm-tools-db psql -U pmtools -d pmtools -c "
-              CREATE TYPE client_status AS ENUM ('prospect', 'active', 'on_hold', 'completed', 'archived');
-              CREATE TYPE project_status AS ENUM ('backlog', 'planned', 'active', 'cancelled', 'completed');
-              CREATE TYPE priority AS ENUM ('urgent', 'high', 'medium', 'low');
-              CREATE TYPE task_status AS ENUM ('todo', 'in_progress', 'done');
+              DROP TYPE IF EXISTS client_status CASCADE;
+              DROP TYPE IF EXISTS project_status CASCADE;
+              DROP TYPE IF EXISTS priority CASCADE;
+              DROP TYPE IF EXISTS task_status CASCADE;
+            " 2>/dev/null || echo "Old types dropped"
+
+            echo "=== Creating database types ==="
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              CREATE TYPE \"ClientStatus\" AS ENUM ('prospect', 'active', 'on_hold', 'completed', 'archived');
+              CREATE TYPE \"ProjectStatus\" AS ENUM ('backlog', 'planned', 'active', 'cancelled', 'completed');
+              CREATE TYPE \"Priority\" AS ENUM ('urgent', 'high', 'medium', 'low');
+              CREATE TYPE \"TaskStatus\" AS ENUM ('todo', 'in_progress', 'done');
             " 2>/dev/null || echo "Types already exist"
 
             docker exec pm-tools-db psql -U pmtools -d pmtools -c "
               CREATE TABLE IF NOT EXISTS clients (
                 id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
                 name TEXT NOT NULL,
-                status client_status DEFAULT 'active',
+                status \"ClientStatus\" DEFAULT 'active',
                 industry TEXT,
                 website TEXT,
                 location TEXT,
@@ -239,8 +247,8 @@ jobs:
                 id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
                 name TEXT NOT NULL,
                 description TEXT,
-                status project_status DEFAULT 'planned',
-                priority priority DEFAULT 'medium',
+                status \"ProjectStatus\" DEFAULT 'planned',
+                priority \"Priority\" DEFAULT 'medium',
                 progress INTEGER DEFAULT 0,
                 \"startDate\" TIMESTAMP(3),
                 \"endDate\" TIMESTAMP(3),
@@ -258,7 +266,7 @@ jobs:
               CREATE TABLE IF NOT EXISTS tasks (
                 id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
                 name TEXT NOT NULL,
-                status task_status DEFAULT 'todo',
+                status \"TaskStatus\" DEFAULT 'todo',
                 assignee TEXT,
                 \"startDate\" TIMESTAMP(3),
                 \"endDate\" TIMESTAMP(3),
