@@ -31,6 +31,13 @@ export type Project = {
   clientId?: string | null
   taskCount: number
   tasks: Task[]
+  // Extended details
+  scopeInScope?: string[]
+  scopeOutOfScope?: string[]
+  outcomes?: string[]
+  keyFeaturesP0?: string[]
+  keyFeaturesP1?: string[]
+  keyFeaturesP2?: string[]
 }
 
 export type CreateProjectInput = {

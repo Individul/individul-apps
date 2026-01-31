@@ -266,7 +266,13 @@ jobs:
                 members TEXT[] DEFAULT '{}',
                 \"createdAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
                 \"updatedAt\" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-                \"clientId\" TEXT REFERENCES clients(id) ON DELETE SET NULL
+                \"clientId\" TEXT REFERENCES clients(id) ON DELETE SET NULL,
+                \"scopeInScope\" TEXT[] DEFAULT '{}',
+                \"scopeOutOfScope\" TEXT[] DEFAULT '{}',
+                outcomes TEXT[] DEFAULT '{}',
+                \"keyFeaturesP0\" TEXT[] DEFAULT '{}',
+                \"keyFeaturesP1\" TEXT[] DEFAULT '{}',
+                \"keyFeaturesP2\" TEXT[] DEFAULT '{}'
               );
             " && echo "Projects table created" || echo "Projects table may already exist"
 

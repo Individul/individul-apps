@@ -78,6 +78,14 @@ model Project {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  // Extended project details
+  scopeInScope    String[]    @default([])
+  scopeOutOfScope String[]    @default([])
+  outcomes        String[]    @default([])
+  keyFeaturesP0   String[]    @default([])
+  keyFeaturesP1   String[]    @default([])
+  keyFeaturesP2   String[]    @default([])
+
   clientId String?
   client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
 

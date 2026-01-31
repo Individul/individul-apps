@@ -54,6 +54,13 @@ export async function GET(request: NextRequest) {
       clientId: p.clientId,
       taskCount: p._count.tasks,
       tasks: [],
+      // Extended details
+      scopeInScope: p.scopeInScope,
+      scopeOutOfScope: p.scopeOutOfScope,
+      outcomes: p.outcomes,
+      keyFeaturesP0: p.keyFeaturesP0,
+      keyFeaturesP1: p.keyFeaturesP1,
+      keyFeaturesP2: p.keyFeaturesP2,
     }))
 
     return NextResponse.json(transformed)
@@ -92,6 +99,13 @@ export async function POST(request: NextRequest) {
         tags: body.tags || [],
         members: body.members || [],
         clientId: body.clientId,
+        // Extended details
+        scopeInScope: body.scopeInScope || [],
+        scopeOutOfScope: body.scopeOutOfScope || [],
+        outcomes: body.outcomes || [],
+        keyFeaturesP0: body.keyFeaturesP0 || [],
+        keyFeaturesP1: body.keyFeaturesP1 || [],
+        keyFeaturesP2: body.keyFeaturesP2 || [],
       },
       include: {
         client: {
