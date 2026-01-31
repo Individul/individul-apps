@@ -19,7 +19,10 @@ import {
 } from "../../ui/command";
 import { Check, X, CornersOut, Star, CalendarBlank, UserCircle, Spinner, List, Paperclip, Microphone, Rows, ChartBar, Tag } from "@phosphor-icons/react/dist/ssr";
 import { ProjectDescriptionEditor } from "../ProjectDescriptionEditor";
-import { clients, type Client } from "@/lib/data/clients";
+import { useClients } from "@/lib/hooks/use-clients";
+import { type Client } from "@/lib/api/clients";
+import { createProject, type Priority } from "@/lib/api/projects";
+import { toast } from "sonner";
 
 // --- Mock Data ---
 
@@ -186,7 +189,9 @@ export function StepQuickCreate({
   onCreate,
   onExpandChange,
 }: StepQuickCreateProps) {
+  const { clients } = useClients();
   const [title, setTitle] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // Description is now managed by Tiptap editor
 
   // Data State
@@ -223,9 +228,55 @@ export function StepQuickCreate({
     return () => clearTimeout(timer);
   }, []);
 
+  const handleCreate = async () => {
+    if (!title.trim()) {
+      toast.error("Project title is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Map status to project status
+      const statusMap: Record<string, "backlog" | "planned" | "active" | "cancelled" | "completed"> = {
+        backlog: "backlog",
+        todo: "planned",
+        "in-progress": "active",
+        done: "completed",
+        canceled: "cancelled",
+      };
+
+      // Map priority
+      const priorityMap: Record<string, Priority> = {
+        "no-priority": "low",
+        urgent: "urgent",
+        high: "high",
+        medium: "medium",
+        low: "low",
+      };
+
+      await createProject({
+        name: title.trim(),
+        status: statusMap[status.id] || "planned",
+        priority: priority ? priorityMap[priority.id] || "medium" : "medium",
+        startDate: startDate,
+        endDate: targetDate,
+        members: assignee ? [assignee.name] : [],
+        tags: selectedTag ? [selectedTag.label] : [],
+        clientId: client?.id,
+        typeLabel: sprintType?.label,
+      });
+
+      onCreate();
+    } catch (error) {
+      toast.error("Failed to create project");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-      onCreate();
+      handleCreate();
     }
   };
 
@@ -547,11 +598,12 @@ export function StepQuickCreate({
           </div>
 
           <button
-            onClick={onCreate}
-            className="bg-primary hover:bg-primary/90 flex gap-3 h-10 items-center justify-center px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            onClick={handleCreate}
+            disabled={isSubmitting}
+            className="bg-primary hover:bg-primary/90 disabled:opacity-50 flex gap-3 h-10 items-center justify-center px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
             <span className="font-medium text-primary-foreground text-sm leading-5">
-              Create Project
+              {isSubmitting ? "Creating..." : "Create Project"}
             </span>
           </button>
         </div>

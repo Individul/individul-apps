@@ -15,6 +15,7 @@ import { StepReview } from "./steps/StepReview";
 import { StepQuickCreate } from "./steps/StepQuickCreate";
 import { CaretLeft, CaretRight, X } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/utils";
+import { createProject } from "@/lib/api/projects";
 
 const QUICK_CREATE_STEP = 100;
 
@@ -38,6 +39,7 @@ export function ProjectWizard({ onClose, onCreate }: ProjectWizardProps) {
     stakeholderIds: [],
     addStarterTasks: false,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Step 0 is Mode Selection. It's separate from the numbered stepper.
   // The numbered stepper starts at Step 1 (Intent).
@@ -220,13 +222,27 @@ export function ProjectWizard({ onClose, onCreate }: ProjectWizardProps) {
                                 <>
                                     <Button variant="outline">Save as template</Button>
                                     <Button
-                                      onClick={() => {
-                                        onCreate?.();
-                                        toast.success("Project created successfully");
-                                        onClose();
+                                      disabled={isSubmitting}
+                                      onClick={async () => {
+                                        setIsSubmitting(true);
+                                        try {
+                                          await createProject({
+                                            name: data.description || "New Project",
+                                            status: "planned",
+                                            priority: "medium",
+                                            members: data.ownerId ? [data.ownerId] : [],
+                                          });
+                                          toast.success("Project created successfully");
+                                          onCreate?.();
+                                          onClose();
+                                        } catch (error) {
+                                          toast.error("Failed to create project");
+                                        } finally {
+                                          setIsSubmitting(false);
+                                        }
                                       }}
                                     >
-                                      Create project
+                                      {isSubmitting ? "Creating..." : "Create project"}
                                     </Button>
                                 </>
                             ) : (

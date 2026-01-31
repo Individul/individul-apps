@@ -173,11 +173,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/pm-tools
-            docker stop pm-tools 2>/dev/null || true
-            docker rm pm-tools 2>/dev/null || true
-            docker build -t pm-tools .
-            docker run -d --name pm-tools --restart unless-stopped -p 3001:3000 pm-tools
-            docker ps | grep pm-tools
+            docker-compose down || true
+            docker-compose build --no-cache
+            docker-compose up -d
+            docker-compose ps
 
       - name: Configure nginx for PM Tools
         uses: appleboy/ssh-action@v1.0.3
@@ -219,5 +218,8 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            sleep 10
             curl -sf http://localhost/ > /dev/null && echo 'Portal: OK' || echo 'Portal: FAIL'
             curl -sf http://localhost/pm/ > /dev/null && echo 'PM Tools: OK' || echo 'PM Tools: FAIL'
+            curl -sf http://localhost/pm/api/clients > /dev/null && echo 'PM Tools API Clients: OK' || echo 'PM Tools API Clients: FAIL'
+            curl -sf http://localhost/pm/api/projects > /dev/null && echo 'PM Tools API Projects: OK' || echo 'PM Tools API Projects: FAIL'

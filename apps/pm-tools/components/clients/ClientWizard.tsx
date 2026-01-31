@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Client, ClientStatus, upsertClient } from "@/lib/data/clients"
+import { Client, ClientStatus, createClient, updateClient } from "@/lib/api/clients"
 import { X } from "@phosphor-icons/react/dist/ssr"
 
 interface ClientWizardProps {
@@ -32,7 +32,7 @@ export function ClientWizard({ mode, initialClient, onClose, onSubmit }: ClientW
 
   const isEdit = mode === "edit"
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast.error("Client name is required")
       return
@@ -40,9 +40,7 @@ export function ClientWizard({ mode, initialClient, onClose, onSubmit }: ClientW
 
     setIsSubmitting(true)
     try {
-      const id = isEdit ? initialClient!.id : name.trim().toLowerCase().replace(/\s+/g, "-")
-      const payload: Client = {
-        id,
+      const payload = {
         name: name.trim(),
         status,
         primaryContactName: primaryContactName.trim() || undefined,
@@ -54,10 +52,17 @@ export function ClientWizard({ mode, initialClient, onClose, onSubmit }: ClientW
         notes: notes.trim() || undefined,
       }
 
-      const saved = upsertClient(payload)
+      let saved: Client
+      if (isEdit && initialClient) {
+        saved = await updateClient(initialClient.id, payload)
+      } else {
+        saved = await createClient(payload)
+      }
       toast.success(isEdit ? "Client updated" : "Client created")
       onSubmit?.(saved)
       onClose()
+    } catch (error) {
+      toast.error(isEdit ? "Failed to update client" : "Failed to create client")
     } finally {
       setIsSubmitting(false)
     }

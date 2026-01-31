@@ -3,23 +3,25 @@ export type Project = {
   name: string
   taskCount: number
   progress: number
-  startDate: Date
-  endDate: Date
+  startDate?: Date
+  endDate?: Date
   status: "backlog" | "planned" | "active" | "cancelled" | "completed"
   priority: "urgent" | "high" | "medium" | "low"
   tags: string[]
   members: string[]
   // Optional subtitle fields for card/list view
-  client?: string
-  typeLabel?: string
-  durationLabel?: string
+  client?: string | null
+  clientId?: string | null
+  typeLabel?: string | null
+  durationLabel?: string | null
+  description?: string | null
   tasks: Array<{
     id: string
     name: string
-    assignee: string
-    status: "todo" | "in-progress" | "done"
-    startDate: Date
-    endDate: Date
+    assignee?: string | null
+    status: "todo" | "in_progress" | "done"
+    startDate?: Date | null
+    endDate?: Date | null
   }>
 }
 
@@ -33,7 +35,14 @@ export type FilterCounts = {
   members?: Record<string, number>
 }
 
-export function computeFilterCounts(list: Project[]): FilterCounts {
+type ProjectLike = {
+  status: string
+  priority: string
+  tags: string[]
+  members: string[]
+}
+
+export function computeFilterCounts(list: ProjectLike[]): FilterCounts {
   const res: FilterCounts = {
     status: {},
     priority: {},

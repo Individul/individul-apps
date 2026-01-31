@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +21,9 @@ import { CaretRight, CaretUpDown, ArrowDown, ArrowUp, DotsThreeVertical, Plus, M
 import { toast } from "sonner"
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { clients, getProjectCountForClient, type ClientStatus } from "@/lib/data/clients"
-import { projects } from "@/lib/data/projects"
+import { useClients } from "@/lib/hooks/use-clients"
+import { useProjects } from "@/lib/hooks/use-projects"
+import { type ClientStatus } from "@/lib/api/clients"
 import { ClientWizard } from "@/components/clients/ClientWizard"
 import { ClientDetailsDrawer } from "@/components/clients/ClientDetailsDrawer"
 
@@ -115,6 +117,9 @@ function ClientProjectsBadge({
 }
 
 export function ClientsContent() {
+  const { clients, isLoading, refresh, deleteClient } = useClients()
+  const { projects } = useProjects()
+
   const [query, setQuery] = useState("")
   const [isWizardOpen, setIsWizardOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<"all" | ClientStatus>("all")
@@ -124,6 +129,10 @@ export function ClientsContent() {
   const [pageSize, setPageSize] = useState(10)
   const [page, setPage] = useState(1)
   const [activeClientId, setActiveClientId] = useState<string | null>(null)
+
+  const getProjectCountForClient = (clientName: string) => {
+    return projects.filter((p) => p.client === clientName).length
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -165,7 +174,7 @@ export function ClientsContent() {
     })
 
     return sorted
-  }, [query, statusFilter, sortKey, sortDirection])
+  }, [clients, projects, query, statusFilter, sortKey, sortDirection])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const currentPage = Math.min(page, totalPages)
@@ -209,10 +218,22 @@ export function ClientsContent() {
 
   const clearSelection = () => setSelectedIds(new Set())
 
-  const handleArchiveSelected = () => {
+  const handleArchiveSelected = async () => {
     if (!selectedIds.size) return
-    toast.success(`Archived ${selectedIds.size} client${selectedIds.size > 1 ? "s" : ""} (mock)`)
-    clearSelection()
+    try {
+      for (const id of selectedIds) {
+        await deleteClient(id)
+      }
+      toast.success(`Archived ${selectedIds.size} client${selectedIds.size > 1 ? "s" : ""}`)
+      clearSelection()
+    } catch {
+      toast.error("Failed to archive clients")
+    }
+  }
+
+  const handleClientCreated = () => {
+    setIsWizardOpen(false)
+    refresh()
   }
 
   const goToPage = (next: number) => {
@@ -234,6 +255,23 @@ export function ClientsContent() {
     if (end < totalPages) pages.push(totalPages)
     return pages
   })()
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 flex-col bg-background mx-2 my-2 border border-border rounded-lg min-w-0 p-6">
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-3/4" />
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col bg-background mx-2 my-2 border border-border rounded-lg min-w-0">
@@ -607,7 +645,7 @@ export function ClientsContent() {
         </div>
       </div>
       {isWizardOpen && (
-        <ClientWizard mode="create" onClose={() => setIsWizardOpen(false)} />
+        <ClientWizard mode="create" onClose={handleClientCreated} />
       )}
       <ClientDetailsDrawer clientId={activeClientId} onClose={() => setActiveClientId(null)} />
     </div>

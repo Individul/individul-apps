@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum ClientStatus {
+  prospect
+  active
+  on_hold
+  completed
+  archived
+}
+
+enum ProjectStatus {
+  backlog
+  planned
+  active
+  cancelled
+  completed
+}
+
+enum Priority {
+  urgent
+  high
+  medium
+  low
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  done
+}
+
+// Models
+model Client {
+  id                  String       @id @default(cuid())
+  name                String
+  status              ClientStatus @default(active)
+  industry            String?
+  website             String?
+  location            String?
+  owner               String?
+  primaryContactName  String?
+  primaryContactEmail String?
+  notes               String?
+  segment             String?
+  lastActivityLabel   String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  projects Project[]
+
+  @@map("clients")
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  name          String
+  description   String?
+  status        ProjectStatus @default(planned)
+  priority      Priority      @default(medium)
+  progress      Int           @default(0)
+  startDate     DateTime?
+  endDate       DateTime?
+  typeLabel     String?
+  durationLabel String?
+  tags          String[]      @default([])
+  members       String[]      @default([])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  tasks       Task[]
+  workstreams Workstream[]
+
+  @@map("projects")
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  name      String
+  status    TaskStatus @default(todo)
+  assignee  String?
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
+}
+
+model Workstream {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("workstreams")
+}
