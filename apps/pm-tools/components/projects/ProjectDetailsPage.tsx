@@ -5,8 +5,9 @@ import { LinkSimple, SquareHalf } from "@phosphor-icons/react/dist/ssr"
 import { toast } from "sonner"
 import { AnimatePresence, motion } from "motion/react"
 
-import type { ProjectDetails } from "@/lib/data/project-details"
-import { getProjectDetailsById } from "@/lib/data/project-details"
+import type { ProjectDetails, User } from "@/lib/data/project-details"
+import { fetchProject, type Project } from "@/lib/api/projects"
+import { getAvatarUrl } from "@/lib/assets/avatars"
 import { Breadcrumbs } from "@/components/projects/Breadcrumbs"
 import { ProjectHeader } from "@/components/projects/ProjectHeader"
 import { ScopeColumns } from "@/components/projects/ScopeColumns"
@@ -32,6 +33,85 @@ type ProjectDetailsPageProps = {
 type LoadState =
   | { status: "loading" }
   | { status: "ready"; project: ProjectDetails }
+  | { status: "error"; message: string }
+
+// Convert API Project to ProjectDetails format
+function projectToDetails(p: Project): ProjectDetails {
+  const picUsers: User[] = p.members.map((name) => ({
+    id: name.trim().toLowerCase().replace(/\s+/g, "-"),
+    name,
+    avatarUrl: getAvatarUrl(name),
+    role: "PIC",
+  }))
+
+  const endDate = p.endDate ? new Date(p.endDate) : new Date()
+
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description || (p.client ? `Project for ${p.client}.` : ""),
+    meta: {
+      priorityLabel: p.priority.charAt(0).toUpperCase() + p.priority.slice(1),
+      locationLabel: "",
+      sprintLabel: p.typeLabel && p.durationLabel ? `${p.typeLabel} ${p.durationLabel}` : p.durationLabel ?? "",
+      lastSyncLabel: "Just now",
+    },
+    scope: {
+      inScope: [],
+      outOfScope: [],
+    },
+    outcomes: [],
+    keyFeatures: {
+      p0: [],
+      p1: [],
+      p2: [],
+    },
+    workstreams: [],
+    timelineTasks: [],
+    time: {
+      estimateLabel: "",
+      dueDate: endDate,
+      daysRemainingLabel: "",
+      progressPercent: p.progress,
+    },
+    backlog: {
+      statusLabel: p.status === "active" ? "Active" : p.status === "completed" ? "Completed" : p.status === "cancelled" ? "Cancelled" : p.status === "backlog" ? "Backlog" : "Planned",
+      groupLabel: "None",
+      priorityLabel: p.priority.charAt(0).toUpperCase() + p.priority.slice(1),
+      labelBadge: "",
+      picUsers,
+      supportUsers: [],
+    },
+    quickLinks: [],
+    files: [],
+    notes: [],
+    source: {
+      id: p.id,
+      name: p.name,
+      taskCount: p.taskCount,
+      progress: p.progress,
+      startDate: p.startDate ? new Date(p.startDate) : undefined,
+      endDate: p.endDate ? new Date(p.endDate) : undefined,
+      status: p.status,
+      priority: p.priority,
+      tags: p.tags,
+      members: p.members,
+      client: p.client,
+      clientId: p.clientId,
+      typeLabel: p.typeLabel,
+      durationLabel: p.durationLabel,
+      description: p.description,
+      tasks: p.tasks.map(t => ({
+        id: t.id,
+        name: t.name,
+        assignee: t.assignee,
+        status: t.status,
+        startDate: t.startDate ? new Date(t.startDate) : null,
+        endDate: t.endDate ? new Date(t.endDate) : null,
+      })),
+    },
+  }
+}
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   const [state, setState] = useState<LoadState>({ status: "loading" })
@@ -42,16 +122,18 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
     let cancelled = false
     setState({ status: "loading" })
 
-    const delay = 600 + Math.floor(Math.random() * 301)
-    const t = setTimeout(() => {
-      if (cancelled) return
-      const project = getProjectDetailsById(projectId)
-      setState({ status: "ready", project })
-    }, delay)
+    fetchProject(projectId)
+      .then((project) => {
+        if (cancelled) return
+        setState({ status: "ready", project: projectToDetails(project) })
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setState({ status: "error", message: err.message || "Failed to load project" })
+      })
 
     return () => {
       cancelled = true
-      clearTimeout(t)
     }
   }, [projectId])
 
@@ -87,6 +169,15 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
 
   if (state.status === "loading") {
     return <ProjectDetailsSkeleton />
+  }
+
+  if (state.status === "error") {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center bg-background mx-2 my-2 border border-border rounded-lg min-w-0 p-8">
+        <p className="text-lg font-medium text-foreground">Project not found</p>
+        <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>
+      </div>
+    )
   }
 
   const project = state.project
