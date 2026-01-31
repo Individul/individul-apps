@@ -23,7 +23,7 @@ RUN npx prisma generate
 
 RUN npm run build
 
-# Production image - use next start instead of standalone
+# Production image - standalone mode
 FROM base AS runner
 RUN apk add --no-cache openssl
 WORKDIR /app
@@ -34,12 +34,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the full build output and node_modules (with correct ownership)
+# Copy standalone output and required files
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 
 USER nextjs
 
@@ -48,10 +50,10 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run migrations and start with next start (with error handling)
+# Run migrations and start standalone server
 CMD set -e && \
     echo "Starting PM Tools..." && \
     echo "Running Prisma migrations..." && \
-    npx prisma migrate deploy && \
-    echo "Starting Next.js server..." && \
-    npm run start
+    node node_modules/prisma/build/index.js migrate deploy && \
+    echo "Starting Next.js standalone server..." && \
+    node server.js
