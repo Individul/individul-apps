@@ -186,18 +186,36 @@ jobs:
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            rm -f /etc/nginx/sites-enabled/pm-tools 2>/dev/null || true
-            echo "Current locations:"
-            grep "location /" /etc/nginx/sites-enabled/default
-            echo "---"
-            # Șterge orice location /pm existent
-            sed -i '/location \/pm/,/^[[:space:]]*}/d' /etc/nginx/sites-enabled/default
-            # Inserează location /pm după location /api/
-            sed -i '/location \/api\//,/}/{ /}/a\            location /pm/ { proxy_pass http://127.0.0.1:3001/; }
-            }' /etc/nginx/sites-enabled/default
-            echo "After edit:"
-            grep "location /" /etc/nginx/sites-enabled/default
+            python3 -c "
+            import re
+            with open('/etc/nginx/sites-enabled/default', 'r') as f:
+                content = f.read()
+
+            # Șterge location /pm vechi
+            content = re.sub(r'location /pm[^}]*}', '', content, flags=re.DOTALL)
+
+            # Adaugă location /pm după location /api/
+            pm_block = '''
+            location /pm/ {
+                proxy_pass http://127.0.0.1:3001/;
+                proxy_http_version 1.1;
+                proxy_set_header Host \$host;
+            }
+            '''
+
+            # Inserează înainte de ultima acoladă
+            if 'location /pm' not in content:
+                content = re.sub(r'(\n})(\s*\Z)', pm_block + r'\1\2', content)
+
+            with open('/etc/nginx/sites-enabled/default', 'w') as f:
+                f.write(content)
+
+            print('Done')
+            "
+            echo "Checking:"
+            grep -A2 "location /pm" /etc/nginx/sites-enabled/default || echo "NOT FOUND!"
             nginx -t && systemctl reload nginx
+            curl -s http://localhost/pm/ | head -c 100
 
       - name: Health check
         uses: appleboy/ssh-action@v1.0.3
