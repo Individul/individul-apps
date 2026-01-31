@@ -300,6 +300,16 @@ jobs:
               );
             " && echo "Workstreams table created" || echo "Workstreams table may already exist"
 
+            echo "=== Adding extended columns to projects table ==="
+            docker exec pm-tools-db psql -U pmtools -d pmtools -c "
+              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"scopeInScope\" TEXT[] DEFAULT '{}';
+              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"scopeOutOfScope\" TEXT[] DEFAULT '{}';
+              ALTER TABLE projects ADD COLUMN IF NOT EXISTS outcomes TEXT[] DEFAULT '{}';
+              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"keyFeaturesP0\" TEXT[] DEFAULT '{}';
+              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"keyFeaturesP1\" TEXT[] DEFAULT '{}';
+              ALTER TABLE projects ADD COLUMN IF NOT EXISTS \"keyFeaturesP2\" TEXT[] DEFAULT '{}';
+            " 2>/dev/null || echo "Columns may already exist"
+
             echo "=== Verifying tables ==="
             docker exec pm-tools-db psql -U pmtools -d pmtools -c "\\dt"
 
