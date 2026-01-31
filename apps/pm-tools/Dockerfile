@@ -43,6 +43,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 
+# Create startup script before switching user
+RUN printf '#!/bin/sh\nset -e\necho "=== PM Tools Startup ==="\necho "Working dir: $(pwd)"\necho "Prisma files:"\nls -la prisma/ 2>/dev/null || echo "No prisma dir"\necho "DATABASE_URL: $DATABASE_URL"\necho "Running db push..."\nnode node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate 2>&1 || echo "db push failed"\necho "Starting server..."\nexec node server.js\n' > /app/start.sh && \
+    chmod +x /app/start.sh && \
+    chown nextjs:nodejs /app/start.sh
+
 USER nextjs
 
 EXPOSE 3000
@@ -50,9 +55,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Sync database schema and start server
-CMD echo "Starting PM Tools..." && \
-    echo "Syncing database schema..." && \
-    node node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate 2>&1 || echo "Schema sync warning" && \
-    echo "Starting Next.js standalone server..." && \
-    node server.js
+CMD ["/app/start.sh"]
