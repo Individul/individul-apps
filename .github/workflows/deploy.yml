@@ -207,8 +207,15 @@ jobs:
             echo "=== Waiting for database to be ready ==="
             sleep 15
 
+            echo "=== Checking prisma files in container ==="
+            docker exec pm-tools ls -la /app/prisma/ || echo "No prisma folder"
+            docker exec pm-tools ls -la /app/node_modules/prisma/ | head -5 || echo "No prisma CLI"
+
+            echo "=== Checking DATABASE_URL ==="
+            docker exec pm-tools sh -c 'echo $DATABASE_URL'
+
             echo "=== Syncing database schema with Prisma ==="
-            docker exec pm-tools sh -c "node node_modules/prisma/build/index.js db push --accept-data-loss 2>&1" && echo "Schema sync complete" || echo "Schema sync failed"
+            docker exec pm-tools sh -c "cd /app && node node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate" && echo "Schema sync complete" || echo "Schema sync failed"
 
             echo "=== Final container status ==="
             docker-compose ps
