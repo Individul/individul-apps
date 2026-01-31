@@ -225,7 +225,28 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sleep 10
+            echo "=== Container logs ==="
+            cd /opt/pm-tools && docker-compose logs --tail=30 pm-tools
+
+            echo ""
+            echo "=== Test direct to container port 3001 ==="
+            curl -s http://localhost:3001/ | head -c 200
+            echo ""
+            curl -s http://localhost:3001/api/health
+            echo ""
+            curl -s http://localhost:3001/api/clients | head -c 200
+            echo ""
+
+            echo ""
+            echo "=== Test through nginx ==="
             curl -sf http://localhost/ > /dev/null && echo 'Portal: OK' || echo 'Portal: FAIL'
             curl -sf http://localhost/pm/ > /dev/null && echo 'PM Tools: OK' || echo 'PM Tools: FAIL'
+            curl -s http://localhost/pm/api/health
+            echo ""
             curl -sf http://localhost/pm/api/clients > /dev/null && echo 'PM Tools API Clients: OK' || echo 'PM Tools API Clients: FAIL'
             curl -sf http://localhost/pm/api/projects > /dev/null && echo 'PM Tools API Projects: OK' || echo 'PM Tools API Projects: FAIL'
+
+            echo ""
+            echo "=== Check standalone files ==="
+            docker exec pm-tools ls -la /app/.next/server/app/api/ 2>/dev/null || echo "No /app/.next/server/app/api/ directory"
+            docker exec pm-tools ls -la /app/app/api/ 2>/dev/null || echo "No /app/app/api/ directory"
