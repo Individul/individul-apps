@@ -264,3 +264,4 @@ jobs:
             echo "=== Check standalone files ==="
             docker exec pm-tools ls -la /app/.next/server/app/api/ 2>/dev/null || echo "No /app/.next/server/app/api/ directory"
             docker exec pm-tools ls -la /app/app/api/ 2>/dev/null || echo "No /app/app/api/ directory"
+
