@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  basePath: '/pm',
+  // Remove basePath - let nginx handle path rewriting
   assetPrefix: '/pm',
   typescript: {
     ignoreBuildErrors: true,
