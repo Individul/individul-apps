@@ -12,7 +12,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     case "IN_PROGRESS":
       return <Badge variant="outline">În progres</Badge>;
     case "DONE":
-      return <Badge className="bg-muted text-muted-foreground border-transparent">Finalizat</Badge>;
+      return <Badge className="bg-green-100 text-green-700 border-transparent">Finalizat</Badge>;
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
