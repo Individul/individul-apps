@@ -71,7 +71,7 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
   }
 
   async function handleDelete() {
-    if (!task || !confirm("Are you sure you want to delete this task?")) return;
+    if (!task || !confirm("Ești sigur că vrei să ștergi această sarcină?")) return;
 
     setDeleting(true);
     try {
@@ -89,30 +89,30 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{isEditing ? "Edit Task" : "New Task"}</SheetTitle>
+          <SheetTitle>{isEditing ? "Editează Sarcina" : "Sarcină Nouă"}</SheetTitle>
           <SheetDescription>
-            {isEditing ? "Update the task details below." : "Fill in the details for your new task."}
+            {isEditing ? "Actualizează detaliile sarcinii mai jos." : "Completează detaliile pentru noua sarcină."}
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Titlu</Label>
             <Input
               id="title"
               name="title"
               defaultValue={task?.title || ""}
-              placeholder="Task title"
+              placeholder="Titlul sarcinii"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Descriere</Label>
             <Textarea
               id="description"
               name="description"
               defaultValue={task?.description || ""}
-              placeholder="Task description"
+              placeholder="Descrierea sarcinii"
               rows={4}
             />
           </div>
@@ -122,53 +122,53 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
               <Label htmlFor="status">Status</Label>
               <Select name="status" defaultValue={task?.status || "TODO"}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Selectează status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TODO">To Do</SelectItem>
-                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                  <SelectItem value="DONE">Done</SelectItem>
+                  <SelectItem value="TODO">De făcut</SelectItem>
+                  <SelectItem value="IN_PROGRESS">În progres</SelectItem>
+                  <SelectItem value="DONE">Finalizat</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">Prioritate</Label>
               <Select name="priority" defaultValue={task?.priority || "MEDIUM"}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder="Selectează prioritate" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="LOW">Low</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
+                  <SelectItem value="LOW">Scăzută</SelectItem>
+                  <SelectItem value="MEDIUM">Medie</SelectItem>
+                  <SelectItem value="HIGH">Ridicată</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">Categorie</Label>
             <Input
               id="category"
               name="category"
               defaultValue={task?.category || ""}
-              placeholder="e.g., Work, Personal, Shopping"
+              placeholder="ex: Muncă, Personal, Cumpărături"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tags">Tags</Label>
+            <Label htmlFor="tags">Etichete</Label>
             <Input
               id="tags"
               name="tags"
               defaultValue={task?.tags?.join(", ") || ""}
-              placeholder="e.g., urgent, frontend, bug (comma separated)"
+              placeholder="ex: urgent, frontend, bug (separate prin virgulă)"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="deadline">Deadline</Label>
+            <Label htmlFor="deadline">Termen limită</Label>
             <Input
               id="deadline"
               name="deadline"
@@ -194,7 +194,7 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
             )}
             <Button type="submit" className="flex-1" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? "Update" : "Create"}
+              {isEditing ? "Actualizează" : "Crează"}
             </Button>
           </SheetFooter>
         </form>

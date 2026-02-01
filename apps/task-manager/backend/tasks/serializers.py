@@ -21,5 +21,5 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def validate_title(self, value):
         if not value.strip():
-            raise serializers.ValidationError("Title cannot be empty.")
+            raise serializers.ValidationError("Titlul nu poate fi gol.")
         return value.strip()

@@ -29,25 +29,25 @@ export function SidebarFilters({
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="ALL" id="status-all" />
             <Label htmlFor="status-all" className="font-normal cursor-pointer">
-              All
+              Toate
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="TODO" id="status-todo" />
             <Label htmlFor="status-todo" className="font-normal cursor-pointer">
-              To Do
+              De făcut
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="IN_PROGRESS" id="status-progress" />
             <Label htmlFor="status-progress" className="font-normal cursor-pointer">
-              In Progress
+              În progres
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="DONE" id="status-done" />
             <Label htmlFor="status-done" className="font-normal cursor-pointer">
-              Done
+              Finalizat
             </Label>
           </div>
         </RadioGroup>
@@ -56,7 +56,7 @@ export function SidebarFilters({
       <Separator />
 
       <div>
-        <h3 className="font-medium mb-3">Priority</h3>
+        <h3 className="font-medium mb-3">Prioritate</h3>
         <RadioGroup
           value={priorityFilter}
           onValueChange={(value) => onPriorityChange(value as TaskPriority | "ALL")}
@@ -64,25 +64,25 @@ export function SidebarFilters({
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="ALL" id="priority-all" />
             <Label htmlFor="priority-all" className="font-normal cursor-pointer">
-              All
+              Toate
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="HIGH" id="priority-high" />
             <Label htmlFor="priority-high" className="font-normal cursor-pointer">
-              High
+              Ridicată
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="MEDIUM" id="priority-medium" />
             <Label htmlFor="priority-medium" className="font-normal cursor-pointer">
-              Medium
+              Medie
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="LOW" id="priority-low" />
             <Label htmlFor="priority-low" className="font-normal cursor-pointer">
-              Low
+              Scăzută
             </Label>
           </div>
         </RadioGroup>

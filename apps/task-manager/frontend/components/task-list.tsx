@@ -91,15 +91,15 @@ export function TaskList() {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="todo">To Do</TabsTrigger>
-              <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-              <TabsTrigger value="done">Done</TabsTrigger>
+              <TabsTrigger value="all">Toate</TabsTrigger>
+              <TabsTrigger value="todo">De făcut</TabsTrigger>
+              <TabsTrigger value="in-progress">În progres</TabsTrigger>
+              <TabsTrigger value="done">Finalizat</TabsTrigger>
             </TabsList>
 
             <Button onClick={handleNewTask}>
               <Plus className="h-4 w-4 mr-2" />
-              New Task
+              Sarcină Nouă
             </Button>
           </div>
 
@@ -110,9 +110,9 @@ export function TaskList() {
               </div>
             ) : filteredTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                <p>No tasks found</p>
+                <p>Nu s-au găsit sarcini</p>
                 <Button variant="outline" className="mt-4" onClick={handleNewTask}>
-                  Create your first task
+                  Creează prima ta sarcină
                 </Button>
               </div>
             ) : (

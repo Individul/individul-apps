@@ -53,7 +53,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
         {task.deadline && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="h-3 w-3" />
-            <span>Due: {formatDate(task.deadline)}</span>
+            <span>Termen: {formatDate(task.deadline)}</span>
           </div>
         )}
       </CardContent>
