@@ -1,17 +1,31 @@
 from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter
 from django.contrib.auth.models import User
+from django.db.models import Q
 from .models import Task
 from .serializers import TaskSerializer, UserSerializer
+
+
+class TaskFilter(FilterSet):
+    tags = CharFilter(method='filter_tags')
+
+    class Meta:
+        model = Task
+        fields = ['status', 'priority', 'category', 'assignee', 'tags']
+
+    def filter_tags(self, queryset, name, value):
+        if value:
+            return queryset.filter(tags__contains=[value])
+        return queryset
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-    filterset_fields = ['status', 'priority', 'category', 'assignee']
+    filterset_class = TaskFilter
     ordering_fields = ['deadline', 'priority', 'created_at', 'updated_at']
     ordering = ['-created_at']
     search_fields = ['title', 'description']
@@ -45,3 +59,18 @@ def user_list(request):
     users = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def category_list(request):
+    categories = Task.objects.exclude(category='').values_list('category', flat=True).distinct().order_by('category')
+    return Response(list(categories))
+
+
+@api_view(['GET'])
+def tag_list(request):
+    tasks_with_tags = Task.objects.exclude(tags=[])
+    all_tags = set()
+    for task in tasks_with_tags:
+        all_tags.update(task.tags)
+    return Response(sorted(list(all_tags)))

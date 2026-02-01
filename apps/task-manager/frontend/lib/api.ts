@@ -31,6 +31,7 @@ export interface TaskFilters {
   priority?: TaskPriority;
   category?: string;
   assignee?: number;
+  tags?: string;
   ordering?: string;
   search?: string;
 }
@@ -63,6 +64,20 @@ export async function fetchUsers(): Promise<User[]> {
   return handleResponse<User[]>(response);
 }
 
+export async function fetchCategories(): Promise<string[]> {
+  const response = await fetch(`${API_URL}/categories/`, {
+    cache: "no-store",
+  });
+  return handleResponse<string[]>(response);
+}
+
+export async function fetchTags(): Promise<string[]> {
+  const response = await fetch(`${API_URL}/tags/`, {
+    cache: "no-store",
+  });
+  return handleResponse<string[]>(response);
+}
+
 export async function fetchTasks(filters?: TaskFilters): Promise<Task[]> {
   const params = new URLSearchParams();
 
@@ -70,6 +85,7 @@ export async function fetchTasks(filters?: TaskFilters): Promise<Task[]> {
   if (filters?.priority) params.append("priority", filters.priority);
   if (filters?.category) params.append("category", filters.category);
   if (filters?.assignee) params.append("assignee", filters.assignee.toString());
+  if (filters?.tags) params.append("tags", filters.tags);
   if (filters?.ordering) params.append("ordering", filters.ordering);
   if (filters?.search) params.append("search", filters.search);
 

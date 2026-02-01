@@ -15,6 +15,9 @@ export function TaskList() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "ALL">("ALL");
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "ALL">("ALL");
+  const [assigneeFilter, setAssigneeFilter] = useState<number | "ALL">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<string | "ALL">("ALL");
+  const [tagFilter, setTagFilter] = useState<string | "ALL">("ALL");
   const [activeTab, setActiveTab] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -35,6 +38,18 @@ export function TaskList() {
         filters.priority = priorityFilter;
       }
 
+      if (assigneeFilter !== "ALL") {
+        filters.assignee = assigneeFilter;
+      }
+
+      if (categoryFilter !== "ALL") {
+        filters.category = categoryFilter;
+      }
+
+      if (tagFilter !== "ALL") {
+        filters.tags = tagFilter;
+      }
+
       const data = await fetchTasks(filters);
       setTasks(data);
     } catch (error) {
@@ -42,7 +57,7 @@ export function TaskList() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, priorityFilter, activeTab]);
+  }, [statusFilter, priorityFilter, assigneeFilter, categoryFilter, tagFilter, activeTab]);
 
   useEffect(() => {
     loadTasks();
@@ -83,8 +98,14 @@ export function TaskList() {
       <SidebarFilters
         statusFilter={statusFilter}
         priorityFilter={priorityFilter}
+        assigneeFilter={assigneeFilter}
+        categoryFilter={categoryFilter}
+        tagFilter={tagFilter}
         onStatusChange={handleStatusFilterChange}
         onPriorityChange={setPriorityFilter}
+        onAssigneeChange={setAssigneeFilter}
+        onCategoryChange={setCategoryFilter}
+        onTagChange={setTagFilter}
       />
 
       <div className="flex-1 flex flex-col p-6">
