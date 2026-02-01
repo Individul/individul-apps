@@ -34,14 +34,14 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [assignee, setAssignee] = useState<string>("");
+  const [assignee, setAssignee] = useState<string>("none");
 
   const isEditing = !!task;
 
   useEffect(() => {
     if (open) {
       fetchUsers().then(setUsers).catch(console.error);
-      setAssignee(task?.assignee?.toString() || "");
+      setAssignee(task?.assignee?.toString() || "none");
     }
   }, [open, task]);
 
