@@ -20,7 +20,7 @@ export function TaskList() {
   const [tagFilter, setTagFilter] = useState<string | "ALL">("ALL");
   const [deadlineFrom, setDeadlineFrom] = useState<string>("");
   const [deadlineTo, setDeadlineTo] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<string>("todo");
   const [formOpen, setFormOpen] = useState(false);
 
   const loadTasks = useCallback(async () => {
