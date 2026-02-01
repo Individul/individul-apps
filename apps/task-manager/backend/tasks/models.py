@@ -45,3 +45,34 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TaskActivity(models.Model):
+    class ActionType(models.TextChoices):
+        CREATED = 'CREATED', 'Creat'
+        UPDATED = 'UPDATED', 'Actualizat'
+        STATUS_CHANGED = 'STATUS_CHANGED', 'Status schimbat'
+        PRIORITY_CHANGED = 'PRIORITY_CHANGED', 'Prioritate schimbată'
+        ASSIGNED = 'ASSIGNED', 'Atribuit'
+        UNASSIGNED = 'UNASSIGNED', 'Dezatribuit'
+        COMMENT = 'COMMENT', 'Comentariu'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='activities')
+    action = models.CharField(max_length=20, choices=ActionType.choices)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='task_activities'
+    )
+    details = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Task activities'
+
+    def __str__(self):
+        return f"{self.task.title} - {self.action}"

@@ -20,7 +20,6 @@ export function TaskList() {
   const [tagFilter, setTagFilter] = useState<string | "ALL">("ALL");
   const [activeTab, setActiveTab] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -63,13 +62,7 @@ export function TaskList() {
     loadTasks();
   }, [loadTasks]);
 
-  function handleTaskClick(task: Task) {
-    setSelectedTask(task);
-    setFormOpen(true);
-  }
-
   function handleNewTask() {
-    setSelectedTask(null);
     setFormOpen(true);
   }
 
@@ -90,8 +83,6 @@ export function TaskList() {
       setStatusFilter("ALL"); // Reset sidebar filter when using tabs
     }
   }
-
-  const filteredTasks = tasks;
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
@@ -129,7 +120,7 @@ export function TaskList() {
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : filteredTasks.length === 0 ? (
+            ) : tasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                 <p>Nu s-au găsit sarcini</p>
                 <Button variant="outline" className="mt-4" onClick={handleNewTask}>
@@ -139,12 +130,8 @@ export function TaskList() {
             ) : (
               <ScrollArea className="h-[calc(100vh-12rem)]">
                 <div className="grid gap-4 pr-4">
-                  {filteredTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onClick={() => handleTaskClick(task)}
-                    />
+                  {tasks.map((task) => (
+                    <TaskCard key={task.id} task={task} />
                   ))}
                 </div>
               </ScrollArea>
@@ -154,7 +141,7 @@ export function TaskList() {
       </div>
 
       <TaskForm
-        task={selectedTask}
+        task={null}
         open={formOpen}
         onOpenChange={setFormOpen}
         onSuccess={handleFormSuccess}

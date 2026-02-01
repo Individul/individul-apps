@@ -2,6 +2,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
+export type ActivityAction = "CREATED" | "UPDATED" | "STATUS_CHANGED" | "PRIORITY_CHANGED" | "ASSIGNED" | "UNASSIGNED" | "COMMENT";
 
 export interface User {
   id: number;
@@ -9,6 +10,16 @@ export interface User {
   first_name: string;
   last_name: string;
   full_name: string;
+}
+
+export interface TaskActivity {
+  id: string;
+  action: ActivityAction;
+  action_display: string;
+  user: number | null;
+  user_details: User | null;
+  details: Record<string, string | number | null>;
+  created_at: string;
 }
 
 export interface Task {
@@ -24,6 +35,10 @@ export interface Task {
   assignee_details: User | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface TaskDetail extends Task {
+  activities: TaskActivity[];
 }
 
 export interface TaskFilters {
@@ -100,11 +115,11 @@ export async function fetchTasks(filters?: TaskFilters): Promise<Task[]> {
   return Array.isArray(data) ? data : data.results || [];
 }
 
-export async function fetchTask(id: string): Promise<Task> {
+export async function fetchTask(id: string): Promise<TaskDetail> {
   const response = await fetch(`${API_URL}/tasks/${id}/`, {
     cache: "no-store",
   });
-  return handleResponse<Task>(response);
+  return handleResponse<TaskDetail>(response);
 }
 
 export async function createTask(data: CreateTaskInput): Promise<Task> {
@@ -137,4 +152,15 @@ export async function deleteTask(id: string): Promise<void> {
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+}
+
+export async function addComment(taskId: string, comment: string, userId?: number): Promise<TaskActivity> {
+  const response = await fetch(`${API_URL}/tasks/${taskId}/comment/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ comment, user_id: userId }),
+  });
+  return handleResponse<TaskActivity>(response);
 }

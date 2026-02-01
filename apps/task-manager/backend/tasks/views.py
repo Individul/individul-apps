@@ -1,11 +1,10 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter
 from django.contrib.auth.models import User
-from django.db.models import Q
-from .models import Task
-from .serializers import TaskSerializer, UserSerializer
+from .models import Task, TaskActivity
+from .serializers import TaskSerializer, TaskDetailSerializer, TaskActivitySerializer, UserSerializer
 
 
 class TaskFilter(FilterSet):
@@ -29,6 +28,103 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering_fields = ['deadline', 'priority', 'created_at', 'updated_at']
     ordering = ['-created_at']
     search_fields = ['title', 'description']
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return TaskDetailSerializer
+        return TaskSerializer
+
+    def perform_create(self, serializer):
+        task = serializer.save()
+        TaskActivity.objects.create(
+            task=task,
+            action=TaskActivity.ActionType.CREATED,
+            user=None,
+            details={'title': task.title}
+        )
+
+    def perform_update(self, serializer):
+        old_task = self.get_object()
+        old_status = old_task.status
+        old_priority = old_task.priority
+        old_assignee = old_task.assignee
+
+        task = serializer.save()
+
+        # Log status change
+        if old_status != task.status:
+            TaskActivity.objects.create(
+                task=task,
+                action=TaskActivity.ActionType.STATUS_CHANGED,
+                user=None,
+                details={
+                    'old_status': old_status,
+                    'new_status': task.status
+                }
+            )
+
+        # Log priority change
+        if old_priority != task.priority:
+            TaskActivity.objects.create(
+                task=task,
+                action=TaskActivity.ActionType.PRIORITY_CHANGED,
+                user=None,
+                details={
+                    'old_priority': old_priority,
+                    'new_priority': task.priority
+                }
+            )
+
+        # Log assignee change
+        if old_assignee != task.assignee:
+            if task.assignee:
+                TaskActivity.objects.create(
+                    task=task,
+                    action=TaskActivity.ActionType.ASSIGNED,
+                    user=None,
+                    details={
+                        'assignee_id': task.assignee.id,
+                        'assignee_name': f"{task.assignee.first_name} {task.assignee.last_name}".strip()
+                    }
+                )
+            else:
+                TaskActivity.objects.create(
+                    task=task,
+                    action=TaskActivity.ActionType.UNASSIGNED,
+                    user=None,
+                    details={
+                        'old_assignee_name': f"{old_assignee.first_name} {old_assignee.last_name}".strip() if old_assignee else None
+                    }
+                )
+
+    @action(detail=True, methods=['post'])
+    def comment(self, request, pk=None):
+        task = self.get_object()
+        comment_text = request.data.get('comment', '')
+        user_id = request.data.get('user_id')
+
+        user = None
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                pass
+
+        if not comment_text.strip():
+            return Response(
+                {'error': 'Comentariul nu poate fi gol.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        activity = TaskActivity.objects.create(
+            task=task,
+            action=TaskActivity.ActionType.COMMENT,
+            user=user,
+            details={'comment': comment_text.strip()}
+        )
+
+        serializer = TaskActivitySerializer(activity)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
