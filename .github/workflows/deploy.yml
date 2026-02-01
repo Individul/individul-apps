@@ -145,34 +145,6 @@ jobs:
             nginx -t && systemctl reload nginx
             grep -A2 "location /pdf\|location /api" /etc/nginx/sites-enabled/default
 
-      # ========== Cleanup PM Tools (if exists) ==========
-      - name: Remove PM Tools from server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "=== Cleaning up PM Tools ==="
-            # Stop and remove PM Tools containers
-            cd /opt/pm-tools 2>/dev/null && docker-compose down --remove-orphans || true
-            docker rm -f pm-tools pm-tools-db 2>/dev/null || true
-
-            # Remove PM Tools images
-            docker rmi -f $(docker images -q "*pm-tools*") 2>/dev/null || true
-
-            # Remove PM Tools directory
-            rm -rf /opt/pm-tools
-
-            # Remove PM Tools nginx config
-            rm -f /etc/nginx/pm-tools.conf
-            sed -i '/include \/etc\/nginx\/pm-tools.conf/d' /etc/nginx/sites-enabled/default
-
-            # Reload nginx
-            nginx -t && systemctl reload nginx
-
-            echo "PM Tools cleanup complete"
-
       # ========== Deploy Task Manager ==========
       - name: Prepare Task Manager directory
         uses: appleboy/ssh-action@v1.0.3
@@ -223,10 +195,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/task-manager
-            docker-compose down --remove-orphans || true
-            docker-compose build --no-cache
+            docker-compose build
             docker-compose up -d
-            sleep 10
             docker exec task-manager-api python manage.py migrate --noinput || true
             docker ps | grep task-manager
 
