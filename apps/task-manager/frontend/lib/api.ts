@@ -48,6 +48,8 @@ export interface TaskFilters {
   category?: string;
   assignee?: number;
   tags?: string;
+  deadline_from?: string;
+  deadline_to?: string;
   ordering?: string;
   search?: string;
 }
@@ -102,6 +104,8 @@ export async function fetchTasks(filters?: TaskFilters): Promise<Task[]> {
   if (filters?.category) params.append("category", filters.category);
   if (filters?.assignee) params.append("assignee", filters.assignee.toString());
   if (filters?.tags) params.append("tags", filters.tags);
+  if (filters?.deadline_from) params.append("deadline_from", filters.deadline_from);
+  if (filters?.deadline_to) params.append("deadline_to", filters.deadline_to);
   if (filters?.ordering) params.append("ordering", filters.ordering);
   if (filters?.search) params.append("search", filters.search);
 

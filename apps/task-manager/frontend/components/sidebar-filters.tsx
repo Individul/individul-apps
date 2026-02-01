@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,11 +20,15 @@ interface SidebarFiltersProps {
   assigneeFilter: number | "ALL";
   categoryFilter: string | "ALL";
   tagFilter: string | "ALL";
+  deadlineFrom: string;
+  deadlineTo: string;
   onStatusChange: (status: TaskStatus | "ALL") => void;
   onPriorityChange: (priority: TaskPriority | "ALL") => void;
   onAssigneeChange: (assignee: number | "ALL") => void;
   onCategoryChange: (category: string | "ALL") => void;
   onTagChange: (tag: string | "ALL") => void;
+  onDeadlineFromChange: (date: string) => void;
+  onDeadlineToChange: (date: string) => void;
 }
 
 export function SidebarFilters({
@@ -32,11 +37,15 @@ export function SidebarFilters({
   assigneeFilter,
   categoryFilter,
   tagFilter,
+  deadlineFrom,
+  deadlineTo,
   onStatusChange,
   onPriorityChange,
   onAssigneeChange,
   onCategoryChange,
   onTagChange,
+  onDeadlineFromChange,
+  onDeadlineToChange,
 }: SidebarFiltersProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [tags, setTags] = useState<string[]>([]);
@@ -186,6 +195,38 @@ export function SidebarFilters({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-medium mb-3">Termen limită</h3>
+        <div className="space-y-2">
+          <div>
+            <Label htmlFor="deadline-from" className="text-xs text-muted-foreground">
+              De la
+            </Label>
+            <Input
+              id="deadline-from"
+              type="date"
+              value={deadlineFrom}
+              onChange={(e) => onDeadlineFromChange(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <Label htmlFor="deadline-to" className="text-xs text-muted-foreground">
+              Până la
+            </Label>
+            <Input
+              id="deadline-to"
+              type="date"
+              value={deadlineTo}
+              onChange={(e) => onDeadlineToChange(e.target.value)}
+              className="w-full"
+            />
+          </div>
+        </div>
       </div>
     </aside>
   );

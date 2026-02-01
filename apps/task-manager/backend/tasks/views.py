@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
-from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter, DateFilter
 from django.contrib.auth.models import User
 from .models import Task, TaskActivity
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskActivitySerializer, UserSerializer
@@ -9,10 +9,12 @@ from .serializers import TaskSerializer, TaskDetailSerializer, TaskActivitySeria
 
 class TaskFilter(FilterSet):
     tags = CharFilter(method='filter_tags')
+    deadline_from = DateFilter(field_name='deadline', lookup_expr='gte')
+    deadline_to = DateFilter(field_name='deadline', lookup_expr='lte')
 
     class Meta:
         model = Task
-        fields = ['status', 'priority', 'category', 'assignee', 'tags']
+        fields = ['status', 'priority', 'category', 'assignee', 'tags', 'deadline_from', 'deadline_to']
 
     def filter_tags(self, queryset, name, value):
         if value:

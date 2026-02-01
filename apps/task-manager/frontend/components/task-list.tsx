@@ -18,6 +18,8 @@ export function TaskList() {
   const [assigneeFilter, setAssigneeFilter] = useState<number | "ALL">("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string | "ALL">("ALL");
   const [tagFilter, setTagFilter] = useState<string | "ALL">("ALL");
+  const [deadlineFrom, setDeadlineFrom] = useState<string>("");
+  const [deadlineTo, setDeadlineTo] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
 
@@ -49,6 +51,14 @@ export function TaskList() {
         filters.tags = tagFilter;
       }
 
+      if (deadlineFrom) {
+        filters.deadline_from = deadlineFrom;
+      }
+
+      if (deadlineTo) {
+        filters.deadline_to = deadlineTo;
+      }
+
       const data = await fetchTasks(filters);
       setTasks(data);
     } catch (error) {
@@ -56,7 +66,7 @@ export function TaskList() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, priorityFilter, assigneeFilter, categoryFilter, tagFilter, activeTab]);
+  }, [statusFilter, priorityFilter, assigneeFilter, categoryFilter, tagFilter, deadlineFrom, deadlineTo, activeTab]);
 
   useEffect(() => {
     loadTasks();
@@ -92,11 +102,15 @@ export function TaskList() {
         assigneeFilter={assigneeFilter}
         categoryFilter={categoryFilter}
         tagFilter={tagFilter}
+        deadlineFrom={deadlineFrom}
+        deadlineTo={deadlineTo}
         onStatusChange={handleStatusFilterChange}
         onPriorityChange={setPriorityFilter}
         onAssigneeChange={setAssigneeFilter}
         onCategoryChange={setCategoryFilter}
         onTagChange={setTagFilter}
+        onDeadlineFromChange={setDeadlineFrom}
+        onDeadlineToChange={setDeadlineTo}
       />
 
       <div className="flex-1 flex flex-col p-6">
