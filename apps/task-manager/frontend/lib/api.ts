@@ -3,6 +3,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
 
+export interface User {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -12,6 +20,8 @@ export interface Task {
   category: string;
   tags: string[];
   deadline: string | null;
+  assignee: number | null;
+  assignee_details: User | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +30,7 @@ export interface TaskFilters {
   status?: TaskStatus;
   priority?: TaskPriority;
   category?: string;
+  assignee?: number;
   ordering?: string;
   search?: string;
 }
@@ -32,6 +43,7 @@ export interface CreateTaskInput {
   category?: string;
   tags?: string[];
   deadline?: string | null;
+  assignee?: number | null;
 }
 
 export interface UpdateTaskInput extends Partial<CreateTaskInput> {}
@@ -44,12 +56,20 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
+export async function fetchUsers(): Promise<User[]> {
+  const response = await fetch(`${API_URL}/users/`, {
+    cache: "no-store",
+  });
+  return handleResponse<User[]>(response);
+}
+
 export async function fetchTasks(filters?: TaskFilters): Promise<Task[]> {
   const params = new URLSearchParams();
 
   if (filters?.status) params.append("status", filters.status);
   if (filters?.priority) params.append("priority", filters.priority);
   if (filters?.category) params.append("category", filters.category);
+  if (filters?.assignee) params.append("assignee", filters.assignee.toString());
   if (filters?.ordering) params.append("ordering", filters.ordering);
   if (filters?.search) params.append("search", filters.search);
 

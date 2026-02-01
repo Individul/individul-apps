@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +20,7 @@ import {
   SheetFooter,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Task, TaskStatus, TaskPriority, createTask, updateTask, deleteTask } from "@/lib/api";
+import { Task, TaskStatus, TaskPriority, User, createTask, updateTask, deleteTask, fetchUsers } from "@/lib/api";
 import { Loader2, Trash2 } from "lucide-react";
 
 interface TaskFormProps {
@@ -33,8 +33,17 @@ interface TaskFormProps {
 export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps) {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [assignee, setAssignee] = useState<string>("");
 
   const isEditing = !!task;
+
+  useEffect(() => {
+    if (open) {
+      fetchUsers().then(setUsers).catch(console.error);
+      setAssignee(task?.assignee?.toString() || "");
+    }
+  }, [open, task]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,6 +62,7 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
       category: formData.get("category") as string,
       tags,
       deadline: formData.get("deadline") as string || null,
+      assignee: assignee && assignee !== "none" ? parseInt(assignee) : null,
     };
 
     try {
@@ -145,6 +155,23 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assignee">Responsabil</Label>
+            <Select value={assignee} onValueChange={setAssignee}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selectează responsabil" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nealocat</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

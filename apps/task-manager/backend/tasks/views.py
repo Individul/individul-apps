@@ -1,15 +1,17 @@
 from rest_framework import viewsets, filters
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.models import User
 from .models import Task
-from .serializers import TaskSerializer
+from .serializers import TaskSerializer, UserSerializer
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-    filterset_fields = ['status', 'priority', 'category']
+    filterset_fields = ['status', 'priority', 'category', 'assignee']
     ordering_fields = ['deadline', 'priority', 'created_at', 'updated_at']
     ordering = ['-created_at']
     search_fields = ['title', 'description']
@@ -36,3 +38,10 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+def user_list(request):
+    users = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)

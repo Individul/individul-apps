@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Task(models.Model):
@@ -29,6 +30,13 @@ class Task(models.Model):
     category = models.CharField(max_length=100, blank=True)
     tags = models.JSONField(default=list, blank=True)
     deadline = models.DateField(null=True, blank=True)
+    assignee = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tasks'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

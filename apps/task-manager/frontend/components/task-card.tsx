@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, PriorityBadge } from "@/components/status-badge";
 import { Task } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
-import { Calendar, Tag } from "lucide-react";
+import { Calendar, Tag, User } from "lucide-react";
 
 interface TaskCardProps {
   task: Task;
@@ -48,6 +48,12 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
                 {tag}
               </span>
             ))}
+          </div>
+        )}
+        {task.assignee_details && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <User className="h-3 w-3" />
+            <span>{task.assignee_details.full_name}</span>
           </div>
         )}
         {task.deadline && (
