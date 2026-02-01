@@ -11,6 +11,15 @@ interface TaskCardProps {
   task: Task;
 }
 
+function getCategoryLabel(category: string): string {
+  switch (category) {
+    case "CUMULARE": return "Cumulare";
+    case "AREST_PREVENTIV": return "Arest preventiv";
+    case "NECLARITATI": return "Neclarități";
+    default: return category;
+  }
+}
+
 export function TaskCard({ task }: TaskCardProps) {
   return (
     <Link href={`/task/${task.id}`}>
@@ -31,7 +40,7 @@ export function TaskCard({ task }: TaskCardProps) {
             <PriorityBadge priority={task.priority} />
             {task.category && (
               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {task.category}
+                {getCategoryLabel(task.category)}
               </span>
             )}
           </div>

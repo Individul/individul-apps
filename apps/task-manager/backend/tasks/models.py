@@ -14,6 +14,11 @@ class Task(models.Model):
         MEDIUM = 'MEDIUM', 'Medium'
         HIGH = 'HIGH', 'High'
 
+    class Category(models.TextChoices):
+        CUMULARE = 'CUMULARE', 'Cumulare'
+        AREST_PREVENTIV = 'AREST_PREVENTIV', 'Arest preventiv'
+        NECLARITATI = 'NECLARITATI', 'Neclarități'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -27,7 +32,11 @@ class Task(models.Model):
         choices=Priority.choices,
         default=Priority.MEDIUM
     )
-    category = models.CharField(max_length=100, blank=True)
+    category = models.CharField(
+        max_length=20,
+        choices=Category.choices,
+        blank=True
+    )
     tags = models.JSONField(default=list, blank=True)
     deadline = models.DateField(null=True, blank=True)
     assignee = models.ForeignKey(

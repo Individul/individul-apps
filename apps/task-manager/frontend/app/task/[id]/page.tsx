@@ -333,13 +333,17 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Categorie</Label>
-              <Input
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="ex: Muncă, Personal, Cumpărături"
-              />
+              <Label>Categorie</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selectează categorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CUMULARE">Cumulare</SelectItem>
+                  <SelectItem value="AREST_PREVENTIV">Arest preventiv</SelectItem>
+                  <SelectItem value="NECLARITATI">Neclarități</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TaskStatus, TaskPriority, User, fetchUsers, fetchCategories, fetchTags } from "@/lib/api";
+import { TaskStatus, TaskPriority, User, fetchUsers, fetchTags } from "@/lib/api";
 
 interface SidebarFiltersProps {
   statusFilter: TaskStatus | "ALL";
@@ -39,12 +39,16 @@ export function SidebarFilters({
   onTagChange,
 }: SidebarFiltersProps) {
   const [users, setUsers] = useState<User[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+
+  const categories = [
+    { value: "CUMULARE", label: "Cumulare" },
+    { value: "AREST_PREVENTIV", label: "Arest preventiv" },
+    { value: "NECLARITATI", label: "Neclarități" },
+  ];
 
   useEffect(() => {
     fetchUsers().then(setUsers).catch(console.error);
-    fetchCategories().then(setCategories).catch(console.error);
     fetchTags().then(setTags).catch(console.error);
   }, []);
 
@@ -153,9 +157,9 @@ export function SidebarFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Toate</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
+            {categories.map((cat) => (
+              <SelectItem key={cat.value} value={cat.value}>
+                {cat.label}
               </SelectItem>
             ))}
           </SelectContent>
