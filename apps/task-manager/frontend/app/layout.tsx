@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Manager de Sarcini",
-  description: "Gestionează-ți sarcinile eficient",
+  title: "Manager dosare defecte",
+  description: "Gestionează dosarele defecte eficient",
 };
 
 export default function RootLayout({
