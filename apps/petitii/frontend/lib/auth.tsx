@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('refresh_token', refresh)
     setToken(access)
     await loadUser(access)
-    router.push('/petitii/dashboard')
+    router.push('/dashboard')
   }
 
   const logout = () => {
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('refresh_token')
     setToken(null)
     setUser(null)
-    router.push('/petitii/login')
+    router.push('/login')
   }
 
   const refreshUser = async () => {
@@ -85,7 +85,7 @@ export function useRequireAuth() {
 
   useEffect(() => {
     if (!isLoading && !token) {
-      router.push('/petitii/login')
+      router.push('/login')
     }
   }, [isLoading, token, router])
 

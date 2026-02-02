@@ -154,7 +154,7 @@ export default function DashboardPage() {
                 {stats?.by_status && Object.entries(stats.by_status).map(([status, count]) => (
                   <Link
                     key={status}
-                    href={`/petitii/petitions?status=${status}`}
+                    href={`/petitions?status=${status}`}
                     className="flex items-center justify-between p-2 rounded-md hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-2">

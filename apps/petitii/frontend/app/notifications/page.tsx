@@ -140,7 +140,7 @@ export default function NotificationsPage() {
                         <p className="text-sm">{notification.message}</p>
                         <div className="flex items-center gap-4 mt-2">
                           <Link
-                            href={`/petitii/petitions/${notification.petition}`}
+                            href={`/petitions/${notification.petition}`}
                             className="text-sm text-primary hover:underline"
                           >
                             {notification.petition_number}

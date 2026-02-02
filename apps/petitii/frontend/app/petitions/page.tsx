@@ -213,7 +213,7 @@ function PetitionsContent() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/petitii/petitions/${petition.id}`}>
+                        <Link href={`/petitions/${petition.id}`}>
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>

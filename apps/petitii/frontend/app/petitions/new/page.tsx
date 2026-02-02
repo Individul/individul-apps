@@ -84,7 +84,7 @@ export default function NewPetitionPage() {
     try {
       const petition = await petitionsApi.create(token, data)
       toast.success('Petiția a fost înregistrată cu succes')
-      router.push(`/petitii/petitions/${petition.id}`)
+      router.push(`/petitions/${petition.id}`)
     } catch (error) {
       if (error instanceof ApiError) {
         toast.error(error.message)
