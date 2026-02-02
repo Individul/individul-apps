@@ -60,9 +60,11 @@ export default function PetitionDetailPage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
 
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState<string | undefined>(undefined)
   const [resolutionDate, setResolutionDate] = useState('')
   const [resolutionText, setResolutionText] = useState('')
+
+  const petitionId = params.id as string | undefined
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -71,7 +73,9 @@ export default function PetitionDetailPage() {
       return
     }
 
-    petitionsApi.get(token, params.id as string)
+    if (!petitionId) return
+
+    petitionsApi.get(token, petitionId)
       .then((data) => {
         setPetition(data)
         setStatus(data.status)
@@ -83,7 +87,7 @@ export default function PetitionDetailPage() {
         router.push('/petitions')
       })
       .finally(() => setLoading(false))
-  }, [router, params.id])
+  }, [router, petitionId])
 
   const handleSave = async () => {
     const token = localStorage.getItem('access_token')
@@ -260,7 +264,7 @@ export default function PetitionDetailPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Status</Label>
-                {editing ? (
+                {editing && status ? (
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger>
                       <SelectValue />
