@@ -13,6 +13,7 @@ import {
   Loader2,
   Edit,
   Save,
+  AlertTriangle,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -63,6 +64,7 @@ export default function PetitionDetailPage() {
   const [status, setStatus] = useState<string | undefined>(undefined)
   const [resolutionDate, setResolutionDate] = useState('')
   const [resolutionText, setResolutionText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const petitionId = params.id as string | undefined
 
@@ -155,6 +157,27 @@ export default function PetitionDetailPage() {
     }
   }
 
+  const handleDeletePetition = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !petition) return
+
+    if (!confirm(`Sigur doriți să ștergeți petiția ${petition.registration_number}? Această acțiune este ireversibilă.`)) return
+
+    setDeleting(true)
+    try {
+      await petitionsApi.delete(token, petition.id)
+      toast.success('Petiția a fost ștearsă')
+      router.push('/petitions')
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A apărut o eroare la ștergere')
+      }
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <AppLayout>
@@ -195,6 +218,19 @@ export default function PetitionDetailPage() {
             {petition.is_due_soon && !petition.is_overdue && (
               <Badge variant="warning">{petition.days_until_due} zile rămase</Badge>
             )}
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeletePetition}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              {!deleting && 'Șterge'}
+            </Button>
           </div>
         </div>
 
