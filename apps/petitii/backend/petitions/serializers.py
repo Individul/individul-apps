@@ -94,10 +94,11 @@ class PetitionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Petition
         fields = [
-            'registration_prefix', 'registration_date', 'petitioner_type',
+            'id', 'registration_prefix', 'registration_date', 'petitioner_type',
             'petitioner_name', 'detainee_fullname', 'object_type',
             'object_description', 'assigned_to'
         ]
+        read_only_fields = ['id']
 
     def create(self, validated_data):
         validated_data['created_by'] = self.context['request'].user
