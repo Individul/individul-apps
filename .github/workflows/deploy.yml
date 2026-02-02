@@ -51,16 +51,15 @@ jobs:
           target: "/var/www/html/portal/"
           strip_components: 2
 
-      - name: Finalize on server
+      - name: Finalize Portal deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Nu ștergem locațiile /pdf/ și /api/ - le păstrăm
             cp /var/www/html/portal/index.html /var/www/html/index.html || true
-            nginx -t && systemctl reload nginx || echo "Nginx reload skipped"
+            echo "Portal files deployed"
 
       # ========== Deploy PDF Toolbox ==========
       - name: Prepare PDF Toolbox directory
@@ -129,21 +128,59 @@ jobs:
             docker-compose up -d
             docker ps | grep pdf-toolbox
 
-      - name: Fix nginx for PDF Toolbox
+      - name: Configure nginx for all apps
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Ștergem locațiile vechi dacă există (pentru a evita duplicate)
-            sed -i '/location \/pdf/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            sed -i '/location \/api\//,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            # Adăugăm locațiile /pdf/ și /api/ înainte de închiderea server block
-            sed -i '/^[[:space:]]*}[[:space:]]*$/i \            location /pdf/ {\n                proxy_pass http://127.0.0.1:8001/;\n            }\n            location /api/ {\n                proxy_pass http://127.0.0.1:8001/;\n                client_max_body_size 100M;\n            }\n' /etc/nginx/sites-enabled/default
-            # Verificăm și reîncărcăm nginx
+            # Scriem configurația completă nginx (idempotent, fără sed)
+            cat > /etc/nginx/sites-enabled/default << 'NGINX_EOF'
+            server {
+                listen 80 default_server;
+                listen [::]:80 default_server;
+                root /var/www/html;
+                index index.html index.htm;
+                server_name _;
+                client_max_body_size 500M;
+
+                location / {
+                    try_files $uri $uri/ =404;
+                }
+
+                location /pdf/ {
+                    proxy_pass http://127.0.0.1:8001/;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    client_max_body_size 500M;
+                }
+
+                location /pdf/api/ {
+                    proxy_pass http://127.0.0.1:8001/api/;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    client_max_body_size 500M;
+                }
+
+                location /tasks/ {
+                    proxy_pass http://127.0.0.1:3002/;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection "upgrade";
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                }
+
+                location /tasks-api/ {
+                    proxy_pass http://127.0.0.1:8000/api/;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                }
+            }
+            NGINX_EOF
             nginx -t && systemctl reload nginx
-            grep -A2 "location /pdf\|location /api" /etc/nginx/sites-enabled/default
+            echo "Nginx configured successfully"
 
       # ========== Deploy Task Manager ==========
       - name: Prepare Task Manager directory
@@ -200,17 +237,22 @@ jobs:
             docker exec task-manager-api python manage.py migrate --noinput || true
             docker ps | grep task-manager
 
-      - name: Configure nginx for Task Manager
+      - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Remove old task-manager locations if exist
-            sed -i '/location \/tasks/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            sed -i '/location \/tasks-api/,/^[[:space:]]*}$/d' /etc/nginx/sites-enabled/default
-            # Add task-manager locations before closing server block
-            sed -i '/^[[:space:]]*}[[:space:]]*$/i \            location /tasks/ {\n                proxy_pass http://127.0.0.1:3002/;\n                proxy_http_version 1.1;\n                proxy_set_header Upgrade $http_upgrade;\n                proxy_set_header Connection "upgrade";\n                proxy_set_header Host $host;\n                proxy_set_header X-Real-IP $remote_addr;\n            }\n            location /tasks-api/ {\n                proxy_pass http://127.0.0.1:8000/api/;\n                proxy_set_header Host $host;\n                proxy_set_header X-Real-IP $remote_addr;\n            }\n' /etc/nginx/sites-enabled/default
-            nginx -t && systemctl reload nginx
-            echo "Task Manager nginx configured"
+            echo "=== Deployment verification ==="
+            echo "Docker containers:"
+            docker ps --format "table {{.Names}}\t{{.Status}}"
+            echo ""
+            echo "Nginx status:"
+            systemctl is-active nginx
+            echo ""
+            echo "PDF Toolbox health:"
+            curl -s http://localhost:8001/health || echo "PDF Toolbox not responding"
+            echo ""
+            echo "Task Manager API health:"
+            curl -s http://localhost:8000/api/ || echo "Task Manager API not responding"
