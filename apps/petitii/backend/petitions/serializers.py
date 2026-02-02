@@ -32,10 +32,10 @@ class PetitionAttachmentSerializer(serializers.ModelSerializer):
 
 class PetitionListSerializer(serializers.ModelSerializer):
     registration_number = serializers.ReadOnlyField()
-    response_due_date = serializers.ReadOnlyField()
-    is_overdue = serializers.ReadOnlyField()
-    is_due_soon = serializers.ReadOnlyField()
-    days_until_due = serializers.ReadOnlyField()
+    response_due_date = serializers.DateField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+    is_due_soon = serializers.BooleanField(read_only=True)
+    days_until_due = serializers.IntegerField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     petitioner_type_display = serializers.CharField(source='get_petitioner_type_display', read_only=True)
     object_type_display = serializers.CharField(source='get_object_type_display', read_only=True)
@@ -61,10 +61,10 @@ class PetitionListSerializer(serializers.ModelSerializer):
 
 class PetitionDetailSerializer(serializers.ModelSerializer):
     registration_number = serializers.ReadOnlyField()
-    response_due_date = serializers.ReadOnlyField()
-    is_overdue = serializers.ReadOnlyField()
-    is_due_soon = serializers.ReadOnlyField()
-    days_until_due = serializers.ReadOnlyField()
+    response_due_date = serializers.DateField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+    is_due_soon = serializers.BooleanField(read_only=True)
+    days_until_due = serializers.IntegerField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     petitioner_type_display = serializers.CharField(source='get_petitioner_type_display', read_only=True)
     object_type_display = serializers.CharField(source='get_object_type_display', read_only=True)
