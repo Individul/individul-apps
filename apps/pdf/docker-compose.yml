@@ -55,7 +55,12 @@ services:
       - "traefik.http.middlewares.security-headers.headers.framedeny=true"
       - "traefik.http.middlewares.security-headers.headers.browserxssfilter=true"
       - "traefik.http.middlewares.security-headers.headers.contenttype nosniff=true"
-      - "traefik.http.routers.pdf-toolbox.middlewares=security-headers"
+      # Buffering middleware for large file uploads (500MB)
+      - "traefik.http.middlewares.large-body.buffering.maxRequestBodyBytes=524288000"
+      - "traefik.http.middlewares.large-body.buffering.memRequestBodyBytes=2097152"
+      - "traefik.http.middlewares.large-body.buffering.maxResponseBodyBytes=524288000"
+      - "traefik.http.middlewares.large-body.buffering.memResponseBodyBytes=2097152"
+      - "traefik.http.routers.pdf-toolbox.middlewares=security-headers,large-body"
     networks:
       - traefik-net
 

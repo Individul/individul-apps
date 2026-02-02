@@ -459,8 +459,24 @@ async function processAction() {
         }
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Procesarea a eșuat. Te rog încearcă din nou.');
+            let errorMessage = 'Procesarea a eșuat. Te rog încearcă din nou.';
+
+            // Handle 413 specifically - file too large for server
+            if (response.status === 413) {
+                errorMessage = 'Fișierele sunt prea mari. Dimensiunea totală maximă permisă este de aproximativ 100MB.';
+            } else {
+                // Try to parse as JSON, but handle HTML error pages gracefully
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.detail || errorMessage;
+                    } catch (e) {
+                        // JSON parsing failed, use default message
+                    }
+                }
+            }
+            throw new Error(errorMessage);
         }
 
         // Obține numele fișierului din headere
