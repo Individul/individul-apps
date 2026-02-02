@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: petitii-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-petitii}
+      POSTGRES_USER: ${DB_USER:-petitii}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-petitii_secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-petitii}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - petitii-net
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: petitii-api
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
+      - DEBUG=${DEBUG:-False}
+      - DB_NAME=${DB_NAME:-petitii}
+      - DB_USER=${DB_USER:-petitii}
+      - DB_PASSWORD=${DB_PASSWORD:-petitii_secure_password}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:3000}
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8002:8000"
+    networks:
+      - petitii-net
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8002}
+    container_name: petitii-web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8002}
+    ports:
+      - "3003:3000"
+    depends_on:
+      - api
+    networks:
+      - petitii-net
+
+volumes:
+  postgres_data:
+  media_data:
+  static_data:
+
+networks:
+  petitii-net:
+    driver: bridge
