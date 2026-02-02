@@ -185,6 +185,32 @@ jobs:
                     proxy_set_header Host $host;
                     proxy_set_header X-Real-IP $remote_addr;
                 }
+
+                # Petitii Frontend
+                location = /petitii {
+                    return 301 /petitii/;
+                }
+
+                location /petitii/ {
+                    proxy_pass http://127.0.0.1:3003;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection "upgrade";
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                }
+
+                # Petitii Backend API
+                location /petitii-api/ {
+                    proxy_pass http://127.0.0.1:8002/;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    client_max_body_size 50M;
+                }
             }
             NGINX_EOF
             nginx -t && systemctl reload nginx
@@ -245,6 +271,74 @@ jobs:
             docker exec task-manager-api python manage.py migrate --noinput || true
             docker ps | grep task-manager
 
+      # ========== Deploy Petitii ==========
+      - name: Prepare Petitii directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p /opt/petitii/backend
+            mkdir -p /opt/petitii/frontend
+
+      - name: Copy Petitii backend files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/petitii/backend/*"
+          target: "/opt/petitii/backend/"
+          strip_components: 3
+
+      - name: Copy Petitii frontend files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/petitii/frontend/*"
+          target: "/opt/petitii/frontend/"
+          strip_components: 3
+
+      - name: Copy Petitii docker-compose
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/petitii/docker-compose.yml"
+          target: "/opt/petitii/"
+          strip_components: 2
+
+      - name: Build and deploy Petitii
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/petitii
+            # Create .env if not exists
+            if [ ! -f .env ]; then
+              cat > .env << 'ENVEOF'
+            SECRET_KEY=django-secure-key-for-production-change-this
+            DEBUG=False
+            DB_NAME=petitii
+            DB_USER=petitii
+            DB_PASSWORD=petitii_secure_password
+            ALLOWED_HOSTS=localhost,127.0.0.1,46.224.209.71
+            CORS_ALLOWED_ORIGINS=http://localhost:3000,http://46.224.209.71
+            CSRF_TRUSTED_ORIGINS=http://localhost:3000,http://46.224.209.71
+            NEXT_PUBLIC_API_URL=http://46.224.209.71/petitii-api
+            ENVEOF
+            fi
+            docker-compose build --build-arg NEXT_PUBLIC_API_URL=http://46.224.209.71/petitii-api
+            docker-compose up -d
+            docker exec petitii-api python manage.py migrate --noinput || true
+            docker ps | grep petitii
+
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -264,3 +358,6 @@ jobs:
             echo ""
             echo "Task Manager API health:"
             curl -s http://localhost:8000/api/ || echo "Task Manager API not responding"
+            echo ""
+            echo "Petitii API health:"
+            curl -s http://localhost:8002/api/ || echo "Petitii API not responding"

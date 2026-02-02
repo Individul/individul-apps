@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Search, Download, Eye } from 'lucide-react'
@@ -45,7 +45,7 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
   redirectionata: 'secondary',
 }
 
-export default function PetitionsPage() {
+function PetitionsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [data, setData] = useState<PaginatedResponse<Petition> | null>(null)
@@ -243,5 +243,20 @@ export default function PetitionsPage() {
         )}
       </div>
     </AppLayout>
+  )
+}
+
+export default function PetitionsPage() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-64" />
+        </div>
+      </AppLayout>
+    }>
+      <PetitionsContent />
+    </Suspense>
   )
 }
