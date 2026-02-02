@@ -67,7 +67,7 @@ export default function PetitionDetailPage() {
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
-      router.push('/petitii/login')
+      router.push('/login')
       return
     }
 
@@ -80,7 +80,7 @@ export default function PetitionDetailPage() {
       })
       .catch(() => {
         toast.error('Nu s-a putut încărca petiția')
-        router.push('/petitii/petitions')
+        router.push('/petitions')
       })
       .finally(() => setLoading(false))
   }, [router, params.id])
@@ -169,7 +169,7 @@ export default function PetitionDetailPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/petitii/petitions">
+            <Link href="/petitions">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-4 w-4" />
               </Button>

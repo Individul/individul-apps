@@ -40,7 +40,7 @@ export default function LoginPage() {
       localStorage.setItem('access_token', access)
       localStorage.setItem('refresh_token', refresh)
       toast.success('Autentificare reușită')
-      router.push('/petitii/dashboard')
+      router.push('/dashboard')
     } catch (error) {
       if (error instanceof ApiError) {
         toast.error(error.message || 'Date de autentificare incorecte')

@@ -36,7 +36,7 @@ export default function NotificationsPage() {
   const fetchNotifications = async () => {
     const token = localStorage.getItem('access_token')
     if (!token) {
-      router.push('/petitii/login')
+      router.push('/login')
       return
     }
 

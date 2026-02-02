@@ -23,10 +23,10 @@ interface AppLayoutProps {
 }
 
 const navigation = [
-  { name: 'Panou principal', href: '/petitii/dashboard', icon: LayoutDashboard },
-  { name: 'Petiții', href: '/petitii/petitions', icon: FileText },
-  { name: 'Notificări', href: '/petitii/notifications', icon: Bell },
-  { name: 'Rapoarte', href: '/petitii/reports', icon: BarChart3 },
+  { name: 'Panou principal', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Petiții', href: '/petitions', icon: FileText },
+  { name: 'Notificări', href: '/notifications', icon: Bell },
+  { name: 'Rapoarte', href: '/reports', icon: BarChart3 },
 ]
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -39,7 +39,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
-      router.push('/petitii/login')
+      router.push('/login')
       return
     }
 
@@ -58,7 +58,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const handleLogout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
-    router.push('/petitii/login')
+    router.push('/login')
   }
 
   return (

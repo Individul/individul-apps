@@ -32,7 +32,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
-      router.push('/petitii/login')
+      router.push('/login')
       return
     }
 
@@ -68,7 +68,7 @@ export default function DashboardPage() {
 
         {/* Main stats */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Link href="/petitii/petitions">
+          <Link href="/petitions">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -85,7 +85,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/petitii/petitions?due_filter=due_soon">
+          <Link href="/petitions?due_filter=due_soon">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-yellow-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -104,7 +104,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/petitii/petitions?due_filter=overdue">
+          <Link href="/petitions?due_filter=overdue">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-red-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -123,7 +123,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/petitii/petitions?status=solutionata">
+          <Link href="/petitions?status=solutionata">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-green-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -181,21 +181,21 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <Link
-                href="/petitii/petitions/new"
+                href="/petitions/new"
                 className="flex items-center justify-between p-3 rounded-md border hover:bg-muted transition-colors"
               >
                 <span className="font-medium">Înregistrare petiție nouă</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/petitii/petitions?due_filter=overdue"
+                href="/petitions?due_filter=overdue"
                 className="flex items-center justify-between p-3 rounded-md border hover:bg-muted transition-colors"
               >
                 <span className="font-medium">Petiții cu termen depășit</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/petitii/reports"
+                href="/reports"
                 className="flex items-center justify-between p-3 rounded-md border hover:bg-muted transition-colors"
               >
                 <span className="font-medium">Generare raport</span>

@@ -76,7 +76,7 @@ export default function NewPetitionPage() {
   const onSubmit = async (data: FormData) => {
     const token = localStorage.getItem('access_token')
     if (!token) {
-      router.push('/petitii/login')
+      router.push('/login')
       return
     }
 
@@ -100,7 +100,7 @@ export default function NewPetitionPage() {
     <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/petitii/petitions">
+          <Link href="/petitions">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -217,7 +217,7 @@ export default function NewPetitionPage() {
               </div>
 
               <div className="flex justify-end gap-4">
-                <Link href="/petitii/petitions">
+                <Link href="/petitions">
                   <Button type="button" variant="outline">
                     Anulare
                   </Button>

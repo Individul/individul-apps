@@ -57,7 +57,7 @@ function PetitionsContent() {
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
-      router.push('/petitii/login')
+      router.push('/login')
       return
     }
 
@@ -96,7 +96,7 @@ function PetitionsContent() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Petiții</h1>
-          <Link href="/petitii/petitions/new">
+          <Link href="/petitions/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Petiție nouă
