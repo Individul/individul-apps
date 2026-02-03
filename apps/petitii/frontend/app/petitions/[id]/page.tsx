@@ -141,6 +141,36 @@ export default function PetitionDetailPage() {
     }
   }
 
+  const handleDownloadAttachment = async (attachmentId: string, filename: string) => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+    try {
+      const response = await fetch(`${API_URL}/api/petitions/attachments/${attachmentId}/download/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Download failed')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      toast.error('A apărut o eroare la descărcare')
+    }
+  }
+
   const handleDeleteAttachment = async (attachmentId: string) => {
     const token = localStorage.getItem('access_token')
     if (!token || !petition) return
@@ -394,11 +424,13 @@ export default function PetitionDetailPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </a>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownloadAttachment(attachment.id, attachment.original_filename)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"

@@ -17,8 +17,12 @@ class PetitionAttachmentSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         request = self.context.get('request')
-        if obj.file and request:
-            return request.build_absolute_uri(obj.file.url)
+        if obj.id and request:
+            # Use the download endpoint instead of direct media URL
+            # This works in both development and production
+            from django.urls import reverse
+            download_url = reverse('attachment-download', kwargs={'pk': obj.id})
+            return request.build_absolute_uri(download_url)
         return None
 
     def validate_file(self, value):
