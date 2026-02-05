@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +15,17 @@ from reportlab.lib.styles import getSampleStyleSheet
 import io
 
 from .models import ConvictedPerson
+
+
+def make_json_serializable(obj):
+    """Convert an object to be JSON serializable (handle UUIDs, dates, etc.)."""
+    if isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_json_serializable(item) for item in obj]
+    elif isinstance(obj, UUID):
+        return str(obj)
+    return obj
 from .serializers import (
     ConvictedPersonListSerializer,
     ConvictedPersonDetailSerializer,
@@ -68,8 +81,8 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
             action=action,
             entity_type='ConvictedPerson',
             entity_id=str(instance.id),
-            before_json=before_data,
-            after_json=after_data,
+            before_json=make_json_serializable(before_data),
+            after_json=make_json_serializable(after_data),
             ip_address=self._get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '') if request else ''
         )
