@@ -16,6 +16,7 @@ import {
   Sentence,
   Fraction,
   SentenceCreate,
+  SentenceReductionCreate,
   ApiError,
   CRIME_TYPES,
   SENTENCE_STATUSES,
@@ -91,8 +92,20 @@ function FractionStatusBadge({ status, isFulfilled }: { status: string; isFulfil
 }
 
 // Smart Case File - Sentence Card
-function SentenceCard({ sentence }: { sentence: Sentence }) {
-  const timeServed = calculateTimeServed(sentence.start_date, sentence.end_date)
+function SentenceCard({
+  sentence,
+  onAddReduction,
+  onDeleteReduction,
+}: {
+  sentence: Sentence
+  onAddReduction: (sentenceId: string) => void
+  onDeleteReduction: (sentenceId: string, reductionId: string) => void
+}) {
+  // Use effective_end_date if there are reductions, otherwise use end_date
+  const endDateToUse = sentence.reductions && sentence.reductions.length > 0
+    ? sentence.effective_end_date
+    : sentence.end_date
+  const timeServed = calculateTimeServed(sentence.start_date, endDateToUse)
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -106,24 +119,40 @@ function SentenceCard({ sentence }: { sentence: Sentence }) {
             </h3>
             <p className="text-sm text-slate-500 mt-0.5">
               {sentence.duration_display}
+              {sentence.reductions && sentence.reductions.length > 0 && (
+                <span className="ml-2 text-amber-600">
+                  (Efectiv: {sentence.effective_duration_display})
+                </span>
+              )}
             </p>
           </div>
-          <StatusBadge status={sentence.status} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onAddReduction(sentence.id)}
+              className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+            >
+              + Reducere
+            </button>
+            <StatusBadge status={sentence.status} />
+          </div>
         </div>
 
         {/* Data Grid */}
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           <div>
             <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Început</p>
             <p className="text-sm font-mono text-slate-700 tabular-nums">{formatDate(sentence.start_date)}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Sfârșit</p>
-            <p className="text-sm font-mono text-slate-700 tabular-nums">{formatDate(sentence.end_date)}</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Total Zile</p>
-            <p className="text-sm font-mono text-slate-700 tabular-nums">{sentence.total_days}</p>
+            {sentence.reductions && sentence.reductions.length > 0 ? (
+              <div>
+                <p className="text-sm font-mono text-slate-400 tabular-nums line-through">{formatDate(sentence.end_date)}</p>
+                <p className="text-sm font-mono text-emerald-600 tabular-nums font-semibold">{formatDate(sentence.effective_end_date)}</p>
+              </div>
+            ) : (
+              <p className="text-sm font-mono text-slate-700 tabular-nums">{formatDate(sentence.end_date)}</p>
+            )}
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Infracțiune Gravă</p>
@@ -191,6 +220,49 @@ function SentenceCard({ sentence }: { sentence: Sentence }) {
           </div>
         ))}
       </div>
+
+      {/* Reductions Section */}
+      {sentence.reductions && sentence.reductions.length > 0 && (
+        <div className="border-t border-gray-100 bg-amber-50/50">
+          <div className="px-5 py-3 border-b border-amber-100">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase text-amber-700 font-semibold">Reduceri Aplicate</span>
+              <span className="text-xs text-amber-600 font-medium">
+                Total: -{sentence.total_reduction_days} zile
+              </span>
+            </div>
+          </div>
+          {sentence.reductions.map((reduction, index) => (
+            <div
+              key={reduction.id}
+              className={`flex items-center justify-between px-5 py-2.5 ${
+                index < sentence.reductions.length - 1 ? 'border-b border-amber-100/50' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-2 py-1 bg-amber-100 text-amber-800 font-mono text-xs rounded">
+                  {reduction.legal_article}
+                </span>
+                <span className="text-sm text-amber-700">
+                  -{reduction.reduction_display}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-amber-600 tabular-nums">
+                  {formatDate(reduction.applied_date)}
+                </span>
+                <button
+                  onClick={() => onDeleteReduction(sentence.id, reduction.id)}
+                  className="p-1 text-amber-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Șterge reducerea"
+                >
+                  <X className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -217,6 +289,19 @@ export default function PersonDetailPage() {
     notes: '',
   })
   const [sentenceStartDate, setSentenceStartDate] = useState<Date | undefined>()
+
+  // Reduction form state
+  const [reductionFormOpen, setReductionFormOpen] = useState(false)
+  const [selectedSentenceForReduction, setSelectedSentenceForReduction] = useState<string | null>(null)
+  const [isAddingReduction, setIsAddingReduction] = useState(false)
+  const [newReduction, setNewReduction] = useState<SentenceReductionCreate>({
+    legal_article: '473/4',
+    reduction_years: 0,
+    reduction_months: 0,
+    reduction_days: 0,
+    applied_date: '',
+  })
+  const [reductionDate, setReductionDate] = useState<Date | undefined>()
 
   const fetchPerson = async () => {
     const token = localStorage.getItem('access_token')
@@ -303,6 +388,71 @@ export default function PersonDetailPage() {
       router.push('/persons')
     } catch (error) {
       toast.error('A apărut o eroare')
+    }
+  }
+
+  const handleOpenReductionForm = (sentenceId: string) => {
+    setSelectedSentenceForReduction(sentenceId)
+    setNewReduction({
+      legal_article: '473/4',
+      reduction_years: 0,
+      reduction_months: 0,
+      reduction_days: 0,
+      applied_date: '',
+    })
+    setReductionDate(undefined)
+    setReductionFormOpen(true)
+  }
+
+  const handleAddReduction = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !selectedSentenceForReduction) return
+
+    if (!newReduction.legal_article || !reductionDate) {
+      toast.error('Completează toate câmpurile obligatorii')
+      return
+    }
+
+    if (newReduction.reduction_years === 0 && newReduction.reduction_months === 0 && newReduction.reduction_days === 0) {
+      toast.error('Trebuie specificată o durată a reducerii')
+      return
+    }
+
+    setIsAddingReduction(true)
+
+    try {
+      await sentencesApi.addReduction(token, selectedSentenceForReduction, {
+        ...newReduction,
+        applied_date: reductionDate.toISOString().split('T')[0],
+      })
+      toast.success('Reducerea a fost adăugată')
+      setReductionFormOpen(false)
+      fetchPerson()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A apărut o eroare')
+      }
+    } finally {
+      setIsAddingReduction(false)
+    }
+  }
+
+  const handleDeleteReduction = async (sentenceId: string, reductionId: string) => {
+    if (!confirm('Sigur doriți să ștergeți această reducere? Fracțiile vor fi recalculate.')) {
+      return
+    }
+
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    try {
+      await sentencesApi.deleteReduction(token, sentenceId, reductionId)
+      toast.success('Reducerea a fost ștearsă')
+      fetchPerson()
+    } catch (error) {
+      toast.error('A apărut o eroare la ștergerea reducerii')
     }
   }
 
@@ -569,11 +719,146 @@ export default function PersonDetailPage() {
           ) : (
             <div className="space-y-5">
               {person.sentences.map((sentence) => (
-                <SentenceCard key={sentence.id} sentence={sentence} />
+                <SentenceCard
+                  key={sentence.id}
+                  sentence={sentence}
+                  onAddReduction={handleOpenReductionForm}
+                  onDeleteReduction={handleDeleteReduction}
+                />
               ))}
             </div>
           )}
         </div>
+
+        {/* Reduction Form Sheet */}
+        <Sheet open={reductionFormOpen} onOpenChange={setReductionFormOpen}>
+          <SheetContent hideCloseButton className="flex flex-col p-0">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-800">Adaugă Reducere Pedeapsă</h2>
+                <p className="text-sm text-slate-500 mt-0.5">Conform articolelor legale aplicabile</p>
+              </div>
+              <SheetClose asChild>
+                <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </SheetClose>
+            </div>
+
+            {/* Form Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 pb-32">
+              <div className="space-y-5">
+                {/* Applied Date with Calendar Icon - FIRST */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                    Data Aplicării *
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                    <DatePicker
+                      date={reductionDate}
+                      onSelect={setReductionDate}
+                      placeholder="Selectează data"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Legal Article - Dropdown */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                    Articol Legal *
+                  </label>
+                  <Select
+                    value={newReduction.legal_article}
+                    onValueChange={(value) => setNewReduction({ ...newReduction, legal_article: value })}
+                  >
+                    <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                      <SelectValue placeholder="Selectează articolul" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="473/4">Art. 473/4</SelectItem>
+                      <SelectItem value="385">Art. 385</SelectItem>
+                      <SelectItem value="107">Art. 107</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Reduction Duration - Compact Grid */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                    Durată Reducere *
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          value={newReduction.reduction_years}
+                          onChange={(e) => setNewReduction({ ...newReduction, reduction_years: parseInt(e.target.value) || 0 })}
+                          className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                          ani
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="11"
+                          value={newReduction.reduction_months}
+                          onChange={(e) => setNewReduction({ ...newReduction, reduction_months: parseInt(e.target.value) || 0 })}
+                          className="w-full h-10 px-3 pr-11 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                          luni
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="29"
+                          value={newReduction.reduction_days}
+                          onChange={(e) => setNewReduction({ ...newReduction, reduction_days: parseInt(e.target.value) || 0 })}
+                          className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                          zile
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer - Sticky Bottom */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+              <button
+                onClick={handleAddReduction}
+                disabled={isAddingReduction || !newReduction.legal_article || !reductionDate}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAddingReduction ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Se salvează...
+                  </span>
+                ) : (
+                  'Salvează Reducere'
+                )}
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </AppLayout>
   )

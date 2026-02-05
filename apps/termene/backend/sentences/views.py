@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.conf import settings
 
-from .models import Sentence, Fraction
+from .models import Sentence, Fraction, SentenceReduction
 
 
 def make_json_serializable(obj):
@@ -28,6 +28,7 @@ from .serializers import (
     FractionSerializer,
     FractionUpdateSerializer,
     FractionListSerializer,
+    SentenceReductionSerializer,
 )
 from accounts.permissions import IsOperatorOrReadOnly
 from audit.models import AuditLog
@@ -35,7 +36,7 @@ from audit.middleware import get_current_request
 
 
 class SentenceViewSet(viewsets.ModelViewSet):
-    queryset = Sentence.objects.select_related('person', 'created_by').prefetch_related('fractions')
+    queryset = Sentence.objects.select_related('person', 'created_by').prefetch_related('fractions', 'reductions')
     permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
     filterset_fields = {
         'status': ['exact', 'in'],
@@ -136,6 +137,75 @@ class SentenceViewSet(viewsets.ModelViewSet):
         )
 
         return Response(FractionSerializer(fraction).data)
+
+    @action(detail=True, methods=['post'], url_path='reductions')
+    def add_reduction(self, request, pk=None):
+        """Adaugă o reducere de pedeapsă."""
+        sentence = self.get_object()
+
+        serializer = SentenceReductionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Verificăm că reducerea nu depășește durata rămasă
+        reduction_total = (
+            serializer.validated_data.get('reduction_years', 0) * 365 +
+            serializer.validated_data.get('reduction_months', 0) * 30 +
+            serializer.validated_data.get('reduction_days', 0)
+        )
+
+        current_effective = sentence.total_days - sentence.total_reduction_days
+        if reduction_total >= current_effective:
+            return Response(
+                {'error': 'Reducerea nu poate depăși durata efectivă rămasă.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        reduction = serializer.save(sentence=sentence, created_by=request.user)
+
+        # Recalculăm fracțiile cu durata efectivă
+        sentence.generate_fractions()
+
+        # Audit log
+        self._log_reduction_action('add_reduction', sentence, reduction)
+
+        return Response(SentenceReductionSerializer(reduction).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], url_path='reductions/(?P<reduction_id>[^/.]+)')
+    def delete_reduction(self, request, pk=None, reduction_id=None):
+        """Șterge o reducere de pedeapsă."""
+        sentence = self.get_object()
+        try:
+            reduction = sentence.reductions.get(id=reduction_id)
+        except SentenceReduction.DoesNotExist:
+            return Response(
+                {'error': 'Reducerea nu a fost găsită.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        self._log_reduction_action('delete_reduction', sentence, reduction)
+        reduction.delete()
+
+        # Recalculăm fracțiile
+        sentence.generate_fractions()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _log_reduction_action(self, action, sentence, reduction):
+        """Log reduction actions to audit log."""
+        request = get_current_request()
+        reduction_data = make_json_serializable(SentenceReductionSerializer(reduction).data)
+
+        AuditLog.objects.create(
+            actor=self.request.user,
+            actor_username=self.request.user.username,
+            action=action,
+            entity_type='SentenceReduction',
+            entity_id=str(reduction.id),
+            before_json=reduction_data if action == 'delete_reduction' else None,
+            after_json=reduction_data if action == 'add_reduction' else None,
+            ip_address=self._get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', '') if request else ''
+        )
 
 
 class FractionViewSet(viewsets.ReadOnlyModelViewSet):

@@ -150,6 +150,19 @@ export const sentencesApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  addReduction: (token: string, sentenceId: string, data: SentenceReductionCreate) =>
+    fetchApi<SentenceReduction>(`/api/sentences/${sentenceId}/reductions/`, {
+      token,
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  deleteReduction: (token: string, sentenceId: string, reductionId: string) =>
+    fetchApi(`/api/sentences/${sentenceId}/reductions/${reductionId}/`, {
+      token,
+      method: 'DELETE',
+    }),
 }
 
 // Fractions
@@ -280,6 +293,27 @@ export interface FractionUpdate {
   notes?: string
 }
 
+export interface SentenceReduction {
+  id: string
+  legal_article: string
+  reduction_years: number
+  reduction_months: number
+  reduction_days: number
+  reduction_display: string
+  applied_date: string
+  created_by: number | null
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface SentenceReductionCreate {
+  legal_article: string
+  reduction_years: number
+  reduction_months: number
+  reduction_days: number
+  applied_date: string
+}
+
 export interface Sentence {
   id: string
   person: string
@@ -294,11 +328,18 @@ export interface Sentence {
   start_date: string
   end_date: string
   total_days: number
+  total_reduction_days: number
+  effective_years: number
+  effective_months: number
+  effective_days: number
+  effective_end_date: string
+  effective_duration_display: string
   status: 'active' | 'suspended' | 'completed' | 'conditionally_released'
   status_display: string
   is_serious_crime: boolean
   notes: string
   fractions: Fraction[]
+  reductions: SentenceReduction[]
   created_by: number
   created_by_name: string
   created_at: string

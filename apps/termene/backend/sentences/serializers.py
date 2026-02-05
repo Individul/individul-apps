@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Sentence, Fraction
+from .models import Sentence, Fraction, SentenceReduction
 
 
 class FractionSerializer(serializers.ModelSerializer):
@@ -43,10 +43,46 @@ class FractionListSerializer(serializers.ModelSerializer):
         ]
 
 
+class SentenceReductionSerializer(serializers.ModelSerializer):
+    reduction_display = serializers.CharField(read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SentenceReduction
+        fields = [
+            'id', 'legal_article',
+            'reduction_years', 'reduction_months', 'reduction_days',
+            'reduction_display', 'applied_date',
+            'created_by', 'created_by_name', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.username
+        return None
+
+    def validate(self, data):
+        # Cel puțin o valoare de reducere trebuie să fie > 0
+        years = data.get('reduction_years', 0)
+        months = data.get('reduction_months', 0)
+        days = data.get('reduction_days', 0)
+        if years == 0 and months == 0 and days == 0:
+            raise serializers.ValidationError('Reducerea trebuie să aibă cel puțin o zi.')
+        return data
+
+
 class SentenceListSerializer(serializers.ModelSerializer):
     fractions = FractionSerializer(many=True, read_only=True)
+    reductions = SentenceReductionSerializer(many=True, read_only=True)
     end_date = serializers.DateField(read_only=True)
     total_days = serializers.IntegerField(read_only=True)
+    total_reduction_days = serializers.IntegerField(read_only=True)
+    effective_years = serializers.IntegerField(read_only=True)
+    effective_months = serializers.IntegerField(read_only=True)
+    effective_days = serializers.IntegerField(read_only=True)
+    effective_end_date = serializers.DateField(read_only=True)
+    effective_duration_display = serializers.CharField(read_only=True)
     is_serious_crime = serializers.BooleanField(read_only=True)
     duration_display = serializers.CharField(read_only=True)
     crime_type_display = serializers.CharField(source='get_crime_type_display', read_only=True)
@@ -59,8 +95,11 @@ class SentenceListSerializer(serializers.ModelSerializer):
             'id', 'person', 'crime_type', 'crime_type_display',
             'crime_description', 'sentence_years', 'sentence_months',
             'sentence_days', 'duration_display', 'start_date', 'end_date',
-            'total_days', 'status', 'status_display', 'is_serious_crime',
-            'notes', 'fractions', 'created_by', 'created_by_name',
+            'total_days', 'total_reduction_days',
+            'effective_years', 'effective_months', 'effective_days',
+            'effective_end_date', 'effective_duration_display',
+            'status', 'status_display', 'is_serious_crime',
+            'notes', 'fractions', 'reductions', 'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
 
@@ -72,8 +111,15 @@ class SentenceListSerializer(serializers.ModelSerializer):
 
 class SentenceDetailSerializer(serializers.ModelSerializer):
     fractions = FractionSerializer(many=True, read_only=True)
+    reductions = SentenceReductionSerializer(many=True, read_only=True)
     end_date = serializers.DateField(read_only=True)
     total_days = serializers.IntegerField(read_only=True)
+    total_reduction_days = serializers.IntegerField(read_only=True)
+    effective_years = serializers.IntegerField(read_only=True)
+    effective_months = serializers.IntegerField(read_only=True)
+    effective_days = serializers.IntegerField(read_only=True)
+    effective_end_date = serializers.DateField(read_only=True)
+    effective_duration_display = serializers.CharField(read_only=True)
     is_serious_crime = serializers.BooleanField(read_only=True)
     duration_display = serializers.CharField(read_only=True)
     crime_type_display = serializers.CharField(source='get_crime_type_display', read_only=True)
@@ -87,8 +133,11 @@ class SentenceDetailSerializer(serializers.ModelSerializer):
             'id', 'person', 'person_name', 'crime_type', 'crime_type_display',
             'crime_description', 'sentence_years', 'sentence_months',
             'sentence_days', 'duration_display', 'start_date', 'end_date',
-            'total_days', 'status', 'status_display', 'is_serious_crime',
-            'notes', 'fractions', 'created_by', 'created_by_name',
+            'total_days', 'total_reduction_days',
+            'effective_years', 'effective_months', 'effective_days',
+            'effective_end_date', 'effective_duration_display',
+            'status', 'status_display', 'is_serious_crime',
+            'notes', 'fractions', 'reductions', 'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
