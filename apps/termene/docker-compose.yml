@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: termene-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-termene}
+      POSTGRES_USER: ${DB_USER:-termene}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-termene_secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-termene}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - termene-net
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: termene-api
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
+      - DEBUG=${DEBUG:-False}
+      - DB_NAME=${DB_NAME:-termene}
+      - DB_USER=${DB_USER:-termene}
+      - DB_PASSWORD=${DB_PASSWORD:-termene_secure_password}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3004}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:3004}
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8003:8000"
+    networks:
+      - termene-net
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8003}
+    container_name: termene-web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8003}
+    ports:
+      - "3004:3000"
+    depends_on:
+      - api
+    networks:
+      - termene-net
+
+volumes:
+  postgres_data:
+  media_data:
+  static_data:
+
+networks:
+  termene-net:
+    driver: bridge
