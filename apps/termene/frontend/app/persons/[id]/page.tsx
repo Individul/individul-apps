@@ -3,20 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Edit, Trash2, Check, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Check, Clock, AlertCircle, X, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Separator } from '@/components/ui/separator'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   personsApi,
   sentencesApi,
@@ -30,21 +22,207 @@ import {
 } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 
-function getAlertBadge(alertStatus: string) {
-  switch (alertStatus) {
-    case 'overdue':
-      return <Badge variant="destructive">Depășit</Badge>
-    case 'imminent':
-      return <Badge variant="outline">≤ 30 zile</Badge>
-    case 'upcoming':
-      return <Badge className="bg-muted text-muted-foreground">30-90 zile</Badge>
-    case 'fulfilled':
-      return <Badge className="bg-secondary">Îndeplinit</Badge>
-    case 'distant':
-      return <Badge className="bg-muted text-muted-foreground">&gt; 90 zile</Badge>
-    default:
-      return null
+// Calculate time served percentage
+function calculateTimeServed(startDate: string, endDate: string): number {
+  const start = new Date(startDate).getTime()
+  const end = new Date(endDate).getTime()
+  const now = Date.now()
+
+  if (now <= start) return 0
+  if (now >= end) return 100
+
+  const total = end - start
+  const served = now - start
+  return Math.round((served / total) * 100)
+}
+
+// Status Badge Component
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    suspended: 'bg-amber-50 text-amber-700 border-amber-200',
+    completed: 'bg-gray-100 text-gray-600 border-gray-200',
+    conditionally_released: 'bg-blue-50 text-blue-700 border-blue-200',
   }
+
+  const labels: Record<string, string> = {
+    active: 'Activă',
+    suspended: 'Suspendată',
+    completed: 'Finalizată',
+    conditionally_released: 'Lib. Condiționată',
+  }
+
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${styles[status] || styles.active}`}>
+      {labels[status] || status}
+    </span>
+  )
+}
+
+// Fraction Status Badge
+function FractionStatusBadge({ status, isFulfilled }: { status: string; isFulfilled: boolean }) {
+  if (isFulfilled) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-500 line-through">
+        Îndeplinit
+      </span>
+    )
+  }
+
+  const styles: Record<string, string> = {
+    overdue: 'bg-red-50 text-red-700 border border-red-100',
+    imminent: 'bg-amber-50 text-amber-700 border border-amber-100',
+    upcoming: 'bg-blue-50 text-blue-700 border border-blue-100',
+    distant: 'bg-amber-50 text-amber-700 border border-amber-100',
+  }
+
+  const labels: Record<string, string> = {
+    overdue: 'Depășit',
+    imminent: '≤ 30 Zile',
+    upcoming: '30-90 Zile',
+    distant: '> 90 Zile',
+  }
+
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${styles[status] || styles.distant}`}>
+      {labels[status] || status}
+    </span>
+  )
+}
+
+// Smart Case File - Sentence Card
+function SentenceCard({ sentence, onMarkFulfilled }: {
+  sentence: Sentence
+  onMarkFulfilled: (sentenceId: string, fractionId: string) => void
+}) {
+  const timeServed = calculateTimeServed(sentence.start_date, sentence.end_date)
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null)
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      {/* Header - Context Zone */}
+      <div className="bg-slate-50 p-5">
+        {/* Title & Status Row */}
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              {sentence.crime_type_display}
+            </h3>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {sentence.duration_display}
+            </p>
+          </div>
+          <StatusBadge status={sentence.status} />
+        </div>
+
+        {/* Data Grid */}
+        <div className="grid grid-cols-4 gap-6">
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Început</p>
+            <p className="text-sm font-mono text-slate-700 tabular-nums">{formatDate(sentence.start_date)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Sfârșit</p>
+            <p className="text-sm font-mono text-slate-700 tabular-nums">{formatDate(sentence.end_date)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Total Zile</p>
+            <p className="text-sm font-mono text-slate-700 tabular-nums">{sentence.total_days}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Infracțiune Gravă</p>
+            <p className="text-sm font-mono text-slate-700">{sentence.is_serious_crime ? 'Da' : 'Nu'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Bar - Time Served */}
+      <div className="px-5 py-3 border-b border-gray-100 bg-white">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-wide text-slate-500 font-bold">Timp Executat</span>
+          <span className="text-xs font-medium text-slate-600 tabular-nums">{timeServed}% Executat</span>
+        </div>
+        <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-slate-600 rounded-full transition-all duration-500"
+            style={{ width: `${timeServed}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Fractions Table - Body */}
+      <div className="bg-white">
+        {/* Table Header */}
+        <div className="grid grid-cols-[70px_1fr_100px_100px_90px] px-5 py-3 border-b border-gray-100 bg-white">
+          <span className="text-xs uppercase text-gray-400 font-semibold">Fracție</span>
+          <span className="text-xs uppercase text-gray-400 font-semibold">Descriere</span>
+          <span className="text-xs uppercase text-gray-400 font-semibold">Data</span>
+          <span className="text-xs uppercase text-gray-400 font-semibold">Status</span>
+          <span className="text-xs uppercase text-gray-400 font-semibold text-right">Acțiune</span>
+        </div>
+
+        {/* Table Rows */}
+        {sentence.fractions.map((fraction, index) => (
+          <div
+            key={fraction.id}
+            onMouseEnter={() => setHoveredRow(fraction.id)}
+            onMouseLeave={() => setHoveredRow(null)}
+            className={`grid grid-cols-[70px_1fr_100px_100px_90px] px-5 py-3 items-center transition-colors ${
+              index < sentence.fractions.length - 1 ? 'border-b border-gray-50' : ''
+            } ${hoveredRow === fraction.id ? 'bg-slate-50/50' : ''} ${fraction.is_fulfilled ? 'opacity-50' : ''}`}
+          >
+            {/* Fraction Type - Technical Tag */}
+            <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-slate-700 font-mono text-xs rounded w-fit">
+              {fraction.fraction_type}
+            </span>
+
+            {/* Description */}
+            <div className="pr-4">
+              <p className="text-sm text-slate-700 truncate">{fraction.description}</p>
+              {fraction.days_until !== undefined && !fraction.is_fulfilled && (
+                <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
+                  {fraction.days_until < 0
+                    ? `${Math.abs(fraction.days_until)} zile depășite`
+                    : `${fraction.days_until} zile rămase`}
+                </p>
+              )}
+            </div>
+
+            {/* Date */}
+            <span className="text-sm font-mono text-slate-700 tabular-nums">
+              {formatDate(fraction.calculated_date)}
+            </span>
+
+            {/* Status Badge */}
+            <FractionStatusBadge status={fraction.alert_status} isFulfilled={fraction.is_fulfilled} />
+
+            {/* Action */}
+            <div className="text-right">
+              {!fraction.is_fulfilled && sentence.status === 'active' && (
+                <button
+                  onClick={() => onMarkFulfilled(sentence.id, fraction.id)}
+                  className={`inline-flex items-center text-xs font-medium transition-all ${
+                    hoveredRow === fraction.id
+                      ? 'text-emerald-600 opacity-100'
+                      : 'text-slate-400 opacity-0'
+                  }`}
+                >
+                  <Check className="h-3.5 w-3.5 mr-1" strokeWidth={2} />
+                  Marchează
+                </button>
+              )}
+              {fraction.is_fulfilled && (
+                <span className="inline-flex items-center text-xs text-gray-400">
+                  <Check className="h-3.5 w-3.5 mr-1" />
+                  Done
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function PersonDetailPage() {
@@ -57,7 +235,6 @@ export default function PersonDetailPage() {
   const [isAddingSentence, setIsAddingSentence] = useState(false)
   const [sentenceFormOpen, setSentenceFormOpen] = useState(false)
 
-  // Sentence form state
   const [newSentence, setNewSentence] = useState<SentenceCreate>({
     person: personId,
     crime_type: '',
@@ -118,7 +295,6 @@ export default function PersonDetailPage() {
       })
       toast.success('Sentința a fost adăugată cu succes')
       setSentenceFormOpen(false)
-      // Reset form
       setNewSentence({
         person: personId,
         crime_type: '',
@@ -131,7 +307,6 @@ export default function PersonDetailPage() {
         notes: '',
       })
       setSentenceStartDate(undefined)
-      // Refresh person data
       fetchPerson()
     } catch (error) {
       if (error instanceof ApiError) {
@@ -181,7 +356,10 @@ export default function PersonDetailPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Se încarcă...</p>
+          <div className="flex items-center gap-2 text-slate-400">
+            <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+            <span className="text-sm">Se încarcă...</span>
+          </div>
         </div>
       </AppLayout>
     )
@@ -191,10 +369,14 @@ export default function PersonDetailPage() {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center h-64">
-          <p className="text-muted-foreground">Persoana nu a fost găsită</p>
-          <Button variant="link" asChild className="mt-2">
-            <Link href="/persons">Înapoi la listă</Link>
-          </Button>
+          <AlertCircle className="h-10 w-10 text-slate-300 mb-4" strokeWidth={1.5} />
+          <p className="text-sm text-slate-500 mb-4">Persoana nu a fost găsită</p>
+          <Link
+            href="/persons"
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-md transition-colors"
+          >
+            Înapoi la listă
+          </Link>
         </div>
       </AppLayout>
     )
@@ -202,87 +384,73 @@ export default function PersonDetailPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/persons">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Link
+              href="/persons"
+              className="flex items-center justify-center w-9 h-9 rounded-md bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 text-slate-500" strokeWidth={1.5} />
+            </Link>
             <div>
-              <h1 className="text-2xl font-semibold">{person.full_name}</h1>
-              <p className="text-muted-foreground">CNP: {person.cnp}</p>
+              <h1 className="text-xl font-semibold text-slate-800 tracking-tight">
+                {person.full_name}
+              </h1>
+              <p className="text-sm text-slate-500 mt-0.5">
+                {person.active_sentences_count} {person.active_sentences_count === 1 ? 'sentință activă' : 'sentințe active'}
+              </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleDeletePerson}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Șterge
-            </Button>
-          </div>
+          <button
+            onClick={handleDeletePerson}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 transition-colors"
+          >
+            <Trash2 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+            Șterge
+          </button>
         </div>
 
-        {/* Person Info Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Informații Personale</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-sm text-muted-foreground">Data nașterii</p>
-                <p className="font-medium">{formatDate(person.date_of_birth)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Data internării</p>
-                <p className="font-medium">{formatDate(person.admission_date)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Sentințe active</p>
-                <p className="font-medium">{person.active_sentences_count}</p>
-              </div>
-            </div>
-            {person.notes && (
-              <div className="mt-4">
-                <p className="text-sm text-muted-foreground">Note</p>
-                <p>{person.notes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Sentences Section */}
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-800">Dosare Sentințe</h2>
+            <Sheet open={sentenceFormOpen} onOpenChange={setSentenceFormOpen}>
+              <SheetTrigger asChild>
+                <button className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-md shadow-sm transition-colors">
+                  <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
+                  Adaugă Sentință
+                </button>
+              </SheetTrigger>
+              <SheetContent hideCloseButton className="flex flex-col p-0">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-800">Adaugă Sentință</h2>
+                    <p className="text-sm text-slate-500 mt-0.5">Configurează detaliile sentinței</p>
+                  </div>
+                  <SheetClose asChild>
+                    <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                      <X className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                  </SheetClose>
+                </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="sentences">
-          <TabsList>
-            <TabsTrigger value="sentences">Sentințe ({person.sentences.length})</TabsTrigger>
-            <TabsTrigger value="history">Istoric</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="sentences" className="space-y-4">
-            {/* Add Sentence Button */}
-            <div className="flex justify-end">
-              <Sheet open={sentenceFormOpen} onOpenChange={setSentenceFormOpen}>
-                <SheetTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adaugă Sentință
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="sm:max-w-lg overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Adaugă Sentință</SheetTitle>
-                  </SheetHeader>
-                  <div className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label>Tip Infracțiune *</Label>
+                {/* Form Content - Scrollable */}
+                <div className="flex-1 overflow-y-auto p-6 pb-32">
+                  <div className="space-y-5">
+                    {/* Crime Type */}
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                        Tip Infracțiune *
+                      </label>
                       <Select
                         value={newSentence.crime_type}
                         onValueChange={(value) => setNewSentence({ ...newSentence, crime_type: value })}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selectează tipul" />
+                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                          <SelectValue placeholder="Selectează tipul infracțiunii" />
                         </SelectTrigger>
                         <SelectContent>
                           {CRIME_TYPES.map((type) => (
@@ -294,69 +462,99 @@ export default function PersonDetailPage() {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Descriere (opțional)</Label>
-                      <Input
+                    {/* Crime Description */}
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                        Descriere
+                      </label>
+                      <textarea
                         value={newSentence.crime_description}
                         onChange={(e) => setNewSentence({ ...newSentence, crime_description: e.target.value })}
-                        placeholder="Descriere suplimentară"
+                        placeholder="Descriere suplimentară a infracțiunii..."
+                        rows={3}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 resize-none"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Durată Pedeapsă *</Label>
-                      <div className="grid grid-cols-3 gap-2">
+                    {/* Sentence Duration - Compact Grid */}
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                        Durată Pedeapsă *
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={newSentence.sentence_years}
-                            onChange={(e) => setNewSentence({ ...newSentence, sentence_years: parseInt(e.target.value) || 0 })}
-                            placeholder="Ani"
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">Ani</p>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              value={newSentence.sentence_years}
+                              onChange={(e) => setNewSentence({ ...newSentence, sentence_years: parseInt(e.target.value) || 0 })}
+                              className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                              ani
+                            </span>
+                          </div>
                         </div>
                         <div>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="11"
-                            value={newSentence.sentence_months}
-                            onChange={(e) => setNewSentence({ ...newSentence, sentence_months: parseInt(e.target.value) || 0 })}
-                            placeholder="Luni"
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">Luni</p>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              max="11"
+                              value={newSentence.sentence_months}
+                              onChange={(e) => setNewSentence({ ...newSentence, sentence_months: parseInt(e.target.value) || 0 })}
+                              className="w-full h-10 px-3 pr-11 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                              luni
+                            </span>
+                          </div>
                         </div>
                         <div>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="29"
-                            value={newSentence.sentence_days}
-                            onChange={(e) => setNewSentence({ ...newSentence, sentence_days: parseInt(e.target.value) || 0 })}
-                            placeholder="Zile"
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">Zile</p>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              max="29"
+                              value={newSentence.sentence_days}
+                              onChange={(e) => setNewSentence({ ...newSentence, sentence_days: parseInt(e.target.value) || 0 })}
+                              className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                              zile
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Data Începerii *</Label>
-                      <DatePicker
-                        date={sentenceStartDate}
-                        onSelect={setSentenceStartDate}
-                        placeholder="Selectează data"
-                      />
+                    {/* Start Date with Calendar Icon */}
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                        Data Începerii Executării *
+                      </label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                        <DatePicker
+                          date={sentenceStartDate}
+                          onSelect={setSentenceStartDate}
+                          placeholder="Selectează data"
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Status</Label>
+                    {/* Status */}
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                        Status Sentință
+                      </label>
                       <Select
                         value={newSentence.status}
                         onValueChange={(value) => setNewSentence({ ...newSentence, status: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -369,117 +567,63 @@ export default function PersonDetailPage() {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Note (opțional)</Label>
-                      <Input
+                    {/* Notes */}
+                    <div>
+                      <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                        Note Adiționale
+                      </label>
+                      <textarea
                         value={newSentence.notes}
                         onChange={(e) => setNewSentence({ ...newSentence, notes: e.target.value })}
-                        placeholder="Note suplimentare"
+                        placeholder="Adaugă note sau observații..."
+                        rows={3}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 resize-none"
                       />
                     </div>
-
-                    <Button
-                      className="w-full"
-                      onClick={handleAddSentence}
-                      disabled={isAddingSentence}
-                    >
-                      {isAddingSentence ? 'Se salvează...' : 'Salvează Sentința'}
-                    </Button>
                   </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+                </div>
 
-            {/* Sentences List */}
-            {person.sentences.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground">Nu există sentințe înregistrate</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {person.sentences.map((sentence) => (
-                  <Card key={sentence.id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{sentence.crime_type_display}</CardTitle>
-                          <CardDescription>
-                            {sentence.duration_display} • Începută la {formatDate(sentence.start_date)}
-                          </CardDescription>
-                        </div>
-                        <Badge variant={sentence.status === 'active' ? 'default' : 'secondary'}>
-                          {sentence.status_display}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-4 md:grid-cols-3 mb-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Data sfârșit</p>
-                          <p className="font-medium">{formatDate(sentence.end_date)}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Total zile</p>
-                          <p className="font-medium">{sentence.total_days}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Infracțiune gravă</p>
-                          <p className="font-medium">{sentence.is_serious_crime ? 'Da' : 'Nu'}</p>
-                        </div>
-                      </div>
+                {/* Footer - Sticky Bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+                  <button
+                    onClick={handleAddSentence}
+                    disabled={isAddingSentence}
+                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isAddingSentence ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Se salvează...
+                      </span>
+                    ) : (
+                      'Salvează Sentința'
+                    )}
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
 
-                      <Separator className="my-4" />
-
-                      {/* Fractions */}
-                      <div>
-                        <h4 className="font-medium mb-3">Fracții</h4>
-                        <div className="space-y-2">
-                          {sentence.fractions.map((fraction) => (
-                            <div
-                              key={fraction.id}
-                              className="flex items-center justify-between p-3 rounded-lg border"
-                            >
-                              <div className="flex items-center gap-3">
-                                <Badge variant="outline">{fraction.fraction_type}</Badge>
-                                <div>
-                                  <p className="font-medium">{formatDate(fraction.calculated_date)}</p>
-                                  <p className="text-sm text-muted-foreground">{fraction.description}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {getAlertBadge(fraction.alert_status)}
-                                {!fraction.is_fulfilled && sentence.status === 'active' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleMarkFractionFulfilled(sentence.id, fraction.id)}
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Marchează
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+          {person.sentences.length === 0 ? (
+            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+              <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-6 w-6 text-slate-400" strokeWidth={1.5} />
               </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="history">
-            <Card>
-              <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground">Istoricul va fi implementat în curând</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              <h3 className="text-base font-medium text-slate-800 mb-1">Nicio sentință</h3>
+              <p className="text-sm text-slate-500">Nu există sentințe înregistrate pentru această persoană</p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {person.sentences.map((sentence) => (
+                <SentenceCard
+                  key={sentence.id}
+                  sentence={sentence}
+                  onMarkFulfilled={handleMarkFractionFulfilled}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </AppLayout>
   )

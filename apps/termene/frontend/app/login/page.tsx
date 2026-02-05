@@ -2,12 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock } from 'lucide-react'
+import { Scale } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { authApi, ApiError } from '@/lib/api'
 
 export default function LoginPage() {
@@ -38,23 +35,38 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary rounded-full">
-              <Clock className="h-8 w-8 text-primary-foreground" />
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#F1F5F9] p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo & Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-white border border-gray-200 rounded-xl shadow-sm mb-4">
+            <Scale className="h-6 w-6 text-slate-600" strokeWidth={1.5} />
           </div>
-          <CardTitle className="text-2xl">Termene Penitenciare</CardTitle>
-          <CardDescription>
-            Sistem de monitorizare a termenelor de executare
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Nume utilizator</Label>
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+            Termene
+          </h1>
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-medium mt-1">
+            Monitorizare Execuție Penitenciară
+          </p>
+        </div>
+
+        {/* Login Card */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          {/* Card Header */}
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900">Autentificare</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Introduceți credențialele pentru acces</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="username"
+                className="text-[10px] font-bold uppercase tracking-widest text-gray-400"
+              >
+                Nume Utilizator
+              </label>
               <Input
                 id="username"
                 type="text"
@@ -63,10 +75,17 @@ export default function LoginPage() {
                 placeholder="Introduceți numele de utilizator"
                 required
                 disabled={isLoading}
+                className="rounded-md border-gray-200 h-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Parolă</Label>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="password"
+                className="text-[10px] font-bold uppercase tracking-widest text-gray-400"
+              >
+                Parolă
+              </label>
               <Input
                 id="password"
                 type="password"
@@ -75,14 +94,32 @@ export default function LoginPage() {
                 placeholder="Introduceți parola"
                 required
                 disabled={isLoading}
+                className="rounded-md border-gray-200 h-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Se autentifică...' : 'Autentificare'}
-            </Button>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-9 bg-[#1E293B] hover:bg-[#334155] text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 mt-2"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Se autentifică...
+                </span>
+              ) : (
+                'Autentificare'
+              )}
+            </button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          Sistem de management al termenelor de executare
+        </p>
+      </div>
     </div>
   )
 }

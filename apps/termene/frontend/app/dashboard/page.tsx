@@ -3,12 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Users, Clock, AlertTriangle, AlertCircle, CheckCircle, Plus } from 'lucide-react'
+import { Users, Clock, AlertTriangle, AlertCircle, CheckCircle, Plus, FileText } from 'lucide-react'
 import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { personsApi, alertsApi, DashboardStats, AlertDashboard } from '@/lib/api'
 
 export default function DashboardPage() {
@@ -40,7 +36,10 @@ export default function DashboardPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Se încarcă...</p>
+          <div className="flex items-center gap-2 text-slate-400">
+            <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+            <span className="text-sm">Se încarcă...</span>
+          </div>
         </div>
       </AppLayout>
     )
@@ -48,149 +47,194 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">Panou principal</h1>
-            <p className="text-muted-foreground">Monitorizarea termenelor de executare</p>
+            <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Panou Principal</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Monitorizarea termenelor de executare</p>
           </div>
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link href="/persons/new">
-                <Plus className="h-4 w-4 mr-2" />
-                Adaugă persoană
-              </Link>
-            </Button>
+          <Link
+            href="/persons/new"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-md transition-colors shadow-sm"
+          >
+            <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
+            Adaugă persoană
+          </Link>
+        </div>
+
+        {/* Stats Cards - Refined */}
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {/* Total Persons */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                  Total Persoane
+                </p>
+                <p className="text-3xl font-semibold text-slate-800 mt-2 tabular-nums">
+                  {stats?.total_persons || 0}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {stats?.persons_with_active_sentences || 0} cu sentințe active
+                </p>
+              </div>
+              <Users className="h-5 w-5 text-slate-300 opacity-60" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          {/* Overdue */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                  Termene Depășite
+                </p>
+                <p className="text-3xl font-semibold text-red-600 mt-2 tabular-nums">
+                  {alertSummary?.overdue || 0}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Necesită atenție imediată
+                </p>
+              </div>
+              <AlertTriangle className="h-5 w-5 text-red-300 opacity-60" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          {/* Imminent */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                  Termene Iminente
+                </p>
+                <p className="text-3xl font-semibold text-amber-600 mt-2 tabular-nums">
+                  {alertSummary?.imminent || 0}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  În următoarele 30 de zile
+                </p>
+              </div>
+              <AlertCircle className="h-5 w-5 text-amber-300 opacity-60" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          {/* Fulfilled */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                  Îndeplinite
+                </p>
+                <p className="text-3xl font-semibold text-emerald-600 mt-2 tabular-nums">
+                  {alertSummary?.fulfilled || 0}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Fracții completate
+                </p>
+              </div>
+              <CheckCircle className="h-5 w-5 text-emerald-300 opacity-60" strokeWidth={1.5} />
+            </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Persoane</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.total_persons || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats?.persons_with_active_sentences || 0} cu sentințe active
-              </p>
-            </CardContent>
-          </Card>
+        {/* Alert Summary - No borders between rows */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-5">
+            <h2 className="text-sm font-semibold text-slate-800">Sumar Alerte</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Distribuția termenelor pe categorii</p>
+          </div>
+          <div className="px-2 pb-2">
+            {/* Overdue Row */}
+            <div className="flex items-center justify-between px-4 py-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-50 text-red-700">
+                  Depășite
+                </span>
+                <span className="text-sm text-slate-600">Termene care au trecut de data calculată</span>
+              </div>
+              <span className="text-sm font-semibold text-slate-800 tabular-nums">{alertSummary?.overdue || 0}</span>
+            </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Termene Depășite</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{alertSummary?.overdue || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Necesită atenție imediată
-              </p>
-            </CardContent>
-          </Card>
+            {/* Imminent Row */}
+            <div className="flex items-center justify-between px-4 py-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700">
+                  ≤ 30 Zile
+                </span>
+                <span className="text-sm text-slate-600">Termene iminente</span>
+              </div>
+              <span className="text-sm font-semibold text-slate-800 tabular-nums">{alertSummary?.imminent || 0}</span>
+            </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Termene Iminente</CardTitle>
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{alertSummary?.imminent || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                În următoarele 30 de zile
-              </p>
-            </CardContent>
-          </Card>
+            {/* Upcoming Row */}
+            <div className="flex items-center justify-between px-4 py-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700">
+                  30-90 Zile
+                </span>
+                <span className="text-sm text-slate-600">Termene în curând</span>
+              </div>
+              <span className="text-sm font-semibold text-slate-800 tabular-nums">{alertSummary?.upcoming || 0}</span>
+            </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Îndeplinite</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{alertSummary?.fulfilled || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Fracții completate
-              </p>
-            </CardContent>
-          </Card>
+            {/* Fulfilled Row */}
+            <div className="flex items-center justify-between px-4 py-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700">
+                  Îndeplinite
+                </span>
+                <span className="text-sm text-slate-600">Fracții completate</span>
+              </div>
+              <span className="text-sm font-semibold text-slate-800 tabular-nums">{alertSummary?.fulfilled || 0}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Alert Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sumar Alerte</CardTitle>
-            <CardDescription>Distribuția termenelor pe categorii</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="destructive">Depășite</Badge>
-                  <span className="text-sm text-muted-foreground">Termene care au trecut de data calculată</span>
-                </div>
-                <span className="font-semibold">{alertSummary?.overdue || 0}</span>
+        {/* Quick Actions - Card-like interactive buttons */}
+        <div>
+          <h2 className="text-sm font-semibold text-slate-800 mb-4">Acțiuni Rapide</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Link
+              href="/persons"
+              className="flex items-center gap-3 p-4 bg-white rounded-lg shadow-sm hover:shadow-md border border-transparent transition-all group"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                <Users className="h-5 w-5 text-slate-600" strokeWidth={1.5} />
               </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">≤ 30 zile</Badge>
-                  <span className="text-sm text-muted-foreground">Termene iminente</span>
-                </div>
-                <span className="font-semibold">{alertSummary?.imminent || 0}</span>
+              <div>
+                <p className="text-sm font-medium text-slate-800">Persoane</p>
+                <p className="text-xs text-slate-500">Vezi toate persoanele</p>
               </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-muted text-muted-foreground">30-90 zile</Badge>
-                  <span className="text-sm text-muted-foreground">Termene în curând</span>
-                </div>
-                <span className="font-semibold">{alertSummary?.upcoming || 0}</span>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-secondary">Îndeplinite</Badge>
-                  <span className="text-sm text-muted-foreground">Fracții completate</span>
-                </div>
-                <span className="font-semibold">{alertSummary?.fulfilled || 0}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </Link>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Acțiuni Rapide</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" asChild>
-                <Link href="/persons">
-                  <Users className="h-4 w-4 mr-2" />
-                  Vezi toate persoanele
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/alerts">
-                  <Clock className="h-4 w-4 mr-2" />
-                  Vezi toate alertele
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/reports">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Generează raport
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            <Link
+              href="/alerts"
+              className="flex items-center gap-3 p-4 bg-white rounded-lg shadow-sm hover:shadow-md border border-transparent transition-all group"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                <Clock className="h-5 w-5 text-slate-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-800">Alerte</p>
+                <p className="text-xs text-slate-500">Vezi toate alertele</p>
+              </div>
+            </Link>
+
+            <Link
+              href="/reports"
+              className="flex items-center gap-3 p-4 bg-white rounded-lg shadow-sm hover:shadow-md border border-transparent transition-all group"
+            >
+              <div className="flex items-center justify-center w-10 h-10 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                <FileText className="h-5 w-5 text-slate-600" strokeWidth={1.5} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-800">Rapoarte</p>
+                <p className="text-xs text-slate-500">Generează raport</p>
+              </div>
+            </Link>
+          </div>
+        </div>
       </div>
     </AppLayout>
   )

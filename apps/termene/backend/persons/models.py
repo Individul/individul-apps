@@ -24,13 +24,19 @@ class ConvictedPerson(models.Model):
     cnp = models.CharField(
         max_length=13,
         unique=True,
+        blank=True,
+        null=True,
         validators=[cnp_validator],
         verbose_name='CNP'
     )
     date_of_birth = models.DateField(
+        blank=True,
+        null=True,
         verbose_name='Data nașterii'
     )
     admission_date = models.DateField(
+        blank=True,
+        null=True,
         verbose_name='Data internării'
     )
     notes = models.TextField(
@@ -58,7 +64,9 @@ class ConvictedPerson(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.last_name} {self.first_name} ({self.cnp})"
+        if self.cnp:
+            return f"{self.last_name} {self.first_name} ({self.cnp})"
+        return f"{self.last_name} {self.first_name}"
 
     @property
     def full_name(self):

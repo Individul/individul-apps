@@ -3,16 +3,15 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { ro } from "date-fns/locale"
-import { Calendar as CalendarIcon } from "lucide-react"
 import { DayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 
 interface DatePickerProps {
   date: Date | undefined
   onSelect: (date: Date | undefined) => void
   placeholder?: string
   disabled?: boolean
+  className?: string
 }
 
 export function DatePicker({
@@ -20,24 +19,26 @@ export function DatePicker({
   onSelect,
   placeholder = "Selectează data",
   disabled = false,
+  className,
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
 
   return (
     <div className="relative">
-      <Button
-        variant="outline"
-        disabled={disabled}
-        className={cn(
-          "w-full justify-start text-left font-normal",
-          !date && "text-muted-foreground"
-        )}
-        onClick={() => setIsOpen(!isOpen)}
+      <button
         type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-left text-sm transition-colors",
+          "focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500",
+          "disabled:opacity-50 disabled:cursor-not-allowed",
+          date ? "text-slate-900" : "text-slate-400",
+          className
+        )}
       >
-        <CalendarIcon className="mr-2 h-4 w-4" />
         {date ? format(date, "dd.MM.yyyy", { locale: ro }) : placeholder}
-      </Button>
+      </button>
       {isOpen && (
         <>
           <div

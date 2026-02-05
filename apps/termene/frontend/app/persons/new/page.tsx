@@ -3,13 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Save, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { DatePicker } from '@/components/ui/date-picker'
 import { personsApi, ApiError, PersonCreate } from '@/lib/api'
 
@@ -19,13 +15,12 @@ export default function NewPersonPage() {
   const [formData, setFormData] = useState<PersonCreate>({
     first_name: '',
     last_name: '',
-    cnp: '',
-    date_of_birth: '',
-    admission_date: '',
-    notes: '',
+    start_date: '',
+    sentence_years: 0,
+    sentence_months: 0,
+    sentence_days: 0,
   })
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>()
-  const [admissionDate, setAdmissionDate] = useState<Date | undefined>()
+  const [startDate, setStartDate] = useState<Date | undefined>()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,9 +30,8 @@ export default function NewPersonPage() {
       return
     }
 
-    // Validate CNP
-    if (!/^\d{13}$/.test(formData.cnp)) {
-      toast.error('CNP-ul trebuie să conțină exact 13 cifre')
+    if (formData.sentence_years === 0 && formData.sentence_months === 0 && formData.sentence_days === 0) {
+      toast.error('Pedeapsa trebuie să aibă cel puțin o zi')
       return
     }
 
@@ -46,8 +40,7 @@ export default function NewPersonPage() {
     try {
       const data = {
         ...formData,
-        date_of_birth: dateOfBirth ? dateOfBirth.toISOString().split('T')[0] : '',
-        admission_date: admissionDate ? admissionDate.toISOString().split('T')[0] : '',
+        start_date: startDate ? startDate.toISOString().split('T')[0] : '',
       }
 
       const person = await personsApi.create(token, data)
@@ -66,112 +59,181 @@ export default function NewPersonPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="max-w-xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/persons">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
+        <div className="flex items-start gap-3 mb-8">
+          <Link
+            href="/persons"
+            className="flex items-center justify-center w-9 h-9 rounded-md bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 text-slate-500" strokeWidth={1.5} />
+          </Link>
           <div>
-            <h1 className="text-2xl font-semibold">Adaugă Persoană</h1>
-            <p className="text-muted-foreground">Completează datele persoanei condamnate</p>
+            <h1 className="text-xl font-semibold text-slate-800 tracking-tight">
+              Adaugă Persoană
+            </h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Completează datele persoanei condamnate
+            </p>
           </div>
         </div>
 
-        {/* Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Date Personale</CardTitle>
-            <CardDescription>Informații de identificare a persoanei</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Nume *</Label>
-                  <Input
-                    id="last_name"
-                    value={formData.last_name}
-                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    placeholder="Introduceți numele"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Prenume *</Label>
-                  <Input
-                    id="first_name"
-                    value={formData.first_name}
-                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    placeholder="Introduceți prenumele"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
+        {/* Form Card */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          {/* Section Header */}
+          <div className="px-6 pt-6 pb-4 mb-2 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-slate-800">Date Personale</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Informații de identificare</p>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="cnp">CNP *</Label>
-                <Input
-                  id="cnp"
-                  value={formData.cnp}
-                  onChange={(e) => setFormData({ ...formData, cnp: e.target.value.replace(/\D/g, '').slice(0, 13) })}
-                  placeholder="Introduceți CNP-ul (13 cifre)"
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="px-6 pb-6">
+            {/* Name Fields */}
+            <div className="grid gap-5 md:grid-cols-2 mb-5">
+              <div>
+                <label className="block text-xs uppercase tracking-wide font-semibold text-slate-500 mb-1.5">
+                  Nume
+                </label>
+                <input
+                  type="text"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="Introduceți numele"
                   required
                   disabled={isLoading}
-                  maxLength={13}
+                  className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 disabled:opacity-50 transition-colors"
                 />
-                <p className="text-xs text-muted-foreground">
-                  {formData.cnp.length}/13 cifre
-                </p>
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Data Nașterii *</Label>
-                  <DatePicker
-                    date={dateOfBirth}
-                    onSelect={setDateOfBirth}
-                    placeholder="Selectează data nașterii"
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Data Internării *</Label>
-                  <DatePicker
-                    date={admissionDate}
-                    onSelect={setAdmissionDate}
-                    placeholder="Selectează data internării"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Note</Label>
-                <Input
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Note adiționale (opțional)"
+              <div>
+                <label className="block text-xs uppercase tracking-wide font-semibold text-slate-500 mb-1.5">
+                  Prenume
+                </label>
+                <input
+                  type="text"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="Introduceți prenumele"
+                  required
                   disabled={isLoading}
+                  className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 disabled:opacity-50 transition-colors"
                 />
               </div>
+            </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Se salvează...' : 'Salvează'}
-                </Button>
-                <Button type="button" variant="outline" asChild disabled={isLoading}>
-                  <Link href="/persons">Anulează</Link>
-                </Button>
+            {/* Start Date */}
+            <div className="mb-5">
+              <label className="block text-xs uppercase tracking-wide font-semibold text-slate-500 mb-1.5">
+                Început de Termen
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                <DatePicker
+                  date={startDate}
+                  onSelect={setStartDate}
+                  placeholder="Selectează data începutului de termen"
+                  disabled={isLoading}
+                  className="pl-10"
+                />
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+
+            {/* Sentence Duration - Clean Grid */}
+            <div className="mb-6">
+              <label className="block text-xs uppercase tracking-wide font-semibold text-slate-500 mb-3">
+                Durata Pedepsei
+              </label>
+              <div className="grid grid-cols-3 gap-4">
+                {/* Years */}
+                <div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.sentence_years}
+                      onChange={(e) => setFormData({ ...formData, sentence_years: parseInt(e.target.value) || 0 })}
+                      disabled={isLoading}
+                      className="w-full h-12 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-lg font-medium text-slate-800 tabular-nums focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 disabled:opacity-50 transition-colors"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
+                      ani
+                    </span>
+                  </div>
+                </div>
+
+                {/* Months */}
+                <div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      max={11}
+                      value={formData.sentence_months}
+                      onChange={(e) => setFormData({ ...formData, sentence_months: parseInt(e.target.value) || 0 })}
+                      disabled={isLoading}
+                      className="w-full h-12 px-3 pr-12 bg-white border border-gray-200 rounded-md text-center text-lg font-medium text-slate-800 tabular-nums focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 disabled:opacity-50 transition-colors"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
+                      luni
+                    </span>
+                  </div>
+                </div>
+
+                {/* Days */}
+                <div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      max={30}
+                      value={formData.sentence_days}
+                      onChange={(e) => setFormData({ ...formData, sentence_days: parseInt(e.target.value) || 0 })}
+                      disabled={isLoading}
+                      className="w-full h-12 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-lg font-medium text-slate-800 tabular-nums focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 disabled:opacity-50 transition-colors"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
+                      zile
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-100 pt-5 mt-6">
+              {/* Actions - Aligned Right */}
+              <div className="flex items-center justify-end gap-3">
+                <Link
+                  href="/persons"
+                  className="inline-flex items-center h-10 px-4 text-sm font-medium text-slate-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Anulează
+                </Link>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="inline-flex items-center h-10 px-6 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 shadow-sm transition-colors disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Se salvează...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" strokeWidth={1.5} />
+                      Salvează
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Info Note */}
+        <p className="text-xs text-slate-500 mt-4 text-center">
+          O sentință inițială va fi creată automat cu datele introduse.
+        </p>
       </div>
     </AppLayout>
   )

@@ -1,52 +1,173 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Bell, Check, RefreshCw } from 'lucide-react'
+import { Check, RefreshCw, AlertTriangle, Clock, X, CheckCircle2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { alertsApi, Alert, PaginatedResponse } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 
-function getAlertBadge(alertType: string) {
+// Tab configuration
+const TABS = [
+  { id: 'all', label: 'Toate' },
+  { id: 'overdue', label: 'Depășite' },
+  { id: 'imminent', label: 'Iminente' },
+  { id: 'upcoming', label: 'În Curând' },
+] as const
+
+type TabId = typeof TABS[number]['id']
+
+// Get border color based on alert type
+function getAlertBorderColor(alertType: string): string {
   switch (alertType) {
     case 'overdue':
-      return <Badge variant="destructive">Depășit</Badge>
+      return 'border-l-red-500'
     case 'imminent':
-      return <Badge variant="outline">≤ 30 zile</Badge>
+      return 'border-l-amber-500'
     case 'upcoming':
-      return <Badge className="bg-muted text-muted-foreground">30-90 zile</Badge>
-    case 'fulfilled':
-      return <Badge className="bg-secondary">Îndeplinit</Badge>
+      return 'border-l-blue-400'
     default:
-      return null
+      return 'border-l-gray-300'
   }
 }
 
-function getPriorityBadge(priority: string) {
-  switch (priority) {
-    case 'high':
-      return <Badge variant="destructive">Ridicată</Badge>
-    case 'medium':
-      return <Badge variant="outline">Medie</Badge>
-    case 'low':
-      return <Badge className="bg-secondary">Scăzută</Badge>
+// Get icon background color
+function getIconBgColor(alertType: string): string {
+  switch (alertType) {
+    case 'overdue':
+      return 'bg-red-50 text-red-500'
+    case 'imminent':
+      return 'bg-amber-50 text-amber-500'
+    case 'upcoming':
+      return 'bg-blue-50 text-blue-500'
     default:
-      return null
+      return 'bg-gray-50 text-gray-500'
   }
+}
+
+// Alert Card Component
+function AlertCard({
+  alert,
+  onMarkRead,
+  onDismiss
+}: {
+  alert: Alert
+  onMarkRead: (id: string) => void
+  onDismiss: (id: string) => void
+}) {
+  const borderColor = getAlertBorderColor(alert.alert_type)
+  const iconBgColor = getIconBgColor(alert.alert_type)
+
+  return (
+    <div
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 ${borderColor} p-4 mb-3 transition-all hover:shadow-md ${
+        alert.is_read ? 'opacity-60' : ''
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        {/* Left - Icon */}
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${iconBgColor}`}>
+          {alert.alert_type === 'overdue' ? (
+            <AlertTriangle className="h-5 w-5" strokeWidth={1.5} />
+          ) : (
+            <Clock className="h-5 w-5" strokeWidth={1.5} />
+          )}
+        </div>
+
+        {/* Middle - Content */}
+        <div className="flex-1 min-w-0">
+          {/* Person Name */}
+          <Link
+            href={`/persons/${alert.person}`}
+            className="text-sm font-bold text-slate-900 hover:text-slate-700 transition-colors"
+          >
+            {alert.person_name}
+          </Link>
+
+          {/* Message */}
+          <p className="text-sm text-slate-600 mt-0.5">
+            {alert.message}
+          </p>
+
+          {/* Meta */}
+          <div className="flex items-center gap-4 mt-2">
+            <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-mono">
+              {alert.fraction_type}
+            </span>
+            <span className="text-xs text-gray-500">
+              Data țintă: <span className="font-medium text-slate-700 tabular-nums">{formatDate(alert.target_date)}</span>
+            </span>
+            {!alert.is_read && (
+              <span className="inline-flex items-center px-1.5 py-0.5 bg-slate-900 text-white rounded text-[10px] font-bold">
+                NOU
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Right - Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href={`/persons/${alert.person}`}
+            className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
+          >
+            <ExternalLink className="h-3 w-3 mr-1.5" strokeWidth={2} />
+            Vezi Dosar
+          </Link>
+          {!alert.is_read && (
+            <button
+              onClick={() => onMarkRead(alert.id)}
+              className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+              title="Marchează ca citit"
+            >
+              <Check className="h-4 w-4" strokeWidth={2} />
+            </button>
+          )}
+          <button
+            onClick={() => onDismiss(alert.id)}
+            className="p-1.5 text-gray-400 hover:text-slate-600 hover:bg-gray-100 rounded-full transition-colors"
+            title="Dismiss"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Empty State Component
+function EmptyState({ activeTab }: { activeTab: TabId }) {
+  const isFiltered = activeTab !== 'all'
+
+  return (
+    <div className="flex flex-col items-center justify-center py-20 px-4">
+      {/* Large Icon Circle */}
+      <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+        <CheckCircle2 className="h-12 w-12 text-slate-300" strokeWidth={1} />
+      </div>
+
+      {/* Message */}
+      <h3 className="text-lg font-semibold text-slate-800 mb-2">
+        {isFiltered ? 'Nicio alertă în această categorie' : 'Nicio alertă activă'}
+      </h3>
+
+      {/* Sub-message */}
+      <p className="text-sm text-slate-400 text-center max-w-sm">
+        {isFiltered
+          ? 'Încercați să schimbați categoria sau verificați mai târziu.'
+          : 'Toate termenele sunt sub control. Relaxează-te.'}
+      </p>
+    </div>
+  )
 }
 
 export default function AlertsPage() {
   const router = useRouter()
   const [alerts, setAlerts] = useState<Alert[]>([])
-  const [filteredAlerts, setFilteredAlerts] = useState<Alert[]>([])
-  const [activeTab, setActiveTab] = useState('all')
+  const [activeTab, setActiveTab] = useState<TabId>('all')
   const [isLoading, setIsLoading] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
 
@@ -60,7 +181,6 @@ export default function AlertsPage() {
     try {
       const data: PaginatedResponse<Alert> = await alertsApi.list(token)
       setAlerts(data.results)
-      filterAlerts(data.results, activeTab)
     } catch (error) {
       console.error(error)
     } finally {
@@ -73,17 +193,30 @@ export default function AlertsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
-  const filterAlerts = (alertsList: Alert[], tab: string) => {
-    if (tab === 'all') {
-      setFilteredAlerts(alertsList)
-    } else {
-      setFilteredAlerts(alertsList.filter(a => a.alert_type === tab))
-    }
-  }
+  // Filter alerts based on active tab
+  const filteredAlerts = useMemo(() => {
+    if (activeTab === 'all') return alerts
+    return alerts.filter(a => a.alert_type === activeTab)
+  }, [alerts, activeTab])
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-    filterAlerts(alerts, tab)
+  // Count alerts per tab
+  const tabCounts = useMemo(() => ({
+    all: alerts.length,
+    overdue: alerts.filter(a => a.alert_type === 'overdue').length,
+    imminent: alerts.filter(a => a.alert_type === 'imminent').length,
+    upcoming: alerts.filter(a => a.alert_type === 'upcoming').length,
+  }), [alerts])
+
+  // Get badge style for tab
+  const getTabBadgeStyle = (tabId: TabId): string => {
+    switch (tabId) {
+      case 'overdue':
+        return 'bg-red-100 text-red-600'
+      case 'imminent':
+        return 'bg-amber-100 text-amber-600'
+      default:
+        return 'bg-gray-100 text-gray-600'
+    }
   }
 
   const handleMarkRead = async (alertId: string) => {
@@ -93,7 +226,20 @@ export default function AlertsPage() {
     try {
       await alertsApi.markRead(token, alertId)
       setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, is_read: true } : a))
-      filterAlerts(alerts.map(a => a.id === alertId ? { ...a, is_read: true } : a), activeTab)
+      toast.success('Alertă marcată ca citită')
+    } catch (error) {
+      toast.error('A apărut o eroare')
+    }
+  }
+
+  const handleDismiss = async (alertId: string) => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    try {
+      await alertsApi.markRead(token, alertId)
+      setAlerts(prev => prev.filter(a => a.id !== alertId))
+      toast.success('Alertă eliminată')
     } catch (error) {
       toast.error('A apărut o eroare')
     }
@@ -105,9 +251,7 @@ export default function AlertsPage() {
 
     try {
       await alertsApi.markAllRead(token)
-      const updatedAlerts = alerts.map(a => ({ ...a, is_read: true }))
-      setAlerts(updatedAlerts)
-      filterAlerts(updatedAlerts, activeTab)
+      setAlerts(prev => prev.map(a => ({ ...a, is_read: true })))
       toast.success('Toate alertele au fost marcate ca citite')
     } catch (error) {
       toast.error('A apărut o eroare')
@@ -136,103 +280,103 @@ export default function AlertsPage() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">Alerte</h1>
-            <p className="text-muted-foreground">
-              {unreadCount} alerte necitite din {alerts.length} total
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Centru de Alerte
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Monitorizare automată a termenelor critice
             </p>
+            {unreadCount > 0 && (
+              <p className="text-xs text-slate-400 mt-1">
+                {unreadCount} {unreadCount === 1 ? 'alertă necitită' : 'alerte necitite'}
+              </p>
+            )}
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleGenerateAlerts} disabled={isGenerating}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleGenerateAlerts}
+              disabled={isGenerating}
+              className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 mr-1.5 ${isGenerating ? 'animate-spin' : ''}`} strokeWidth={1.5} />
               Regenerează
-            </Button>
-            <Button variant="outline" onClick={handleMarkAllRead}>
-              <Check className="h-4 w-4 mr-2" />
+            </button>
+            <button
+              onClick={handleMarkAllRead}
+              className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              <Check className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
               Marchează toate
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="all">Toate ({alerts.length})</TabsTrigger>
-            <TabsTrigger value="overdue">
-              Depășite ({alerts.filter(a => a.alert_type === 'overdue').length})
-            </TabsTrigger>
-            <TabsTrigger value="imminent">
-              Iminente ({alerts.filter(a => a.alert_type === 'imminent').length})
-            </TabsTrigger>
-            <TabsTrigger value="upcoming">
-              În curând ({alerts.filter(a => a.alert_type === 'upcoming').length})
-            </TabsTrigger>
-          </TabsList>
+        {/* Tabs - Full Width Border Bottom */}
+        <div className="border-b border-gray-200">
+          <nav className="flex gap-6">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative pb-3 text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-slate-900 font-semibold'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  {tab.label}
+                  {tabCounts[tab.id] > 0 && (
+                    <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold ${getTabBadgeStyle(tab.id)}`}>
+                      {tabCounts[tab.id]}
+                    </span>
+                  )}
+                </span>
 
-          <TabsContent value={activeTab}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Lista Alertelor</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-32">
-                    <p className="text-muted-foreground">Se încarcă...</p>
-                  </div>
-                ) : filteredAlerts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-32 text-center">
-                    <Bell className="h-8 w-8 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">Nu există alerte în această categorie</p>
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-2">
-                      {filteredAlerts.map((alert) => (
-                        <div
-                          key={alert.id}
-                          className={`flex items-start justify-between p-4 rounded-lg border ${
-                            alert.is_read ? 'bg-muted/30' : 'bg-background'
-                          }`}
-                        >
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-2">
-                              {getAlertBadge(alert.alert_type)}
-                              {getPriorityBadge(alert.priority)}
-                              {!alert.is_read && (
-                                <Badge variant="default" className="ml-auto">Nou</Badge>
-                              )}
-                            </div>
-                            <Link
-                              href={`/persons/${alert.person}`}
-                              className="font-medium hover:underline"
-                            >
-                              {alert.person_name}
-                            </Link>
-                            <p className="text-sm text-muted-foreground">{alert.message}</p>
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>Fracție: {alert.fraction_type}</span>
-                              <span>Data țintă: {formatDate(alert.target_date)}</span>
-                            </div>
-                          </div>
-                          {!alert.is_read && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMarkRead(alert.id)}
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                {/* Active Indicator */}
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Alerts List */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex items-center gap-2 text-slate-400">
+              <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+              <span className="text-sm">Se încarcă alertele...</span>
+            </div>
+          </div>
+        ) : filteredAlerts.length === 0 ? (
+          <EmptyState activeTab={activeTab} />
+        ) : (
+          <div>
+            {/* Results count */}
+            <p className="text-xs text-gray-500 mb-4">
+              {filteredAlerts.length} {filteredAlerts.length === 1 ? 'alertă' : 'alerte'}
+              {activeTab !== 'all' && ` în categoria "${TABS.find(t => t.id === activeTab)?.label}"`}
+            </p>
+
+            {/* Alert Cards */}
+            <div>
+              {filteredAlerts.map((alert) => (
+                <AlertCard
+                  key={alert.id}
+                  alert={alert}
+                  onMarkRead={handleMarkRead}
+                  onDismiss={handleDismiss}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   )

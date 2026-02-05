@@ -56,17 +56,53 @@ class ConvictedPersonDetailSerializer(serializers.ModelSerializer):
 
 
 class ConvictedPersonCreateSerializer(serializers.ModelSerializer):
+    # Sentence fields for creating person with sentence
+    start_date = serializers.DateField(write_only=True)
+    sentence_years = serializers.IntegerField(write_only=True, min_value=0)
+    sentence_months = serializers.IntegerField(write_only=True, min_value=0, max_value=11)
+    sentence_days = serializers.IntegerField(write_only=True, min_value=0, max_value=30)
+
     class Meta:
         model = ConvictedPerson
         fields = [
-            'first_name', 'last_name', 'cnp',
-            'date_of_birth', 'admission_date', 'notes'
+            'first_name', 'last_name',
+            'start_date', 'sentence_years', 'sentence_months', 'sentence_days'
         ]
 
-    def validate_cnp(self, value):
-        if not value.isdigit() or len(value) != 13:
-            raise serializers.ValidationError('CNP-ul trebuie să conțină exact 13 cifre.')
-        return value
+    def validate(self, data):
+        # Ensure at least some sentence duration
+        years = data.get('sentence_years', 0)
+        months = data.get('sentence_months', 0)
+        days = data.get('sentence_days', 0)
+        if years == 0 and months == 0 and days == 0:
+            raise serializers.ValidationError({'sentence_years': 'Pedeapsa trebuie să aibă cel puțin o zi.'})
+        return data
+
+    def create(self, validated_data):
+        from sentences.models import Sentence
+
+        # Extract sentence data
+        start_date = validated_data.pop('start_date')
+        sentence_years = validated_data.pop('sentence_years')
+        sentence_months = validated_data.pop('sentence_months')
+        sentence_days = validated_data.pop('sentence_days')
+
+        # Create person
+        person = ConvictedPerson.objects.create(**validated_data)
+
+        # Create sentence
+        Sentence.objects.create(
+            person=person,
+            crime_type='altul',
+            start_date=start_date,
+            sentence_years=sentence_years,
+            sentence_months=sentence_months,
+            sentence_days=sentence_days,
+            status='active',
+            created_by=validated_data.get('created_by')
+        )
+
+        return person
 
 
 class ConvictedPersonUpdateSerializer(serializers.ModelSerializer):

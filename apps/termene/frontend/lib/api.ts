@@ -236,10 +236,10 @@ export interface PersonDetail extends Person {
 export interface PersonCreate {
   first_name: string
   last_name: string
-  cnp: string
-  date_of_birth: string
-  admission_date: string
-  notes?: string
+  start_date: string
+  sentence_years: number
+  sentence_months: number
+  sentence_days: number
 }
 
 export interface PersonUpdate {
