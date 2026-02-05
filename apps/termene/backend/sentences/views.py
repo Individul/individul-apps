@@ -1,3 +1,6 @@
+import json
+from uuid import UUID
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,6 +9,17 @@ from django.utils import timezone
 from django.conf import settings
 
 from .models import Sentence, Fraction
+
+
+def make_json_serializable(obj):
+    """Convert an object to be JSON serializable (handle UUIDs, dates, etc.)."""
+    if isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_json_serializable(item) for item in obj]
+    elif isinstance(obj, UUID):
+        return str(obj)
+    return obj
 from .serializers import (
     SentenceListSerializer,
     SentenceDetailSerializer,
@@ -101,13 +115,13 @@ class SentenceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        before_data = FractionSerializer(fraction).data
+        before_data = make_json_serializable(FractionSerializer(fraction).data)
         serializer = FractionUpdateSerializer(fraction, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         # Log the fraction update
-        after_data = FractionSerializer(fraction).data
+        after_data = make_json_serializable(FractionSerializer(fraction).data)
         request_obj = get_current_request()
         AuditLog.objects.create(
             actor=request.user,
