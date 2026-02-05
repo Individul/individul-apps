@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Check, Clock, AlertCircle, X, Calendar } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Clock, AlertCircle, X, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'
@@ -91,12 +91,8 @@ function FractionStatusBadge({ status, isFulfilled }: { status: string; isFulfil
 }
 
 // Smart Case File - Sentence Card
-function SentenceCard({ sentence, onMarkFulfilled }: {
-  sentence: Sentence
-  onMarkFulfilled: (sentenceId: string, fractionId: string) => void
-}) {
+function SentenceCard({ sentence }: { sentence: Sentence }) {
   const timeServed = calculateTimeServed(sentence.start_date, sentence.end_date)
-  const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -153,23 +149,20 @@ function SentenceCard({ sentence, onMarkFulfilled }: {
       {/* Fractions Table - Body */}
       <div className="bg-white">
         {/* Table Header */}
-        <div className="grid grid-cols-[70px_1fr_100px_100px_90px] px-5 py-3 border-b border-gray-100 bg-white">
+        <div className="grid grid-cols-[70px_1fr_120px_100px] px-5 py-3 border-b border-gray-100 bg-white">
           <span className="text-xs uppercase text-gray-400 font-semibold">Fracție</span>
           <span className="text-xs uppercase text-gray-400 font-semibold">Descriere</span>
           <span className="text-xs uppercase text-gray-400 font-semibold">Data</span>
           <span className="text-xs uppercase text-gray-400 font-semibold">Status</span>
-          <span className="text-xs uppercase text-gray-400 font-semibold text-right">Acțiune</span>
         </div>
 
         {/* Table Rows */}
         {sentence.fractions.map((fraction, index) => (
           <div
             key={fraction.id}
-            onMouseEnter={() => setHoveredRow(fraction.id)}
-            onMouseLeave={() => setHoveredRow(null)}
-            className={`grid grid-cols-[70px_1fr_100px_100px_90px] px-5 py-3 items-center transition-colors ${
+            className={`grid grid-cols-[70px_1fr_120px_100px] px-5 py-3 items-center ${
               index < sentence.fractions.length - 1 ? 'border-b border-gray-50' : ''
-            } ${hoveredRow === fraction.id ? 'bg-slate-50/50' : ''} ${fraction.is_fulfilled ? 'opacity-50' : ''}`}
+            } ${fraction.is_fulfilled ? 'opacity-50' : ''}`}
           >
             {/* Fraction Type - Technical Tag */}
             <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-slate-700 font-mono text-xs rounded w-fit">
@@ -195,29 +188,6 @@ function SentenceCard({ sentence, onMarkFulfilled }: {
 
             {/* Status Badge */}
             <FractionStatusBadge status={fraction.alert_status} isFulfilled={fraction.is_fulfilled} />
-
-            {/* Action */}
-            <div className="text-right">
-              {!fraction.is_fulfilled && sentence.status === 'active' && (
-                <button
-                  onClick={() => onMarkFulfilled(sentence.id, fraction.id)}
-                  className={`inline-flex items-center text-xs font-medium transition-all ${
-                    hoveredRow === fraction.id
-                      ? 'text-emerald-600 opacity-100'
-                      : 'text-slate-400 opacity-0'
-                  }`}
-                >
-                  <Check className="h-3.5 w-3.5 mr-1" strokeWidth={2} />
-                  Marchează
-                </button>
-              )}
-              {fraction.is_fulfilled && (
-                <span className="inline-flex items-center text-xs text-gray-400">
-                  <Check className="h-3.5 w-3.5 mr-1" />
-                  Done
-                </span>
-              )}
-            </div>
           </div>
         ))}
       </div>
@@ -316,22 +286,6 @@ export default function PersonDetailPage() {
       }
     } finally {
       setIsAddingSentence(false)
-    }
-  }
-
-  const handleMarkFractionFulfilled = async (sentenceId: string, fractionId: string) => {
-    const token = localStorage.getItem('access_token')
-    if (!token) return
-
-    try {
-      await sentencesApi.updateFraction(token, sentenceId, fractionId, {
-        is_fulfilled: true,
-        fulfilled_date: new Date().toISOString().split('T')[0],
-      })
-      toast.success('Fracția a fost marcată ca îndeplinită')
-      fetchPerson()
-    } catch (error) {
-      toast.error('A apărut o eroare')
     }
   }
 
@@ -615,11 +569,7 @@ export default function PersonDetailPage() {
           ) : (
             <div className="space-y-5">
               {person.sentences.map((sentence) => (
-                <SentenceCard
-                  key={sentence.id}
-                  sentence={sentence}
-                  onMarkFulfilled={handleMarkFractionFulfilled}
-                />
+                <SentenceCard key={sentence.id} sentence={sentence} />
               ))}
             </div>
           )}
