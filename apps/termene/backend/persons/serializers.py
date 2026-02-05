@@ -65,9 +65,10 @@ class ConvictedPersonCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConvictedPerson
         fields = [
-            'first_name', 'last_name',
+            'id', 'first_name', 'last_name',
             'start_date', 'sentence_years', 'sentence_months', 'sentence_days'
         ]
+        read_only_fields = ['id']
 
     def validate(self, data):
         # Ensure at least some sentence duration
