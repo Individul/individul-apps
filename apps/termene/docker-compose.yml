@@ -28,6 +28,7 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY:-django-insecure-change-this-in-production}
       - DEBUG=${DEBUG:-False}
+      - USE_POSTGRES=true
       - DB_NAME=${DB_NAME:-termene}
       - DB_USER=${DB_USER:-termene}
       - DB_PASSWORD=${DB_PASSWORD:-termene_secure_password}
