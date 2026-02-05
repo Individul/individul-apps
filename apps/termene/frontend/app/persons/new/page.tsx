@@ -30,6 +30,11 @@ export default function NewPersonPage() {
       return
     }
 
+    if (!startDate) {
+      toast.error('Data începutului de termen este obligatorie')
+      return
+    }
+
     if (formData.sentence_years === 0 && formData.sentence_months === 0 && formData.sentence_days === 0) {
       toast.error('Pedeapsa trebuie să aibă cel puțin o zi')
       return

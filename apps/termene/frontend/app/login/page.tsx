@@ -70,6 +70,7 @@ export default function LoginPage() {
               <Input
                 id="username"
                 type="text"
+                autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Introduceți numele de utilizator"
@@ -89,6 +90,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Introduceți parola"
