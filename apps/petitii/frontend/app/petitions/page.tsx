@@ -7,7 +7,6 @@ import { Plus, Search, Download, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -95,7 +94,7 @@ function PetitionsContent() {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Petiții</h1>
+          <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Petiții</h1>
           <Link href="/petitions/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -104,59 +103,67 @@ function PetitionsContent() {
           </Link>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Filtre și căutare</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Filters Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="px-6 py-4 border-b border-gray-50">
+            <h2 className="text-base font-semibold text-slate-800">Filtre și căutare</h2>
+          </div>
+          <div className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="Căutare după nume petiționar, deținut..."
-                  className="pl-9"
+                  className="pl-9 focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={dueFilter} onValueChange={setDueFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Termen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toate</SelectItem>
-                  <SelectItem value="due_soon">Scadente în curând</SelectItem>
-                  <SelectItem value="overdue">Termen depășit</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <div className="bg-gray-100 rounded-lg p-1 flex">
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger className="w-full sm:w-44 border-0 bg-white shadow-sm focus:ring-1 focus:ring-slate-500">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="bg-gray-100 rounded-lg p-1 flex">
+                  <Select value={dueFilter} onValueChange={setDueFilter}>
+                    <SelectTrigger className="w-full sm:w-44 border-0 bg-white shadow-sm focus:ring-1 focus:ring-slate-500">
+                      <SelectValue placeholder="Termen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toate</SelectItem>
+                      <SelectItem value="due_soon">Scadente în curând</SelectItem>
+                      <SelectItem value="overdue">Termen depășit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button variant="outline" size="sm" onClick={handleExportXlsx}>
+              <Button variant="outline" size="sm" onClick={handleExportXlsx} className="hover:bg-slate-50">
                 <Download className="h-4 w-4 mr-2" />
                 Export XLSX
               </Button>
-              <Button variant="outline" size="sm" onClick={handleExportPdf}>
+              <Button variant="outline" size="sm" onClick={handleExportPdf} className="hover:bg-slate-50">
                 <Download className="h-4 w-4 mr-2" />
                 Export PDF
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-0">
+        {/* Table Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="p-0">
             {loading ? (
               <div className="p-6 space-y-4">
                 {[...Array(5)].map((_, i) => (
@@ -166,7 +173,7 @@ function PetitionsContent() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="hover:bg-transparent border-b border-gray-100">
                     <TableHead>Nr. Înreg.</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead>Petiționar</TableHead>
@@ -178,20 +185,20 @@ function PetitionsContent() {
                 </TableHeader>
                 <TableBody>
                   {data?.results.map((petition) => (
-                    <TableRow key={petition.id}>
-                      <TableCell className="font-medium">
+                    <TableRow key={petition.id} className="border-b border-gray-50 hover:bg-[#F8FAFC]">
+                      <TableCell className="font-medium text-slate-800 tabular-nums">
                         {petition.registration_number}
                       </TableCell>
-                      <TableCell>{formatDate(petition.registration_date)}</TableCell>
+                      <TableCell className="text-slate-600 tabular-nums">{formatDate(petition.registration_date)}</TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{petition.petitioner_name}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="font-medium text-slate-800">{petition.petitioner_name}</div>
+                          <div className="text-xs text-slate-500">
                             {petition.petitioner_type_display}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{petition.object_type_display}</TableCell>
+                      <TableCell className="text-slate-600">{petition.object_type_display}</TableCell>
                       <TableCell>
                         <Badge variant={statusVariants[petition.status] || 'default'}>
                           {petition.status_display}
@@ -199,7 +206,7 @@ function PetitionsContent() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {formatDate(petition.response_due_date)}
+                          <span className="text-slate-600 tabular-nums">{formatDate(petition.response_due_date)}</span>
                           {petition.is_overdue && (
                             <Badge variant="destructive" className="text-xs">
                               Depășit
@@ -214,7 +221,7 @@ function PetitionsContent() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Link href={`/petitions/${petition.id}`}>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="hover:bg-slate-100">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
@@ -223,7 +230,7 @@ function PetitionsContent() {
                   ))}
                   {(!data?.results || data.results.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-slate-500">
                         Nu au fost găsite petiții
                       </TableCell>
                     </TableRow>
@@ -231,12 +238,12 @@ function PetitionsContent() {
                 </TableBody>
               </Table>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {data && data.count > 20 && (
           <div className="flex justify-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-500">
               Afișate {data.results.length} din {data.count} petiții
             </p>
           </div>
