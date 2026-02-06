@@ -22,3 +22,14 @@ export function formatDateTime(date: string | Date): string {
     minute: '2-digit',
   })
 }
+
+/**
+ * Formatează un obiect Date în format YYYY-MM-DD pentru API.
+ * Folosește data locală (nu UTC) pentru a evita scăderea cu o zi.
+ */
+export function formatDateForApi(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}

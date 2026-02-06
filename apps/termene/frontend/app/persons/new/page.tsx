@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
 import { DatePicker } from '@/components/ui/date-picker'
 import { personsApi, ApiError, PersonCreate } from '@/lib/api'
+import { formatDateForApi } from '@/lib/utils'
 
 export default function NewPersonPage() {
   const router = useRouter()
@@ -45,7 +46,7 @@ export default function NewPersonPage() {
     try {
       const data = {
         ...formData,
-        start_date: startDate ? startDate.toISOString().split('T')[0] : '',
+        start_date: startDate ? formatDateForApi(startDate) : '',
       }
 
       const person = await personsApi.create(token, data)

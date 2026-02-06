@@ -7,6 +7,7 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
 import { personsApi } from '@/lib/api'
+import { formatDateForApi } from '@/lib/utils'
 
 // Report types configuration
 const REPORT_TYPES = [
@@ -49,10 +50,10 @@ export default function ReportsPage() {
     try {
       const params = new URLSearchParams()
       if (startDate) {
-        params.set('admission_date__gte', startDate.toISOString().split('T')[0])
+        params.set('admission_date__gte', formatDateForApi(startDate))
       }
       if (endDate) {
-        params.set('admission_date__lte', endDate.toISOString().split('T')[0])
+        params.set('admission_date__lte', formatDateForApi(endDate))
       }
       params.set('report_type', selectedReport)
 
@@ -73,10 +74,10 @@ export default function ReportsPage() {
     try {
       const params = new URLSearchParams()
       if (startDate) {
-        params.set('admission_date__gte', startDate.toISOString().split('T')[0])
+        params.set('admission_date__gte', formatDateForApi(startDate))
       }
       if (endDate) {
-        params.set('admission_date__lte', endDate.toISOString().split('T')[0])
+        params.set('admission_date__lte', formatDateForApi(endDate))
       }
       params.set('report_type', selectedReport)
 

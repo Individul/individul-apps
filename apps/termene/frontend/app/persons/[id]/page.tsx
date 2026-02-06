@@ -21,7 +21,7 @@ import {
   CRIME_TYPES,
   SENTENCE_STATUSES,
 } from '@/lib/api'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatDateForApi } from '@/lib/utils'
 
 // Calculate time served percentage
 function calculateTimeServed(startDate: string, endDate: string): number {
@@ -346,7 +346,7 @@ export default function PersonDetailPage() {
       await sentencesApi.create(token, {
         ...newSentence,
         person: personId,
-        start_date: sentenceStartDate.toISOString().split('T')[0],
+        start_date: formatDateForApi(sentenceStartDate),
       })
       toast.success('Sentința a fost adăugată cu succes')
       setSentenceFormOpen(false)
@@ -423,7 +423,7 @@ export default function PersonDetailPage() {
     try {
       await sentencesApi.addReduction(token, selectedSentenceForReduction, {
         ...newReduction,
-        applied_date: reductionDate.toISOString().split('T')[0],
+        applied_date: formatDateForApi(reductionDate),
       })
       toast.success('Reducerea a fost adăugată')
       setReductionFormOpen(false)
