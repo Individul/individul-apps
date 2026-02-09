@@ -527,8 +527,8 @@ export default function PersonDetailPage() {
               if (!token) return
               const newValue = e.target.checked
               try {
-                const updated = await personsApi.update(token, personId, { mai_notification: newValue })
-                setPerson(updated)
+                await personsApi.update(token, personId, { mai_notification: newValue })
+                setPerson({ ...person, mai_notification: newValue })
                 toast.success(newValue ? 'Înștiințare MAI activată' : 'Înștiințare MAI dezactivată')
               } catch (error) {
                 toast.error('Eroare la actualizarea înștiințării MAI')
