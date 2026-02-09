@@ -14,7 +14,8 @@ class ConvictedPersonListSerializer(serializers.ModelSerializer):
         model = ConvictedPerson
         fields = [
             'id', 'first_name', 'last_name', 'full_name', 'cnp',
-            'date_of_birth', 'admission_date', 'active_sentences_count',
+            'date_of_birth', 'admission_date', 'mai_notification',
+            'active_sentences_count',
             'nearest_fraction_date', 'nearest_fraction_type',
             'created_by', 'created_by_name', 'created_at', 'updated_at'
         ]
@@ -43,7 +44,7 @@ class ConvictedPersonDetailSerializer(serializers.ModelSerializer):
         model = ConvictedPerson
         fields = [
             'id', 'first_name', 'last_name', 'full_name', 'cnp',
-            'date_of_birth', 'admission_date', 'notes',
+            'date_of_birth', 'admission_date', 'notes', 'mai_notification',
             'active_sentences_count', 'sentences',
             'created_by', 'created_by_name', 'created_at', 'updated_at'
         ]
@@ -111,7 +112,7 @@ class ConvictedPersonUpdateSerializer(serializers.ModelSerializer):
         model = ConvictedPerson
         fields = [
             'first_name', 'last_name', 'cnp',
-            'date_of_birth', 'admission_date', 'notes'
+            'date_of_birth', 'admission_date', 'notes', 'mai_notification'
         ]
 
     def validate_cnp(self, value):

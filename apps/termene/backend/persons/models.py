@@ -43,6 +43,10 @@ class ConvictedPerson(models.Model):
         blank=True,
         verbose_name='Note'
     )
+    mai_notification = models.BooleanField(
+        default=False,
+        verbose_name='Înștiințare MAI'
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

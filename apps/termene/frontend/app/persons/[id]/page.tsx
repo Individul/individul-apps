@@ -516,6 +516,31 @@ export default function PersonDetailPage() {
           </button>
         </div>
 
+        {/* MAI Notification Checkbox */}
+        <div className="flex items-center gap-3 bg-white rounded-lg border border-gray-200 px-4 py-3">
+          <input
+            type="checkbox"
+            id="mai_notification"
+            checked={person.mai_notification}
+            onChange={async (e) => {
+              const token = localStorage.getItem('access_token')
+              if (!token) return
+              const newValue = e.target.checked
+              try {
+                const updated = await personsApi.update(token, personId, { mai_notification: newValue })
+                setPerson(updated)
+                toast.success(newValue ? 'Înștiințare MAI activată' : 'Înștiințare MAI dezactivată')
+              } catch (error) {
+                toast.error('Eroare la actualizarea înștiințării MAI')
+              }
+            }}
+            className="h-4 w-4 rounded border-gray-300 text-slate-800 focus:ring-slate-500 cursor-pointer"
+          />
+          <label htmlFor="mai_notification" className="text-sm font-medium text-slate-700 cursor-pointer select-none">
+            Înștiințare MAI
+          </label>
+        </div>
+
         {/* Sentences Section */}
         <div className="space-y-5">
           <div className="flex items-center justify-between">

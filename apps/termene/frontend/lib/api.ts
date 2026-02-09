@@ -232,6 +232,7 @@ export interface Person {
   cnp: string
   date_of_birth: string
   admission_date: string
+  mai_notification: boolean
   active_sentences_count: number
   nearest_fraction_date: string | null
   nearest_fraction_type: string | null
@@ -262,6 +263,7 @@ export interface PersonUpdate {
   date_of_birth?: string
   admission_date?: string
   notes?: string
+  mai_notification?: boolean
 }
 
 export interface Fraction {
