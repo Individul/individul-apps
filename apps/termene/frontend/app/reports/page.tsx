@@ -55,16 +55,17 @@ export default function ReportsPage() {
 
     try {
       const params = new URLSearchParams()
-      if (startDate) {
-        params.set('admission_date__gte', formatDateForApi(startDate))
-      }
-      if (endDate) {
-        params.set('admission_date__lte', formatDateForApi(endDate))
-      }
-      params.set('report_type', selectedReport)
       if (selectedReport === 'mai_notifications') {
         params.set('mai_notification', 'true')
+      } else {
+        if (startDate) {
+          params.set('admission_date__gte', formatDateForApi(startDate))
+        }
+        if (endDate) {
+          params.set('admission_date__lte', formatDateForApi(endDate))
+        }
       }
+      params.set('report_type', selectedReport)
 
       await personsApi.exportXlsx(token, params)
       toast.success('Exportul XLSX a început')
@@ -81,16 +82,17 @@ export default function ReportsPage() {
 
     try {
       const params = new URLSearchParams()
-      if (startDate) {
-        params.set('admission_date__gte', formatDateForApi(startDate))
-      }
-      if (endDate) {
-        params.set('admission_date__lte', formatDateForApi(endDate))
-      }
-      params.set('report_type', selectedReport)
       if (selectedReport === 'mai_notifications') {
         params.set('mai_notification', 'true')
+      } else {
+        if (startDate) {
+          params.set('admission_date__gte', formatDateForApi(startDate))
+        }
+        if (endDate) {
+          params.set('admission_date__lte', formatDateForApi(endDate))
+        }
       }
+      params.set('report_type', selectedReport)
 
       await personsApi.exportPdf(token, params)
       toast.success('Exportul PDF a început')
