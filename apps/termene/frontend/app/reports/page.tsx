@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Users, Clock, AlertTriangle, FileText, FileSpreadsheet, Calendar, Download } from 'lucide-react'
+import { Users, Clock, AlertTriangle, FileText, FileSpreadsheet, Calendar, Download, Bell } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -28,6 +28,12 @@ const REPORT_TYPES = [
     title: 'Termene Depășite',
     description: 'Fracții cu termene depășite care necesită atenție imediată.',
     icon: AlertTriangle,
+  },
+  {
+    id: 'mai_notifications',
+    title: 'Înștiințări MAI',
+    description: 'Persoanele care au notificare MAI activă.',
+    icon: Bell,
   },
 ] as const
 
@@ -56,6 +62,9 @@ export default function ReportsPage() {
         params.set('admission_date__lte', formatDateForApi(endDate))
       }
       params.set('report_type', selectedReport)
+      if (selectedReport === 'mai_notifications') {
+        params.set('mai_notification', 'true')
+      }
 
       const url = personsApi.exportXlsx(token, params)
       window.open(`${url}&token=${token}`, '_blank')
@@ -80,6 +89,9 @@ export default function ReportsPage() {
         params.set('admission_date__lte', formatDateForApi(endDate))
       }
       params.set('report_type', selectedReport)
+      if (selectedReport === 'mai_notifications') {
+        params.set('mai_notification', 'true')
+      }
 
       const url = personsApi.exportPdf(token, params)
       window.open(`${url}&token=${token}`, '_blank')
@@ -110,7 +122,7 @@ export default function ReportsPage() {
             1. Selectează Raportul
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {REPORT_TYPES.map((report) => {
               const Icon = report.icon
               const isSelected = selectedReport === report.id

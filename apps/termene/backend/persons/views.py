@@ -44,6 +44,7 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
     filterset_fields = {
         'admission_date': ['gte', 'lte', 'exact'],
+        'mai_notification': ['exact'],
     }
     search_fields = ['first_name', 'last_name', 'cnp']
     ordering_fields = ['last_name', 'first_name', 'admission_date', 'created_at']
@@ -151,7 +152,7 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
         ws.title = "Persoane Condamnate"
 
         # Header
-        headers = ['Nume', 'Prenume', 'CNP', 'Data nașterii', 'Data internării', 'Sentințe active']
+        headers = ['Nume', 'Prenume', 'CNP', 'Data nașterii', 'Data internării', 'Sentințe active', 'Înștiințare MAI']
         ws.append(headers)
 
         # Data
@@ -162,7 +163,8 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
                 person.cnp,
                 person.date_of_birth.strftime('%d.%m.%Y'),
                 person.admission_date.strftime('%d.%m.%Y'),
-                person.active_sentences_count
+                person.active_sentences_count,
+                'Da' if person.mai_notification else 'Nu',
             ])
 
         # Set column widths
@@ -172,6 +174,7 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
         ws.column_dimensions['D'].width = 15
         ws.column_dimensions['E'].width = 15
         ws.column_dimensions['F'].width = 15
+        ws.column_dimensions['G'].width = 18
 
         buffer = io.BytesIO()
         wb.save(buffer)
@@ -196,7 +199,7 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
 
         elements.append(Paragraph("Lista Persoanelor Condamnate", styles['Heading1']))
 
-        data = [['Nume', 'Prenume', 'CNP', 'Data nașterii', 'Data internării', 'Sentințe']]
+        data = [['Nume', 'Prenume', 'CNP', 'Data nașterii', 'Data internării', 'Sentințe', 'Înștiințare MAI']]
         for person in queryset:
             data.append([
                 person.last_name,
@@ -204,7 +207,8 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
                 person.cnp,
                 person.date_of_birth.strftime('%d.%m.%Y'),
                 person.admission_date.strftime('%d.%m.%Y'),
-                str(person.active_sentences_count)
+                str(person.active_sentences_count),
+                'Da' if person.mai_notification else 'Nu',
             ])
 
         table = Table(data)
