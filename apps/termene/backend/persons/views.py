@@ -11,7 +11,9 @@ from openpyxl import Workbook
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import io
 
 from .models import ConvictedPerson
@@ -192,12 +194,15 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
         """Export persons list to PDF."""
         queryset = self.filter_queryset(self.get_queryset())
 
+        pdfmetrics.registerFont(TTFont('DejaVu', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
+        pdfmetrics.registerFont(TTFont('DejaVuBd', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
+
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
         elements = []
-        styles = getSampleStyleSheet()
 
-        elements.append(Paragraph("Lista Persoanelor Condamnate", styles['Heading1']))
+        title_style = ParagraphStyle('Title', fontName='DejaVuBd', fontSize=16, spaceAfter=12)
+        elements.append(Paragraph("Lista Persoanelor Condamnate", title_style))
 
         data = [['Nume', 'Prenume', 'CNP', 'Data nașterii', 'Data internării', 'Sentințe', 'Înștiințare MAI']]
         for person in queryset:
@@ -216,7 +221,8 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, 0), 'DejaVuBd'),
+            ('FONTNAME', (0, 1), (-1, -1), 'DejaVu'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
