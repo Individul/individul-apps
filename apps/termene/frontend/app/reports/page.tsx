@@ -66,8 +66,7 @@ export default function ReportsPage() {
         params.set('mai_notification', 'true')
       }
 
-      const url = personsApi.exportXlsx(token, params)
-      window.open(`${url}&token=${token}`, '_blank')
+      await personsApi.exportXlsx(token, params)
       toast.success('Exportul XLSX a început')
     } finally {
       setIsExporting(null)
@@ -93,8 +92,7 @@ export default function ReportsPage() {
         params.set('mai_notification', 'true')
       }
 
-      const url = personsApi.exportPdf(token, params)
-      window.open(`${url}&token=${token}`, '_blank')
+      await personsApi.exportPdf(token, params)
       toast.success('Exportul PDF a început')
     } finally {
       setIsExporting(null)

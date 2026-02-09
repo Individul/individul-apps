@@ -103,11 +103,33 @@ export const personsApi = {
   stats: (token: string) =>
     fetchApi<DashboardStats>('/api/persons/stats/', { token }),
 
-  exportXlsx: (token: string, params?: URLSearchParams) =>
-    `${API_URL}/api/persons/export_xlsx/?${params?.toString() || ''}`,
+  exportXlsx: async (token: string, params?: URLSearchParams) => {
+    const response = await fetch(`${API_URL}/api/persons/export_xlsx/?${params?.toString() || ''}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+    if (!response.ok) throw new Error('Export failed')
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'persoane_condamnate.xlsx'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  },
 
-  exportPdf: (token: string, params?: URLSearchParams) =>
-    `${API_URL}/api/persons/export_pdf/?${params?.toString() || ''}`,
+  exportPdf: async (token: string, params?: URLSearchParams) => {
+    const response = await fetch(`${API_URL}/api/persons/export_pdf/?${params?.toString() || ''}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+    if (!response.ok) throw new Error('Export failed')
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'persoane_condamnate.pdf'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  },
 }
 
 // Sentences
