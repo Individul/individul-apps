@@ -160,9 +160,9 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
             ws.append([
                 person.last_name,
                 person.first_name,
-                person.cnp,
-                person.date_of_birth.strftime('%d.%m.%Y'),
-                person.admission_date.strftime('%d.%m.%Y'),
+                person.cnp or '',
+                person.date_of_birth.strftime('%d.%m.%Y') if person.date_of_birth else '',
+                person.admission_date.strftime('%d.%m.%Y') if person.admission_date else '',
                 person.active_sentences_count,
                 'Da' if person.mai_notification else 'Nu',
             ])
@@ -204,9 +204,9 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
             data.append([
                 person.last_name,
                 person.first_name,
-                person.cnp,
-                person.date_of_birth.strftime('%d.%m.%Y'),
-                person.admission_date.strftime('%d.%m.%Y'),
+                person.cnp or '',
+                person.date_of_birth.strftime('%d.%m.%Y') if person.date_of_birth else '',
+                person.admission_date.strftime('%d.%m.%Y') if person.admission_date else '',
                 str(person.active_sentences_count),
                 'Da' if person.mai_notification else 'Nu',
             ])
