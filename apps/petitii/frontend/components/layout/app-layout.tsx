@@ -119,7 +119,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <p className="text-sm font-medium text-slate-800 truncate">
                 {user?.full_name || 'Utilizator'}
               </p>
-              <p className="text-xs text-slate-400 capitalize">{user?.department || user?.role || 'User'}</p>
+              <p className="text-xs text-slate-400">{user?.department || user?.role || 'User'}</p>
             </div>
           </div>
           <button
@@ -190,7 +190,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-800">{user?.full_name || 'Utilizator'}</p>
-                  <p className="text-xs text-slate-400 capitalize">{user?.department || user?.role}</p>
+                  <p className="text-xs text-slate-400">{user?.department || user?.role}</p>
                 </div>
               </div>
               <button
