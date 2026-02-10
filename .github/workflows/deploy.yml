@@ -434,6 +434,8 @@ jobs:
             NEXT_PUBLIC_API_URL=http://46.224.209.71/petitii-api
             ENVEOF
             fi
+            # Clean up dangling Docker images to free disk space and avoid cache conflicts
+            docker system prune -f || true
             docker-compose build --no-cache --build-arg NEXT_PUBLIC_API_URL=http://46.224.209.71/petitii-api
             docker-compose up -d
             docker exec petitii-api python manage.py migrate --noinput || true
