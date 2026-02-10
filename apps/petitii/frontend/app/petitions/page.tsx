@@ -179,6 +179,7 @@ function PetitionsContent() {
                     <TableHead>Petiționar</TableHead>
                     <TableHead>Obiect</TableHead>
                     <TableHead>Status</TableHead>
+                    {status === 'solutionata' && <TableHead>Data soluționării</TableHead>}
                     <TableHead>Termen</TableHead>
                     <TableHead className="text-right">Acțiuni</TableHead>
                   </TableRow>
@@ -204,6 +205,11 @@ function PetitionsContent() {
                           {petition.status_display}
                         </Badge>
                       </TableCell>
+                      {status === 'solutionata' && (
+                        <TableCell className="text-slate-600 tabular-nums">
+                          {petition.resolution_date ? formatDate(petition.resolution_date) : '—'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="text-slate-600 tabular-nums">{formatDate(petition.response_due_date)}</span>
@@ -230,7 +236,7 @@ function PetitionsContent() {
                   ))}
                   {(!data?.results || data.results.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={status === 'solutionata' ? 8 : 7} className="text-center py-8 text-slate-500">
                         Nu au fost găsite petiții
                       </TableCell>
                     </TableRow>
