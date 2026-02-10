@@ -32,7 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [user, setUser] = useState<{ full_name: string; role: string } | null>(null)
+  const [user, setUser] = useState<{ full_name: string; role: string; department?: string } | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -49,7 +49,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     // Get user info from token
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
-      setUser({ full_name: payload.full_name, role: payload.role })
+      setUser({ full_name: payload.full_name, role: payload.role, department: payload.department })
     } catch {}
   }, [router])
 
@@ -119,7 +119,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <p className="text-sm font-medium text-slate-800 truncate">
                 {user?.full_name || 'Utilizator'}
               </p>
-              <p className="text-xs text-slate-400 capitalize">{user?.role || 'User'}</p>
+              <p className="text-xs text-slate-400 capitalize">{user?.department || user?.role || 'User'}</p>
             </div>
           </div>
           <button
@@ -190,7 +190,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-800">{user?.full_name || 'Utilizator'}</p>
-                  <p className="text-xs text-slate-400 capitalize">{user?.role}</p>
+                  <p className="text-xs text-slate-400 capitalize">{user?.department || user?.role}</p>
                 </div>
               </div>
               <button

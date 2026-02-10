@@ -13,6 +13,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['username'] = user.username
         token['role'] = user.role
         token['full_name'] = user.get_full_name()
+        token['department'] = user.department
         return token
 
 
