@@ -14,6 +14,7 @@ import {
   Edit,
   Save,
   AlertTriangle,
+  CheckCircle,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -65,6 +66,7 @@ export default function PetitionDetailPage() {
   const [resolutionDate, setResolutionDate] = useState('')
   const [resolutionText, setResolutionText] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [finalizing, setFinalizing] = useState(false)
 
   const petitionId = params.id as string | undefined
 
@@ -187,6 +189,34 @@ export default function PetitionDetailPage() {
     }
   }
 
+  const handleFinalize = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !petition) return
+
+    if (!confirm('Sigur doriți să marcați petiția ca finalizată?')) return
+
+    setFinalizing(true)
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const updated = await petitionsApi.update(token, petition.id, {
+        status: 'solutionata',
+        resolution_date: today,
+      })
+      setPetition(updated)
+      setStatus(updated.status)
+      setResolutionDate(updated.resolution_date || '')
+      toast.success('Petiția a fost marcată ca finalizată')
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A apărut o eroare')
+      }
+    } finally {
+      setFinalizing(false)
+    }
+  }
+
   const handleDeletePetition = async () => {
     const token = localStorage.getItem('access_token')
     if (!token || !petition) return
@@ -247,6 +277,22 @@ export default function PetitionDetailPage() {
             )}
             {petition.is_due_soon && !petition.is_overdue && (
               <Badge variant="warning">{petition.days_until_due} zile rămase</Badge>
+            )}
+            {petition.status !== 'solutionata' && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleFinalize}
+                disabled={finalizing}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {finalizing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
+                Marchează ca finalizată
+              </Button>
             )}
             <Button
               variant="destructive"
