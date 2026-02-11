@@ -66,7 +66,10 @@ export default function DashboardPage() {
         {/* Stats Cards - Refined */}
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
           {/* Total Persons */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          <Link
+            href="/persons?tab=all"
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
@@ -81,10 +84,13 @@ export default function DashboardPage() {
               </div>
               <Users className="h-5 w-5 text-slate-300 opacity-60" strokeWidth={1.5} />
             </div>
-          </div>
+          </Link>
 
           {/* Released Persons */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          <Link
+            href="/persons?tab=archive"
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
@@ -99,10 +105,13 @@ export default function DashboardPage() {
               </div>
               <UserCheck className="h-5 w-5 text-emerald-300 opacity-60" strokeWidth={1.5} />
             </div>
-          </div>
+          </Link>
 
           {/* Overdue */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          <Link
+            href="/alerts?tab=overdue"
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
@@ -117,10 +126,13 @@ export default function DashboardPage() {
               </div>
               <AlertTriangle className="h-5 w-5 text-red-300 opacity-60" strokeWidth={1.5} />
             </div>
-          </div>
+          </Link>
 
           {/* Imminent */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          <Link
+            href="/alerts?tab=imminent"
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
@@ -135,10 +147,13 @@ export default function DashboardPage() {
               </div>
               <AlertCircle className="h-5 w-5 text-amber-300 opacity-60" strokeWidth={1.5} />
             </div>
-          </div>
+          </Link>
 
           {/* Fulfilled */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          <Link
+            href="/alerts?tab=all"
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
@@ -153,7 +168,7 @@ export default function DashboardPage() {
               </div>
               <CheckCircle className="h-5 w-5 text-emerald-300 opacity-60" strokeWidth={1.5} />
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Alert Summary - No borders between rows */}
