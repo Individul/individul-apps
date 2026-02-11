@@ -14,6 +14,7 @@ import {
   Loader2,
   Edit,
   Save,
+  AlertTriangle,
   CheckCircle,
 } from 'lucide-react'
 
@@ -402,10 +403,15 @@ export default function PetitionDetailPage() {
               variant={statusVariants[petition.status] || 'default'}
               className={headerActionClass}
             >
+              {petition.status === 'inregistrata' && <FileText className="h-4 w-4 mr-2" />}
               {petition.status_display}
             </Badge>
             {petition.is_overdue && (
-              <Badge variant="destructive" className={headerActionClass}>
+              <Badge
+                variant="outline"
+                className={`${headerActionClass} border-amber-600 bg-amber-100 text-amber-800`}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
                 Termen depășit
               </Badge>
             )}
