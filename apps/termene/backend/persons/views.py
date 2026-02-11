@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import date
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -37,6 +38,7 @@ from .serializers import (
 from accounts.permissions import IsOperatorOrReadOnly
 from audit.models import AuditLog
 from audit.middleware import get_current_request
+from sentences.models import Sentence
 
 
 class ConvictedPersonViewSet(viewsets.ModelViewSet):
@@ -97,6 +99,44 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0].strip()
         return request.META.get('REMOTE_ADDR')
+
+    @action(detail=True, methods=['post'])
+    def release(self, request, pk=None):
+        """Mark person as released and move all active sentences out of active state."""
+        person = self.get_object()
+        before_data = ConvictedPersonDetailSerializer(person).data
+
+        release_date_raw = request.data.get('release_date')
+        if release_date_raw:
+            try:
+                release_date = date.fromisoformat(str(release_date_raw))
+            except ValueError:
+                return Response(
+                    {'error': 'Data eliberarii trebuie sa fie in format YYYY-MM-DD.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            release_date = timezone.now().date()
+
+        updated_sentences = person.sentences.filter(
+            status=Sentence.Status.ACTIVE
+        ).update(status=Sentence.Status.CONDITIONALLY_RELEASED)
+
+        person.release_date = release_date
+        person.save(update_fields=['release_date', 'updated_at'])
+
+        # Reload instance to avoid stale prefetched sentence statuses.
+        person = self.get_queryset().get(pk=person.pk)
+
+        after_data = ConvictedPersonDetailSerializer(person).data
+        self._log_action('release', person, before_data, after_data)
+
+        return Response({
+            'message': 'Persoana a fost marcata ca eliberata.',
+            'released_date': release_date,
+            'updated_sentences': updated_sentences,
+            'person': after_data,
+        })
 
     @action(detail=False, methods=['get'])
     def stats(self, request):

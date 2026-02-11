@@ -13,7 +13,7 @@ const FILTER_TABS = [
   { id: 'all', label: 'Toți' },
   { id: 'active', label: 'Activi' },
   { id: 'alerts', label: 'Cu Alerte' },
-  { id: 'archive', label: 'Arhivă' },
+  { id: 'archive', label: 'Elibera\u021bi' },
 ] as const
 
 type FilterTab = typeof FILTER_TABS[number]['id']
@@ -210,7 +210,7 @@ export default function PersonsPage() {
         case 'alerts':
           return alertStatus === 'overdue' || alertStatus === 'imminent'
         case 'archive':
-          return person.active_sentences_count === 0
+          return person.release_date !== null || person.active_sentences_count === 0
         default:
           return true
       }
@@ -231,7 +231,7 @@ export default function PersonsPage() {
         const status = getAlertStatus(p.nearest_fraction_date)
         return status === 'overdue' || status === 'imminent'
       }).length,
-      archive: persons.filter(p => p.active_sentences_count === 0).length,
+      archive: persons.filter(p => p.release_date !== null || p.active_sentences_count === 0).length,
     }
   }, [persons])
 

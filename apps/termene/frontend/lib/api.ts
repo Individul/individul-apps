@@ -94,6 +94,13 @@ export const personsApi = {
       body: JSON.stringify(data),
     }),
 
+  release: (token: string, id: string, data: { release_date: string }) =>
+    fetchApi<{ message: string; released_date: string; updated_sentences: number; person: PersonDetail }>(`/api/persons/${id}/release/`, {
+      token,
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   delete: (token: string, id: string) =>
     fetchApi(`/api/persons/${id}/`, {
       token,
@@ -254,6 +261,7 @@ export interface Person {
   cnp: string
   date_of_birth: string
   admission_date: string
+  release_date: string | null
   mai_notification: boolean
   active_sentences_count: number
   nearest_fraction_date: string | null
@@ -284,6 +292,7 @@ export interface PersonUpdate {
   cnp?: string
   date_of_birth?: string
   admission_date?: string
+  release_date?: string | null
   notes?: string
   mai_notification?: boolean
 }

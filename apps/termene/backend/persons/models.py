@@ -39,6 +39,11 @@ class ConvictedPerson(models.Model):
         null=True,
         verbose_name='Data internării'
     )
+    release_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Data eliberarii'
+    )
     notes = models.TextField(
         blank=True,
         verbose_name='Note'
@@ -65,6 +70,7 @@ class ConvictedPerson(models.Model):
             models.Index(fields=['cnp']),
             models.Index(fields=['last_name', 'first_name']),
             models.Index(fields=['admission_date']),
+            models.Index(fields=['release_date']),
         ]
 
     def __str__(self):

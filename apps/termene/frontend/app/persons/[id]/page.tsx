@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Clock, AlertCircle, X, Calendar } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Clock, AlertCircle, X, Calendar, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'
@@ -35,6 +35,13 @@ function calculateTimeServed(startDate: string, endDate: string): number {
   const total = end - start
   const served = now - start
   return Math.round((served / total) * 100)
+}
+
+function parseApiDate(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return undefined
+  return new Date(year, month - 1, day)
 }
 
 // Status Badge Component
@@ -302,6 +309,8 @@ export default function PersonDetailPage() {
     applied_date: '',
   })
   const [reductionDate, setReductionDate] = useState<Date | undefined>()
+  const [releaseDate, setReleaseDate] = useState<Date | undefined>(new Date())
+  const [isReleasing, setIsReleasing] = useState(false)
 
   const fetchPerson = async () => {
     const token = localStorage.getItem('access_token')
@@ -313,6 +322,7 @@ export default function PersonDetailPage() {
     try {
       const data = await personsApi.get(token, personId)
       setPerson(data)
+      setReleaseDate(parseApiDate(data.release_date) || new Date())
     } catch (error) {
       console.error(error)
       toast.error('Nu s-a putut încărca persoana')
@@ -388,6 +398,38 @@ export default function PersonDetailPage() {
       router.push('/persons')
     } catch (error) {
       toast.error('A apărut o eroare')
+    }
+  }
+
+  const handleReleasePerson = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    if (!releaseDate) {
+      toast.error('Selecteaza data eliberarii')
+      return
+    }
+
+    if (!confirm('Confirmati marcarea persoanei ca eliberata?')) {
+      return
+    }
+
+    setIsReleasing(true)
+    try {
+      const response = await personsApi.release(token, personId, {
+        release_date: formatDateForApi(releaseDate),
+      })
+      setPerson(response.person)
+      setReleaseDate(parseApiDate(response.person.release_date) || releaseDate)
+      toast.success('Persoana a fost marcata ca eliberata')
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A aparut o eroare la eliberare')
+      }
+    } finally {
+      setIsReleasing(false)
     }
   }
 
@@ -539,6 +581,48 @@ export default function PersonDetailPage() {
           <label htmlFor="mai_notification" className="text-sm font-medium text-slate-700 cursor-pointer select-none">
             Înștiințare MAI
           </label>
+        </div>
+
+        {/* Release Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end">
+            <div className="flex-1">
+              <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                Data eliberarii
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                <DatePicker
+                  date={releaseDate}
+                  onSelect={setReleaseDate}
+                  placeholder="Selecteaza data eliberarii"
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <button
+              onClick={handleReleasePerson}
+              disabled={!releaseDate || isReleasing}
+              className="inline-flex items-center justify-center px-4 h-10 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isReleasing ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Se proceseaza...
+                </span>
+              ) : (
+                <>
+                  <UserCheck className="h-4 w-4 mr-1.5" strokeWidth={2} />
+                  Eliberat
+                </>
+              )}
+            </button>
+          </div>
+          {person.release_date && (
+            <p className="mt-2 text-xs text-emerald-700">
+              Eliberat la {formatDate(person.release_date)}
+            </p>
+          )}
         </div>
 
         {/* Sentences Section */}
