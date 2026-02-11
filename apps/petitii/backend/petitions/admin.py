@@ -12,10 +12,10 @@ class PetitionAttachmentInline(admin.TabularInline):
 class PetitionAdmin(admin.ModelAdmin):
     list_display = [
         'registration_number', 'registration_date', 'petitioner_type',
-        'petitioner_name', 'object_type', 'status', 'assigned_to',
+        'petitioner_name', 'detention_sector', 'object_type', 'status', 'assigned_to',
         'response_due_date', 'is_overdue'
     ]
-    list_filter = ['status', 'petitioner_type', 'object_type', 'registration_year']
+    list_filter = ['status', 'petitioner_type', 'detention_sector', 'object_type', 'registration_year']
     search_fields = ['petitioner_name', 'detainee_fullname', 'registration_seq']
     date_hierarchy = 'registration_date'
     readonly_fields = ['registration_seq', 'registration_year', 'created_by', 'created_at', 'updated_at']
@@ -26,7 +26,7 @@ class PetitionAdmin(admin.ModelAdmin):
             'fields': ('registration_prefix', 'registration_seq', 'registration_year', 'registration_date')
         }),
         ('Petiționar', {
-            'fields': ('petitioner_type', 'petitioner_name', 'detainee_fullname')
+            'fields': ('petitioner_type', 'petitioner_name', 'detainee_fullname', 'detention_sector')
         }),
         ('Obiect', {
             'fields': ('object_type', 'object_description')

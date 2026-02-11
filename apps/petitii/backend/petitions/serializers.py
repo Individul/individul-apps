@@ -42,6 +42,7 @@ class PetitionListSerializer(serializers.ModelSerializer):
     days_until_due = serializers.IntegerField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     petitioner_type_display = serializers.CharField(source='get_petitioner_type_display', read_only=True)
+    detention_sector_display = serializers.CharField(source='get_detention_sector_display', read_only=True)
     object_type_display = serializers.CharField(source='get_object_type_display', read_only=True)
     assigned_to_name = serializers.CharField(source='assigned_to.get_full_name', read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
@@ -53,6 +54,7 @@ class PetitionListSerializer(serializers.ModelSerializer):
             'id', 'registration_number', 'registration_prefix', 'registration_seq',
             'registration_year', 'registration_date', 'petitioner_type',
             'petitioner_type_display', 'petitioner_name', 'detainee_fullname',
+            'detention_sector', 'detention_sector_display',
             'object_type', 'object_type_display', 'status', 'status_display',
             'assigned_to', 'assigned_to_name', 'response_due_date',
             'is_overdue', 'is_due_soon', 'days_until_due', 'resolution_date',
@@ -71,6 +73,7 @@ class PetitionDetailSerializer(serializers.ModelSerializer):
     days_until_due = serializers.IntegerField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     petitioner_type_display = serializers.CharField(source='get_petitioner_type_display', read_only=True)
+    detention_sector_display = serializers.CharField(source='get_detention_sector_display', read_only=True)
     object_type_display = serializers.CharField(source='get_object_type_display', read_only=True)
     assigned_to_name = serializers.CharField(source='assigned_to.get_full_name', read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
@@ -82,6 +85,7 @@ class PetitionDetailSerializer(serializers.ModelSerializer):
             'id', 'registration_number', 'registration_prefix', 'registration_seq',
             'registration_year', 'registration_date', 'petitioner_type',
             'petitioner_type_display', 'petitioner_name', 'detainee_fullname',
+            'detention_sector', 'detention_sector_display',
             'object_type', 'object_type_display', 'object_description',
             'status', 'status_display', 'assigned_to', 'assigned_to_name',
             'response_due_date', 'is_overdue', 'is_due_soon', 'days_until_due',
@@ -99,10 +103,13 @@ class PetitionCreateSerializer(serializers.ModelSerializer):
         model = Petition
         fields = [
             'id', 'registration_prefix', 'registration_date', 'petitioner_type',
-            'petitioner_name', 'detainee_fullname', 'object_type',
+            'petitioner_name', 'detainee_fullname', 'detention_sector', 'object_type',
             'object_description', 'assigned_to'
         ]
         read_only_fields = ['id']
+        extra_kwargs = {
+            'detention_sector': {'required': True},
+        }
 
     def create(self, validated_data):
         validated_data['created_by'] = self.context['request'].user
@@ -114,7 +121,7 @@ class PetitionUpdateSerializer(serializers.ModelSerializer):
         model = Petition
         fields = [
             'petitioner_type', 'petitioner_name', 'detainee_fullname',
-            'object_type', 'object_description', 'status', 'assigned_to',
+            'detention_sector', 'object_type', 'object_description', 'status', 'assigned_to',
             'resolution_date', 'resolution_text'
         ]
 
@@ -126,6 +133,7 @@ class PetitionStatsSerializer(serializers.Serializer):
     overdue = serializers.IntegerField()
     by_object_type = serializers.DictField()
     by_petitioner_type = serializers.DictField()
+    by_detention_sector = serializers.DictField()
 
 
 class AttachmentUploadSerializer(serializers.Serializer):

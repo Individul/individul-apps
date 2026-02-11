@@ -37,6 +37,10 @@ const objectTypeLabels: Record<string, string> = {
   altele: 'Altele',
 }
 
+const detentionSectorLabels: Record<string, string> = Object.fromEntries(
+  Array.from({ length: 12 }, (_, i) => [String(i + 1), `Sector ${i + 1}`])
+)
+
 export default function ReportsPage() {
   const router = useRouter()
   const [stats, setStats] = useState<PetitionStats | null>(null)
@@ -115,8 +119,8 @@ export default function ReportsPage() {
           </Card>
         </div>
 
-        {/* Stats by status and type */}
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* Stats by status, type and detention sector */}
+        <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -156,6 +160,35 @@ export default function ReportsPage() {
                 {stats?.by_object_type && Object.entries(stats.by_object_type).map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between">
                     <span className="text-sm">{objectTypeLabels[key] || key}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{ width: `${(value / (stats.total || 1)) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-8 text-right">{value}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Pe sector detenție
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats?.by_detention_sector && Object.entries(stats.by_detention_sector)
+                  .sort((a, b) => Number(a[0]) - Number(b[0]))
+                  .map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="text-sm">{detentionSectorLabels[key] || `Sector ${key}`}</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                         <div

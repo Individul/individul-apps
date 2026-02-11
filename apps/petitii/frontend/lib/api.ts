@@ -238,6 +238,8 @@ export interface Petition {
   petitioner_type_display: string
   petitioner_name: string
   detainee_fullname: string
+  detention_sector: number
+  detention_sector_display: string
   object_type: string
   object_type_display: string
   object_description?: string
@@ -265,6 +267,7 @@ export interface PetitionCreate {
   petitioner_type: string
   petitioner_name: string
   detainee_fullname?: string
+  detention_sector: number
   object_type: string
   object_description?: string
   assigned_to?: number | null
@@ -274,6 +277,7 @@ export interface PetitionUpdate {
   petitioner_type?: string
   petitioner_name?: string
   detainee_fullname?: string
+  detention_sector?: number
   object_type?: string
   object_description?: string
   status?: string
@@ -301,6 +305,7 @@ export interface PetitionStats {
   overdue: number
   by_object_type: Record<string, number>
   by_petitioner_type: Record<string, number>
+  by_detention_sector: Record<string, number>
 }
 
 export interface Notification {

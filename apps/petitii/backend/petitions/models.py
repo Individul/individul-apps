@@ -32,6 +32,20 @@ class Petition(models.Model):
         COPII_ACTE = 'copii_acte', 'Copii acte'
         ALTELE = 'altele', 'Altele'
 
+    class DetentionSector(models.IntegerChoices):
+        SECTOR_1 = 1, 'Sector 1'
+        SECTOR_2 = 2, 'Sector 2'
+        SECTOR_3 = 3, 'Sector 3'
+        SECTOR_4 = 4, 'Sector 4'
+        SECTOR_5 = 5, 'Sector 5'
+        SECTOR_6 = 6, 'Sector 6'
+        SECTOR_7 = 7, 'Sector 7'
+        SECTOR_8 = 8, 'Sector 8'
+        SECTOR_9 = 9, 'Sector 9'
+        SECTOR_10 = 10, 'Sector 10'
+        SECTOR_11 = 11, 'Sector 11'
+        SECTOR_12 = 12, 'Sector 12'
+
     class Status(models.TextChoices):
         INREGISTRATA = 'inregistrata', 'Înregistrată'
         IN_EXAMINARE = 'in_examinare', 'În examinare'
@@ -72,6 +86,11 @@ class Petition(models.Model):
         max_length=255,
         blank=True,
         verbose_name='Nume complet deținut'
+    )
+    detention_sector = models.PositiveSmallIntegerField(
+        choices=DetentionSector.choices,
+        default=DetentionSector.SECTOR_1,
+        verbose_name='Sector detenție'
     )
 
     # Petition details
@@ -133,6 +152,7 @@ class Petition(models.Model):
             models.Index(fields=['status']),
             models.Index(fields=['petitioner_type']),
             models.Index(fields=['object_type']),
+            models.Index(fields=['detention_sector']),
         ]
 
     def __str__(self):

@@ -341,6 +341,10 @@ export default function PetitionDetailPage() {
                 </div>
               )}
               <div>
+                <Label className="text-muted-foreground">Sector detenție</Label>
+                <p className="font-medium">{petition.detention_sector_display}</p>
+              </div>
+              <div>
                 <Label className="text-muted-foreground">Obiect</Label>
                 <p className="font-medium">{petition.object_type_display}</p>
               </div>

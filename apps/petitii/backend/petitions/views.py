@@ -29,6 +29,7 @@ class PetitionViewSet(viewsets.ModelViewSet):
     filterset_fields = {
         'status': ['exact', 'in'],
         'petitioner_type': ['exact', 'in'],
+        'detention_sector': ['exact', 'in'],
         'object_type': ['exact', 'in'],
         'assigned_to': ['exact', 'isnull'],
         'registration_date': ['gte', 'lte', 'exact'],
@@ -146,6 +147,9 @@ class PetitionViewSet(viewsets.ModelViewSet):
         by_petitioner_type = dict(
             queryset.values('petitioner_type').annotate(count=Count('id')).values_list('petitioner_type', 'count')
         )
+        by_detention_sector = dict(
+            queryset.values('detention_sector').annotate(count=Count('id')).values_list('detention_sector', 'count')
+        )
 
         data = {
             'total': total,
@@ -154,6 +158,7 @@ class PetitionViewSet(viewsets.ModelViewSet):
             'overdue': overdue,
             'by_object_type': by_object_type,
             'by_petitioner_type': by_petitioner_type,
+            'by_detention_sector': by_detention_sector,
         }
 
         serializer = PetitionStatsSerializer(data)

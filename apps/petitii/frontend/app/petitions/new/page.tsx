@@ -43,12 +43,18 @@ const objectTypes = [
   { value: 'altele', label: 'Altele' },
 ]
 
+const detentionSectors = Array.from({ length: 12 }, (_, i) => ({
+  value: String(i + 1),
+  label: `Sector ${i + 1}`,
+}))
+
 const formSchema = z.object({
   registration_prefix: z.string().default('P'),
   registration_date: z.string().optional(),
   petitioner_type: z.string().min(1, 'Selectați tipul petiționar'),
   petitioner_name: z.string().min(1, 'Introduceți numele petiționar'),
   detainee_fullname: z.string().optional(),
+  detention_sector: z.string().min(1, 'Selectați sectorul de detenție'),
   object_type: z.string().min(1, 'Selectați tipul obiect'),
   object_description: z.string().optional(),
 })
@@ -70,6 +76,7 @@ export default function NewPetitionPage() {
     defaultValues: {
       registration_prefix: 'P',
       registration_date: new Date().toISOString().split('T')[0],
+      detention_sector: '1',
     },
   })
 
@@ -82,7 +89,10 @@ export default function NewPetitionPage() {
 
     setIsSubmitting(true)
     try {
-      const petition = await petitionsApi.create(token, data)
+      const petition = await petitionsApi.create(token, {
+        ...data,
+        detention_sector: Number(data.detention_sector),
+      })
       toast.success('Petiția a fost înregistrată cu succes')
       router.push(`/petitions/${petition.id}`)
     } catch (error) {
@@ -178,6 +188,28 @@ export default function NewPetitionPage() {
                     {...register('detainee_fullname')}
                     placeholder="Numele complet al deținutului"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Sector detenție *</Label>
+                  <Select
+                    value={watch('detention_sector')}
+                    onValueChange={(value) => setValue('detention_sector', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectați sectorul de detenție" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {detentionSectors.map((sector) => (
+                        <SelectItem key={sector.value} value={sector.value}>
+                          {sector.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.detention_sector && (
+                    <p className="text-sm text-destructive">{errors.detention_sector.message}</p>
+                  )}
                 </div>
               </div>
 

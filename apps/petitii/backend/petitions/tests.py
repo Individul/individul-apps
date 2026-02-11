@@ -20,6 +20,7 @@ class PetitionModelTests(TestCase):
             'registration_date': timezone.now().date(),
             'petitioner_type': Petition.PetitionerType.CONDAMNAT,
             'petitioner_name': 'Ion Popescu',
+            'detention_sector': Petition.DetentionSector.SECTOR_1,
             'object_type': Petition.ObjectType.ART_91,
             'created_by': self.user,
         }
