@@ -13,7 +13,6 @@ import {
   Loader2,
   Edit,
   Save,
-  AlertTriangle,
   CheckCircle,
 } from 'lucide-react'
 
@@ -43,6 +42,25 @@ const statusOptions = [
   { value: 'redirectionata', label: 'Redirecționată' },
 ]
 
+const petitionerTypes = [
+  { value: 'condamnat', label: 'Condamnat' },
+  { value: 'ruda', label: 'Ruda' },
+  { value: 'avocat', label: 'Avocat' },
+  { value: 'organ_stat', label: 'Organ de stat' },
+  { value: 'altul', label: 'Altul' },
+]
+
+const objectTypes = [
+  { value: 'art_91', label: 'Art. 91 (Liberare conditionata)' },
+  { value: 'art_92', label: 'Art. 92 (Intreruperea executarii)' },
+  { value: 'amnistie', label: 'Amnistie' },
+  { value: 'transfer', label: 'Transfer' },
+  { value: 'executare', label: 'Executarea pedepsei' },
+  { value: 'copii_dosar', label: 'Copii dosar' },
+  { value: 'copii_acte', label: 'Copii acte' },
+  { value: 'altele', label: 'Altele' },
+]
+
 const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'success' | 'warning'> = {
   inregistrata: 'default',
   in_examinare: 'warning',
@@ -58,9 +76,17 @@ export default function PetitionDetailPage() {
 
   const [petition, setPetition] = useState<Petition | null>(null)
   const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [editingDetails, setEditingDetails] = useState(false)
+  const [editingStatus, setEditingStatus] = useState(false)
+  const [savingDetails, setSavingDetails] = useState(false)
+  const [savingStatus, setSavingStatus] = useState(false)
   const [uploading, setUploading] = useState(false)
+
+  const [petitionerType, setPetitionerType] = useState<string | undefined>(undefined)
+  const [petitionerName, setPetitionerName] = useState('')
+  const [detaineeFullname, setDetaineeFullname] = useState('')
+  const [objectType, setObjectType] = useState<string | undefined>(undefined)
+  const [objectDescription, setObjectDescription] = useState('')
 
   const [status, setStatus] = useState<string | undefined>(undefined)
   const [resolutionDate, setResolutionDate] = useState('')
@@ -70,6 +96,20 @@ export default function PetitionDetailPage() {
 
   const petitionId = params.id as string | undefined
   const headerActionClass = 'h-10 px-4 rounded-md text-sm font-medium'
+
+  const resetDetailsForm = (data: Petition) => {
+    setPetitionerType(data.petitioner_type)
+    setPetitionerName(data.petitioner_name || '')
+    setDetaineeFullname(data.detainee_fullname || '')
+    setObjectType(data.object_type)
+    setObjectDescription(data.object_description || '')
+  }
+
+  const resetStatusForm = (data: Petition) => {
+    setStatus(data.status)
+    setResolutionDate(data.resolution_date || '')
+    setResolutionText(data.resolution_text || '')
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -83,9 +123,8 @@ export default function PetitionDetailPage() {
     petitionsApi.get(token, petitionId)
       .then((data) => {
         setPetition(data)
-        setStatus(data.status)
-        setResolutionDate(data.resolution_date || '')
-        setResolutionText(data.resolution_text || '')
+        resetDetailsForm(data)
+        resetStatusForm(data)
       })
       .catch(() => {
         toast.error('Nu s-a putut încărca petiția')
@@ -94,11 +133,51 @@ export default function PetitionDetailPage() {
       .finally(() => setLoading(false))
   }, [router, petitionId])
 
-  const handleSave = async () => {
+  const handleCancelDetailsEdit = () => {
+    if (!petition) return
+    resetDetailsForm(petition)
+    setEditingDetails(false)
+  }
+
+  const handleSaveDetails = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !petition || !petitionerType || !objectType || !petitionerName.trim()) return
+
+    setSavingDetails(true)
+    try {
+      const updated = await petitionsApi.update(token, petition.id, {
+        petitioner_type: petitionerType,
+        petitioner_name: petitionerName.trim(),
+        detainee_fullname: detaineeFullname.trim(),
+        object_type: objectType,
+        object_description: objectDescription.trim(),
+      })
+      setPetition(updated)
+      resetDetailsForm(updated)
+      setEditingDetails(false)
+      toast.success('Detaliile petitiei au fost actualizate')
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A aparut o eroare la salvare')
+      }
+    } finally {
+      setSavingDetails(false)
+    }
+  }
+
+  const handleCancelStatusEdit = () => {
+    if (!petition) return
+    resetStatusForm(petition)
+    setEditingStatus(false)
+  }
+
+  const handleSaveStatus = async () => {
     const token = localStorage.getItem('access_token')
     if (!token || !petition) return
 
-    setSaving(true)
+    setSavingStatus(true)
     try {
       const updated = await petitionsApi.update(token, petition.id, {
         status,
@@ -106,7 +185,8 @@ export default function PetitionDetailPage() {
         resolution_text: resolutionText,
       })
       setPetition(updated)
-      setEditing(false)
+      resetStatusForm(updated)
+      setEditingStatus(false)
       toast.success('Petiția a fost actualizată')
     } catch (error) {
       if (error instanceof ApiError) {
@@ -115,7 +195,7 @@ export default function PetitionDetailPage() {
         toast.error('A apărut o eroare la salvare')
       }
     } finally {
-      setSaving(false)
+      setSavingStatus(false)
     }
   }
 
@@ -204,8 +284,7 @@ export default function PetitionDetailPage() {
         resolution_date: today,
       })
       setPetition(updated)
-      setStatus(updated.status)
-      setResolutionDate(updated.resolution_date || '')
+      resetStatusForm(updated)
       toast.success('Petiția a fost marcată ca finalizată')
     } catch (error) {
       if (error instanceof ApiError) {
@@ -322,22 +401,78 @@ export default function PetitionDetailPage() {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Petition details */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Detalii petiție</CardTitle>
+              {!editingDetails ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingDetails(true)}
+                  disabled={editingStatus}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editare
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleCancelDetailsEdit}>
+                    Anulare
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveDetails}
+                    disabled={savingDetails || !petitionerType || !objectType || petitionerName.trim().length === 0}
+                  >
+                    {savingDetails ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Salvare
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <Label className="text-muted-foreground">Tip petiționar</Label>
-                <p className="font-medium">{petition.petitioner_type_display}</p>
+                {editingDetails ? (
+                  <Select value={petitionerType} onValueChange={setPetitionerType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectati tipul petitionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {petitionerTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium">{petition.petitioner_type_display}</p>
+                )}
               </div>
               <div>
                 <Label className="text-muted-foreground">Nume petiționar</Label>
-                <p className="font-medium">{petition.petitioner_name}</p>
+                {editingDetails ? (
+                  <Input
+                    value={petitionerName}
+                    onChange={(e) => setPetitionerName(e.target.value)}
+                    placeholder="Numele complet al petitionarului"
+                  />
+                ) : (
+                  <p className="font-medium">{petition.petitioner_name}</p>
+                )}
               </div>
-              {petition.detainee_fullname && (
+              {(editingDetails || petition.detainee_fullname) && (
                 <div>
                   <Label className="text-muted-foreground">Nume deținut</Label>
-                  <p className="font-medium">{petition.detainee_fullname}</p>
+                  {editingDetails ? (
+                    <Input
+                      value={detaineeFullname}
+                      onChange={(e) => setDetaineeFullname(e.target.value)}
+                      placeholder="Numele complet al detinutului"
+                    />
+                  ) : (
+                    <p className="font-medium">{petition.detainee_fullname}</p>
+                  )}
                 </div>
               )}
               <div>
@@ -346,12 +481,36 @@ export default function PetitionDetailPage() {
               </div>
               <div>
                 <Label className="text-muted-foreground">Obiect</Label>
-                <p className="font-medium">{petition.object_type_display}</p>
+                {editingDetails ? (
+                  <Select value={objectType} onValueChange={setObjectType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectati tipul obiect" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {objectTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium">{petition.object_type_display}</p>
+                )}
               </div>
-              {petition.object_description && (
+              {(editingDetails || petition.object_description) && (
                 <div>
                   <Label className="text-muted-foreground">Descriere</Label>
-                  <p className="text-sm">{petition.object_description}</p>
+                  {editingDetails ? (
+                    <Textarea
+                      value={objectDescription}
+                      onChange={(e) => setObjectDescription(e.target.value)}
+                      rows={3}
+                      placeholder="Detalii suplimentare despre obiectul petitiei"
+                    />
+                  ) : (
+                    <p className="text-sm">{petition.object_description}</p>
+                  )}
                 </div>
               )}
               <div>
@@ -369,18 +528,23 @@ export default function PetitionDetailPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Status și rezoluție</CardTitle>
-              {!editing ? (
-                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              {!editingStatus ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingStatus(true)}
+                  disabled={editingDetails}
+                >
                   <Edit className="h-4 w-4 mr-2" />
                   Editare
                 </Button>
               ) : (
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
+                  <Button variant="outline" size="sm" onClick={handleCancelStatusEdit}>
                     Anulare
                   </Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving}>
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                  <Button size="sm" onClick={handleSaveStatus} disabled={savingStatus}>
+                    {savingStatus ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvare
                   </Button>
                 </div>
@@ -389,7 +553,7 @@ export default function PetitionDetailPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Status</Label>
-                {editing && status ? (
+                {editingStatus && status ? (
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger>
                       <SelectValue />
@@ -408,7 +572,7 @@ export default function PetitionDetailPage() {
               </div>
               <div className="space-y-2">
                 <Label>Data rezoluției</Label>
-                {editing ? (
+                {editingStatus ? (
                   <Input
                     type="date"
                     value={resolutionDate}
@@ -420,7 +584,7 @@ export default function PetitionDetailPage() {
               </div>
               <div className="space-y-2">
                 <Label>Text rezoluție</Label>
-                {editing ? (
+                {editingStatus ? (
                   <Textarea
                     value={resolutionText}
                     onChange={(e) => setResolutionText(e.target.value)}
