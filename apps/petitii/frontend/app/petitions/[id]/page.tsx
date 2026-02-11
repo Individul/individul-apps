@@ -9,6 +9,7 @@ import {
   Upload,
   FileText,
   Trash2,
+  Eye,
   Download,
   Loader2,
   Edit,
@@ -259,6 +260,41 @@ export default function PetitionDetailPage() {
       document.body.removeChild(a)
     } catch (error) {
       toast.error('A apărut o eroare la descărcare')
+    }
+  }
+
+  const handleViewAttachment = async (attachmentId: string) => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    const previewWindow = window.open('', '_blank')
+    if (!previewWindow) {
+      toast.error('Permiteti pop-up-urile pentru a vizualiza fisierul')
+      return
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+    try {
+      const response = await fetch(`${API_URL}/api/petitions/attachments/${attachmentId}/download/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Preview failed')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      previewWindow.location.href = url
+
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(url)
+      }, 60000)
+    } catch (error) {
+      previewWindow.close()
+      toast.error('A aparut o eroare la vizualizare')
     }
   }
 
@@ -670,6 +706,14 @@ export default function PetitionDetailPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewAttachment(attachment.id)}
+                        title="Vizualizare"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
