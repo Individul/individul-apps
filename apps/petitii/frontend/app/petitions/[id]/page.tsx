@@ -281,10 +281,10 @@ export default function PetitionDetailPage() {
             {petition.status !== 'solutionata' && (
               <Button
                 variant="default"
-                size="sm"
+                size="default"
                 onClick={handleFinalize}
                 disabled={finalizing}
-                className="bg-green-600 hover:bg-green-700"
+                className="h-10 px-4 bg-green-600 hover:bg-green-700"
               >
                 {finalizing ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -296,9 +296,10 @@ export default function PetitionDetailPage() {
             )}
             <Button
               variant="destructive"
-              size="sm"
+              size="default"
               onClick={handleDeletePetition}
               disabled={deleting}
+              className="h-10 px-4"
             >
               {deleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
