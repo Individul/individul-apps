@@ -119,6 +119,14 @@ export default function PetitionDetailPage() {
     setResolutionText(data.resolution_text || '')
   }
 
+  const refreshPetition = async (token: string, id: string) => {
+    const fullPetition = await petitionsApi.get(token, id)
+    setPetition(fullPetition)
+    resetDetailsForm(fullPetition)
+    resetStatusForm(fullPetition)
+    return fullPetition
+  }
+
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (!token) {
@@ -153,7 +161,7 @@ export default function PetitionDetailPage() {
 
     setSavingDetails(true)
     try {
-      const updated = await petitionsApi.update(token, petition.id, {
+      await petitionsApi.update(token, petition.id, {
         petitioner_type: petitionerType,
         petitioner_name: petitionerName.trim(),
         detainee_fullname: detaineeFullname.trim(),
@@ -161,8 +169,7 @@ export default function PetitionDetailPage() {
         object_type: objectType,
         object_description: objectDescription.trim(),
       })
-      setPetition(updated)
-      resetDetailsForm(updated)
+      await refreshPetition(token, petition.id)
       setEditingDetails(false)
       toast.success('Detaliile petitiei au fost actualizate')
     } catch (error) {
@@ -188,13 +195,12 @@ export default function PetitionDetailPage() {
 
     setSavingStatus(true)
     try {
-      const updated = await petitionsApi.update(token, petition.id, {
+      await petitionsApi.update(token, petition.id, {
         status,
         resolution_date: resolutionDate || null,
         resolution_text: resolutionText,
       })
-      setPetition(updated)
-      resetStatusForm(updated)
+      await refreshPetition(token, petition.id)
       setEditingStatus(false)
       toast.success('Petiția a fost actualizată')
     } catch (error) {
@@ -323,12 +329,11 @@ export default function PetitionDetailPage() {
     setFinalizing(true)
     try {
       const today = new Date().toISOString().split('T')[0]
-      const updated = await petitionsApi.update(token, petition.id, {
+      await petitionsApi.update(token, petition.id, {
         status: 'solutionata',
         resolution_date: today,
       })
-      setPetition(updated)
-      resetStatusForm(updated)
+      await refreshPetition(token, petition.id)
       toast.success('Petiția a fost marcată ca finalizată')
     } catch (error) {
       if (error instanceof ApiError) {
