@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check, RefreshCw, AlertTriangle, Clock, X, CheckCircle2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
@@ -166,7 +166,6 @@ function EmptyState({ activeTab }: { activeTab: TabId }) {
 
 export default function AlertsPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [activeTab, setActiveTab] = useState<TabId>('all')
   const [isLoading, setIsLoading] = useState(true)
@@ -195,13 +194,19 @@ export default function AlertsPage() {
   }, [router])
 
   useEffect(() => {
-    const tab = searchParams.get('tab')
-    if (tab && TABS.some((item) => item.id === tab)) {
-      setActiveTab(tab as TabId)
-      return
+    const applyTabFromUrl = () => {
+      const tab = new URLSearchParams(window.location.search).get('tab')
+      if (tab && TABS.some((item) => item.id === tab)) {
+        setActiveTab(tab as TabId)
+        return
+      }
+      setActiveTab('all')
     }
-    setActiveTab('all')
-  }, [searchParams])
+
+    applyTabFromUrl()
+    window.addEventListener('popstate', applyTabFromUrl)
+    return () => window.removeEventListener('popstate', applyTabFromUrl)
+  }, [])
 
   // Filter alerts based on active tab
   const filteredAlerts = useMemo(() => {

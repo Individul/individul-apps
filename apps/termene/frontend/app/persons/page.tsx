@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Search, ChevronRight, User } from 'lucide-react'
 import { AppLayout } from '@/components/layout/app-layout'
@@ -172,7 +172,6 @@ function PersonCard({ person }: { person: Person }) {
 
 export default function PersonsPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [persons, setPersons] = useState<Person[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
@@ -201,13 +200,19 @@ export default function PersonsPage() {
   }, [router, searchQuery])
 
   useEffect(() => {
-    const tab = searchParams.get('tab')
-    if (tab && FILTER_TABS.some((item) => item.id === tab)) {
-      setActiveFilter(tab as FilterTab)
-      return
+    const applyTabFromUrl = () => {
+      const tab = new URLSearchParams(window.location.search).get('tab')
+      if (tab && FILTER_TABS.some((item) => item.id === tab)) {
+        setActiveFilter(tab as FilterTab)
+        return
+      }
+      setActiveFilter('all')
     }
-    setActiveFilter('all')
-  }, [searchParams])
+
+    applyTabFromUrl()
+    window.addEventListener('popstate', applyTabFromUrl)
+    return () => window.removeEventListener('popstate', applyTabFromUrl)
+  }, [])
 
   // Filter persons based on active tab
   const filteredPersons = useMemo(() => {
