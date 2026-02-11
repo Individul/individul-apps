@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Users, Clock, AlertTriangle, AlertCircle, CheckCircle, Plus, FileText } from 'lucide-react'
+import { Users, Clock, AlertTriangle, AlertCircle, CheckCircle, Plus, FileText, UserCheck } from 'lucide-react'
 import { AppLayout } from '@/components/layout/app-layout'
 import { personsApi, alertsApi, DashboardStats, AlertDashboard } from '@/lib/api'
 
@@ -64,7 +64,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Cards - Refined */}
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
           {/* Total Persons */}
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
             <div className="flex items-start justify-between">
@@ -80,6 +80,24 @@ export default function DashboardPage() {
                 </p>
               </div>
               <Users className="h-5 w-5 text-slate-300 opacity-60" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          {/* Released Persons */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                  Liberate
+                </p>
+                <p className="text-3xl font-semibold text-emerald-600 mt-2 tabular-nums">
+                  {stats?.released_persons || 0}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Persoane marcate eliberate
+                </p>
+              </div>
+              <UserCheck className="h-5 w-5 text-emerald-300 opacity-60" strokeWidth={1.5} />
             </div>
           </div>
 

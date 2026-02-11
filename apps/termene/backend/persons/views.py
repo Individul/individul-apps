@@ -152,6 +152,9 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
         active_sentences = ConvictedPerson.objects.filter(
             sentences__status='active'
         ).distinct().count()
+        released_persons = ConvictedPerson.objects.filter(
+            release_date__isnull=False
+        ).count()
 
         # Overdue fractions (before today)
         overdue_count = Fraction.objects.filter(
@@ -179,6 +182,7 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
         return Response({
             'total_persons': total_persons,
             'persons_with_active_sentences': active_sentences,
+            'released_persons': released_persons,
             'overdue_fractions': overdue_count,
             'imminent_fractions': imminent_count,
             'upcoming_fractions': upcoming_count,

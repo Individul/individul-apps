@@ -430,6 +430,7 @@ export interface AlertDashboard {
 export interface DashboardStats {
   total_persons: number
   persons_with_active_sentences: number
+  released_persons: number
   overdue_fractions: number
   imminent_fractions: number
   upcoming_fractions: number
