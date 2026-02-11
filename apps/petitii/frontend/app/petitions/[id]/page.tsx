@@ -61,6 +61,11 @@ const objectTypes = [
   { value: 'altele', label: 'Altele' },
 ]
 
+const detentionSectors = Array.from({ length: 12 }, (_, i) => ({
+  value: String(i + 1),
+  label: `Sector ${i + 1}`,
+}))
+
 const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'success' | 'warning'> = {
   inregistrata: 'default',
   in_examinare: 'warning',
@@ -85,6 +90,7 @@ export default function PetitionDetailPage() {
   const [petitionerType, setPetitionerType] = useState<string | undefined>(undefined)
   const [petitionerName, setPetitionerName] = useState('')
   const [detaineeFullname, setDetaineeFullname] = useState('')
+  const [detentionSector, setDetentionSector] = useState('')
   const [objectType, setObjectType] = useState<string | undefined>(undefined)
   const [objectDescription, setObjectDescription] = useState('')
 
@@ -101,6 +107,7 @@ export default function PetitionDetailPage() {
     setPetitionerType(data.petitioner_type)
     setPetitionerName(data.petitioner_name || '')
     setDetaineeFullname(data.detainee_fullname || '')
+    setDetentionSector(String(data.detention_sector || 1))
     setObjectType(data.object_type)
     setObjectDescription(data.object_description || '')
   }
@@ -141,7 +148,7 @@ export default function PetitionDetailPage() {
 
   const handleSaveDetails = async () => {
     const token = localStorage.getItem('access_token')
-    if (!token || !petition || !petitionerType || !objectType || !petitionerName.trim()) return
+    if (!token || !petition || !petitionerType || !objectType || !petitionerName.trim() || !detentionSector) return
 
     setSavingDetails(true)
     try {
@@ -149,6 +156,7 @@ export default function PetitionDetailPage() {
         petitioner_type: petitionerType,
         petitioner_name: petitionerName.trim(),
         detainee_fullname: detaineeFullname.trim(),
+        detention_sector: Number(detentionSector),
         object_type: objectType,
         object_description: objectDescription.trim(),
       })
@@ -421,7 +429,7 @@ export default function PetitionDetailPage() {
                   <Button
                     size="sm"
                     onClick={handleSaveDetails}
-                    disabled={savingDetails || !petitionerType || !objectType || petitionerName.trim().length === 0}
+                    disabled={savingDetails || !petitionerType || !objectType || !detentionSector || petitionerName.trim().length === 0}
                   >
                     {savingDetails ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvare
@@ -477,7 +485,22 @@ export default function PetitionDetailPage() {
               )}
               <div>
                 <Label className="text-muted-foreground">Sector detenție</Label>
-                <p className="font-medium">{petition.detention_sector_display}</p>
+                {editingDetails ? (
+                  <Select value={detentionSector} onValueChange={setDetentionSector}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectati sectorul de detentie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {detentionSectors.map((sector) => (
+                        <SelectItem key={sector.value} value={sector.value}>
+                          {sector.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium">{petition.detention_sector_display}</p>
+                )}
               </div>
               <div>
                 <Label className="text-muted-foreground">Obiect</Label>
