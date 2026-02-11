@@ -68,7 +68,7 @@ export default function DashboardPage() {
           {/* Total Persons */}
           <Link
             href="/persons?tab=all"
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+            className="block bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -89,7 +89,7 @@ export default function DashboardPage() {
           {/* Released Persons */}
           <Link
             href="/persons?tab=archive"
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+            className="block bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -110,7 +110,7 @@ export default function DashboardPage() {
           {/* Overdue */}
           <Link
             href="/alerts?tab=overdue"
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+            className="block bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -131,7 +131,7 @@ export default function DashboardPage() {
           {/* Imminent */}
           <Link
             href="/alerts?tab=imminent"
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+            className="block bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
           {/* Fulfilled */}
           <Link
             href="/alerts?tab=all"
-            className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+            className="block bg-white rounded-lg p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
           >
             <div className="flex items-start justify-between">
               <div>
