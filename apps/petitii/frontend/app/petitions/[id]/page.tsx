@@ -69,6 +69,7 @@ export default function PetitionDetailPage() {
   const [finalizing, setFinalizing] = useState(false)
 
   const petitionId = params.id as string | undefined
+  const headerActionClass = 'h-10 px-4 rounded-md text-sm font-medium'
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -269,14 +270,21 @@ export default function PetitionDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={statusVariants[petition.status] || 'default'} className="text-sm">
+            <Badge
+              variant={statusVariants[petition.status] || 'default'}
+              className={headerActionClass}
+            >
               {petition.status_display}
             </Badge>
             {petition.is_overdue && (
-              <Badge variant="destructive">Termen depășit</Badge>
+              <Badge variant="destructive" className={headerActionClass}>
+                Termen depășit
+              </Badge>
             )}
             {petition.is_due_soon && !petition.is_overdue && (
-              <Badge variant="warning">{petition.days_until_due} zile rămase</Badge>
+              <Badge variant="warning" className={headerActionClass}>
+                {petition.days_until_due} zile rămase
+              </Badge>
             )}
             {petition.status !== 'solutionata' && (
               <Button
