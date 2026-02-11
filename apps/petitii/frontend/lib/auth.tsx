@@ -21,6 +21,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    setToken(null)
+    setUser(null)
+    router.push('/login')
+  }, [router])
+
   const loadUser = useCallback(async (accessToken: string) => {
     try {
       const userData = await authApi.getProfile(accessToken)
@@ -29,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Failed to load user:', error)
       logout()
     }
-  }, [])
+  }, [logout])
 
   useEffect(() => {
     const storedToken = localStorage.getItem('access_token')
@@ -48,14 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(access)
     await loadUser(access)
     router.push('/dashboard')
-  }
-
-  const logout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    setToken(null)
-    setUser(null)
-    router.push('/login')
   }
 
   const refreshUser = async () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Bell, CheckCheck, Clock, AlertTriangle } from 'lucide-react'
@@ -33,7 +33,7 @@ export default function NotificationsPage() {
   const [data, setData] = useState<PaginatedResponse<Notification> | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     const token = localStorage.getItem('access_token')
     if (!token) {
       router.push('/login')
@@ -48,11 +48,11 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
   useEffect(() => {
     fetchNotifications()
-  }, [router])
+  }, [fetchNotifications])
 
   const handleMarkRead = async (id: string) => {
     const token = localStorage.getItem('access_token')
