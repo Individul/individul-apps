@@ -60,7 +60,7 @@ function hashCode(str: string): number {
 }
 
 // Person Row Card Component
-function PersonCard({ person }: { person: Person }) {
+function PersonCard({ person, showReleaseDate = false }: { person: Person; showReleaseDate?: boolean }) {
   const alertStatus = getAlertStatus(person.nearest_fraction_date)
   const daysUntil = getDaysUntil(person.nearest_fraction_date)
   const initials = getInitials(person.full_name)
@@ -115,7 +115,16 @@ function PersonCard({ person }: { person: Person }) {
 
         {/* Right - Critical Info */}
         <div className="flex items-center gap-4">
-          {person.nearest_fraction_date ? (
+          {showReleaseDate ? (
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
+                Data eliberarii
+              </p>
+              <p className="text-sm font-mono tabular-nums text-slate-700">
+                {person.release_date ? formatDate(person.release_date) : '-'}
+              </p>
+            </div>
+          ) : person.nearest_fraction_date ? (
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
                 Urm. Fracție
@@ -216,7 +225,7 @@ export default function PersonsPage() {
 
   // Filter persons based on active tab
   const filteredPersons = useMemo(() => {
-    return persons.filter(person => {
+    const filtered = persons.filter(person => {
       const alertStatus = getAlertStatus(person.nearest_fraction_date)
 
       switch (activeFilter) {
@@ -230,6 +239,16 @@ export default function PersonsPage() {
           return true
       }
     })
+
+    if (activeFilter === 'archive') {
+      return [...filtered].sort((a, b) => {
+        const aTime = a.release_date ? new Date(a.release_date).getTime() : Number.NEGATIVE_INFINITY
+        const bTime = b.release_date ? new Date(b.release_date).getTime() : Number.NEGATIVE_INFINITY
+        return bTime - aTime
+      })
+    }
+
+    return filtered
   }, [persons, activeFilter])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -357,7 +376,7 @@ export default function PersonsPage() {
             {/* Person Cards */}
             <div>
               {filteredPersons.map((person) => (
-                <PersonCard key={person.id} person={person} />
+                <PersonCard key={person.id} person={person} showReleaseDate={activeFilter === 'archive'} />
               ))}
             </div>
           </div>
