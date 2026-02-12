@@ -16,6 +16,7 @@ function getCategoryLabel(category: string): string {
     case "CUMULARE": return "Cumulare";
     case "AREST_PREVENTIV": return "Arest preventiv";
     case "NECLARITATI": return "Neclarități";
+    case "SOLICITARE_HOTARIRI": return "Solicitare hotărîri";
     default: return category;
   }
 }

@@ -184,6 +184,7 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
                 <SelectItem value="CUMULARE">Cumulare</SelectItem>
                 <SelectItem value="AREST_PREVENTIV">Arest preventiv</SelectItem>
                 <SelectItem value="NECLARITATI">Neclarități</SelectItem>
+                <SelectItem value="SOLICITARE_HOTARIRI">Solicitare hotărîri</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -2,7 +2,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
-export type TaskCategory = "CUMULARE" | "AREST_PREVENTIV" | "NECLARITATI" | "";
+export type TaskCategory = "CUMULARE" | "AREST_PREVENTIV" | "NECLARITATI" | "SOLICITARE_HOTARIRI" | "";
 export type ActivityAction = "CREATED" | "UPDATED" | "STATUS_CHANGED" | "PRIORITY_CHANGED" | "ASSIGNED" | "UNASSIGNED" | "COMMENT";
 
 export interface User {

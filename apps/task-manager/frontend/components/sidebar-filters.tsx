@@ -54,6 +54,7 @@ export function SidebarFilters({
     { value: "CUMULARE", label: "Cumulare" },
     { value: "AREST_PREVENTIV", label: "Arest preventiv" },
     { value: "NECLARITATI", label: "Neclarități" },
+    { value: "SOLICITARE_HOTARIRI", label: "Solicitare hotărîri" },
   ];
 
   useEffect(() => {
