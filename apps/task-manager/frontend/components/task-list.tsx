@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TaskCard } from "@/components/task-card";
 import { TaskForm } from "@/components/task-form";
 import { SidebarFilters } from "@/components/sidebar-filters";
 import { fetchTasks, Task, TaskStatus, TaskPriority, TaskFilters } from "@/lib/api";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Search } from "lucide-react";
 
 export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -20,8 +21,18 @@ export function TaskList() {
   const [tagFilter, setTagFilter] = useState<string | "ALL">("ALL");
   const [deadlineFrom, setDeadlineFrom] = useState<string>("");
   const [deadlineTo, setDeadlineTo] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("todo");
   const [formOpen, setFormOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput.trim());
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -59,6 +70,10 @@ export function TaskList() {
         filters.deadline_to = deadlineTo;
       }
 
+      if (searchTerm) {
+        filters.search = searchTerm;
+      }
+
       const data = await fetchTasks(filters);
       setTasks(data);
     } catch (error) {
@@ -66,7 +81,7 @@ export function TaskList() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, priorityFilter, assigneeFilter, categoryFilter, tagFilter, deadlineFrom, deadlineTo, activeTab]);
+  }, [statusFilter, priorityFilter, assigneeFilter, categoryFilter, tagFilter, deadlineFrom, deadlineTo, activeTab, searchTerm]);
 
   useEffect(() => {
     loadTasks();
@@ -115,6 +130,18 @@ export function TaskList() {
 
       <div className="flex-1 flex flex-col p-6">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
+          <div className="mb-4 flex justify-center">
+            <div className="relative w-full max-w-md">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Căutare după titlu sau descriere..."
+                className="pl-9"
+              />
+            </div>
+          </div>
+
           <div className="flex items-center justify-between mb-4">
             <TabsList>
               <TabsTrigger value="all">Toate</TabsTrigger>
