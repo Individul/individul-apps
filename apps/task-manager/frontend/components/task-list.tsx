@@ -39,10 +39,10 @@ export function TaskList() {
     try {
       const filters: TaskFilters = {};
 
-      // Use sidebar filter or tab filter for status
+      // When searching, ignore tab-based status restriction and search across all tabs.
       if (statusFilter !== "ALL") {
         filters.status = statusFilter;
-      } else if (activeTab !== "all") {
+      } else if (!searchTerm && activeTab !== "all") {
         filters.status = activeTab.toUpperCase().replace("-", "_") as TaskStatus;
       }
 
