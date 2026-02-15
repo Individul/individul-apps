@@ -5,68 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Instrumente PDF online simple - Unește, șterge pagini și extrage pagini din fișierele tale PDF.">
     <title>PDF Toolbox - Instrumente PDF Online</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        background: {
-                            50: '#F6F7F9',
-                            100: '#E8EAED',
-                            200: '#D1D4DB',
-                            300: '#B8BCC7',
-                            400: '#8F95A3',
-                            500: '#73788A',
-                            600: '#565B6B',
-                            700: '#434854',
-                            800: '#2F333C',
-                            900: '#1F2229',
-                        },
-                        primary: {
-                            50: '#E8EDF2',
-                            100: '#D0DCE6',
-                            200: '#B0C4D5',
-                            300: '#8AACC4',
-                            400: '#6491B3',
-                            500: '#4A7AA3',
-                            600: '#3B6489',
-                            700: '#2F5270',
-                            800: '#264059',
-                            900: '#1F3A5F',
-                        },
-                        success: {
-                            light: '#D1EAD9',
-                            DEFAULT: '#5B9E6F',
-                            dark: '#3D7A51',
-                        },
-                        error: {
-                            light: '#F0D4D4',
-                            DEFAULT: '#C45A5A',
-                            dark: '#9E3F3F',
-                        },
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'card': '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)',
-                        'card-hover': '0 2px 6px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)',
-                        'input': '0 0 0 3px rgba(31, 58, 95, 0.1)',
-                    },
-                    borderRadius: {
-                        'card': '14px',
-                        'input': '8px',
-                    },
-                },
-            },
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ================================================================
+           RESET & BASE
+           ================================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         :root {
             --color-bg: #F6F7F9;
             --color-card: #FFFFFF;
@@ -95,73 +39,233 @@
             --color-error: #C45A5A;
         }
 
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--color-bg);
             color: var(--color-text);
             transition: background-color 0.2s ease, color 0.2s ease;
+            min-height: 100vh;
+            line-height: 1.5;
         }
 
-        .dark body {
-            background-color: var(--color-bg);
+        /* ================================================================
+           INTER FONT - inline @font-face (self-hosted fallback to system)
+           ================================================================ */
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: local('Inter Regular'), local('Inter-Regular');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: local('Inter Medium'), local('Inter-Medium');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            src: local('Inter SemiBold'), local('Inter-SemiBold');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: local('Inter Bold'), local('Inter-Bold');
         }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
+        /* ================================================================
+           SCROLLBAR
+           ================================================================ */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D1D4DB; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #B8BCC7; }
+        .dark ::-webkit-scrollbar-thumb { background: #434854; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #565B6B; }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #D1D4DB;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #B8BCC7;
-        }
-
-        .dark ::-webkit-scrollbar-thumb {
-            background: #434854;
-        }
-
-        .dark ::-webkit-scrollbar-thumb:hover {
-            background: #565B6B;
-        }
-
-        /* Animations */
+        /* ================================================================
+           ANIMATIONS
+           ================================================================ */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         @keyframes slideInRight {
             from { opacity: 0; transform: translateX(20px); }
             to { opacity: 1; transform: translateX(0); }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.25s ease-out;
-        }
-
-        .animate-slide-in {
-            animation: slideInRight 0.3s ease-out;
-        }
+        .animate-fade-in { animation: fadeIn 0.25s ease-out; }
+        .animate-slide-in { animation: slideInRight 0.3s ease-out; }
 
         .spinner {
+            width: 40px; height: 40px;
             border: 2.5px solid var(--color-border);
             border-top-color: var(--color-primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
         }
+
+        /* ================================================================
+           LAYOUT UTILITIES
+           ================================================================ */
+        .container-main {
+            max-width: 64rem; /* ~1024px */
+            margin: 0 auto;
+            padding: 48px 20px;
+        }
+        @media (min-width: 768px) {
+            .container-main { padding: 64px 20px; }
+        }
+
+        .text-center { text-align: center; }
+        .cursor-pointer { cursor: pointer; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .inline-flex { display: inline-flex; }
+        .flex-col { flex-direction: column; }
+        .flex-1 { flex: 1 1 0%; }
+        .flex-shrink-0 { flex-shrink: 0; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-3 { gap: 12px; }
+        .gap-5 { gap: 20px; }
+        .space-y-2 > * + * { margin-top: 8px; }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .min-w-0 { min-width: 0; }
+        .overflow-hidden { overflow: hidden; }
+        .overflow-y-auto { overflow-y: auto; }
+        .border-b { border-bottom: 1px solid var(--color-border); }
+        .border-t { border-top: 1px solid var(--color-border); }
+
+        /* ================================================================
+           SIZING
+           ================================================================ */
+        .w-3\.5 { width: 14px; }
+        .h-3\.5 { height: 14px; }
+        .w-4 { width: 16px; }
+        .h-4 { height: 16px; }
+        .w-5 { width: 20px; }
+        .h-5 { height: 20px; }
+        .w-6 { width: 24px; }
+        .h-6 { height: 24px; }
+        .w-7 { width: 28px; }
+        .h-7 { height: 28px; }
+        .w-8 { width: 32px; }
+        .h-8 { height: 32px; }
+        .w-10 { width: 40px; }
+        .h-10 { height: 40px; }
+        .w-11 { width: 44px; }
+        .h-11 { height: 44px; }
+        .w-14 { width: 56px; }
+        .h-14 { height: 56px; }
+        .w-full { width: 100%; }
+        .max-w-lg { max-width: 32rem; }
+        .max-h-\[90vh\] { max-height: 90vh; }
+
+        /* ================================================================
+           SPACING
+           ================================================================ */
+        .p-1 { padding: 4px; }
+        .p-1\.5 { padding: 6px; }
+        .p-3 { padding: 12px; }
+        .p-4 { padding: 16px; }
+        .p-6 { padding: 24px; }
+        .p-8 { padding: 32px; }
+        .px-4 { padding-left: 16px; padding-right: 16px; }
+        .px-5 { padding-left: 20px; padding-right: 20px; }
+        .px-6 { padding-left: 24px; padding-right: 24px; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .py-2\.5 { padding-top: 10px; padding-bottom: 10px; }
+        .py-4 { padding-top: 16px; padding-bottom: 16px; }
+        .py-5 { padding-top: 20px; padding-bottom: 20px; }
+        .mb-1 { margin-bottom: 4px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mb-5 { margin-bottom: 20px; }
+        .mb-14 { margin-bottom: 56px; }
+        .mt-0\.5 { margin-top: 2px; }
+        .mt-1 { margin-top: 4px; }
+        .mt-2 { margin-top: 8px; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+
+        /* ================================================================
+           TYPOGRAPHY
+           ================================================================ */
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-base { font-size: 1rem; line-height: 1.5rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        @media (min-width: 768px) {
+            .md\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .tracking-tight { letter-spacing: -0.025em; }
+        .leading-relaxed { line-height: 1.625; }
+
+        /* ================================================================
+           BORDER RADIUS
+           ================================================================ */
+        .rounded-full { border-radius: 9999px; }
+        .rounded-md { border-radius: 6px; }
+        .rounded-lg { border-radius: 8px; }
+        .rounded-xl { border-radius: 12px; }
+        .rounded-card { border-radius: 14px; }
+        .rounded-input { border-radius: 8px; }
+
+        /* ================================================================
+           POSITIONING
+           ================================================================ */
+        .fixed { position: fixed; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .top-6 { top: 24px; }
+        .right-6 { right: 24px; }
+        .z-40 { z-index: 40; }
+        .z-50 { z-index: 50; }
+
+        /* ================================================================
+           GRID
+           ================================================================ */
+        .grid { display: grid; }
+        @media (min-width: 768px) {
+            .md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* ================================================================
+           DARK MODE TOGGLE VISIBILITY
+           ================================================================ */
+        .block { display: block; }
+        .dark .dark\:block { display: block; }
+        .dark .dark\:hidden { display: none !important; }
+        .dark .dark\:hover\:bg-gray-700:hover { background-color: #374151; }
+
+        /* Hover utilities */
+        .hover\:bg-gray-100:hover { background-color: #f3f4f6; }
+        .hover\:bg-red-50:hover { background-color: #fef2f2; }
+        .dark .dark\:hover\:bg-red-900\/20:hover { background-color: rgba(127, 29, 29, 0.2); }
+        .transition-colors { transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
+        .text-red-500 { color: #ef4444; }
+        .hover\:text-red-600:hover { color: #dc2626; }
+
+        /* ================================================================
+           COMPONENTS
+           ================================================================ */
 
         /* Upload zone */
         .upload-zone {
@@ -169,17 +273,14 @@
             background-color: var(--color-card);
             transition: all 0.2s ease;
         }
-
         .upload-zone:hover {
             border-color: var(--color-primary);
             background-color: var(--color-bg);
         }
-
         .upload-zone.drag-over {
             border-color: var(--color-primary);
             background-color: rgba(31, 58, 95, 0.05);
         }
-
         .dark .upload-zone.drag-over {
             background-color: rgba(74, 122, 163, 0.1);
         }
@@ -190,19 +291,10 @@
             border: 1px solid var(--color-border);
             transition: all 0.15s ease;
         }
-
-        .file-item:hover {
-            border-color: #B8BCC7;
-        }
-
-        .dark .file-item:hover {
-            border-color: #565B6B;
-        }
-
-        .file-item.dragging {
-            opacity: 0.5;
-            transform: scale(0.99);
-        }
+        .file-item:hover { border-color: #B8BCC7; }
+        .dark .file-item:hover { border-color: #565B6B; }
+        .file-item.dragging { opacity: 0.5; transform: scale(0.99); }
+        .cursor-move { cursor: move; }
 
         /* Toast notifications */
         .toast-container {
@@ -215,7 +307,6 @@
             gap: 12px;
             pointer-events: none;
         }
-
         .toast {
             pointer-events: auto;
             background-color: var(--color-card);
@@ -229,47 +320,32 @@
             min-width: 300px;
             max-width: 400px;
         }
-
-        .dark .toast {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .toast.success {
-            border-left: 3px solid var(--color-success);
-        }
-
-        .toast.error {
-            border-left: 3px solid var(--color-error);
-        }
-
-        .toast.info {
-            border-left: 3px solid var(--color-primary);
-        }
+        .dark .toast { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .toast.success { border-left: 3px solid var(--color-success); }
+        .toast.error { border-left: 3px solid var(--color-error); }
+        .toast.info { border-left: 3px solid var(--color-primary); }
 
         /* Modal overlay */
         .modal-overlay {
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
         }
-
         .modal-card {
             background-color: var(--color-card);
         }
 
-        /* Focus states */
+        /* Input field */
         .input-field {
             background-color: var(--color-card);
             border: 1px solid var(--color-border);
             color: var(--color-text);
             transition: all 0.15s ease;
         }
-
         .input-field:focus {
             outline: none;
             border-color: var(--color-primary);
             box-shadow: 0 0 0 3px rgba(31, 58, 95, 0.1);
         }
-
         .dark .input-field:focus {
             box-shadow: 0 0 0 3px rgba(74, 122, 163, 0.2);
         }
@@ -279,24 +355,23 @@
             background-color: var(--color-primary);
             color: white;
             transition: all 0.15s ease;
+            border: none;
+            cursor: pointer;
         }
-
         .btn-primary:hover:not(:disabled) {
             background-color: var(--color-primary-hover);
         }
-
         .btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-
         .btn-secondary {
             background-color: transparent;
             border: 1px solid var(--color-border);
             color: var(--color-text);
             transition: all 0.15s ease;
+            cursor: pointer;
         }
-
         .btn-secondary:hover {
             border-color: var(--color-text-muted);
             background-color: var(--color-bg);
@@ -308,12 +383,10 @@
             border: 1px solid var(--color-border);
             transition: all 0.2s ease;
         }
-
         .tool-card:hover {
             box-shadow: 0 4px 16px rgba(0,0,0,0.06);
             border-color: #D1D4DB;
         }
-
         .dark .tool-card:hover {
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             border-color: #565B6B;
@@ -327,17 +400,14 @@
             align-items: flex-start;
             gap: 12px;
         }
-
         .status-message.success {
             background-color: var(--color-success-light);
-            color: var(--color-success-dark, #3D7A51);
+            color: #3D7A51;
         }
-
         .status-message.error {
             background-color: var(--color-error-light);
-            color: var(--color-error-dark, #9E3F3F);
+            color: #9E3F3F;
         }
-
         .status-message.info {
             background-color: var(--color-primary);
             color: white;
@@ -357,7 +427,6 @@
             border-radius: 2px;
             overflow: hidden;
         }
-
         .progress-bar-fill {
             height: 100%;
             background-color: var(--color-primary);
@@ -369,9 +438,14 @@
             background-color: var(--color-bg);
             color: var(--color-primary);
         }
+
+        /* Shadow utilities */
+        .shadow-card-hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+        }
     </style>
 </head>
-<body class="min-h-screen">
+<body>
     <!-- Dark mode toggle -->
     <button id="theme-toggle" class="fixed top-6 right-6 z-50 w-10 h-10 rounded-lg btn-secondary flex items-center justify-center" aria-label="Comută modul întunecat">
         <svg class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 24 24">
@@ -383,7 +457,7 @@
     </button>
 
     <!-- Main Container -->
-    <div class="max-w-5xl mx-auto px-5 py-12 md:py-16">
+    <div class="container-main">
         <!-- Header -->
         <header class="text-center mb-14">
             <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl icon-container mb-5">
@@ -444,7 +518,7 @@
         <!-- Footer -->
         <footer class="text-center text-sm" style="color: var(--color-text-muted);">
             <p class="mb-2">Toate procesările se fac pe server. Fișierele tale nu sunt stocate după procesare.</p>
-            <p>© 2026 Dumitru Prisăcaru</p>
+            <p>&copy; 2026 Dumitru Prisăcaru</p>
         </footer>
     </div>
 
@@ -453,7 +527,7 @@
         <!-- Modal Card -->
         <div class="modal-card rounded-card shadow-card-hover w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color: var(--color-border);">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
                 <div>
                     <h2 id="modal-title" class="font-semibold text-lg" style="color: var(--color-text);">Tool Name</h2>
                     <p id="modal-description" class="text-sm mt-0.5" style="color: var(--color-text-muted);">Description</p>
@@ -517,7 +591,7 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t flex items-center justify-between" style="border-color: var(--color-border);">
+            <div class="px-6 py-4 border-t flex items-center justify-between">
                 <button onclick="closeModal()" class="btn-secondary px-4 py-2 rounded-input text-sm font-medium">
                     Anulează
                 </button>
@@ -531,7 +605,7 @@
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center">
         <div class="modal-card rounded-card p-8 text-center">
-            <div class="spinner w-10 h-10 mx-auto mb-4"></div>
+            <div class="spinner"></div>
             <p id="loading-text" class="font-medium" style="color: var(--color-text);">Se procesează...</p>
             <p class="text-sm mt-1" style="color: var(--color-text-muted);">Acest lucru poate dura câteva secunde</p>
         </div>
@@ -540,6 +614,6 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>
