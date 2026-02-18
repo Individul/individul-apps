@@ -15,6 +15,7 @@ import {
   FileBox,
   ArrowLeftRight,
   Scale,
+  Gavel,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -38,6 +39,7 @@ const secondary = [
 const external = [
   { name: 'Clasificare', href: '/clasificare/', icon: Calculator },
   { name: 'PDF Toolbox', href: '/pdf/', icon: FileBox },
+  { name: 'Monitor Ședințe', href: '/monitor/', icon: Gavel },
 ]
 
 interface SidebarProps {
