@@ -595,7 +595,7 @@ jobs:
           host: ${{ env.SERVER_HOST }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "apps/monitor-sedinte/package.json,apps/monitor-sedinte/Dockerfile,apps/monitor-sedinte/docker-compose.yml"
+          source: "apps/monitor-sedinte/package.json,apps/monitor-sedinte/package-lock.json,apps/monitor-sedinte/Dockerfile,apps/monitor-sedinte/docker-compose.yml"
           target: "/opt/monitor-sedinte/"
           strip_components: 2
 
@@ -622,6 +622,7 @@ jobs:
             DATABASE_PATH=./data/monitor.db
             ENVEOF
             fi
+            docker system prune -f || true
             docker-compose build --no-cache
             docker-compose up -d
             docker ps | grep monitor-sedinte
