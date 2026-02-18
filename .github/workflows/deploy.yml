@@ -263,6 +263,20 @@ jobs:
                     proxy_set_header X-Forwarded-Proto $scheme;
                     client_max_body_size 50M;
                 }
+
+                # Monitor Sedinte (Express: API + frontend pe un singur port)
+                location = /monitor {
+                    return 301 /monitor/;
+                }
+
+                location /monitor/ {
+                    proxy_pass http://127.0.0.1:8005/;
+                    proxy_http_version 1.1;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                }
             }
             NGINX_EOF
             nginx -t && systemctl reload nginx
@@ -539,6 +553,79 @@ jobs:
             docker-compose up -d
             docker ps | grep mega-app
 
+      # ========== Deploy Monitor Sedinte ==========
+      - name: Prepare Monitor Sedinte directory
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p /opt/monitor-sedinte/server
+            mkdir -p /opt/monitor-sedinte/frontend
+            mkdir -p /opt/monitor-sedinte/data
+
+      - name: Copy Monitor Sedinte server files
+        continue-on-error: true
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/monitor-sedinte/server/*"
+          target: "/opt/monitor-sedinte/server/"
+          strip_components: 3
+
+      - name: Copy Monitor Sedinte frontend files
+        continue-on-error: true
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/monitor-sedinte/frontend/*"
+          target: "/opt/monitor-sedinte/frontend/"
+          strip_components: 3
+
+      - name: Copy Monitor Sedinte root files
+        continue-on-error: true
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "apps/monitor-sedinte/package.json,apps/monitor-sedinte/Dockerfile,apps/monitor-sedinte/docker-compose.yml"
+          target: "/opt/monitor-sedinte/"
+          strip_components: 2
+
+      - name: Build and deploy Monitor Sedinte
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_HOST }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/monitor-sedinte
+            # Create .env if not exists
+            if [ ! -f .env ]; then
+              cat > .env << 'ENVEOF'
+            APP_PASSWORD=schimba-aceasta-parola
+            TELEGRAM_BOT_TOKEN=
+            TELEGRAM_CHAT_ID=
+            CRON_SCHEDULE_MORNING=0 7 * * *
+            CRON_SCHEDULE_EVENING=0 19 * * *
+            SCRAPE_DELAY_MS=2000
+            PORT=3000
+            NODE_ENV=production
+            DATABASE_PATH=./data/monitor.db
+            ENVEOF
+            fi
+            docker-compose build --no-cache
+            docker-compose up -d
+            docker ps | grep monitor-sedinte
+
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -567,3 +654,6 @@ jobs:
             echo ""
             echo "Hub API health:"
             curl -s http://localhost:8004/api/ || echo "Hub API not responding"
+            echo ""
+            echo "Monitor Sedinte health:"
+            curl -s http://localhost:8005/api/health || echo "Monitor Sedinte not responding"

@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    container_name: monitor-sedinte
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8005:3000"
+    volumes:
+      - data:/app/data
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  data:
