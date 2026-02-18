@@ -11,6 +11,8 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.sqlite3
+*.sqlite3.*
 venv/
 env/
 ENV/
@@ -36,6 +38,10 @@ Thumbs.db
 .nuxt/
 .output/
 .vercel/
+.next/
 
 # Claude
 .claude/
+
+# Local migration backups / scratch
+apps/unified/frontend/app_legacy_unified/

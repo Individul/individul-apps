@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db import models
 from django.db.models import Sum
 from .models import Transfer, TransferEntry, Penitentiary, ISOLATOR_VALUES
 
@@ -54,9 +55,12 @@ class TransferListSerializer(serializers.ModelSerializer):
         return obj.entries.aggregate(total=Sum('plecati'))['total'] or 0
 
     def get_entries_count(self, obj):
+        """Numarul de penitenciare implicate (cu cel putin un venit sau plecat)."""
         if hasattr(obj, '_prefetched_objects_cache') and 'entries' in obj._prefetched_objects_cache:
-            return len(obj.entries.all())
-        return obj.entries.count()
+            return sum(1 for e in obj.entries.all() if e.veniti > 0 or e.plecati > 0)
+        return obj.entries.filter(
+            models.Q(veniti__gt=0) | models.Q(plecati__gt=0)
+        ).count()
 
 
 class TransferDetailSerializer(serializers.ModelSerializer):
