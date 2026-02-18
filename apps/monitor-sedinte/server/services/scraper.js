@@ -7,6 +7,7 @@ const SCRAPE_DELAY_MS = parseInt(process.env.SCRAPE_DELAY_MS || '2000', 10);
 const REQUEST_TIMEOUT_MS = 30000;
 
 let isRunning = false;
+let scrapeProgress = { current: 0, total: 0, currentPerson: '', phase: '' };
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -24,65 +25,88 @@ function parseDataToISO(dataDDMMYYYY) {
   return `${parts[2]}-${parts[1]}-${parts[0]}`;
 }
 
+const FETCH_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.8'
+};
+
 export async function scrapeInstanta(codInstanta, numePersoana, tipDosar = 'Any') {
-  const url = `https://${codInstanta}.instante.justice.md/ro/agenda-of-meetings?dossier_part=${encodeURIComponent(numePersoana)}&type=${tipDosar}&apply_filter=1`;
   const baseUrl = `https://${codInstanta}.instante.justice.md`;
+  // Try with /ro/ prefix first, fallback without it (some courts don't have /ro/)
+  const urls = [
+    `${baseUrl}/ro/agenda-of-meetings?dossier_part=${encodeURIComponent(numePersoana)}&type=${tipDosar}&apply_filter=1`,
+    `${baseUrl}/agenda-of-meetings?dossier_part=${encodeURIComponent(numePersoana)}&type=${tipDosar}&apply_filter=1`
+  ];
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let html;
+  for (const url of urls) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.8'
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: FETCH_HEADERS
+      });
+
+      if (response.ok) {
+        html = await response.text();
+        break;
+      }
+      // If 404, try next URL
+      if (response.status === 404) {
+        continue;
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Request timeout');
+      // If this is the last URL, throw
+      if (url === urls[urls.length - 1]) throw err;
+      // Otherwise try fallback
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  if (!html) {
+    throw new Error('All URL variants failed');
+  }
+
+  const $ = cheerio.load(html);
+  const sedinte = [];
+
+  $('table tbody tr').each((_, row) => {
+    const cells = $(row).find('td');
+    if (cells.length < 11) return;
+
+    const sedinta = {};
+    COLOANE_SEDINTA.forEach((col, i) => {
+      if (col === 'pdf_link') {
+        const link = $(cells[i]).find('a');
+        if (link.length) {
+          let href = link.attr('href') || '';
+          if (href && !href.startsWith('http')) {
+            href = baseUrl + (href.startsWith('/') ? '' : '/') + href;
+          }
+          sedinta[col] = href;
+        } else {
+          sedinta[col] = '';
+        }
+      } else {
+        sedinta[col] = $(cells[i]).text().trim();
       }
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
+    sedinta.instanta_cod = codInstanta;
+    sedinta.instanta_nume = INSTANTE[codInstanta] || codInstanta;
+    sedinta.data_sedinta_iso = parseDataToISO(sedinta.data_sedinta);
+    sedinta.hash_unic = generateHash(codInstanta, sedinta.numar_dosar, sedinta.data_sedinta, sedinta.ora);
 
-    const html = await response.text();
-    const $ = cheerio.load(html);
-    const sedinte = [];
+    sedinte.push(sedinta);
+  });
 
-    $('table tbody tr').each((_, row) => {
-      const cells = $(row).find('td');
-      if (cells.length < 11) return;
-
-      const sedinta = {};
-      COLOANE_SEDINTA.forEach((col, i) => {
-        if (col === 'pdf_link') {
-          const link = $(cells[i]).find('a');
-          if (link.length) {
-            let href = link.attr('href') || '';
-            if (href && !href.startsWith('http')) {
-              href = baseUrl + (href.startsWith('/') ? '' : '/') + href;
-            }
-            sedinta[col] = href;
-          } else {
-            sedinta[col] = '';
-          }
-        } else {
-          sedinta[col] = $(cells[i]).text().trim();
-        }
-      });
-
-      sedinta.instanta_cod = codInstanta;
-      sedinta.instanta_nume = INSTANTE[codInstanta] || codInstanta;
-      sedinta.data_sedinta_iso = parseDataToISO(sedinta.data_sedinta);
-      sedinta.hash_unic = generateHash(codInstanta, sedinta.numar_dosar, sedinta.data_sedinta, sedinta.ora);
-
-      sedinte.push(sedinta);
-    });
-
-    return sedinte;
-  } finally {
-    clearTimeout(timeout);
-  }
+  return sedinte;
 }
 
 export async function scrapePersoana(persoana) {
@@ -187,7 +211,12 @@ export async function scrapeAll() {
     const persoane = db.prepare('SELECT * FROM persoane_monitorizate WHERE activ = 1').all();
     const rezultatTotal = { persoane: persoane.length, gasite: 0, noi: 0, modificate: 0, erori: [], sedinte_noi: [], sedinte_modificate: [] };
 
-    for (const persoana of persoane) {
+    scrapeProgress = { current: 0, total: persoane.length, currentPerson: '', phase: 'sedinte' };
+
+    for (let i = 0; i < persoane.length; i++) {
+      const persoana = persoane[i];
+      scrapeProgress = { current: i + 1, total: persoane.length, currentPerson: persoana.nume, phase: 'sedinte' };
+
       // Get count of sedinte before scraping
       const countBefore = db.prepare('SELECT COUNT(*) as cnt FROM sedinte WHERE persoana_id = ?').get(persoana.id).cnt;
 
@@ -227,11 +256,16 @@ export async function scrapeAll() {
     return rezultatTotal;
   } finally {
     isRunning = false;
+    scrapeProgress = { current: 0, total: 0, currentPerson: '', phase: '' };
   }
 }
 
 export function isScraperRunning() {
   return isRunning;
+}
+
+export function getScrapeProgress() {
+  return { running: isRunning, ...scrapeProgress };
 }
 
 // --- Court decisions scraping ---
@@ -245,66 +279,76 @@ export async function scrapeHotarariInstanta(codInstanta, numePersoana) {
   const allHotarari = [];
 
   for (const { path, tip } of types) {
-    const url = `${baseUrl}/ro/${path}?dossier_part=${encodeURIComponent(numePersoana)}&apply_filter=1`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    // Try with /ro/ prefix first, fallback without it
+    const urls = [
+      `${baseUrl}/ro/${path}?dossier_part=${encodeURIComponent(numePersoana)}&apply_filter=1`,
+      `${baseUrl}/${path}?dossier_part=${encodeURIComponent(numePersoana)}&apply_filter=1`
+    ];
 
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.8'
-        }
-      });
+    for (const url of urls) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-      if (!response.ok) continue;
-
-      const html = await response.text();
-      const $ = cheerio.load(html);
-
-      $('table tbody tr').each((_, row) => {
-        const cells = $(row).find('td');
-        if (cells.length < 4) return;
-
-        const numarDosar = $(cells[0]).text().trim();
-        const dataPronuntare = $(cells[1]).text().trim();
-        const judecator = $(cells[2]).text().trim();
-        const solutie = $(cells[3]).text().trim();
-
-        let pdfLink = '';
-        const link = $(cells[cells.length - 1]).find('a');
-        if (link.length) {
-          let href = link.attr('href') || '';
-          if (href && !href.startsWith('http')) {
-            href = baseUrl + (href.startsWith('/') ? '' : '/') + href;
-          }
-          pdfLink = href;
-        }
-
-        const dataPronuntareIso = parseDataToISO(dataPronuntare);
-        const hashStr = `${codInstanta}|${tip}|${numarDosar}|${dataPronuntare}`;
-        const hashUnic = createHash('md5').update(hashStr).digest('hex');
-
-        allHotarari.push({
-          hash_unic: hashUnic,
-          instanta_cod: codInstanta,
-          instanta_nume: INSTANTE[codInstanta] || codInstanta,
-          numar_dosar: numarDosar,
-          tip_act: tip,
-          data_pronuntare: dataPronuntare,
-          data_pronuntare_iso: dataPronuntareIso,
-          judecator,
-          solutie,
-          pdf_link: pdfLink
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: FETCH_HEADERS
         });
-      });
-    } catch (err) {
-      // Silently skip failed requests
-      console.error(`[SCRAPER] Error scraping ${path} from ${codInstanta}: ${err.message}`);
-    } finally {
-      clearTimeout(timeout);
+
+        if (!response.ok) {
+          if (response.status === 404 && url !== urls[urls.length - 1]) continue;
+          break; // Skip this type entirely on other errors
+        }
+
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        $('table tbody tr').each((_, row) => {
+          const cells = $(row).find('td');
+          if (cells.length < 4) return;
+
+          const numarDosar = $(cells[0]).text().trim();
+          const dataPronuntare = $(cells[1]).text().trim();
+          const judecator = $(cells[2]).text().trim();
+          const solutie = $(cells[3]).text().trim();
+
+          let pdfLink = '';
+          const link = $(cells[cells.length - 1]).find('a');
+          if (link.length) {
+            let href = link.attr('href') || '';
+            if (href && !href.startsWith('http')) {
+              href = baseUrl + (href.startsWith('/') ? '' : '/') + href;
+            }
+            pdfLink = href;
+          }
+
+          const dataPronuntareIso = parseDataToISO(dataPronuntare);
+          const hashStr = `${codInstanta}|${tip}|${numarDosar}|${dataPronuntare}`;
+          const hashUnic = createHash('md5').update(hashStr).digest('hex');
+
+          allHotarari.push({
+            hash_unic: hashUnic,
+            instanta_cod: codInstanta,
+            instanta_nume: INSTANTE[codInstanta] || codInstanta,
+            numar_dosar: numarDosar,
+            tip_act: tip,
+            data_pronuntare: dataPronuntare,
+            data_pronuntare_iso: dataPronuntareIso,
+            judecator,
+            solutie,
+            pdf_link: pdfLink
+          });
+        });
+
+        break; // Success, don't try fallback
+      } catch (err) {
+        if (url === urls[urls.length - 1]) {
+          console.error(`[SCRAPER] Error scraping ${path} from ${codInstanta}: ${err.message}`);
+        }
+        // Otherwise try fallback URL
+      } finally {
+        clearTimeout(timeout);
+      }
     }
 
     await sleep(SCRAPE_DELAY_MS);
@@ -349,7 +393,12 @@ export async function scrapeAllHotarari() {
   const persoane = db.prepare('SELECT * FROM persoane_monitorizate WHERE activ = 1').all();
   const rezultatTotal = { persoane: persoane.length, gasite: 0, noi: 0, hotarari_noi: [] };
 
-  for (const persoana of persoane) {
+  scrapeProgress = { ...scrapeProgress, phase: 'hotarari', current: 0, total: persoane.length };
+
+  for (let i = 0; i < persoane.length; i++) {
+    const persoana = persoane[i];
+    scrapeProgress = { ...scrapeProgress, current: i + 1, currentPerson: persoana.nume };
+
     const rez = await scrapeHotarariPersoana(persoana);
     rezultatTotal.gasite += rez.gasite;
     rezultatTotal.noi += rez.noi;

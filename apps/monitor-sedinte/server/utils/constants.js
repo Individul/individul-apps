@@ -10,13 +10,15 @@ export const INSTANTE = {
   jor: 'Judecătoria Orhei',
   jcs: 'Judecătoria Căușeni',
   jst: 'Judecătoria Strășeni',
-  jcl: 'Judecătoria Călărași',
   jan: 'Judecătoria Anenii Noi',
-  jri: 'Judecătoria Rezina',
   cac: 'Curtea de Apel Chișinău',
   cab: 'Curtea de Apel Bălți',
   cach: 'Curtea de Apel Cahul'
 };
+
+// Instante cu domeniu inexistent (DNS NXDOMAIN) - excluse din lista default
+// jcl: 'Judecătoria Călărași' - domeniu inexistent
+// jri: 'Judecătoria Rezina' - domeniu inexistent
 
 export const TOATE_INSTANTELE = Object.keys(INSTANTE);
 

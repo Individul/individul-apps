@@ -63,6 +63,7 @@ const navItems = [
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [verifyProgress, setVerifyProgress] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
@@ -101,14 +102,30 @@ export default function Layout() {
     setSearchTimeout(t);
   }
 
+  // Poll verification progress
+  useEffect(() => {
+    if (!verifying) return;
+    const poll = setInterval(async () => {
+      try {
+        const status = await apiFetch('/verificare/status');
+        setVerifyProgress(status);
+        if (!status.running) {
+          setVerifying(false);
+          setVerifyProgress(null);
+          clearInterval(poll);
+        }
+      } catch { /* ignore */ }
+    }, 1500);
+    return () => clearInterval(poll);
+  }, [verifying]);
+
   async function handleVerify() {
     setVerifying(true);
+    setVerifyProgress(null);
     try {
       await apiFetch('/verificare/acum', { method: 'POST', body: {} });
     } catch {
-      // ignore
-    } finally {
-      setTimeout(() => setVerifying(false), 3000);
+      setVerifying(false);
     }
   }
 
@@ -252,6 +269,29 @@ export default function Layout() {
             {verifying ? 'Se verifica...' : 'Verifica acum'}
           </button>
         </header>
+
+        {/* Verification progress bar */}
+        {verifying && verifyProgress && verifyProgress.total > 0 && (
+          <div className="bg-blue-50 border-b border-blue-100 px-4 lg:px-6 py-2">
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-blue-700 font-medium">
+                {verifyProgress.phase === 'hotarari' ? 'Hotarari' : 'Sedinte'}: {verifyProgress.current}/{verifyProgress.total}
+                {verifyProgress.currentPerson && (
+                  <span className="text-blue-500 font-normal ml-2">— {verifyProgress.currentPerson}</span>
+                )}
+              </span>
+              <span className="text-blue-400 text-xs">
+                {Math.round((verifyProgress.current / verifyProgress.total) * 100)}%
+              </span>
+            </div>
+            <div className="w-full bg-blue-100 rounded-full h-1.5">
+              <div
+                className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${(verifyProgress.current / verifyProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Page content */}
         <main className="flex-1 p-4 lg:p-6 overflow-auto">

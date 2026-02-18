@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../db/database.js';
-import { scrapeAll, scrapeAllHotarari, isScraperRunning } from '../services/scraper.js';
+import { scrapeAll, scrapeAllHotarari, isScraperRunning, getScrapeProgress } from '../services/scraper.js';
 import { sendScrapeReport, sendHotarariReport } from '../services/telegram.js';
 import { notifyNewSedinte, notifyModificari, notifyNewHotarari } from '../services/webhook.js';
 
@@ -34,7 +34,7 @@ router.post('/acum', async (req, res) => {
 });
 
 router.get('/status', (req, res) => {
-  res.json({ running: isScraperRunning() });
+  res.json(getScrapeProgress());
 });
 
 router.get('/log', (req, res) => {
