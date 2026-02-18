@@ -5,8 +5,8 @@ const INSTANTE = {
   jc: 'Judecatoria Chisinau', jsr: 'Judecatoria Soroca', jbl: 'Judecatoria Balti',
   jch: 'Judecatoria Cahul', jcm: 'Judecatoria Comrat', jed: 'Judecatoria Edinet',
   jhn: 'Judecatoria Hincesti', jun: 'Judecatoria Ungheni', jor: 'Judecatoria Orhei',
-  jcs: 'Judecatoria Causeni', jst: 'Judecatoria Straseni', jcl: 'Judecatoria Calarasi',
-  jan: 'Judecatoria Anenii Noi', jri: 'Judecatoria Rezina', cac: 'Curtea de Apel Chisinau',
+  jcs: 'Judecatoria Causeni', jst: 'Judecatoria Straseni',
+  jan: 'Judecatoria Anenii Noi', cac: 'Curtea de Apel Chisinau',
   cab: 'Curtea de Apel Balti', cach: 'Curtea de Apel Cahul'
 };
 

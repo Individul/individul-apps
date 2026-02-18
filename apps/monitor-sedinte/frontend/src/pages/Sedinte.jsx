@@ -5,8 +5,8 @@ const INSTANTE = {
   jc: 'Judecatoria Chisinau', jsr: 'Judecatoria Soroca', jbl: 'Judecatoria Balti',
   jch: 'Judecatoria Cahul', jcm: 'Judecatoria Comrat', jed: 'Judecatoria Edinet',
   jhn: 'Judecatoria Hincesti', jun: 'Judecatoria Ungheni', jor: 'Judecatoria Orhei',
-  jcs: 'Judecatoria Causeni', jst: 'Judecatoria Straseni', jcl: 'Judecatoria Calarasi',
-  jan: 'Judecatoria Anenii Noi', jri: 'Judecatoria Rezina', cac: 'Curtea de Apel Chisinau',
+  jcs: 'Judecatoria Causeni', jst: 'Judecatoria Straseni',
+  jan: 'Judecatoria Anenii Noi', cac: 'Curtea de Apel Chisinau',
   cab: 'Curtea de Apel Balti', cach: 'Curtea de Apel Cahul'
 };
 
@@ -18,7 +18,7 @@ export default function Sedinte() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [filters, setFilters] = useState({
-    persoana_id: '', instanta: '', tip_dosar: '', viitoare: '1', cautare: '', page: 1, sort: 'data_sedinta_iso', order: 'DESC'
+    persoana_id: '', instanta: '', tip_dosar: '', viitoare: '1', cautare: '', page: 1, sort: 'data_sedinta_iso', order: 'ASC'
   });
 
   useEffect(() => {
@@ -132,7 +132,6 @@ export default function Sedinte() {
                   { key: 'data_sedinta_iso', label: 'Data' },
                   { key: 'ora', label: 'Ora' },
                   { key: 'instanta_cod', label: 'Instanta' },
-                  { key: 'numar_dosar', label: 'Nr. Dosar' },
                   { key: null, label: 'Denumire' },
                   { key: 'judecator', label: 'Judecator' },
                   { key: 'tip_dosar', label: 'Tip' },
@@ -154,9 +153,9 @@ export default function Sedinte() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="text-center py-8 text-slate-400">Se incarca...</td></tr>
+                <tr><td colSpan={8} className="text-center py-8 text-slate-400">Se incarca...</td></tr>
               ) : sedinte.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-8 text-slate-400">Nicio sedinta gasita</td></tr>
+                <tr><td colSpan={8} className="text-center py-8 text-slate-400">Nicio sedinta gasita</td></tr>
               ) : sedinte.map(s => (
                 <tr
                   key={s.id}
@@ -168,7 +167,6 @@ export default function Sedinte() {
                   <td className="px-3 py-2.5 whitespace-nowrap font-medium">{s.data_sedinta}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap">{s.ora}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap text-xs">{s.instanta_nume}</td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">{s.numar_dosar}</td>
                   <td className="px-3 py-2.5 max-w-[200px] truncate" title={s.denumire_dosar}>{s.denumire_dosar}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap">{s.judecator}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap">

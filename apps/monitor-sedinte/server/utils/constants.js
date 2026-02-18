@@ -16,10 +16,6 @@ export const INSTANTE = {
   cach: 'Curtea de Apel Cahul'
 };
 
-// Instante cu domeniu inexistent (DNS NXDOMAIN) - excluse din lista default
-// jcl: 'Judecătoria Călărași' - domeniu inexistent
-// jri: 'Judecătoria Rezina' - domeniu inexistent
-
 export const TOATE_INSTANTELE = Object.keys(INSTANTE);
 
 export const COLOANE_SEDINTA = [
