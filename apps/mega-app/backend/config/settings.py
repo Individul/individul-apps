@@ -166,6 +166,10 @@ PETITION_DUE_SOON_DAYS = 3
 FRACTION_IMMINENT_DAYS = 30
 FRACTION_UPCOMING_DAYS = 90
 
+# Monitor Sedinte integration
+MONITOR_SEDINTE_URL = os.getenv('MONITOR_SEDINTE_URL', 'http://host.docker.internal:8005')
+MONITOR_SEDINTE_PASSWORD = os.getenv('MONITOR_SEDINTE_PASSWORD', '')
+
 # Security settings for production
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True

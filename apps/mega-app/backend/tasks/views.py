@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from accounts.permissions import IsOperatorOrReadOnly
 from .models import Task, TaskActivity
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskActivitySerializer, UserSerializer
+from .monitor_sync import add_person_to_monitor, deactivate_person_in_monitor
 
 User = get_user_model()
 
@@ -70,6 +71,11 @@ class TaskViewSet(viewsets.ModelViewSet):
                     'new_status': task.status
                 }
             )
+            # Sincronizare Monitor Sedinte
+            if task.status == Task.Status.IN_PROGRESS and old_status != Task.Status.IN_PROGRESS:
+                add_person_to_monitor(task.title)
+            elif old_status == Task.Status.IN_PROGRESS and task.status != Task.Status.IN_PROGRESS:
+                deactivate_person_in_monitor(task.title)
 
         # Log priority change
         if old_priority != task.priority:

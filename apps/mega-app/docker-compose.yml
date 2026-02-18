@@ -23,6 +23,8 @@ services:
       dockerfile: Dockerfile
     container_name: mega-app-api
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - DEBUG=${DEBUG:-False}
@@ -38,6 +40,8 @@ services:
       - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-False}
       - CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE:-False}
       - SECURE_HSTS_SECONDS=${SECURE_HSTS_SECONDS:-0}
+      - MONITOR_SEDINTE_URL=${MONITOR_SEDINTE_URL:-http://host.docker.internal:8005}
+      - MONITOR_SEDINTE_PASSWORD=${MONITOR_SEDINTE_PASSWORD:-}
     volumes:
       - media_data:/app/media
       - static_data:/app/staticfiles
