@@ -31,27 +31,36 @@ interface IssueFormProps {
 
 export function IssueForm({ open, onOpenChange, onSuccess }: IssueFormProps) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string>("")
   const [category, setCategory] = useState<string>("")
+  const [priority, setPriority] = useState<string>("MEDIU")
 
   const isBug = category === "BUG_CRITIC" || category === "BUG_MINOR"
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError("")
     setLoading(true)
 
     const token = localStorage.getItem("access_token")
     if (!token) return
 
+    if (!category) {
+      setError("Selectează o categorie.")
+      setLoading(false)
+      return
+    }
+
     const formData = new FormData(e.currentTarget)
     const data: TrackerIssueCreate = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      category: formData.get("category") as string,
-      priority: formData.get("priority") as string,
+      category,
+      priority,
       module_name: formData.get("module_name") as string,
-      steps_to_reproduce: formData.get("steps_to_reproduce") as string,
-      expected_behavior: formData.get("expected_behavior") as string,
-      actual_behavior: formData.get("actual_behavior") as string,
+      steps_to_reproduce: formData.get("steps_to_reproduce") as string || "",
+      expected_behavior: formData.get("expected_behavior") as string || "",
+      actual_behavior: formData.get("actual_behavior") as string || "",
     }
 
     try {
@@ -59,15 +68,18 @@ export function IssueForm({ open, onOpenChange, onSuccess }: IssueFormProps) {
       onSuccess()
       onOpenChange(false)
       setCategory("")
-    } catch (error) {
-      console.error("Failed to create issue:", error)
+      setPriority("MEDIU")
+      setError("")
+    } catch (err: any) {
+      console.error("Failed to create issue:", err)
+      setError(err?.message || "Nu s-a putut crea problema. Verifică datele și încearcă din nou.")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setCategory("") }}>
+    <Sheet open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setCategory(""); setPriority("MEDIU"); setError("") } }}>
       <SheetContent className="sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Problemă nouă</SheetTitle>
@@ -103,7 +115,7 @@ export function IssueForm({ open, onOpenChange, onSuccess }: IssueFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="priority">Prioritate</Label>
-              <Select name="priority" defaultValue="MEDIU">
+              <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selectează" />
                 </SelectTrigger>
@@ -169,13 +181,8 @@ export function IssueForm({ open, onOpenChange, onSuccess }: IssueFormProps) {
             </>
           )}
 
-          {/* Hidden fields for non-bug categories */}
-          {!isBug && (
-            <>
-              <input type="hidden" name="steps_to_reproduce" value="" />
-              <input type="hidden" name="expected_behavior" value="" />
-              <input type="hidden" name="actual_behavior" value="" />
-            </>
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
           )}
 
           <SheetFooter className="pt-4">
