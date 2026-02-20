@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'notifications',
     'transfers',
     'commissions',
+    'tracker',
 ]
 
 MIDDLEWARE = [

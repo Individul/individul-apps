@@ -10,9 +10,10 @@ import {
   UserCheck, Hourglass, UserX, UsersRound,
   ArrowLeftRight, ArrowDownToLine, ArrowUpFromLine, TrendingUp, TrendingDown,
   Scale, ClipboardCheck, Activity,
+  Bug, Loader2, CheckCircle, XCircle,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { petitionsApi, personsApi, alertsApi, notificationsApi, tasksApi, transfersApi, commissionsApi, PetitionStats, DashboardStats, AlertDashboard, TransferStats, CommissionStats } from '@/lib/api'
+import { petitionsApi, personsApi, alertsApi, notificationsApi, tasksApi, transfersApi, commissionsApi, trackerApi, PetitionStats, DashboardStats, AlertDashboard, TransferStats, CommissionStats, TrackerStats } from '@/lib/api'
 
 interface KpiCardProps {
   href: string
@@ -84,6 +85,7 @@ export default function DashboardPage() {
   const [taskCounts, setTaskCounts] = useState({ total: 0, todo: 0, in_progress: 0, done: 0 })
   const [transferStats, setTransferStats] = useState<TransferStats | null>(null)
   const [commissionStats, setCommissionStats] = useState<CommissionStats | null>(null)
+  const [trackerStats, setTrackerStats] = useState<TrackerStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -100,12 +102,14 @@ export default function DashboardPage() {
       tasksApi.list(token).catch(() => []),
       transfersApi.stats(token).catch(() => null),
       commissionsApi.stats(token).catch(() => null),
-    ]).then(([pStats, perStats, alerts, tasks, tStats, cStats]) => {
+      trackerApi.stats(token).catch(() => null),
+    ]).then(([pStats, perStats, alerts, tasks, tStats, cStats, trStats]) => {
       if (pStats) setPetitionStats(pStats)
       if (perStats) setPersonStats(perStats)
       if (alerts) setAlertSummary(alerts)
       if (tStats) setTransferStats(tStats)
       if (cStats) setCommissionStats(cStats as CommissionStats)
+      if (trStats) setTrackerStats(trStats as TrackerStats)
       if (Array.isArray(tasks)) {
         setTaskCounts({
           total: tasks.length,
@@ -354,6 +358,47 @@ export default function DashboardPage() {
             description="Ședințe comisie luna curentă"
             icon={<Scale className="h-4.5 w-4.5 text-orange-500" strokeWidth={1.5} />}
             color="orange"
+          />
+        </div>
+      </section>
+
+      {/* Tracker SIA */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <Bug className="h-5 w-5 text-slate-600" />
+          <h2 className="text-base font-semibold text-slate-700">Tracker SIA</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          <KpiCard
+            href="/tracker"
+            label="Total"
+            value={trackerStats?.total || 0}
+            description="Toate problemele raportate"
+            icon={<Bug className="h-4.5 w-4.5 text-slate-500" strokeWidth={1.5} />}
+          />
+          <KpiCard
+            href="/tracker?status=NOU"
+            label="Noi"
+            value={trackerStats?.by_status?.NOU || 0}
+            description="Probleme neraportate"
+            icon={<Loader2 className="h-4.5 w-4.5 text-blue-500" strokeWidth={1.5} />}
+            color="blue"
+          />
+          <KpiCard
+            href="/tracker?status=IN_LUCRU"
+            label="În lucru"
+            value={trackerStats?.by_status?.IN_LUCRU || 0}
+            description="Probleme în curs de rezolvare"
+            icon={<Loader className="h-4.5 w-4.5 text-orange-500" strokeWidth={1.5} />}
+            color="orange"
+          />
+          <KpiCard
+            href="/tracker?status=IMPLEMENTAT"
+            label="Implementate"
+            value={trackerStats?.by_status?.IMPLEMENTAT || 0}
+            description="Probleme rezolvate"
+            icon={<CheckCircle className="h-4.5 w-4.5 text-green-500" strokeWidth={1.5} />}
+            color="green"
           />
         </div>
       </section>

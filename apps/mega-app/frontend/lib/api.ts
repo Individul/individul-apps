@@ -1344,4 +1344,122 @@ export const DECISION_OPTIONS = [
   { value: 'respins', label: 'De respins' },
 ]
 
+// =============================================================================
+// Tracker SIA API
+// =============================================================================
+
+export const trackerApi = {
+  list: (token: string, params?: URLSearchParams) =>
+    fetchApi<PaginatedResponse<TrackerIssue>>(`/api/v1/tracker/?${params?.toString() || ''}`, { token }),
+
+  get: (token: string, id: string) =>
+    fetchApi<TrackerIssueDetail>(`/api/v1/tracker/${id}/`, { token }),
+
+  create: (token: string, data: TrackerIssueCreate) =>
+    fetchApi<TrackerIssueDetail>('/api/v1/tracker/', {
+      token, method: 'POST', body: JSON.stringify(data),
+    }),
+
+  update: (token: string, id: string, data: TrackerIssueUpdate) =>
+    fetchApi<TrackerIssueDetail>(`/api/v1/tracker/${id}/`, {
+      token, method: 'PATCH', body: JSON.stringify(data),
+    }),
+
+  delete: (token: string, id: string) =>
+    fetchApi(`/api/v1/tracker/${id}/`, { token, method: 'DELETE' }),
+
+  stats: (token: string) =>
+    fetchApi<TrackerStats>('/api/v1/tracker/stats/', { token }),
+
+  exportXlsx: (params?: URLSearchParams) =>
+    `${API_URL}/api/v1/tracker/export_xlsx/?${params?.toString() || ''}`,
+}
+
+// =============================================================================
+// Types - Tracker SIA
+// =============================================================================
+
+export interface TrackerIssue {
+  id: string
+  title: string
+  category: 'BUG_CRITIC' | 'BUG_MINOR' | 'PROPUNERE' | 'CERINTA_NOUA'
+  category_display: string
+  priority: 'CRITIC' | 'INALT' | 'MEDIU' | 'SCAZUT'
+  priority_display: string
+  status: 'NOU' | 'IN_LUCRU' | 'TESTAT' | 'IMPLEMENTAT' | 'RESPINS'
+  status_display: string
+  module_name: string
+  created_by: number | null
+  created_by_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TrackerIssueDetail extends TrackerIssue {
+  description: string
+  steps_to_reproduce: string
+  expected_behavior: string
+  actual_behavior: string
+  resolution_notes: string
+}
+
+export interface TrackerIssueCreate {
+  title: string
+  description?: string
+  category: string
+  priority?: string
+  module_name?: string
+  steps_to_reproduce?: string
+  expected_behavior?: string
+  actual_behavior?: string
+}
+
+export interface TrackerIssueUpdate {
+  title?: string
+  description?: string
+  category?: string
+  priority?: string
+  status?: string
+  module_name?: string
+  steps_to_reproduce?: string
+  expected_behavior?: string
+  actual_behavior?: string
+  resolution_notes?: string
+}
+
+export interface TrackerStats {
+  total: number
+  by_status: Record<string, number>
+  by_category: Record<string, number>
+  by_priority: Record<string, number>
+  recent_count: number
+  resolved_count: number
+}
+
+// =============================================================================
+// Constants - Tracker SIA
+// =============================================================================
+
+export const TRACKER_CATEGORIES = [
+  { value: 'BUG_CRITIC', label: 'Bug critic' },
+  { value: 'BUG_MINOR', label: 'Bug minor' },
+  { value: 'PROPUNERE', label: 'Propunere de îmbunătățire' },
+  { value: 'CERINTA_NOUA', label: 'Cerință nouă' },
+]
+
+export const TRACKER_PRIORITIES = [
+  { value: 'CRITIC', label: 'Critic' },
+  { value: 'INALT', label: 'Înalt' },
+  { value: 'MEDIU', label: 'Mediu' },
+  { value: 'SCAZUT', label: 'Scăzut' },
+]
+
+export const TRACKER_STATUSES = [
+  { value: 'NOU', label: 'Nou' },
+  { value: 'IN_LUCRU', label: 'În lucru' },
+  { value: 'TESTAT', label: 'Testat' },
+  { value: 'IMPLEMENTAT', label: 'Implementat' },
+  { value: 'RESPINS', label: 'Respins' },
+]
+
 export { ApiError }

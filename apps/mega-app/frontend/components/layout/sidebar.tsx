@@ -16,6 +16,7 @@ import {
   ArrowLeftRight,
   Scale,
   Gavel,
+  Bug,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ const modules = [
   { name: 'Termene', href: '/termene', icon: Users },
   { name: 'Transferuri', href: '/transferuri', icon: ArrowLeftRight },
   { name: 'Comisia', href: '/comisia', icon: Scale },
+  { name: 'Tracker SIA', href: '/tracker', icon: Bug },
 ]
 
 const secondary = [

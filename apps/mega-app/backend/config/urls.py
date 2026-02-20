@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/v1/alerts/', include('alerts.urls')),
     path('api/v1/transfers/', include('transfers.urls')),
     path('api/v1/commissions/', include('commissions.urls')),
+    path('api/v1/tracker/', include('tracker.urls')),
     # Shared
     path('api/v1/audit/', include('audit.urls')),
     path('api/v1/notifications/', include('notifications.urls')),
