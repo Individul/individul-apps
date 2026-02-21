@@ -503,9 +503,24 @@ export default function PersonDetailPage() {
       toast.success('Sentinta a fost actualizata cu succes')
       setEditSentenceFormOpen(false)
       fetchPerson()
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Sentence update error:', error)
       if (error instanceof ApiError) {
-        toast.error(error.message)
+        // Extract field-level errors from backend response
+        const data = error.data
+        if (data && typeof data === 'object' && !data.detail && !data.message) {
+          const messages: string[] = []
+          for (const [, value] of Object.entries(data)) {
+            if (Array.isArray(value)) {
+              messages.push(...value.map(String))
+            } else if (typeof value === 'string') {
+              messages.push(value)
+            }
+          }
+          toast.error(messages.length > 0 ? messages.join('. ') : error.message)
+        } else {
+          toast.error(error.message)
+        }
       } else {
         toast.error('A aparut o eroare la actualizare')
       }
