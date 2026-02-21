@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Clock, AlertCircle, X, Calendar, UserCheck } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Clock, AlertCircle, X, Calendar, UserCheck, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'
@@ -312,6 +312,14 @@ export default function PersonDetailPage() {
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(new Date())
   const [isReleasing, setIsReleasing] = useState(false)
 
+  // Edit form state
+  const [editFormOpen, setEditFormOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editData, setEditData] = useState({
+    first_name: '',
+    last_name: '',
+  })
+
   const fetchPerson = async () => {
     const token = localStorage.getItem('access_token')
     if (!token) {
@@ -398,6 +406,45 @@ export default function PersonDetailPage() {
       router.push('/persons')
     } catch (error) {
       toast.error('A apărut o eroare')
+    }
+  }
+
+  const handleOpenEditForm = () => {
+    if (person) {
+      setEditData({
+        first_name: person.first_name,
+        last_name: person.last_name,
+      })
+      setEditFormOpen(true)
+    }
+  }
+
+  const handleEditPerson = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    if (!editData.first_name.trim() || !editData.last_name.trim()) {
+      toast.error('Numele și prenumele sunt obligatorii')
+      return
+    }
+
+    setIsEditing(true)
+    try {
+      await personsApi.update(token, personId, {
+        first_name: editData.first_name.trim(),
+        last_name: editData.last_name.trim(),
+      })
+      toast.success('Datele au fost actualizate cu succes')
+      setEditFormOpen(false)
+      fetchPerson()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A apărut o eroare la actualizare')
+      }
+    } finally {
+      setIsEditing(false)
     }
   }
 
@@ -549,13 +596,22 @@ export default function PersonDetailPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleDeletePerson}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 transition-colors"
-          >
-            <Trash2 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
-            Șterge
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleOpenEditForm}
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md border border-gray-200 transition-colors"
+            >
+              <Pencil className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              Editează
+            </button>
+            <button
+              onClick={handleDeletePerson}
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 transition-colors"
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              Șterge
+            </button>
+          </div>
         </div>
 
         {/* MAI Notification Checkbox */}
@@ -838,6 +894,72 @@ export default function PersonDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Edit Person Sheet */}
+        <Sheet open={editFormOpen} onOpenChange={setEditFormOpen}>
+          <SheetContent hideCloseButton className="flex flex-col p-0">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-800">Editează Persoana</h2>
+                <p className="text-sm text-slate-500 mt-0.5">Modifică datele personale</p>
+              </div>
+              <SheetClose asChild>
+                <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </SheetClose>
+            </div>
+
+            {/* Form Content */}
+            <div className="flex-1 overflow-y-auto p-6 pb-32">
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                    Nume *
+                  </label>
+                  <input
+                    type="text"
+                    value={editData.last_name}
+                    onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
+                    placeholder="Introduceți numele"
+                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                    Prenume *
+                  </label>
+                  <input
+                    type="text"
+                    value={editData.first_name}
+                    onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
+                    placeholder="Introduceți prenumele"
+                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+              <button
+                onClick={handleEditPerson}
+                disabled={isEditing}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isEditing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Se salvează...
+                  </span>
+                ) : (
+                  'Salvează Modificările'
+                )}
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
 
         {/* Reduction Form Sheet */}
         <Sheet open={reductionFormOpen} onOpenChange={setReductionFormOpen}>
