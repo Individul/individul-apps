@@ -142,7 +142,7 @@ class Sentence(models.Model):
 
     @property
     def total_reduction_days(self):
-        """Total zile reduse din toate reducerile."""
+        """Total zile reduse din toate reducerile (pentru afișare)."""
         total = 0
         for r in self.reductions.all():
             total += (r.reduction_years * 365) + (r.reduction_months * 30) + r.reduction_days
@@ -154,31 +154,38 @@ class Sentence(models.Model):
         return max(0, self.total_days - self.total_reduction_days)
 
     @property
+    def effective_end_date(self):
+        """Data efectivă de eliberare după reduceri.
+
+        Scade fiecare reducere direct din data de sfârșit a sentinței
+        folosind relativedelta pentru precizie calendaristică.
+        """
+        end = self.end_date
+        for r in self.reductions.all():
+            end = end - relativedelta(
+                years=r.reduction_years,
+                months=r.reduction_months,
+                days=r.reduction_days
+            )
+        return end
+
+    @property
     def effective_years(self):
-        """Ani efectivi după reduceri."""
-        return self.effective_total_days // 365
+        """Ani efectivi după reduceri (din diferența între start și effective_end_date)."""
+        delta = relativedelta(self.effective_end_date, self.start_date)
+        return max(0, delta.years)
 
     @property
     def effective_months(self):
         """Luni efective după reduceri."""
-        remaining = self.effective_total_days % 365
-        return remaining // 30
+        delta = relativedelta(self.effective_end_date, self.start_date)
+        return max(0, delta.months)
 
     @property
     def effective_days(self):
         """Zile efective după reduceri."""
-        remaining = self.effective_total_days % 365
-        return remaining % 30
-
-    @property
-    def effective_end_date(self):
-        """Data efectivă de eliberare după reduceri."""
-        return calculate_end_date(
-            self.start_date,
-            self.effective_years,
-            self.effective_months,
-            self.effective_days
-        )
+        delta = relativedelta(self.effective_end_date, self.start_date)
+        return max(0, delta.days)
 
     @property
     def effective_duration_display(self):
