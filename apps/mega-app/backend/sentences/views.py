@@ -80,8 +80,8 @@ class SentenceViewSet(viewsets.ModelViewSet):
             action=action,
             entity_type='Sentence',
             entity_id=str(instance.id),
-            before_json=before_data,
-            after_json=after_data,
+            before_json=make_json_serializable(before_data) if before_data else None,
+            after_json=make_json_serializable(after_data) if after_data else None,
             ip_address=self._get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '') if request else ''
         )
