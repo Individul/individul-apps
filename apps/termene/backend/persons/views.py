@@ -3,6 +3,7 @@ from datetime import date
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponse
@@ -41,10 +42,15 @@ from audit.middleware import get_current_request
 from sentences.models import Sentence
 
 
+class LargePagePagination(PageNumberPagination):
+    page_size = 200
+
+
 class ConvictedPersonViewSet(viewsets.ModelViewSet):
     queryset = ConvictedPerson.objects.select_related('created_by').prefetch_related(
         'sentences__fractions'
     )
+    pagination_class = LargePagePagination
     permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
     filterset_fields = {
         'admission_date': ['gte', 'lte', 'exact'],
@@ -53,6 +59,21 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
     search_fields = ['first_name', 'last_name', 'cnp']
     ordering_fields = ['last_name', 'first_name', 'admission_date', 'created_at']
     ordering = ['last_name', 'first_name']
+
+    def get_queryset(self):
+        return ConvictedPerson.objects.select_related('created_by').prefetch_related(
+            'sentences__fractions', 'sentences__reductions', 'sentences__preventive_arrests', 'sentences__zpm_entries'
+        )
+
+    def list(self, request, *args, **kwargs):
+        """Override list to sort by active_sentence_end_date (soonest first)."""
+        response = super().list(request, *args, **kwargs)
+        far_future = '9999-12-31'
+        response.data['results'] = sorted(
+            response.data['results'],
+            key=lambda p: str(p.get('active_sentence_end_date') or far_future),
+        )
+        return response
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -118,12 +139,15 @@ class ConvictedPersonViewSet(viewsets.ModelViewSet):
         else:
             release_date = timezone.now().date()
 
+        release_type = request.data.get('release_type', '')
+
         updated_sentences = person.sentences.filter(
             status=Sentence.Status.ACTIVE
-        ).update(status=Sentence.Status.CONDITIONALLY_RELEASED)
+        ).update(status=Sentence.Status.FINISHED)
 
         person.release_date = release_date
-        person.save(update_fields=['release_date', 'updated_at'])
+        person.release_type = release_type
+        person.save(update_fields=['release_date', 'release_type', 'updated_at'])
 
         # Reload instance to avoid stale prefetched sentence statuses.
         person = self.get_queryset().get(pk=person.pk)

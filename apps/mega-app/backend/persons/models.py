@@ -39,10 +39,23 @@ class ConvictedPerson(models.Model):
         null=True,
         verbose_name='Data internării'
     )
+    class ReleaseType(models.TextChoices):
+        FULL_TERM = 'full_term', 'Executarea integrală'
+        ART_91 = 'art_91', 'Art. 91'
+        ART_92 = 'art_92', 'Art. 92'
+        CONDITIONS = 'conditions', 'Condiții'
+
     release_date = models.DateField(
         blank=True,
         null=True,
         verbose_name='Data eliberarii'
+    )
+    release_type = models.CharField(
+        max_length=20,
+        choices=ReleaseType.choices,
+        blank=True,
+        default='',
+        verbose_name='Modalitatea eliberării'
     )
     notes = models.TextField(
         blank=True,
@@ -84,7 +97,7 @@ class ConvictedPerson(models.Model):
 
     @property
     def active_sentences_count(self):
-        return self.sentences.filter(status='active').count()
+        return self.sentences.exclude(status='finished').count()
 
     @property
     def nearest_fraction(self):
@@ -101,3 +114,28 @@ class ConvictedPerson(models.Model):
         ).order_by('calculated_date').first()
 
         return fraction
+
+    @property
+    def active_sentence_end_date(self):
+        """Returns the effective end date of the active sentence."""
+        active = self.sentences.filter(status='active').first()
+        if active:
+            return active.effective_end_date
+        return None
+
+    @property
+    def has_fulfilled_fractions(self):
+        """Returns True if person has sentences but all fractions are fulfilled."""
+        from sentences.models import Fraction
+        total_fractions = Fraction.objects.filter(
+            sentence__person=self,
+            sentence__status='active',
+        ).count()
+        if total_fractions == 0:
+            return False
+        unfulfilled = Fraction.objects.filter(
+            sentence__person=self,
+            sentence__status='active',
+            is_fulfilled=False,
+        ).count()
+        return unfulfilled == 0

@@ -26,7 +26,7 @@ class AuditLog(models.Model):
         verbose_name='Username actor'
     )
     action = models.CharField(
-        max_length=20,
+        max_length=50,
         choices=ActionType.choices,
         verbose_name='Acțiune'
     )

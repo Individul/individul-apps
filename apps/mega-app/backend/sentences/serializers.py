@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Sentence, Fraction, SentenceReduction
+from .models import Sentence, Fraction, SentenceReduction, PreventiveArrest, ZPM
 
 
 class FractionSerializer(serializers.ModelSerializer):
@@ -72,12 +72,82 @@ class SentenceReductionSerializer(serializers.ModelSerializer):
         return data
 
 
+class PreventiveArrestSerializer(serializers.ModelSerializer):
+    days = serializers.IntegerField(read_only=True)
+    duration_display = serializers.CharField(read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PreventiveArrest
+        fields = [
+            'id', 'start_date', 'end_date',
+            'days', 'duration_display',
+            'created_by', 'created_by_name', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.username
+        return None
+
+    def validate(self, data):
+        start = data.get('start_date')
+        end = data.get('end_date')
+        if start and end and end <= start:
+            raise serializers.ValidationError(
+                'Data sfârșit trebuie să fie după data început.'
+            )
+        return data
+
+
+class ZPMSerializer(serializers.ModelSerializer):
+    month_display = serializers.CharField(read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ZPM
+        fields = [
+            'id', 'month', 'year', 'days',
+            'month_display',
+            'created_by', 'created_by_name', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.username
+        return None
+
+    def validate_month(self, value):
+        if value < 1 or value > 12:
+            raise serializers.ValidationError('Luna trebuie să fie între 1 și 12.')
+        return value
+
+    def validate_year(self, value):
+        if value < 2000 or value > 2100:
+            raise serializers.ValidationError('Anul trebuie să fie valid.')
+        return value
+
+    def validate_days(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Numărul de zile trebuie să fie mai mare decât 0.')
+        if value > 31:
+            raise serializers.ValidationError('Numărul de zile nu poate depăși 31.')
+        return value
+
+
 class SentenceListSerializer(serializers.ModelSerializer):
     fractions = FractionSerializer(many=True, read_only=True)
     reductions = SentenceReductionSerializer(many=True, read_only=True)
+    preventive_arrests = PreventiveArrestSerializer(many=True, read_only=True)
+    zpm_entries = ZPMSerializer(many=True, read_only=True)
     end_date = serializers.DateField(read_only=True)
     total_days = serializers.IntegerField(read_only=True)
     total_reduction_days = serializers.IntegerField(read_only=True)
+    total_preventive_arrest_days = serializers.IntegerField(read_only=True)
+    total_zpm_days = serializers.IntegerField(read_only=True)
+    total_zpm_days_raw = serializers.FloatField(read_only=True)
     effective_years = serializers.IntegerField(read_only=True)
     effective_months = serializers.IntegerField(read_only=True)
     effective_days = serializers.IntegerField(read_only=True)
@@ -95,11 +165,13 @@ class SentenceListSerializer(serializers.ModelSerializer):
             'id', 'person', 'crime_type', 'crime_type_display',
             'crime_description', 'sentence_years', 'sentence_months',
             'sentence_days', 'duration_display', 'start_date', 'end_date',
-            'total_days', 'total_reduction_days',
+            'total_days', 'total_reduction_days', 'total_preventive_arrest_days',
+            'total_zpm_days', 'total_zpm_days_raw',
             'effective_years', 'effective_months', 'effective_days',
             'effective_end_date', 'effective_duration_display',
             'status', 'status_display', 'is_serious_crime',
-            'notes', 'fractions', 'reductions', 'created_by', 'created_by_name',
+            'notes', 'fractions', 'reductions', 'preventive_arrests', 'zpm_entries',
+            'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
 
@@ -112,9 +184,14 @@ class SentenceListSerializer(serializers.ModelSerializer):
 class SentenceDetailSerializer(serializers.ModelSerializer):
     fractions = FractionSerializer(many=True, read_only=True)
     reductions = SentenceReductionSerializer(many=True, read_only=True)
+    preventive_arrests = PreventiveArrestSerializer(many=True, read_only=True)
+    zpm_entries = ZPMSerializer(many=True, read_only=True)
     end_date = serializers.DateField(read_only=True)
     total_days = serializers.IntegerField(read_only=True)
     total_reduction_days = serializers.IntegerField(read_only=True)
+    total_preventive_arrest_days = serializers.IntegerField(read_only=True)
+    total_zpm_days = serializers.IntegerField(read_only=True)
+    total_zpm_days_raw = serializers.FloatField(read_only=True)
     effective_years = serializers.IntegerField(read_only=True)
     effective_months = serializers.IntegerField(read_only=True)
     effective_days = serializers.IntegerField(read_only=True)
@@ -133,11 +210,13 @@ class SentenceDetailSerializer(serializers.ModelSerializer):
             'id', 'person', 'person_name', 'crime_type', 'crime_type_display',
             'crime_description', 'sentence_years', 'sentence_months',
             'sentence_days', 'duration_display', 'start_date', 'end_date',
-            'total_days', 'total_reduction_days',
+            'total_days', 'total_reduction_days', 'total_preventive_arrest_days',
+            'total_zpm_days', 'total_zpm_days_raw',
             'effective_years', 'effective_months', 'effective_days',
             'effective_end_date', 'effective_duration_display',
             'status', 'status_display', 'is_serious_crime',
-            'notes', 'fractions', 'reductions', 'created_by', 'created_by_name',
+            'notes', 'fractions', 'reductions', 'preventive_arrests', 'zpm_entries',
+            'created_by', 'created_by_name',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']

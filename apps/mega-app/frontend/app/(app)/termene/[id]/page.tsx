@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Clock, AlertCircle, X, Calendar, UserCheck, Pencil } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Clock, AlertCircle, X, Calendar, UserCheck, Pencil, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -16,9 +16,12 @@ import {
   Fraction,
   SentenceCreate,
   SentenceReductionCreate,
+  PreventiveArrestCreate,
+  ZPMCreate,
   ApiError,
   CRIME_TYPES,
   SENTENCE_STATUSES,
+  RELEASE_TYPES,
 } from '@/lib/api'
 import { formatDate, formatDateForApi } from '@/lib/utils'
 
@@ -47,16 +50,16 @@ function parseApiDate(value: string | null | undefined): Date | undefined {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    suspended: 'bg-amber-50 text-amber-700 border-amber-200',
-    completed: 'bg-gray-100 text-gray-600 border-gray-200',
-    conditionally_released: 'bg-blue-50 text-blue-700 border-blue-200',
+    cumulated: 'bg-amber-50 text-amber-700 border-amber-200',
+    new: 'bg-blue-50 text-blue-700 border-blue-200',
+    finished: 'bg-gray-100 text-gray-600 border-gray-300',
   }
 
   const labels: Record<string, string> = {
     active: 'Activa',
-    suspended: 'Suspendata',
-    completed: 'Finalizata',
-    conditionally_released: 'Lib. Conditionata',
+    cumulated: 'Cumulata',
+    new: 'Noua',
+    finished: 'Finalizata',
   }
 
   return (
@@ -102,15 +105,30 @@ function SentenceCard({
   sentence,
   onAddReduction,
   onDeleteReduction,
+  onAddPreventiveArrest,
+  onDeletePreventiveArrest,
+  onEditPreventiveArrest,
   onEditSentence,
+  onAddZpm,
+  onDeleteZpm,
 }: {
   sentence: Sentence
   onAddReduction: (sentenceId: string) => void
   onDeleteReduction: (sentenceId: string, reductionId: string) => void
+  onAddPreventiveArrest: (sentenceId: string) => void
+  onDeletePreventiveArrest: (sentenceId: string, paId: string) => void
+  onEditPreventiveArrest: (sentenceId: string, pa: any) => void
   onEditSentence: (sentence: Sentence) => void
+  onAddZpm: (sentenceId: string) => void
+  onDeleteZpm: (sentenceId: string, zpmId: string) => void
 }) {
-  // Use effective_end_date if there are reductions, otherwise use end_date
-  const endDateToUse = sentence.reductions && sentence.reductions.length > 0
+  const [reductionsExpanded, setReductionsExpanded] = useState(false)
+  const [arrestExpanded, setArrestExpanded] = useState(false)
+  const [zpmExpanded, setZpmExpanded] = useState(false)
+
+  // Use effective_end_date if there are reductions, preventive arrests, or ZPM, otherwise use end_date
+  const hasDeductions = (sentence.reductions && sentence.reductions.length > 0) || (sentence.preventive_arrests && sentence.preventive_arrests.length > 0) || (sentence.zpm_entries && sentence.zpm_entries.length > 0)
+  const endDateToUse = hasDeductions
     ? sentence.effective_end_date
     : sentence.end_date
   const timeServed = calculateTimeServed(sentence.start_date, endDateToUse)
@@ -127,7 +145,7 @@ function SentenceCard({
             </h3>
             <p className="text-sm text-slate-500 mt-0.5">
               {sentence.duration_display}
-              {sentence.reductions && sentence.reductions.length > 0 && (
+              {hasDeductions && (
                 <span className="ml-2 text-amber-600">
                   (Efectiv: {sentence.effective_duration_display})
                 </span>
@@ -148,6 +166,18 @@ function SentenceCard({
             >
               + Reducere
             </button>
+            <button
+              onClick={() => onAddPreventiveArrest(sentence.id)}
+              className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+            >
+              + Arest Prev.
+            </button>
+            <button
+              onClick={() => onAddZpm(sentence.id)}
+              className="text-xs text-teal-600 hover:text-teal-800 hover:bg-teal-50 px-2 py-1 rounded transition-colors"
+            >
+              + ZPM
+            </button>
             <StatusBadge status={sentence.status} />
           </div>
         </div>
@@ -160,7 +190,7 @@ function SentenceCard({
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1">Sfarsit</p>
-            {sentence.reductions && sentence.reductions.length > 0 ? (
+            {hasDeductions ? (
               <div>
                 <p className="text-sm font-mono text-slate-400 tabular-nums line-through">{formatDate(sentence.end_date)}</p>
                 <p className="text-sm font-mono text-emerald-600 tabular-nums font-semibold">{formatDate(sentence.effective_end_date)}</p>
@@ -195,8 +225,8 @@ function SentenceCard({
         {/* Table Header */}
         <div className="grid grid-cols-[70px_1fr_120px_100px] px-5 py-3 border-b border-gray-100 bg-white">
           <span className="text-xs uppercase text-gray-400 font-semibold">Fractie</span>
-          <span className="text-xs uppercase text-gray-400 font-semibold">Descriere</span>
           <span className="text-xs uppercase text-gray-400 font-semibold">Data</span>
+          <span className="text-xs uppercase text-gray-400 font-semibold">Zile</span>
           <span className="text-xs uppercase text-gray-400 font-semibold">Status</span>
         </div>
 
@@ -213,21 +243,14 @@ function SentenceCard({
               {fraction.fraction_type}
             </span>
 
-            {/* Description */}
-            <div className="pr-4">
-              <p className="text-sm text-slate-700 truncate">{fraction.description}</p>
-              {fraction.days_until !== undefined && !fraction.is_fulfilled && (
-                <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
-                  {fraction.days_until < 0
-                    ? `${Math.abs(fraction.days_until)} zile depasite`
-                    : `${fraction.days_until} zile ramase`}
-                </p>
-              )}
-            </div>
-
             {/* Date */}
             <span className="text-sm font-mono text-slate-700 tabular-nums">
               {formatDate(fraction.calculated_date)}
+            </span>
+
+            {/* Days Until */}
+            <span className={`text-sm font-medium ${fraction.days_until < 0 ? 'text-red-600' : 'text-slate-600'}`}>
+              {fraction.is_fulfilled ? '—' : fraction.days_until < 0 ? `${Math.abs(fraction.days_until)} depasit` : `${fraction.days_until} ramase`}
             </span>
 
             {/* Status Badge */}
@@ -239,18 +262,23 @@ function SentenceCard({
       {/* Reductions Section */}
       {sentence.reductions && sentence.reductions.length > 0 && (
         <div className="border-t border-gray-100 bg-amber-50/50">
-          <div className="px-5 py-3 border-b border-amber-100">
-            <div className="flex items-center justify-between">
+          <button
+            onClick={() => setReductionsExpanded(!reductionsExpanded)}
+            className="w-full px-5 py-3 flex items-center justify-between hover:bg-amber-50/80 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <ChevronDown className={`h-3.5 w-3.5 text-amber-500 transition-transform ${reductionsExpanded ? '' : '-rotate-90'}`} />
               <span className="text-xs uppercase text-amber-700 font-semibold">Reduceri Aplicate</span>
-              <span className="text-xs text-amber-600 font-medium">
-                Total: -{sentence.total_reduction_days} zile
-              </span>
+              <span className="text-xs text-amber-500">({sentence.reductions.length})</span>
             </div>
-          </div>
-          {sentence.reductions.map((reduction, index) => (
+            <span className="text-xs text-amber-600 font-medium">
+              Total: -{sentence.total_reduction_days} zile
+            </span>
+          </button>
+          {reductionsExpanded && sentence.reductions.map((reduction, index) => (
             <div
               key={reduction.id}
-              className={`flex items-center justify-between px-5 py-2.5 ${
+              className={`flex items-center justify-between px-5 py-2.5 border-t border-amber-100/50 ${
                 index < sentence.reductions.length - 1 ? 'border-b border-amber-100/50' : ''
               }`}
             >
@@ -274,6 +302,109 @@ function SentenceCard({
                   <X className="h-3.5 w-3.5" strokeWidth={2} />
                 </button>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Arest Preventiv Section */}
+      {sentence.preventive_arrests && sentence.preventive_arrests.length > 0 && (
+        <div className="border-t border-gray-100 bg-blue-50/50">
+          <button
+            onClick={() => setArrestExpanded(!arrestExpanded)}
+            className="w-full px-5 py-3 flex items-center justify-between hover:bg-blue-50/80 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <ChevronDown className={`h-3.5 w-3.5 text-blue-500 transition-transform ${arrestExpanded ? '' : '-rotate-90'}`} />
+              <span className="text-xs uppercase text-blue-700 font-semibold tracking-wider">Arest Preventiv</span>
+              <span className="text-xs text-blue-500">({sentence.preventive_arrests.length})</span>
+            </div>
+            <span className="text-xs text-blue-600 font-medium">
+              Total: -{sentence.total_preventive_arrest_days} zile
+            </span>
+          </button>
+          {arrestExpanded && sentence.preventive_arrests.map((pa: any, index: number) => (
+            <div
+              key={pa.id}
+              className={`flex items-center justify-between px-5 py-2.5 border-t border-blue-100/50 ${
+                index < sentence.preventive_arrests.length - 1 ? 'border-b border-blue-100/50' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 font-mono text-xs rounded">
+                  AP
+                </span>
+                <span className="text-sm text-blue-700">
+                  {formatDate(pa.start_date)} — {formatDate(pa.end_date)}
+                </span>
+                <span className="text-xs text-blue-500">
+                  ({pa.days} zile)
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => onEditPreventiveArrest(sentence.id, pa)}
+                  className="p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  title="Editează arestul preventiv"
+                >
+                  <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+                <button
+                  onClick={() => onDeletePreventiveArrest(sentence.id, pa.id)}
+                  className="p-1 text-blue-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  title="Șterge arestul preventiv"
+                >
+                  <X className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ZPM Section */}
+      {sentence.zpm_entries && sentence.zpm_entries.length > 0 && (
+        <div className="border-t border-gray-100 bg-teal-50/50">
+          <button
+            onClick={() => setZpmExpanded(!zpmExpanded)}
+            className="w-full px-5 py-3 flex items-center justify-between hover:bg-teal-50/80 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <ChevronDown className={`h-3.5 w-3.5 text-teal-500 transition-transform ${zpmExpanded ? '' : '-rotate-90'}`} />
+              <span className="text-xs uppercase text-teal-700 font-semibold tracking-wider">ZPM - Zile Privilegiate</span>
+              <span className="text-xs text-teal-500">({sentence.zpm_entries.length})</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-teal-600 font-medium tabular-nums">
+                Total: {sentence.total_zpm_days_raw?.toFixed(2)} zile
+              </span>
+              <span className="text-xs text-teal-700 font-semibold tabular-nums">
+                Aplicat: -{sentence.total_zpm_days} zile
+              </span>
+            </div>
+          </button>
+          {zpmExpanded && sentence.zpm_entries.map((zpm: any, index: number) => (
+            <div
+              key={zpm.id}
+              className={`flex items-center justify-between px-5 py-2.5 border-t border-teal-100/50 ${
+                index < sentence.zpm_entries.length - 1 ? 'border-b border-teal-100/50' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center px-2 py-1 bg-teal-100 text-teal-800 font-mono text-xs rounded">
+                  {zpm.month_display}
+                </span>
+                <span className="text-sm text-teal-700 tabular-nums">
+                  {Number(zpm.days).toFixed(2)} zile
+                </span>
+              </div>
+              <button
+                onClick={() => onDeleteZpm(sentence.id, zpm.id)}
+                className="p-1 text-teal-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                title="Sterge ZPM"
+              >
+                <X className="h-3.5 w-3.5" strokeWidth={2} />
+              </button>
             </div>
           ))}
         </div>
@@ -318,7 +449,23 @@ export default function PersonDetailPage() {
   })
   const [reductionDate, setReductionDate] = useState<Date | undefined>()
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(new Date())
+  const [releaseType, setReleaseType] = useState('')
   const [isReleasing, setIsReleasing] = useState(false)
+
+  // Preventive arrest form state
+  const [paFormOpen, setPaFormOpen] = useState(false)
+  const [selectedSentenceForPa, setSelectedSentenceForPa] = useState<string | null>(null)
+  const [isAddingPa, setIsAddingPa] = useState(false)
+  const [paStartDate, setPaStartDate] = useState<Date | undefined>()
+  const [paEndDate, setPaEndDate] = useState<Date | undefined>()
+
+  // Edit preventive arrest form state
+  const [editPaFormOpen, setEditPaFormOpen] = useState(false)
+  const [selectedSentenceForEditPa, setSelectedSentenceForEditPa] = useState<string | null>(null)
+  const [selectedPaId, setSelectedPaId] = useState<string | null>(null)
+  const [isEditingPa, setIsEditingPa] = useState(false)
+  const [editPaStartDate, setEditPaStartDate] = useState<Date | undefined>()
+  const [editPaEndDate, setEditPaEndDate] = useState<Date | undefined>()
 
   // Edit person form state
   const [editFormOpen, setEditFormOpen] = useState(false)
@@ -336,8 +483,17 @@ export default function PersonDetailPage() {
     sentence_years: 0,
     sentence_months: 0,
     sentence_days: 0,
+    status: 'active',
   })
   const [editSentenceStartDate, setEditSentenceStartDate] = useState<Date | undefined>()
+
+  // ZPM form state
+  const [zpmFormOpen, setZpmFormOpen] = useState(false)
+  const [selectedSentenceForZpm, setSelectedSentenceForZpm] = useState<string | null>(null)
+  const [isAddingZpm, setIsAddingZpm] = useState(false)
+  const [zpmMonth, setZpmMonth] = useState<string>('')
+  const [zpmYear, setZpmYear] = useState<number>(new Date().getFullYear())
+  const [zpmDays, setZpmDays] = useState<string>('')
 
   const fetchPerson = async () => {
     const token = localStorage.getItem('access_token')
@@ -350,6 +506,7 @@ export default function PersonDetailPage() {
       const data = await personsApi.get(token, personId)
       setPerson(data)
       setReleaseDate(parseApiDate(data.release_date) || new Date())
+      setReleaseType(data.release_type || '')
     } catch (error) {
       console.error(error)
       toast.error('Nu s-a putut incarca persoana')
@@ -473,6 +630,7 @@ export default function PersonDetailPage() {
       sentence_years: sentence.sentence_years,
       sentence_months: sentence.sentence_months,
       sentence_days: sentence.sentence_days,
+      status: sentence.status,
     })
     setEditSentenceStartDate(parseApiDate(sentence.start_date))
     setEditSentenceFormOpen(true)
@@ -499,6 +657,7 @@ export default function PersonDetailPage() {
         sentence_months: editSentenceData.sentence_months,
         sentence_days: editSentenceData.sentence_days,
         start_date: formatDateForApi(editSentenceStartDate),
+        status: editSentenceData.status,
       })
       toast.success('Sentinta a fost actualizata cu succes')
       setEditSentenceFormOpen(false)
@@ -538,6 +697,11 @@ export default function PersonDetailPage() {
       return
     }
 
+    if (!releaseType) {
+      toast.error('Selecteaza modalitatea eliberarii')
+      return
+    }
+
     if (!confirm('Confirmati marcarea persoanei ca eliberata?')) {
       return
     }
@@ -546,9 +710,11 @@ export default function PersonDetailPage() {
     try {
       const response = await personsApi.release(token, personId, {
         release_date: formatDateForApi(releaseDate),
+        release_type: releaseType,
       })
       setPerson(response.person)
       setReleaseDate(parseApiDate(response.person.release_date) || releaseDate)
+      setReleaseType(response.person.release_type || '')
       toast.success('Persoana a fost marcata ca eliberata')
     } catch (error) {
       if (error instanceof ApiError) {
@@ -623,6 +789,151 @@ export default function PersonDetailPage() {
       fetchPerson()
     } catch (error) {
       toast.error('A aparut o eroare la stergerea reducerii')
+    }
+  }
+
+  const handleOpenPaForm = (sentenceId: string) => {
+    setSelectedSentenceForPa(sentenceId)
+    setPaStartDate(undefined)
+    setPaEndDate(undefined)
+    setPaFormOpen(true)
+  }
+
+  const handleAddPreventiveArrest = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !selectedSentenceForPa) return
+
+    if (!paStartDate || !paEndDate) {
+      toast.error('Completați ambele date')
+      return
+    }
+
+    setIsAddingPa(true)
+    try {
+      await sentencesApi.addPreventiveArrest(token, selectedSentenceForPa, {
+        start_date: formatDateForApi(paStartDate),
+        end_date: formatDateForApi(paEndDate),
+      })
+      toast.success('Arestul preventiv a fost adăugat')
+      setPaFormOpen(false)
+      fetchPerson()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A apărut o eroare')
+      }
+    } finally {
+      setIsAddingPa(false)
+    }
+  }
+
+  const handleDeletePreventiveArrest = async (sentenceId: string, paId: string) => {
+    if (!confirm('Sigur doriți să ștergeți această perioadă de arest preventiv?')) return
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    try {
+      await sentencesApi.deletePreventiveArrest(token, sentenceId, paId)
+      toast.success('Arestul preventiv a fost șters')
+      fetchPerson()
+    } catch (error) {
+      toast.error('A apărut o eroare la ștergere')
+    }
+  }
+
+  const handleOpenZpmForm = (sentenceId: string) => {
+    setSelectedSentenceForZpm(sentenceId)
+    setZpmMonth('')
+    setZpmYear(new Date().getFullYear())
+    setZpmDays('')
+    setZpmFormOpen(true)
+  }
+
+  const handleAddZpm = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !selectedSentenceForZpm) return
+
+    if (!zpmMonth || !zpmDays) {
+      toast.error('Completeaza luna si numarul de zile')
+      return
+    }
+
+    const daysValue = parseFloat(zpmDays)
+    if (isNaN(daysValue) || daysValue <= 0) {
+      toast.error('Numarul de zile trebuie sa fie mai mare decat 0')
+      return
+    }
+
+    setIsAddingZpm(true)
+    try {
+      await sentencesApi.addZpm(token, selectedSentenceForZpm, {
+        month: parseInt(zpmMonth),
+        year: zpmYear,
+        days: daysValue,
+      })
+      toast.success('ZPM a fost adaugat')
+      setZpmFormOpen(false)
+      fetchPerson()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A aparut o eroare')
+      }
+    } finally {
+      setIsAddingZpm(false)
+    }
+  }
+
+  const handleDeleteZpm = async (sentenceId: string, zpmId: string) => {
+    if (!confirm('Sigur doriti sa stergeti acest ZPM?')) return
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    try {
+      await sentencesApi.deleteZpm(token, sentenceId, zpmId)
+      toast.success('ZPM a fost sters')
+      fetchPerson()
+    } catch (error) {
+      toast.error('A aparut o eroare la stergerea ZPM')
+    }
+  }
+
+  const handleOpenEditPaForm = (sentenceId: string, pa: any) => {
+    setSelectedSentenceForEditPa(sentenceId)
+    setSelectedPaId(pa.id)
+    setEditPaStartDate(parseApiDate(pa.start_date))
+    setEditPaEndDate(parseApiDate(pa.end_date))
+    setEditPaFormOpen(true)
+  }
+
+  const handleEditPreventiveArrest = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !selectedSentenceForEditPa || !selectedPaId) return
+
+    if (!editPaStartDate || !editPaEndDate) {
+      toast.error('Completați ambele date')
+      return
+    }
+
+    setIsEditingPa(true)
+    try {
+      await sentencesApi.updatePreventiveArrest(token, selectedSentenceForEditPa, selectedPaId, {
+        start_date: formatDateForApi(editPaStartDate),
+        end_date: formatDateForApi(editPaEndDate),
+      })
+      toast.success('Arestul preventiv a fost actualizat')
+      setEditPaFormOpen(false)
+      fetchPerson()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A apărut o eroare la actualizare')
+      }
+    } finally {
+      setIsEditingPa(false)
     }
   }
 
@@ -732,9 +1043,26 @@ export default function PersonDetailPage() {
               />
             </div>
           </div>
+          <div className="flex-1">
+            <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+              Modalitatea eliberarii
+            </label>
+            <Select value={releaseType} onValueChange={setReleaseType}>
+              <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                <SelectValue placeholder="Selecteaza modalitatea" />
+              </SelectTrigger>
+              <SelectContent>
+                {RELEASE_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <button
             onClick={handleReleasePerson}
-            disabled={!releaseDate || isReleasing}
+            disabled={!releaseDate || !releaseType || isReleasing}
             className="inline-flex items-center justify-center px-4 h-10 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isReleasing ? (
@@ -753,6 +1081,7 @@ export default function PersonDetailPage() {
         {person.release_date && (
           <p className="mt-2 text-xs text-emerald-700">
             Eliberat la {formatDate(person.release_date)}
+            {person.release_type && ` — ${RELEASE_TYPES.find(t => t.value === person.release_type)?.label || person.release_type}`}
           </p>
         )}
       </div>
@@ -965,7 +1294,12 @@ export default function PersonDetailPage() {
                 sentence={sentence}
                 onAddReduction={handleOpenReductionForm}
                 onDeleteReduction={handleDeleteReduction}
+                onAddPreventiveArrest={handleOpenPaForm}
+                onDeletePreventiveArrest={handleDeletePreventiveArrest}
+                onEditPreventiveArrest={handleOpenEditPaForm}
                 onEditSentence={handleOpenEditSentenceForm}
+                onAddZpm={handleOpenZpmForm}
+                onDeleteZpm={handleDeleteZpm}
               />
             ))}
           </div>
@@ -1045,7 +1379,7 @@ export default function PersonDetailPage() {
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <div>
               <h2 className="text-lg font-semibold text-slate-800">Editeaza Sentinta</h2>
-              <p className="text-sm text-slate-500 mt-0.5">Modifica durata si inceputul termenului</p>
+              <p className="text-sm text-slate-500 mt-0.5">Modifica durata, inceputul termenului si statusul</p>
             </div>
             <SheetClose asChild>
               <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
@@ -1124,6 +1458,28 @@ export default function PersonDetailPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Status Sentinta
+                </label>
+                <Select
+                  value={editSentenceData.status}
+                  onValueChange={(value) => setEditSentenceData({ ...editSentenceData, status: value })}
+                >
+                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SENTENCE_STATUSES.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -1272,6 +1628,254 @@ export default function PersonDetailPage() {
                 </span>
               ) : (
                 'Salveaza Reducere'
+              )}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Preventive Arrest Form Sheet */}
+      <Sheet open={paFormOpen} onOpenChange={setPaFormOpen}>
+        <SheetContent hideCloseButton className="flex flex-col p-0">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">Adaugă Arest Preventiv</h2>
+              <p className="text-sm text-slate-500 mt-0.5">Perioada de detenție anterioară executării pedepsei</p>
+            </div>
+            <SheetClose asChild>
+              <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </SheetClose>
+          </div>
+
+          {/* Form Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-6 pb-32">
+            <div className="space-y-5">
+              {/* Start Date */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Data Început *
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                  <DatePicker
+                    date={paStartDate}
+                    onSelect={setPaStartDate}
+                    placeholder="Selecteaza data"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Data Sfârșit *
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                  <DatePicker
+                    date={paEndDate}
+                    onSelect={setPaEndDate}
+                    placeholder="Selecteaza data"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer - Sticky Bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+            <button
+              onClick={handleAddPreventiveArrest}
+              disabled={isAddingPa || !paStartDate || !paEndDate}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAddingPa ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Se salvează...
+                </span>
+              ) : (
+                'Salvează'
+              )}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Edit Preventive Arrest Sheet */}
+      <Sheet open={editPaFormOpen} onOpenChange={setEditPaFormOpen}>
+        <SheetContent hideCloseButton className="flex flex-col p-0">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">Editează Arest Preventiv</h2>
+              <p className="text-sm text-slate-500 mt-0.5">Modifică perioada de arest preventiv</p>
+            </div>
+            <SheetClose asChild>
+              <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </SheetClose>
+          </div>
+
+          {/* Form Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-6 pb-32">
+            <div className="space-y-5">
+              {/* Start Date */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Data Început *
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                  <DatePicker
+                    date={editPaStartDate}
+                    onSelect={setEditPaStartDate}
+                    placeholder="Selecteaza data"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Data Sfârșit *
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                  <DatePicker
+                    date={editPaEndDate}
+                    onSelect={setEditPaEndDate}
+                    placeholder="Selecteaza data"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer - Sticky Bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+            <button
+              onClick={handleEditPreventiveArrest}
+              disabled={isEditingPa || !editPaStartDate || !editPaEndDate}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isEditingPa ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Se salvează...
+                </span>
+              ) : (
+                'Salvează Modificările'
+              )}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ZPM Form Sheet */}
+      <Sheet open={zpmFormOpen} onOpenChange={setZpmFormOpen}>
+        <SheetContent hideCloseButton className="flex flex-col p-0">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">Adauga ZPM</h2>
+              <p className="text-sm text-slate-500 mt-0.5">Zile privilegiate de munca pentru luna selectata</p>
+            </div>
+            <SheetClose asChild>
+              <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </SheetClose>
+          </div>
+
+          {/* Form Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-6 pb-32">
+            <div className="space-y-5">
+              {/* Month */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Luna *
+                </label>
+                <Select
+                  value={zpmMonth}
+                  onValueChange={setZpmMonth}
+                >
+                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                    <SelectValue placeholder="Selecteaza luna" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Ianuarie</SelectItem>
+                    <SelectItem value="2">Februarie</SelectItem>
+                    <SelectItem value="3">Martie</SelectItem>
+                    <SelectItem value="4">Aprilie</SelectItem>
+                    <SelectItem value="5">Mai</SelectItem>
+                    <SelectItem value="6">Iunie</SelectItem>
+                    <SelectItem value="7">Iulie</SelectItem>
+                    <SelectItem value="8">August</SelectItem>
+                    <SelectItem value="9">Septembrie</SelectItem>
+                    <SelectItem value="10">Octombrie</SelectItem>
+                    <SelectItem value="11">Noiembrie</SelectItem>
+                    <SelectItem value="12">Decembrie</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Year */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Anul *
+                </label>
+                <input
+                  type="number"
+                  min="2000"
+                  max="2100"
+                  value={zpmYear}
+                  onChange={(e) => setZpmYear(parseInt(e.target.value) || new Date().getFullYear())}
+                  className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                />
+              </div>
+
+              {/* Days */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                  Zile Lucrate *
+                </label>
+                <input
+                  type="number"
+                  min="0.01"
+                  max="31"
+                  step="0.01"
+                  value={zpmDays}
+                  onChange={(e) => setZpmDays(e.target.value)}
+                  placeholder="ex: 1.11"
+                  className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-900 tabular-nums placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer - Sticky Bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+            <button
+              onClick={handleAddZpm}
+              disabled={isAddingZpm || !zpmMonth || !zpmDays}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAddingZpm ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Se salveaza...
+                </span>
+              ) : (
+                'Salveaza ZPM'
               )}
             </button>
           </div>

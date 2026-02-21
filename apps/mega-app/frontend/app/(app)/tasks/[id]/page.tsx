@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,21 @@ import {
 type TaskStatus = Task["status"];
 type TaskPriority = Task["priority"];
 
+function renderTextWithLinks(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) => {
+    if (urlRegex.test(part)) {
+      return (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline break-all">
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 interface TaskDetailPageProps {
   params: { id: string };
 }
@@ -59,6 +74,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [status, setStatus] = useState<TaskStatus>("TODO");
   const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
   const [category, setCategory] = useState("");
@@ -279,13 +295,34 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
             <div className="space-y-2">
               <Label htmlFor="description">Descriere</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descrierea sarcinii"
-                rows={4}
-              />
+              {isEditingDescription ? (
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value)
+                    e.target.style.height = 'auto'
+                    e.target.style.height = e.target.scrollHeight + 'px'
+                  }}
+                  onBlur={() => setIsEditingDescription(false)}
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = 'auto'
+                      el.style.height = el.scrollHeight + 'px'
+                      el.focus()
+                    }
+                  }}
+                  placeholder="Descrierea sarcinii"
+                  className="min-h-[100px] resize-none overflow-hidden"
+                />
+              ) : (
+                <div
+                  onClick={() => setIsEditingDescription(true)}
+                  className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm cursor-text whitespace-pre-wrap break-words"
+                >
+                  {description ? renderTextWithLinks(description) : <span className="text-muted-foreground">Descrierea sarcinii</span>}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

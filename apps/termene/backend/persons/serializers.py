@@ -8,15 +8,18 @@ class ConvictedPersonListSerializer(serializers.ModelSerializer):
     active_sentences_count = serializers.IntegerField(read_only=True)
     nearest_fraction_date = serializers.SerializerMethodField()
     nearest_fraction_type = serializers.SerializerMethodField()
+    active_sentence_end_date = serializers.SerializerMethodField()
+    has_fulfilled_fractions = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ConvictedPerson
         fields = [
             'id', 'first_name', 'last_name', 'full_name', 'cnp',
-            'date_of_birth', 'admission_date', 'release_date', 'mai_notification',
+            'date_of_birth', 'admission_date', 'release_date', 'release_type', 'mai_notification',
             'active_sentences_count',
             'nearest_fraction_date', 'nearest_fraction_type',
+            'active_sentence_end_date', 'has_fulfilled_fractions',
             'created_by', 'created_by_name', 'created_at', 'updated_at'
         ]
 
@@ -28,6 +31,12 @@ class ConvictedPersonListSerializer(serializers.ModelSerializer):
         fraction = obj.nearest_fraction
         return fraction.fraction_type if fraction else None
 
+    def get_active_sentence_end_date(self, obj):
+        return obj.active_sentence_end_date
+
+    def get_has_fulfilled_fractions(self, obj):
+        return obj.has_fulfilled_fractions
+
     def get_created_by_name(self, obj):
         if obj.created_by:
             return obj.created_by.get_full_name() or obj.created_by.username
@@ -37,14 +46,26 @@ class ConvictedPersonListSerializer(serializers.ModelSerializer):
 class ConvictedPersonDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     active_sentences_count = serializers.IntegerField(read_only=True)
-    sentences = SentenceListSerializer(many=True, read_only=True)
+    sentences = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()
+
+    def get_sentences(self, obj):
+        """Return sentences ordered with active first, then by start_date descending."""
+        from django.db.models import Case, When, Value, IntegerField
+        sentences = obj.sentences.annotate(
+            status_order=Case(
+                When(status='active', then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('status_order', '-start_date')
+        return SentenceListSerializer(sentences, many=True).data
 
     class Meta:
         model = ConvictedPerson
         fields = [
             'id', 'first_name', 'last_name', 'full_name', 'cnp',
-            'date_of_birth', 'admission_date', 'release_date', 'notes', 'mai_notification',
+            'date_of_birth', 'admission_date', 'release_date', 'release_type', 'notes', 'mai_notification',
             'active_sentences_count', 'sentences',
             'created_by', 'created_by_name', 'created_at', 'updated_at'
         ]
@@ -112,7 +133,7 @@ class ConvictedPersonUpdateSerializer(serializers.ModelSerializer):
         model = ConvictedPerson
         fields = [
             'first_name', 'last_name', 'cnp',
-            'date_of_birth', 'admission_date', 'release_date', 'notes', 'mai_notification'
+            'date_of_birth', 'admission_date', 'release_date', 'release_type', 'notes', 'mai_notification'
         ]
 
     def validate_cnp(self, value):

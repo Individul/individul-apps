@@ -221,9 +221,8 @@ export default function ReportsPage() {
                     <SelectContent>
                       <SelectItem value="all">Toate statusurile</SelectItem>
                       <SelectItem value="active">Activă</SelectItem>
-                      <SelectItem value="suspended">Suspendată</SelectItem>
-                      <SelectItem value="completed">Finalizată</SelectItem>
-                      <SelectItem value="conditionally_released">Liberare condiționată</SelectItem>
+                      <SelectItem value="cumulated">Cumulată</SelectItem>
+                      <SelectItem value="new">Nouă</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

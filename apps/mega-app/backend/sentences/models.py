@@ -35,9 +35,9 @@ class Sentence(models.Model):
 
     class Status(models.TextChoices):
         ACTIVE = 'active', 'Activă'
-        SUSPENDED = 'suspended', 'Suspendată'
-        COMPLETED = 'completed', 'Finalizată'
-        CONDITIONALLY_RELEASED = 'conditionally_released', 'Liberare condiționată'
+        CUMULATED = 'cumulated', 'Cumulată'
+        NEW = 'new', 'Nouă'
+        FINISHED = 'finished', 'Finalizată'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     person = models.ForeignKey(
@@ -149,9 +149,35 @@ class Sentence(models.Model):
         return total
 
     @property
+    def total_preventive_arrest_days(self):
+        """Total zile de arest preventiv."""
+        total = 0
+        for pa in self.preventive_arrests.all():
+            total += (pa.end_date - pa.start_date).days
+        return total
+
+    @property
+    def total_zpm_days(self):
+        """Total ZPM zile (partea întreagă din suma tuturor zilelor ZPM)."""
+        from decimal import Decimal
+        total = Decimal('0.00')
+        for zpm in self.zpm_entries.all():
+            total += zpm.days
+        return int(total)
+
+    @property
+    def total_zpm_days_raw(self):
+        """Total ZPM zile ca număr zecimal (pentru afișare)."""
+        from decimal import Decimal
+        total = Decimal('0.00')
+        for zpm in self.zpm_entries.all():
+            total += zpm.days
+        return float(total)
+
+    @property
     def effective_total_days(self):
-        """Total zile efective după reduceri."""
-        return max(0, self.total_days - self.total_reduction_days)
+        """Total zile efective după reduceri, arest preventiv și ZPM."""
+        return max(0, self.total_days - self.total_reduction_days - self.total_preventive_arrest_days - self.total_zpm_days)
 
     @property
     def effective_end_date(self):
@@ -159,6 +185,7 @@ class Sentence(models.Model):
 
         Scade fiecare reducere direct din data de sfârșit a sentinței
         folosind relativedelta pentru precizie calendaristică.
+        De asemenea scade zilele de arest preventiv.
         """
         end = self.end_date
         for r in self.reductions.all():
@@ -167,6 +194,10 @@ class Sentence(models.Model):
                 months=r.reduction_months,
                 days=r.reduction_days
             )
+        # Scade zilele de arest preventiv
+        end = end - relativedelta(days=self.total_preventive_arrest_days)
+        # Scade zilele ZPM (doar partea întreagă)
+        end = end - relativedelta(days=self.total_zpm_days)
         return end
 
     @property
@@ -290,6 +321,97 @@ class SentenceReduction(models.Model):
     def total_reduction_days(self):
         """Total zile reduse din această reducere."""
         return (self.reduction_years * 365) + (self.reduction_months * 30) + self.reduction_days
+
+
+class PreventiveArrest(models.Model):
+    """Perioadă de arest preventiv creditată la executarea pedepsei."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sentence = models.ForeignKey(
+        'Sentence',
+        on_delete=models.CASCADE,
+        related_name='preventive_arrests',
+        verbose_name='Sentință'
+    )
+
+    start_date = models.DateField(verbose_name='Data început')
+    end_date = models.DateField(verbose_name='Data sfârșit')
+
+    # Audit
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_preventive_arrests',
+        verbose_name='Creat de'
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Creat la')
+
+    class Meta:
+        ordering = ['start_date']
+        verbose_name = 'Arest preventiv'
+        verbose_name_plural = 'Arestări preventive'
+
+    def __str__(self):
+        return f"{self.sentence.person.full_name} - AP {self.start_date} → {self.end_date} ({self.days} zile)"
+
+    @property
+    def days(self):
+        """Numărul de zile ale perioadei de arest preventiv."""
+        return (self.end_date - self.start_date).days
+
+    @property
+    def duration_display(self):
+        """Format: 'X zile'"""
+        d = self.days
+        return f"{d} {'zi' if d == 1 else 'zile'}"
+
+
+class ZPM(models.Model):
+    """Zile Privilegiate de Muncă - zile lucrate lunar creditate la executarea pedepsei."""
+    MONTH_NAMES = [
+        '', 'Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun',
+        'Iul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sentence = models.ForeignKey(
+        'Sentence',
+        on_delete=models.CASCADE,
+        related_name='zpm_entries',
+        verbose_name='Sentință'
+    )
+
+    month = models.PositiveSmallIntegerField(verbose_name='Luna')
+    year = models.PositiveSmallIntegerField(verbose_name='Anul')
+    days = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name='Zile lucrate'
+    )
+
+    # Audit
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_zpm_entries',
+        verbose_name='Creat de'
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Creat la')
+
+    class Meta:
+        ordering = ['-year', '-month']
+        verbose_name = 'ZPM'
+        verbose_name_plural = 'ZPM'
+        unique_together = [['sentence', 'month', 'year']]
+
+    def __str__(self):
+        return f"{self.sentence.person.full_name} - ZPM {self.month:02d}/{self.year} ({self.days} zile)"
+
+    @property
+    def month_display(self):
+        """Format: 'Ian 2024'"""
+        return f"{self.MONTH_NAMES[self.month]} {self.year}"
 
 
 class Fraction(models.Model):

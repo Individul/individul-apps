@@ -94,7 +94,7 @@ export const personsApi = {
       body: JSON.stringify(data),
     }),
 
-  release: (token: string, id: string, data: { release_date: string }) =>
+  release: (token: string, id: string, data: { release_date: string; release_type: string }) =>
     fetchApi<{ message: string; released_date: string; updated_sentences: number; person: PersonDetail }>(`/api/persons/${id}/release/`, {
       token,
       method: 'POST',
@@ -192,6 +192,39 @@ export const sentencesApi = {
       token,
       method: 'DELETE',
     }),
+
+  addPreventiveArrest: (token: string, sentenceId: string, data: PreventiveArrestCreate) =>
+    fetchApi<PreventiveArrest>(`/api/sentences/${sentenceId}/preventive-arrests/`, {
+      token,
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updatePreventiveArrest: (token: string, sentenceId: string, paId: string, data: PreventiveArrestCreate) =>
+    fetchApi<PreventiveArrest>(`/api/sentences/${sentenceId}/preventive-arrests/${paId}/update/`, {
+      token,
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deletePreventiveArrest: (token: string, sentenceId: string, paId: string) =>
+    fetchApi(`/api/sentences/${sentenceId}/preventive-arrests/${paId}/`, {
+      token,
+      method: 'DELETE',
+    }),
+
+  addZpm: (token: string, sentenceId: string, data: ZPMCreate) =>
+    fetchApi<ZPM>(`/api/sentences/${sentenceId}/zpm/`, {
+      token,
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  deleteZpm: (token: string, sentenceId: string, zpmId: string) =>
+    fetchApi(`/api/sentences/${sentenceId}/zpm/${zpmId}/`, {
+      token,
+      method: 'DELETE',
+    }),
 }
 
 // Fractions
@@ -262,10 +295,13 @@ export interface Person {
   date_of_birth: string
   admission_date: string
   release_date: string | null
+  release_type: string
   mai_notification: boolean
   active_sentences_count: number
   nearest_fraction_date: string | null
   nearest_fraction_type: string | null
+  active_sentence_end_date: string | null
+  has_fulfilled_fractions: boolean
   created_by: number
   created_by_name: string
   created_at: string
@@ -347,6 +383,39 @@ export interface SentenceReductionCreate {
   applied_date: string
 }
 
+export interface PreventiveArrest {
+  id: string
+  start_date: string
+  end_date: string
+  days: number
+  duration_display: string
+  created_by: number | null
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface PreventiveArrestCreate {
+  start_date: string
+  end_date: string
+}
+
+export interface ZPM {
+  id: string
+  month: number
+  year: number
+  days: number
+  month_display: string
+  created_by: number | null
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface ZPMCreate {
+  month: number
+  year: number
+  days: number
+}
+
 export interface Sentence {
   id: string
   person: string
@@ -362,17 +431,22 @@ export interface Sentence {
   end_date: string
   total_days: number
   total_reduction_days: number
+  total_preventive_arrest_days: number
+  total_zpm_days: number
+  total_zpm_days_raw: number
   effective_years: number
   effective_months: number
   effective_days: number
   effective_end_date: string
   effective_duration_display: string
-  status: 'active' | 'suspended' | 'completed' | 'conditionally_released'
+  status: 'active' | 'cumulated' | 'new'
   status_display: string
   is_serious_crime: boolean
   notes: string
   fractions: Fraction[]
   reductions: SentenceReduction[]
+  preventive_arrests: PreventiveArrest[]
+  zpm_entries: ZPM[]
   created_by: number
   created_by_name: string
   created_at: string
@@ -465,9 +539,16 @@ export const CRIME_TYPES = [
 
 export const SENTENCE_STATUSES = [
   { value: 'active', label: 'Activă' },
-  { value: 'suspended', label: 'Suspendată' },
-  { value: 'completed', label: 'Finalizată' },
-  { value: 'conditionally_released', label: 'Liberare condiționată' },
+  { value: 'cumulated', label: 'Cumulată' },
+  { value: 'new', label: 'Nouă' },
+  { value: 'finished', label: 'Finalizată' },
+]
+
+export const RELEASE_TYPES = [
+  { value: 'full_term', label: 'Executarea integrală' },
+  { value: 'art_91', label: 'Art. 91' },
+  { value: 'art_92', label: 'Art. 92' },
+  { value: 'conditions', label: 'Condiții' },
 ]
 
 export { ApiError }

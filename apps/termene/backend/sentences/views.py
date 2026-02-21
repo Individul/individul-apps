@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.conf import settings
 
-from .models import Sentence, Fraction, SentenceReduction
+from .models import Sentence, Fraction, SentenceReduction, PreventiveArrest, ZPM
 
 
 def make_json_serializable(obj):
@@ -29,6 +29,8 @@ from .serializers import (
     FractionUpdateSerializer,
     FractionListSerializer,
     SentenceReductionSerializer,
+    PreventiveArrestSerializer,
+    ZPMSerializer,
 )
 from accounts.permissions import IsOperatorOrReadOnly
 from audit.models import AuditLog
@@ -36,7 +38,7 @@ from audit.middleware import get_current_request
 
 
 class SentenceViewSet(viewsets.ModelViewSet):
-    queryset = Sentence.objects.select_related('person', 'created_by').prefetch_related('fractions', 'reductions')
+    queryset = Sentence.objects.select_related('person', 'created_by').prefetch_related('fractions', 'reductions', 'preventive_arrests', 'zpm_entries')
     permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
     filterset_fields = {
         'status': ['exact', 'in'],
@@ -203,6 +205,189 @@ class SentenceViewSet(viewsets.ModelViewSet):
             entity_id=str(reduction.id),
             before_json=reduction_data if action == 'delete_reduction' else None,
             after_json=reduction_data if action == 'add_reduction' else None,
+            ip_address=self._get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', '') if request else ''
+        )
+
+    @action(detail=True, methods=['post'], url_path='preventive-arrests')
+    def add_preventive_arrest(self, request, pk=None):
+        """Adaugă o perioadă de arest preventiv."""
+        sentence = self.get_object()
+
+        serializer = PreventiveArrestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Calculăm zilele noii perioade
+        start = serializer.validated_data['start_date']
+        end = serializer.validated_data['end_date']
+        new_days = (end - start).days
+
+        # Verificăm că nu depășește durata efectivă rămasă
+        current_effective = sentence.total_days - sentence.total_reduction_days - sentence.total_preventive_arrest_days
+        if new_days >= current_effective:
+            return Response(
+                {'error': 'Perioada de arest preventiv nu poate depăși durata efectivă rămasă.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pa = serializer.save(sentence=sentence, created_by=request.user)
+
+        # Recalculăm fracțiile
+        sentence.generate_fractions()
+
+        # Audit log
+        self._log_preventive_arrest_action('add_preventive_arrest', sentence, pa)
+
+        return Response(PreventiveArrestSerializer(pa).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch'], url_path='preventive-arrests/(?P<pa_id>[^/.]+)/update')
+    def update_preventive_arrest(self, request, pk=None, pa_id=None):
+        """Editează o perioadă de arest preventiv."""
+        sentence = self.get_object()
+        try:
+            pa = sentence.preventive_arrests.get(id=pa_id)
+        except PreventiveArrest.DoesNotExist:
+            return Response(
+                {'error': 'Perioada de arest preventiv nu a fost găsită.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        before_data = make_json_serializable(PreventiveArrestSerializer(pa).data)
+        serializer = PreventiveArrestSerializer(pa, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Calculăm zilele noii perioade
+        start = serializer.validated_data.get('start_date', pa.start_date)
+        end = serializer.validated_data.get('end_date', pa.end_date)
+        new_days = (end - start).days
+
+        # Verificăm că nu depășește durata efectivă rămasă (excluzând PA curentă)
+        current_effective = sentence.total_days - sentence.total_reduction_days - sentence.total_preventive_arrest_days + pa.days
+        if new_days >= current_effective:
+            return Response(
+                {'error': 'Perioada de arest preventiv nu poate depăși durata efectivă rămasă.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer.save()
+
+        # Recalculăm fracțiile
+        sentence.generate_fractions()
+
+        # Audit log
+        after_data = make_json_serializable(PreventiveArrestSerializer(pa).data)
+        request_obj = get_current_request()
+        AuditLog.objects.create(
+            actor=request.user,
+            actor_username=request.user.username,
+            action='update',
+            entity_type='PreventiveArrest',
+            entity_id=str(pa.id),
+            before_json=before_data,
+            after_json=after_data,
+            ip_address=self._get_client_ip(request_obj),
+            user_agent=request_obj.META.get('HTTP_USER_AGENT', '') if request_obj else ''
+        )
+
+        return Response(PreventiveArrestSerializer(pa).data)
+
+    @action(detail=True, methods=['delete'], url_path='preventive-arrests/(?P<pa_id>[^/.]+)')
+    def delete_preventive_arrest(self, request, pk=None, pa_id=None):
+        """Șterge o perioadă de arest preventiv."""
+        sentence = self.get_object()
+        try:
+            pa = sentence.preventive_arrests.get(id=pa_id)
+        except PreventiveArrest.DoesNotExist:
+            return Response(
+                {'error': 'Perioada de arest preventiv nu a fost găsită.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        self._log_preventive_arrest_action('delete_preventive_arrest', sentence, pa)
+        pa.delete()
+
+        # Recalculăm fracțiile
+        sentence.generate_fractions()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _log_preventive_arrest_action(self, action, sentence, pa):
+        """Log preventive arrest actions to audit log."""
+        request = get_current_request()
+        pa_data = make_json_serializable(PreventiveArrestSerializer(pa).data)
+
+        AuditLog.objects.create(
+            actor=self.request.user,
+            actor_username=self.request.user.username,
+            action=action,
+            entity_type='PreventiveArrest',
+            entity_id=str(pa.id),
+            before_json=pa_data if action == 'delete_preventive_arrest' else None,
+            after_json=pa_data if action == 'add_preventive_arrest' else None,
+            ip_address=self._get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', '') if request else ''
+        )
+
+    @action(detail=True, methods=['post'], url_path='zpm')
+    def add_zpm(self, request, pk=None):
+        """Adaugă o înregistrare ZPM."""
+        sentence = self.get_object()
+
+        serializer = ZPMSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Verificăm că nu există deja o înregistrare pentru luna/anul respectiv
+        month = serializer.validated_data['month']
+        year = serializer.validated_data['year']
+        if sentence.zpm_entries.filter(month=month, year=year).exists():
+            return Response(
+                {'error': f'Există deja o înregistrare ZPM pentru {month:02d}/{year}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        zpm = serializer.save(sentence=sentence, created_by=request.user)
+
+        # Recalculăm fracțiile
+        sentence.generate_fractions()
+
+        # Audit log
+        self._log_zpm_action('add_zpm', sentence, zpm)
+
+        return Response(ZPMSerializer(zpm).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], url_path='zpm/(?P<zpm_id>[^/.]+)')
+    def delete_zpm(self, request, pk=None, zpm_id=None):
+        """Șterge o înregistrare ZPM."""
+        sentence = self.get_object()
+        try:
+            zpm = sentence.zpm_entries.get(id=zpm_id)
+        except ZPM.DoesNotExist:
+            return Response(
+                {'error': 'Înregistrarea ZPM nu a fost găsită.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        self._log_zpm_action('delete_zpm', sentence, zpm)
+        zpm.delete()
+
+        # Recalculăm fracțiile
+        sentence.generate_fractions()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _log_zpm_action(self, action, sentence, zpm):
+        """Log ZPM actions to audit log."""
+        request = get_current_request()
+        zpm_data = make_json_serializable(ZPMSerializer(zpm).data)
+
+        AuditLog.objects.create(
+            actor=self.request.user,
+            actor_username=self.request.user.username,
+            action=action,
+            entity_type='ZPM',
+            entity_id=str(zpm.id),
+            before_json=zpm_data if action == 'delete_zpm' else None,
+            after_json=zpm_data if action == 'add_zpm' else None,
             ip_address=self._get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '') if request else ''
         )

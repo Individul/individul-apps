@@ -124,34 +124,69 @@ function PersonCard({ person, showReleaseDate = false }: { person: Person; showR
                 {person.release_date ? formatDate(person.release_date) : '-'}
               </p>
             </div>
-          ) : person.nearest_fraction_date ? (
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
-                Urm. Fracție
-              </p>
-              <p className={`text-sm font-mono tabular-nums ${
-                isUrgent ? 'text-red-600 font-semibold' : 'text-slate-700'
-              }`}>
-                {formatDate(person.nearest_fraction_date)}
-              </p>
-              {daysUntil !== null && (
-                <p className={`text-[10px] mt-0.5 ${
-                  isUrgent ? 'text-red-500' : 'text-gray-400'
-                }`}>
-                  {daysUntil < 0
-                    ? `${Math.abs(daysUntil)} zile depășit`
-                    : `${daysUntil} zile rămase`}
-                </p>
-              )}
-            </div>
           ) : (
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
-                Status
-              </p>
-              <p className="text-xs text-gray-500">
-                Fără termene
-              </p>
+            <div className="flex items-center gap-5">
+              {/* Sfârșit termen */}
+              {person.active_sentence_end_date && (
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
+                    Sfârșit termen
+                  </p>
+                  <p className="text-sm font-mono tabular-nums text-slate-700">
+                    {formatDate(person.active_sentence_end_date)}
+                  </p>
+                </div>
+              )}
+
+              {/* Urm. Fracție sau Fracții ispășite */}
+              {person.nearest_fraction_date ? (
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
+                    Urm. Fracție
+                  </p>
+                  <p className={`text-sm font-mono tabular-nums ${
+                    isUrgent ? 'text-red-600 font-semibold' : 'text-slate-700'
+                  }`}>
+                    {formatDate(person.nearest_fraction_date)}
+                  </p>
+                  {daysUntil !== null && (
+                    <p className={`text-[10px] mt-0.5 ${
+                      isUrgent ? 'text-red-500' : 'text-gray-400'
+                    }`}>
+                      {daysUntil < 0
+                        ? `${Math.abs(daysUntil)} zile depășit`
+                        : `${daysUntil} zile rămase`}
+                    </p>
+                  )}
+                </div>
+              ) : person.has_fulfilled_fractions ? (
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
+                    Status
+                  </p>
+                  <p className="text-xs text-emerald-600 font-medium">
+                    Fracții ispășite
+                  </p>
+                </div>
+              ) : person.active_sentences_count > 0 ? (
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
+                    Status
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Fără fracții
+                  </p>
+                </div>
+              ) : (
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">
+                    Status
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Fără termene
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
