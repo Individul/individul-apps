@@ -4,6 +4,7 @@ import * as React from "react"
 import { format } from "date-fns"
 import { ro } from "date-fns/locale"
 import { DayPicker } from "react-day-picker"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface DatePickerProps {
@@ -14,6 +15,15 @@ interface DatePickerProps {
   className?: string
 }
 
+const MONTHS_RO = [
+  "Ianuarie", "Februarie", "Martie", "Aprilie",
+  "Mai", "Iunie", "Iulie", "August",
+  "Septembrie", "Octombrie", "Noiembrie", "Decembrie",
+]
+
+const currentYear = new Date().getFullYear()
+const YEARS = Array.from({ length: currentYear - 1970 + 1 }, (_, i) => currentYear - i)
+
 export function DatePicker({
   date,
   onSelect,
@@ -22,6 +32,39 @@ export function DatePicker({
   className,
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
+  const [displayMonth, setDisplayMonth] = React.useState<Date>(date || new Date())
+
+  React.useEffect(() => {
+    if (date) {
+      setDisplayMonth(date)
+    }
+  }, [date])
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newMonth = parseInt(e.target.value)
+    const newDate = new Date(displayMonth)
+    newDate.setMonth(newMonth)
+    setDisplayMonth(newDate)
+  }
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newYear = parseInt(e.target.value)
+    const newDate = new Date(displayMonth)
+    newDate.setFullYear(newYear)
+    setDisplayMonth(newDate)
+  }
+
+  const goToPrevMonth = () => {
+    const newDate = new Date(displayMonth)
+    newDate.setMonth(newDate.getMonth() - 1)
+    setDisplayMonth(newDate)
+  }
+
+  const goToNextMonth = () => {
+    const newDate = new Date(displayMonth)
+    newDate.setMonth(newDate.getMonth() + 1)
+    setDisplayMonth(newDate)
+  }
 
   return (
     <div className="relative">
@@ -46,9 +89,52 @@ export function DatePicker({
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute top-full left-0 z-50 mt-1 rounded-md border bg-popover p-3 shadow-md">
+            {/* Month/Year Navigation */}
+            <div className="flex items-center justify-between mb-3">
+              <button
+                type="button"
+                onClick={goToPrevMonth}
+                className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="flex items-center gap-1">
+                <select
+                  value={displayMonth.getMonth()}
+                  onChange={handleMonthChange}
+                  className="text-sm font-medium bg-transparent border border-gray-200 rounded-md px-2 py-1 cursor-pointer hover:bg-accent focus:outline-none focus:ring-1 focus:ring-slate-500"
+                >
+                  {MONTHS_RO.map((month, idx) => (
+                    <option key={idx} value={idx}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={displayMonth.getFullYear()}
+                  onChange={handleYearChange}
+                  className="text-sm font-medium bg-transparent border border-gray-200 rounded-md px-2 py-1 cursor-pointer hover:bg-accent focus:outline-none focus:ring-1 focus:ring-slate-500"
+                >
+                  {YEARS.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={goToNextMonth}
+                className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
             <DayPicker
               mode="single"
               selected={date}
+              month={displayMonth}
+              onMonthChange={setDisplayMonth}
               onSelect={(newDate) => {
                 onSelect(newDate)
                 setIsOpen(false)
@@ -58,14 +144,8 @@ export function DatePicker({
               classNames={{
                 months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                 month: "space-y-4",
-                caption: "flex justify-center pt-1 relative items-center",
-                caption_label: "text-sm font-medium",
-                nav: "space-x-1 flex items-center",
-                nav_button: cn(
-                  "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input"
-                ),
-                nav_button_previous: "absolute left-1",
-                nav_button_next: "absolute right-1",
+                caption: "hidden",
+                nav: "hidden",
                 table: "w-full border-collapse space-y-1",
                 head_row: "flex",
                 head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
