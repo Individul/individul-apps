@@ -103,10 +103,12 @@ function SentenceCard({
   sentence,
   onAddReduction,
   onDeleteReduction,
+  onEditSentence,
 }: {
   sentence: Sentence
   onAddReduction: (sentenceId: string) => void
   onDeleteReduction: (sentenceId: string, reductionId: string) => void
+  onEditSentence: (sentence: Sentence) => void
 }) {
   // Use effective_end_date if there are reductions, otherwise use end_date
   const endDateToUse = sentence.reductions && sentence.reductions.length > 0
@@ -134,6 +136,13 @@ function SentenceCard({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => onEditSentence(sentence)}
+              className="text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 px-2 py-1 rounded transition-colors"
+              title="Editează sentința"
+            >
+              <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </button>
             <button
               onClick={() => onAddReduction(sentence.id)}
               className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
@@ -312,13 +321,24 @@ export default function PersonDetailPage() {
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(new Date())
   const [isReleasing, setIsReleasing] = useState(false)
 
-  // Edit form state
+  // Edit person form state
   const [editFormOpen, setEditFormOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState({
     first_name: '',
     last_name: '',
   })
+
+  // Edit sentence form state
+  const [editSentenceFormOpen, setEditSentenceFormOpen] = useState(false)
+  const [isEditingSentence, setIsEditingSentence] = useState(false)
+  const [selectedSentenceForEdit, setSelectedSentenceForEdit] = useState<string | null>(null)
+  const [editSentenceData, setEditSentenceData] = useState({
+    sentence_years: 0,
+    sentence_months: 0,
+    sentence_days: 0,
+  })
+  const [editSentenceStartDate, setEditSentenceStartDate] = useState<Date | undefined>()
 
   const fetchPerson = async () => {
     const token = localStorage.getItem('access_token')
@@ -445,6 +465,53 @@ export default function PersonDetailPage() {
       }
     } finally {
       setIsEditing(false)
+    }
+  }
+
+  const handleOpenEditSentenceForm = (sentence: Sentence) => {
+    setSelectedSentenceForEdit(sentence.id)
+    setEditSentenceData({
+      sentence_years: sentence.sentence_years,
+      sentence_months: sentence.sentence_months,
+      sentence_days: sentence.sentence_days,
+    })
+    setEditSentenceStartDate(parseApiDate(sentence.start_date))
+    setEditSentenceFormOpen(true)
+  }
+
+  const handleEditSentence = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token || !selectedSentenceForEdit) return
+
+    if (!editSentenceStartDate) {
+      toast.error('Data începutului de termen este obligatorie')
+      return
+    }
+
+    if (editSentenceData.sentence_years === 0 && editSentenceData.sentence_months === 0 && editSentenceData.sentence_days === 0) {
+      toast.error('Pedeapsa trebuie să aibă cel puțin o zi')
+      return
+    }
+
+    setIsEditingSentence(true)
+    try {
+      await sentencesApi.update(token, selectedSentenceForEdit, {
+        sentence_years: editSentenceData.sentence_years,
+        sentence_months: editSentenceData.sentence_months,
+        sentence_days: editSentenceData.sentence_days,
+        start_date: formatDateForApi(editSentenceStartDate),
+      })
+      toast.success('Sentința a fost actualizată cu succes')
+      setEditSentenceFormOpen(false)
+      fetchPerson()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        toast.error('A apărut o eroare la actualizare')
+      }
+    } finally {
+      setIsEditingSentence(false)
     }
   }
 
@@ -889,6 +956,7 @@ export default function PersonDetailPage() {
                   sentence={sentence}
                   onAddReduction={handleOpenReductionForm}
                   onDeleteReduction={handleDeleteReduction}
+                  onEditSentence={handleOpenEditSentenceForm}
                 />
               ))}
             </div>
@@ -949,6 +1017,116 @@ export default function PersonDetailPage() {
                 className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isEditing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Se salvează...
+                  </span>
+                ) : (
+                  'Salvează Modificările'
+                )}
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Edit Sentence Sheet */}
+        <Sheet open={editSentenceFormOpen} onOpenChange={setEditSentenceFormOpen}>
+          <SheetContent hideCloseButton className="flex flex-col p-0">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-800">Editează Sentința</h2>
+                <p className="text-sm text-slate-500 mt-0.5">Modifică durata și începutul termenului</p>
+              </div>
+              <SheetClose asChild>
+                <button className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </SheetClose>
+            </div>
+
+            {/* Form Content */}
+            <div className="flex-1 overflow-y-auto p-6 pb-32">
+              <div className="space-y-5">
+                {/* Start Date */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                    Început de Termen *
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" strokeWidth={1.5} />
+                    <DatePicker
+                      date={editSentenceStartDate}
+                      onSelect={setEditSentenceStartDate}
+                      placeholder="Selectează data"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Sentence Duration */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
+                    Durată Pedeapsă *
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          value={editSentenceData.sentence_years}
+                          onChange={(e) => setEditSentenceData({ ...editSentenceData, sentence_years: parseInt(e.target.value) || 0 })}
+                          className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                          ani
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="11"
+                          value={editSentenceData.sentence_months}
+                          onChange={(e) => setEditSentenceData({ ...editSentenceData, sentence_months: parseInt(e.target.value) || 0 })}
+                          className="w-full h-10 px-3 pr-11 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                          luni
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="29"
+                          value={editSentenceData.sentence_days}
+                          onChange={(e) => setEditSentenceData({ ...editSentenceData, sentence_days: parseInt(e.target.value) || 0 })}
+                          className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                          zile
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
+              <button
+                onClick={handleEditSentence}
+                disabled={isEditingSentence}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isEditingSentence ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Se salvează...
