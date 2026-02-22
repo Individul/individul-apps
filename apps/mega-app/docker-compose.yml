@@ -83,7 +83,8 @@ services:
       dockerfile: Dockerfile
     container_name: mega-app-bot
     restart: unless-stopped
-    command: python manage.py run_bot
+    entrypoint: ["python", "manage.py", "run_bot"]
+    command: []
     environment:
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - DEBUG=${DEBUG:-False}
