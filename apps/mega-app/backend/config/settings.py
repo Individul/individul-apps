@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'transfers',
     'commissions',
     'tracker',
-    'bot',
 ]
 
 MIDDLEWARE = [
@@ -171,10 +170,6 @@ FRACTION_UPCOMING_DAYS = 90
 # Monitor Sedinte integration
 MONITOR_SEDINTE_URL = os.getenv('MONITOR_SEDINTE_URL', 'http://host.docker.internal:8005')
 MONITOR_SEDINTE_PASSWORD = os.getenv('MONITOR_SEDINTE_PASSWORD', '')
-
-# Telegram Bot
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
 
 # Security settings for production
 if not DEBUG:

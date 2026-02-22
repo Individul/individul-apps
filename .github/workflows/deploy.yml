@@ -549,13 +549,8 @@ jobs:
             NEXT_PUBLIC_API_URL=http://46.224.209.71/hub-api
             MONITOR_SEDINTE_URL=http://host.docker.internal:8005
             MONITOR_SEDINTE_PASSWORD=admin123
-            TELEGRAM_BOT_TOKEN=
-            TELEGRAM_CHAT_ID=
             ENVEOF
             fi
-            # Add Telegram vars if missing from existing .env
-            grep -q 'TELEGRAM_BOT_TOKEN' .env || echo 'TELEGRAM_BOT_TOKEN=' >> .env
-            grep -q 'TELEGRAM_CHAT_ID' .env || echo 'TELEGRAM_CHAT_ID=' >> .env
             docker-compose build --no-cache --build-arg NEXT_PUBLIC_API_URL=http://46.224.209.71/hub-api
             docker-compose up -d
             docker exec mega-app-api python manage.py migrate --noinput || true
