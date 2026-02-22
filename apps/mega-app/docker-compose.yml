@@ -42,6 +42,8 @@ services:
       - SECURE_HSTS_SECONDS=${SECURE_HSTS_SECONDS:-0}
       - MONITOR_SEDINTE_URL=${MONITOR_SEDINTE_URL:-http://host.docker.internal:8005}
       - MONITOR_SEDINTE_PASSWORD=${MONITOR_SEDINTE_PASSWORD:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
     volumes:
       - media_data:/app/media
       - static_data:/app/staticfiles
@@ -72,6 +74,53 @@ services:
       - "127.0.0.1:3005:3000"
     depends_on:
       - api
+    networks:
+      - mega-app-net
+
+  bot:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mega-app-bot
+    restart: unless-stopped
+    command: python manage.py run_bot
+    environment:
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - DEBUG=${DEBUG:-False}
+      - DB_NAME=${DB_NAME:-mega_app}
+      - DB_USER=${DB_USER:-mega_app}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mega-app-net
+
+  cron:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mega-app-cron
+    restart: unless-stopped
+    entrypoint: /bin/sh
+    command: >
+      -c "while true; do python manage.py send_alerts; sleep 14400; done"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - DB_NAME=${DB_NAME:-mega_app}
+      - DB_USER=${DB_USER:-mega_app}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - mega-app-net
 
