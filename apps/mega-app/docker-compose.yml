@@ -75,6 +75,33 @@ services:
     networks:
       - mega-app-net
 
+  monitor-cron:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mega-app-monitor-cron
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - DB_NAME=${DB_NAME:-mega_app}
+      - DB_USER=${DB_USER:-mega_app}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - MONITOR_SEDINTE_URL=${MONITOR_SEDINTE_URL:-http://host.docker.internal:8005}
+      - MONITOR_SEDINTE_PASSWORD=${MONITOR_SEDINTE_PASSWORD:-}
+      - TZ=Europe/Bucharest
+      - DIGEST_HOUR=${DIGEST_HOUR:-7}
+      - DIGEST_MINUTE=${DIGEST_MINUTE:-0}
+    entrypoint: ["python", "cron_scheduler.py"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mega-app-net
+
 volumes:
   postgres_data:
   media_data:
