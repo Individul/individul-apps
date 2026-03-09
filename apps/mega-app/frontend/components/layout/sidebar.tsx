@@ -62,7 +62,7 @@ export function Sidebar({ user, unreadCount }: SidebarProps) {
       key={item.name}
       href={item.href}
       className={cn(
-        'group flex items-center gap-3 px-3 py-3 rounded-md text-sm transition-all',
+        'group flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition-all',
         isActive(item.href)
           ? 'bg-slate-100 text-slate-900 font-semibold border-l-4 border-slate-800 -ml-px pl-[11px]'
           : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50'
@@ -84,7 +84,7 @@ export function Sidebar({ user, unreadCount }: SidebarProps) {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 w-60 bg-white border-r border-gray-200/80 hidden lg:flex lg:flex-col">
       {/* Header */}
-      <div className="px-6 py-6">
+      <div className="px-6 py-4">
         <div className="flex items-center gap-2.5">
           <Shield className="h-5 w-5 text-slate-700" strokeWidth={1.5} />
           <span className="font-semibold text-base text-slate-900 tracking-tight">Hub</span>
@@ -98,7 +98,7 @@ export function Sidebar({ user, unreadCount }: SidebarProps) {
       <nav className="flex-1 px-3 py-2 pb-32 space-y-0.5 overflow-y-auto">
         {navigation.map((item) => renderLink(item))}
 
-        <div className="py-2">
+        <div className="py-1">
           <div className="border-t border-gray-100" />
           <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-widest text-slate-400 font-medium">
             Module
@@ -107,7 +107,7 @@ export function Sidebar({ user, unreadCount }: SidebarProps) {
 
         {modules.map((item) => renderLink(item))}
 
-        <div className="py-2">
+        <div className="py-1">
           <div className="border-t border-gray-100" />
         </div>
 
@@ -115,7 +115,7 @@ export function Sidebar({ user, unreadCount }: SidebarProps) {
           .filter((item) => !item.adminOnly || user?.role === 'admin')
           .map((item) => renderLink(item))}
 
-        <div className="py-2">
+        <div className="py-1">
           <div className="border-t border-gray-100" />
           <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-widest text-slate-400 font-medium">
             Instrumente
@@ -128,7 +128,7 @@ export function Sidebar({ user, unreadCount }: SidebarProps) {
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-3 px-3 py-3 rounded-md text-sm text-slate-500 hover:text-slate-700 hover:bg-gray-50 transition-all"
+            className="group flex items-center gap-3 px-3 py-1.5 rounded-md text-sm text-slate-500 hover:text-slate-700 hover:bg-gray-50 transition-all"
           >
             <item.icon className="h-[18px] w-[18px] text-slate-400" strokeWidth={1.5} />
             <span className="flex-1">{item.name}</span>
