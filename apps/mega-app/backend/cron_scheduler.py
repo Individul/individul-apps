@@ -7,6 +7,7 @@ import time
 import subprocess
 import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
@@ -33,7 +34,8 @@ def main():
     last_run_date = None
 
     while True:
-        now = datetime.now()
+        tz = ZoneInfo(TZ)
+        now = datetime.now(tz)
         today = now.date()
 
         if (now.hour == SCHEDULE_HOUR and

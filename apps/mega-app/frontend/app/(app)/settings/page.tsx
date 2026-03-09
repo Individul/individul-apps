@@ -18,7 +18,7 @@ interface EmailSettings {
   smtp_port: number
   smtp_user: string
   smtp_password: string
-  use_tls: boolean
+  smtp_use_tls: boolean
   email_from: string
   email_to: string
   last_sent: string | null
@@ -31,7 +31,7 @@ const DEFAULT_SETTINGS: EmailSettings = {
   smtp_port: 587,
   smtp_user: '',
   smtp_password: '',
-  use_tls: true,
+  smtp_use_tls: true,
   email_from: '',
   email_to: '',
   last_sent: null,
@@ -96,6 +96,8 @@ export default function SettingsPage() {
     try {
       await monitorEmailApi.testEmail(token)
       toast.success('Email de test trimis cu succes')
+      const refreshed = await monitorEmailApi.getSettings(token)
+      setSettings(s => ({ ...s, ...refreshed, smtp_password: '' }))
     } catch (err: any) {
       toast.error(err?.message || 'Eroare la trimiterea emailului de test')
     } finally {
@@ -111,6 +113,8 @@ export default function SettingsPage() {
     try {
       await monitorEmailApi.sendNow(token)
       toast.success('Digest trimis cu succes')
+      const refreshed = await monitorEmailApi.getSettings(token)
+      setSettings(s => ({ ...s, ...refreshed, smtp_password: '' }))
     } catch (err: any) {
       toast.error(err?.message || 'Eroare la trimiterea digestului')
     } finally {
@@ -224,13 +228,13 @@ export default function SettingsPage() {
 
             <div className="mt-4 flex items-center gap-3">
               <Checkbox
-                id="use_tls"
-                checked={settings.use_tls}
+                id="smtp_use_tls"
+                checked={settings.smtp_use_tls}
                 onCheckedChange={(checked) =>
-                  updateField('use_tls', checked === true)
+                  updateField('smtp_use_tls', checked === true)
                 }
               />
-              <Label htmlFor="use_tls" className="text-sm cursor-pointer">
+              <Label htmlFor="smtp_use_tls" className="text-sm cursor-pointer">
                 Foloseste TLS
               </Label>
             </div>

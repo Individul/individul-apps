@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from html import escape
 
 import requests
 from django.conf import settings
@@ -80,12 +81,12 @@ def build_email_html(sedinte_azi, sedinte_maine):
 
         rows = ""
         for s in sedinte:
-            ora = s.get("ora", "")
-            instanta = s.get("instanta_nume", "")
-            numar_dosar = s.get("numar_dosar", "")
-            parti = s.get("persoana_nume", "")
-            judecator = s.get("judecator", "")
-            obiect_cauza = s.get("obiect_cauza", "")
+            ora = escape(str(s.get("ora", "") or ""))
+            instanta = escape(str(s.get("instanta_nume", "") or ""))
+            numar_dosar = escape(str(s.get("numar_dosar", "") or ""))
+            parti = escape(str(s.get("persoana_nume", "") or ""))
+            judecator = escape(str(s.get("judecator", "") or ""))
+            obiect_cauza = escape(str(s.get("obiect_cauza", "") or ""))
 
             rows += (
                 "<tr>"
@@ -221,6 +222,9 @@ def send_test_email():
     a simple test message instead of the full digest.
     """
     config = MonitorEmailConfig.get_config()
+
+    if not config.smtp_host or not config.email_to.strip() or not config.email_from:
+        raise ValueError('Completati campurile SMTP Host, Email From si Email To')
 
     subject = "[Monitor Sedinte] Email de test"
 
