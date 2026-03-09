@@ -5,12 +5,12 @@ const router = Router();
 
 router.get('/stats', (req, res) => {
   const totalPersoane = db.prepare('SELECT COUNT(*) as cnt FROM persoane_monitorizate WHERE activ = 1').get().cnt;
-  const sedinteViitoare = db.prepare("SELECT COUNT(*) as cnt FROM sedinte WHERE data_sedinta_iso >= date('now')").get().cnt;
+  const sedinteViitoare = db.prepare("SELECT COUNT(*) as cnt FROM sedinte s JOIN persoane_monitorizate pm ON pm.id = s.persoana_id WHERE s.data_sedinta_iso >= date('now') AND pm.activ = 1").get().cnt;
 
   const today = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const sedinteAzi = db.prepare('SELECT COUNT(*) as cnt FROM sedinte WHERE data_sedinta_iso = ?').get(today).cnt;
-  const sedinteMaine = db.prepare('SELECT COUNT(*) as cnt FROM sedinte WHERE data_sedinta_iso = ?').get(tomorrow).cnt;
+  const sedinteAzi = db.prepare('SELECT COUNT(*) as cnt FROM sedinte s JOIN persoane_monitorizate pm ON pm.id = s.persoana_id WHERE s.data_sedinta_iso = ? AND pm.activ = 1').get(today).cnt;
+  const sedinteMaine = db.prepare('SELECT COUNT(*) as cnt FROM sedinte s JOIN persoane_monitorizate pm ON pm.id = s.persoana_id WHERE s.data_sedinta_iso = ? AND pm.activ = 1').get(tomorrow).cnt;
 
   const modificari24h = db.prepare("SELECT COUNT(*) as cnt FROM modificari_sedinte WHERE detectat_la >= datetime('now', '-24 hours')").get().cnt;
   const sedinteNoi24h = db.prepare("SELECT COUNT(*) as cnt FROM sedinte WHERE prima_detectare >= datetime('now', '-24 hours')").get().cnt;
@@ -58,7 +58,7 @@ router.get('/urmatoarele', (req, res) => {
     SELECT s.*, pm.nume as persoana_nume
     FROM sedinte s
     JOIN persoane_monitorizate pm ON pm.id = s.persoana_id
-    WHERE s.data_sedinta_iso >= date('now')
+    WHERE s.data_sedinta_iso >= date('now') AND pm.activ = 1
     ORDER BY s.data_sedinta_iso ASC, s.ora ASC
     LIMIT ?
   `).all(limit);
@@ -72,7 +72,7 @@ router.get('/badge', (req, res) => {
   const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
   const sedinte7zile = db.prepare(
-    'SELECT COUNT(*) as cnt FROM sedinte WHERE data_sedinta_iso >= ? AND data_sedinta_iso <= ?'
+    'SELECT COUNT(*) as cnt FROM sedinte s JOIN persoane_monitorizate pm ON pm.id = s.persoana_id WHERE s.data_sedinta_iso >= ? AND s.data_sedinta_iso <= ? AND pm.activ = 1'
   ).get(today, nextWeek).cnt;
 
   const ultimaVerificare = db.prepare(

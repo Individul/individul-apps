@@ -30,7 +30,8 @@ router.get('/', (req, res) => {
     params.push(q, q, q, q);
   }
 
-  const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
+  where.push('pm.activ = 1');
+  const whereClause = 'WHERE ' + where.join(' AND ');
 
   // Validate sort column
   const validSorts = ['data_sedinta_iso', 'ora', 'instanta_cod', 'numar_dosar', 'judecator', 'tip_dosar', 'prima_detectare'];
@@ -40,7 +41,7 @@ router.get('/', (req, res) => {
   const offset = (Math.max(1, parseInt(page, 10)) - 1) * parseInt(limit, 10);
   const lim = Math.min(100, Math.max(1, parseInt(limit, 10)));
 
-  const countQuery = `SELECT COUNT(*) as total FROM sedinte s ${whereClause}`;
+  const countQuery = `SELECT COUNT(*) as total FROM sedinte s JOIN persoane_monitorizate pm ON pm.id = s.persoana_id ${whereClause}`;
   const total = db.prepare(countQuery).get(...params).total;
 
   const dataQuery = `
@@ -80,7 +81,7 @@ router.get('/viitoare', (req, res) => {
     SELECT s.*, pm.nume as persoana_nume
     FROM sedinte s
     JOIN persoane_monitorizate pm ON pm.id = s.persoana_id
-    WHERE s.data_sedinta_iso >= date('now')
+    WHERE s.data_sedinta_iso >= date('now') AND pm.activ = 1
     ORDER BY s.data_sedinta_iso ASC, s.ora ASC
   `).all();
 
@@ -102,7 +103,7 @@ router.get('/calendar', (req, res) => {
     SELECT s.*, pm.nume as persoana_nume
     FROM sedinte s
     JOIN persoane_monitorizate pm ON pm.id = s.persoana_id
-    WHERE s.data_sedinta_iso >= ? AND s.data_sedinta_iso < ?
+    WHERE s.data_sedinta_iso >= ? AND s.data_sedinta_iso < ? AND pm.activ = 1
     ORDER BY s.data_sedinta_iso ASC, s.ora ASC
   `).all(startDate, endDate);
 
@@ -145,7 +146,8 @@ router.get('/export', (req, res) => {
     params.push(q, q, q, q);
   }
 
-  const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
+  where.push('pm.activ = 1');
+  const whereClause = 'WHERE ' + where.join(' AND ');
 
   const sedinte = db.prepare(`
     SELECT s.*, pm.nume as persoana_nume
