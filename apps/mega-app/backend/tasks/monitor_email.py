@@ -16,13 +16,14 @@ logger = logging.getLogger(__name__)
 
 def fetch_upcoming_hearings():
     """
-    Fetch upcoming hearings from Monitor Sedinte and filter for today and tomorrow.
+    Fetch upcoming hearings from Monitor Sedinte and group by day for the next 7 days.
 
     Returns:
-        tuple: (sedinte_azi, sedinte_maine) -- each a list of hearing dicts.
+        dict: {date_obj: [hearing_dicts]} for each day that has hearings.
     """
-    sedinte_azi = []
-    sedinte_maine = []
+    from collections import OrderedDict
+
+    sedinte_per_zi = OrderedDict()
 
     try:
         token = _get_monitor_token()
@@ -36,40 +37,50 @@ def fetch_upcoming_hearings():
         hearings = resp.json()
 
         today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
+        end_date = today + timedelta(days=7)
 
-        today_str = today.isoformat()
-        tomorrow_str = tomorrow.isoformat()
+        # Initialize all 7 days
+        for i in range(7):
+            day = today + timedelta(days=i)
+            sedinte_per_zi[day] = []
 
         for h in hearings:
             data_iso = h.get("data_sedinta_iso", "")
-            if data_iso == today_str:
-                sedinte_azi.append(h)
-            elif data_iso == tomorrow_str:
-                sedinte_maine.append(h)
+            if not data_iso:
+                continue
+            from datetime import date
+            try:
+                h_date = date.fromisoformat(data_iso)
+            except ValueError:
+                continue
+            if today <= h_date < end_date:
+                sedinte_per_zi[h_date].append(h)
 
     except Exception as e:
         logger.error("Monitor email: eroare la fetch sedinte viitoare: %s", e)
 
-    return sedinte_azi, sedinte_maine
+    return sedinte_per_zi
 
 
-def build_email_html(sedinte_azi, sedinte_maine):
+def build_email_html(sedinte_per_zi):
     """
-    Build an HTML email body with hearing tables for today and tomorrow.
+    Build an HTML email body with hearing tables for each day in the next 7 days.
 
     Args:
-        sedinte_azi: list of hearing dicts for today
-        sedinte_maine: list of hearing dicts for tomorrow
+        sedinte_per_zi: OrderedDict {date: [hearing_dicts]}
 
     Returns:
         str: HTML content for the email
     """
+    ZILE = ['Luni', 'Marti', 'Miercuri', 'Joi', 'Vineri', 'Sambata', 'Duminica']
     today = timezone.localdate()
-    tomorrow = today + timedelta(days=1)
 
-    today_fmt = today.strftime("%d.%m.%Y")
-    tomorrow_fmt = tomorrow.strftime("%d.%m.%Y")
+    def _day_label(day):
+        if day == today:
+            return "Azi"
+        if day == today + timedelta(days=1):
+            return "Maine"
+        return ZILE[day.weekday()]
 
     def _build_table(sedinte):
         if not sedinte:
@@ -121,8 +132,20 @@ def build_email_html(sedinte_azi, sedinte_maine):
             "</table>"
         )
 
-    table_azi = _build_table(sedinte_azi)
-    table_maine = _build_table(sedinte_maine)
+    # Build sections for each day
+    sections = ""
+    first = True
+    for day, sedinte in sedinte_per_zi.items():
+        label = _day_label(day)
+        day_fmt = day.strftime("%d.%m.%Y")
+        margin = "0" if first else "24px"
+        first = False
+        sections += (
+            f'<h2 style="margin: {margin} 0 12px; font-size: 18px; color: #1a73e8; '
+            f'border-bottom: 2px solid #1a73e8; padding-bottom: 8px;">'
+            f"{label} ({day_fmt})</h2>"
+            f"{_build_table(sedinte)}"
+        )
 
     html = (
         "<!DOCTYPE html>"
@@ -134,27 +157,16 @@ def build_email_html(sedinte_azi, sedinte_maine):
         '<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; '
         'background-color: #f9f9f9; color: #333;">'
         '<div style="max-width: 900px; margin: 0 auto; padding: 20px;">'
-        # Header
         '<div style="background-color: #1a73e8; color: #ffffff; padding: 20px 24px; '
         'border-radius: 6px 6px 0 0;">'
         '<h1 style="margin: 0; font-size: 22px; font-weight: 600;">Monitor Sedinte</h1>'
-        '<p style="margin: 6px 0 0; font-size: 14px; opacity: 0.9;">Raport sedinte programate</p>'
+        '<p style="margin: 6px 0 0; font-size: 14px; opacity: 0.9;">'
+        'Raport sedinte programate (7 zile)</p>'
         "</div>"
-        # Content
         '<div style="background-color: #ffffff; padding: 24px; border: 1px solid #e0e0e0; '
         'border-top: none;">'
-        # Today section
-        f'<h2 style="margin: 0 0 12px; font-size: 18px; color: #1a73e8; '
-        f'border-bottom: 2px solid #1a73e8; padding-bottom: 8px;">'
-        f"Sedinte programate azi ({today_fmt})</h2>"
-        f"{table_azi}"
-        # Tomorrow section
-        f'<h2 style="margin: 24px 0 12px; font-size: 18px; color: #1a73e8; '
-        f'border-bottom: 2px solid #1a73e8; padding-bottom: 8px;">'
-        f"Sedinte programate maine ({tomorrow_fmt})</h2>"
-        f"{table_maine}"
+        f"{sections}"
         "</div>"
-        # Footer
         '<div style="padding: 16px 24px; text-align: center; font-size: 12px; color: #999; '
         'border-top: 1px solid #e0e0e0;">'
         "Generat automat de Hub &mdash; Monitor Sedinte"
@@ -180,8 +192,8 @@ def send_daily_digest():
         return
 
     try:
-        sedinte_azi, sedinte_maine = fetch_upcoming_hearings()
-        html_content = build_email_html(sedinte_azi, sedinte_maine)
+        sedinte_per_zi = fetch_upcoming_hearings()
+        html_content = build_email_html(sedinte_per_zi)
 
         today_fmt = timezone.localdate().strftime("%d.%m.%Y")
         subject = f"[Monitor Sedinte] Sedinte programate \u2014 {today_fmt}"
