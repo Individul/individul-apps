@@ -27,11 +27,11 @@ interface EmailSettings {
 
 const DEFAULT_SETTINGS: EmailSettings = {
   enabled: false,
-  smtp_host: '',
-  smtp_port: 587,
+  smtp_host: 'smtp',
+  smtp_port: 25,
   smtp_user: '',
   smtp_password: '',
-  smtp_use_tls: true,
+  smtp_use_tls: false,
   email_from: '',
   email_to: '',
   last_sent: null,
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                   type="text"
                   value={settings.smtp_host}
                   onChange={(e) => updateField('smtp_host', e.target.value)}
-                  placeholder="smtp.example.com"
+                  placeholder="smtp"
                 />
               </div>
               <div className="space-y-2">
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     updateField('smtp_port', parseInt(e.target.value, 10) || 0)
                   }
-                  placeholder="587"
+                  placeholder="25"
                 />
               </div>
               <div className="space-y-2">

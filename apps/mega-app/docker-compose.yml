@@ -75,6 +75,16 @@ services:
     networks:
       - mega-app-net
 
+  smtp:
+    image: boky/postfix
+    container_name: mega-app-smtp
+    restart: unless-stopped
+    environment:
+      - ALLOWED_SENDER_DOMAINS=${SMTP_SENDER_DOMAIN:-mega-app.local}
+      - HOSTNAME=${SMTP_HOSTNAME:-mega-app.local}
+    networks:
+      - mega-app-net
+
   monitor-cron:
     build:
       context: ./backend

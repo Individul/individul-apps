@@ -88,11 +88,11 @@ class TaskActivity(models.Model):
 
 
 class MonitorEmailConfig(models.Model):
-    smtp_host = models.CharField(max_length=255, default='', blank=True)
-    smtp_port = models.IntegerField(default=587)
+    smtp_host = models.CharField(max_length=255, default='smtp', blank=True)
+    smtp_port = models.IntegerField(default=25)
     smtp_user = models.CharField(max_length=255, default='', blank=True)
     smtp_password = models.CharField(max_length=255, default='', blank=True)
-    smtp_use_tls = models.BooleanField(default=True)
+    smtp_use_tls = models.BooleanField(default=False)
     email_from = models.EmailField(default='', blank=True)
     email_to = models.TextField(help_text='Adrese email separate prin virgula', default='', blank=True)
     enabled = models.BooleanField(default=False)
