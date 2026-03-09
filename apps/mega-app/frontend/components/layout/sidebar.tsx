@@ -17,6 +17,7 @@ import {
   Scale,
   Gavel,
   Bug,
+  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +37,7 @@ const modules = [
 const secondary = [
   { name: 'Rapoarte', href: '/reports', icon: BarChart3 },
   { name: 'Administrare', href: '/admin/users', icon: Shield, adminOnly: true },
+  { name: 'Setări', href: '/settings', icon: Settings, adminOnly: true },
 ]
 
 const external = [

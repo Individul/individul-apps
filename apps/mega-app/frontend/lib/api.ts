@@ -1543,4 +1543,31 @@ export const TRACKER_STATUSES = [
   { value: 'RESPINS', label: 'Respins' },
 ]
 
+// =============================================================================
+// Monitor Email API
+// =============================================================================
+
+export const monitorEmailApi = {
+  getSettings: (token: string) =>
+    fetchApi<any>('/api/v1/tasks/monitor-email/settings/', { token }),
+  saveSettings: (token: string, data: Record<string, any>) =>
+    fetchApi<any>('/api/v1/tasks/monitor-email/settings/', {
+      method: 'PUT',
+      token,
+      body: JSON.stringify(data),
+    }),
+  testEmail: (token: string) =>
+    fetchApi<any>('/api/v1/tasks/monitor-email/test/', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({}),
+    }),
+  sendNow: (token: string) =>
+    fetchApi<any>('/api/v1/tasks/monitor-email/send-now/', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({}),
+    }),
+}
+
 export { ApiError }
