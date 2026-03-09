@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, action, permission_classes as pe
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter, DateFilter
 from django.contrib.auth import get_user_model
-from accounts.permissions import IsOperatorOrReadOnly
+from accounts.permissions import IsAdmin, IsOperatorOrReadOnly
 from .models import Task, TaskActivity
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskActivitySerializer, UserSerializer
 from .monitor_sync import add_person_to_monitor, deactivate_person_in_monitor
@@ -154,6 +154,61 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+@api_view(['GET', 'PUT'])
+@perm_classes([IsAdmin])
+def monitor_email_settings(request):
+    """GET: return config (no password), PUT: save config"""
+    from .models import MonitorEmailConfig
+    config = MonitorEmailConfig.get_config()
+
+    if request.method == 'GET':
+        return Response({
+            'smtp_host': config.smtp_host,
+            'smtp_port': config.smtp_port,
+            'smtp_user': config.smtp_user,
+            'smtp_use_tls': config.smtp_use_tls,
+            'email_from': config.email_from,
+            'email_to': config.email_to,
+            'enabled': config.enabled,
+            'last_sent': config.last_sent,
+            'last_error': config.last_error,
+        })
+
+    # PUT
+    data = request.data
+    for field in ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_use_tls', 'email_from', 'email_to', 'enabled']:
+        if field in data:
+            setattr(config, field, data[field])
+    if 'smtp_password' in data and data['smtp_password']:
+        config.smtp_password = data['smtp_password']
+    config.save()
+    return Response({'ok': True})
+
+
+@api_view(['POST'])
+@perm_classes([IsAdmin])
+def monitor_email_test(request):
+    """Send a test email using the current config."""
+    from .monitor_email import send_test_email
+    try:
+        send_test_email()
+        return Response({'ok': True, 'message': 'Email de test trimis'})
+    except Exception as e:
+        return Response({'ok': False, 'error': str(e)}, status=400)
+
+
+@api_view(['POST'])
+@perm_classes([IsAdmin])
+def monitor_email_send_now(request):
+    """Trigger immediate daily digest send."""
+    from .monitor_email import send_daily_digest
+    try:
+        send_daily_digest()
+        return Response({'ok': True, 'message': 'Digest trimis'})
+    except Exception as e:
+        return Response({'ok': False, 'error': str(e)}, status=400)
 
 
 @api_view(['GET'])
