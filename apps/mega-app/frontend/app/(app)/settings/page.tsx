@@ -28,7 +28,7 @@ interface EmailSettings {
 const DEFAULT_SETTINGS: EmailSettings = {
   enabled: false,
   smtp_host: 'smtp',
-  smtp_port: 25,
+  smtp_port: 587,
   smtp_user: '',
   smtp_password: '',
   smtp_use_tls: false,
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     updateField('smtp_port', parseInt(e.target.value, 10) || 0)
                   }
-                  placeholder="25"
+                  placeholder="587"
                 />
               </div>
               <div className="space-y-2">
