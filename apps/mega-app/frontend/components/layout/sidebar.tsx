@@ -95,7 +95,7 @@ export function Sidebar({ user, unreadCount }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-2 pb-32 space-y-0.5 overflow-y-auto">
         {navigation.map((item) => renderLink(item))}
 
         <div className="py-2">
