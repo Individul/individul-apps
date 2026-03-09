@@ -83,6 +83,7 @@ def build_email_html(sedinte_azi, sedinte_maine):
         for s in sedinte:
             ora = escape(str(s.get("ora", "") or ""))
             instanta = escape(str(s.get("instanta_nume", "") or ""))
+            denumire = escape(str(s.get("denumire_dosar", "") or ""))
             parti = escape(str(s.get("persoana_nume", "") or ""))
             judecator = escape(str(s.get("judecator", "") or ""))
             obiect_cauza = escape(str(s.get("obiect_cauza", "") or ""))
@@ -91,6 +92,7 @@ def build_email_html(sedinte_azi, sedinte_maine):
                 "<tr>"
                 f'<td style="padding: 8px 12px; border: 1px solid #ddd;">{ora}</td>'
                 f'<td style="padding: 8px 12px; border: 1px solid #ddd;">{instanta}</td>'
+                f'<td style="padding: 8px 12px; border: 1px solid #ddd;">{denumire}</td>'
                 f'<td style="padding: 8px 12px; border: 1px solid #ddd;">{parti}</td>'
                 f'<td style="padding: 8px 12px; border: 1px solid #ddd;">{judecator}</td>'
                 f'<td style="padding: 8px 12px; border: 1px solid #ddd;">{obiect_cauza}</td>'
@@ -105,6 +107,8 @@ def build_email_html(sedinte_azi, sedinte_maine):
             'text-align: left; font-weight: 600; color: #333;">Ora</th>'
             '<th style="padding: 10px 12px; border: 1px solid #ddd; background-color: #f5f5f5; '
             'text-align: left; font-weight: 600; color: #333;">Instanta</th>'
+            '<th style="padding: 10px 12px; border: 1px solid #ddd; background-color: #f5f5f5; '
+            'text-align: left; font-weight: 600; color: #333;">Denumire dosar</th>'
             '<th style="padding: 10px 12px; border: 1px solid #ddd; background-color: #f5f5f5; '
             'text-align: left; font-weight: 600; color: #333;">Parti</th>'
             '<th style="padding: 10px 12px; border: 1px solid #ddd; background-color: #f5f5f5; '
