@@ -7,7 +7,8 @@ const INSTANTE = {
   jhn: 'Judecatoria Hincesti', jun: 'Judecatoria Ungheni', jor: 'Judecatoria Orhei',
   jcs: 'Judecatoria Causeni', jst: 'Judecatoria Straseni',
   jan: 'Judecatoria Anenii Noi', cac: 'Curtea de Apel Chisinau',
-  cab: 'Curtea de Apel Balti', cach: 'Curtea de Apel Cahul'
+  cab: 'Curtea de Apel Balti', cach: 'Curtea de Apel Cahul',
+  csj: 'Curtea Suprema de Justitie'
 };
 
 const ALL_CODES = Object.keys(INSTANTE);

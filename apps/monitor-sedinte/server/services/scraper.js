@@ -109,6 +109,92 @@ export async function scrapeInstanta(codInstanta, numePersoana, tipDosar = 'Any'
   return sedinte;
 }
 
+// --- CSJ (Curtea Supremă de Justiție) scraper ---
+// CSJ uses a jqGrid JSON API at agenda.csj.md instead of HTML tables
+
+function parseCSJDate(dateYYYYMMDD) {
+  if (!dateYYYYMMDD) return { display: '', iso: '' };
+  const parts = dateYYYYMMDD.trim().split('-');
+  if (parts.length !== 3) return { display: '', iso: '' };
+  return {
+    display: `${parts[2]}.${parts[1]}.${parts[0]}`,
+    iso: dateYYYYMMDD.trim()
+  };
+}
+
+export async function scrapeCSJ(numePersoana) {
+  const filters = JSON.stringify({
+    groupOp: 'AND',
+    rules: [{ field: 'partea_dosar', op: 'cn', data: numePersoana }]
+  });
+
+  const body = new URLSearchParams({
+    page: '1',
+    rows: '500',
+    sidx: 'data_sedinta',
+    sord: 'desc',
+    _search: 'true',
+    filters
+  });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch('https://agenda.csj.md/penal_grid.php', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        ...FETCH_HEADERS,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const sedinte = [];
+
+    for (const row of (data.rows || [])) {
+      const c = row.cell;
+      if (!c || c.length < 12) continue;
+
+      const date = parseCSJDate(c[2]);
+      const pdfLink = row.id ? `https://agenda.csj.md/pdf_creator_penal.php?id=${row.id}` : '';
+
+      const sedinta = {
+        numar_dosar: (c[1] || '').trim(),
+        judecator: (c[9] || '').trim().replace(/\*/g, ', ').replace(/^,\s*/, ''),
+        data_sedinta: date.display,
+        data_sedinta_iso: date.iso,
+        ora: (c[7] || '').trim(),
+        sala: (c[8] || '').trim(),
+        denumire_dosar: (c[3] || '').trim(),
+        obiect_cauza: (c[4] || '').trim(),
+        tip_dosar: 'Penal',
+        tip_sedinta: (c[10] || '').trim(),
+        rezultat: (c[11] || '').trim(),
+        pdf_link: pdfLink,
+        instanta_cod: 'csj',
+        instanta_nume: INSTANTE.csj
+      };
+
+      sedinta.hash_unic = generateHash('csj', sedinta.numar_dosar, sedinta.data_sedinta, sedinta.ora);
+      sedinte.push(sedinta);
+    }
+
+    return sedinte;
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Request timeout');
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function scrapePersoana(persoana) {
   const instante = JSON.parse(persoana.instante);
   const rezultat = { gasite: 0, noi: 0, modificate: 0, erori: [] };
@@ -138,7 +224,9 @@ export async function scrapePersoana(persoana) {
     let sedinteNoi = 0;
 
     try {
-      const sedinte = await scrapeInstanta(codInstanta, persoana.nume, persoana.tip_dosar);
+      const sedinte = codInstanta === 'csj'
+        ? await scrapeCSJ(persoana.nume)
+        : await scrapeInstanta(codInstanta, persoana.nume, persoana.tip_dosar);
       rezultat.gasite += sedinte.length;
 
       for (const sedinta of sedinte) {

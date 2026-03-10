@@ -13,7 +13,8 @@ export const INSTANTE = {
   jan: 'Judecătoria Anenii Noi',
   cac: 'Curtea de Apel Chișinău',
   cab: 'Curtea de Apel Bălți',
-  cach: 'Curtea de Apel Cahul'
+  cach: 'Curtea de Apel Cahul',
+  csj: 'Curtea Supremă de Justiție'
 };
 
 export const TOATE_INSTANTELE = Object.keys(INSTANTE);
