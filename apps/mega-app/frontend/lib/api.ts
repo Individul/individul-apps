@@ -724,6 +724,7 @@ export interface Person {
   nearest_fraction_type: string | null
   active_sentence_end_date: string | null
   has_fulfilled_fractions: boolean
+  has_defect_task: string | null
   created_by: number
   created_by_name: string
   created_at: string

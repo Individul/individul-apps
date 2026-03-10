@@ -593,7 +593,7 @@ export default function PetitionDetailPage() {
         {/* Status and resolution */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Status si rezolutie</CardTitle>
+            <CardTitle className="text-lg">Status</CardTitle>
             {!editingStatus ? (
               <Button
                 variant="outline"
@@ -637,7 +637,7 @@ export default function PetitionDetailPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label>Data rezolutiei</Label>
+              <Label>Finalizata</Label>
               {editingStatus ? (
                 <Input
                   type="date"
@@ -649,13 +649,13 @@ export default function PetitionDetailPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label>Text rezolutie</Label>
+              <Label>Text finalizare</Label>
               {editingStatus ? (
                 <Textarea
                   value={resolutionText}
                   onChange={(e) => setResolutionText(e.target.value)}
                   rows={4}
-                  placeholder="Introduceti textul rezolutiei..."
+                  placeholder="Introduceti textul finalizarii..."
                 />
               ) : (
                 <p className="text-sm whitespace-pre-wrap">

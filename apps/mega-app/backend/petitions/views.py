@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -23,8 +24,13 @@ from accounts.permissions import IsOperatorOrReadOnly
 from audit.utils import log_action
 
 
+class LargePagePagination(PageNumberPagination):
+    page_size = 200
+
+
 class PetitionViewSet(viewsets.ModelViewSet):
     queryset = Petition.objects.select_related('assigned_to', 'created_by').prefetch_related('attachments')
+    pagination_class = LargePagePagination
     permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
     filterset_fields = {
         'status': ['exact', 'in'],
@@ -205,10 +211,16 @@ class PetitionViewSet(viewsets.ModelViewSet):
 
         content_type = mimetypes.guess_type(file.name)[0] or 'application/octet-stream'
 
+        # Auto-generate filename: Name_Surname_RegNumber_Date.ext
+        petitioner_parts = petition.petitioner_name.replace(' ', '_')
+        reg_number = petition.registration_number.replace('/', '_')
+        reg_date = petition.registration_date.strftime('%d.%m.%Y')
+        auto_filename = f"{petitioner_parts}_{reg_number}_{reg_date}{ext}"
+
         attachment = PetitionAttachment.objects.create(
             petition=petition,
             file=file,
-            original_filename=file.name,
+            original_filename=auto_filename,
             size_bytes=file.size,
             content_type=content_type,
             uploaded_by=request.user

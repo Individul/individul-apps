@@ -124,11 +124,11 @@ class Petition(models.Model):
     resolution_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name='Data rezoluției'
+        verbose_name='Finalizată'
     )
     resolution_text = models.TextField(
         blank=True,
-        verbose_name='Text rezoluție'
+        verbose_name='Text finalizare'
     )
 
     # Metadata
@@ -160,9 +160,9 @@ class Petition(models.Model):
 
     @property
     def registration_number(self):
-        """Generate registration number format: PREFIX-SEQ/YY"""
+        """Generate registration number format: PREFIX/YY"""
         year_short = str(self.registration_year)[-2:]
-        return f"{self.registration_prefix}-{self.registration_seq}/{year_short}"
+        return f"{self.registration_prefix}/{year_short}"
 
     @property
     def response_due_date(self):

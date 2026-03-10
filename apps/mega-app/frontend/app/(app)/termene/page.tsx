@@ -90,9 +90,20 @@ function PersonCard({ person, showReleaseDate = false }: { person: Person; showR
 
           {/* Name & ID */}
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-slate-900 truncate group-hover:text-slate-700">
-              {person.full_name}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 truncate group-hover:text-slate-700">
+                {person.full_name}
+              </h3>
+              {person.has_defect_task && (
+                <a
+                  href={`/hub/tasks/${person.has_defect_task}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center px-1.5 py-0.5 bg-red-600 text-white rounded text-[9px] font-bold uppercase tracking-wider shrink-0 hover:bg-red-700 transition-colors"
+                >
+                  Dosar defect
+                </a>
+              )}
+            </div>
             <p className="text-xs text-gray-400 font-mono tracking-wide">
               ID: {person.id.substring(0, 8).toUpperCase()}
             </p>

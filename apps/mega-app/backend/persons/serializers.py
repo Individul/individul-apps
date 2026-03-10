@@ -10,6 +10,7 @@ class ConvictedPersonListSerializer(serializers.ModelSerializer):
     nearest_fraction_type = serializers.SerializerMethodField()
     active_sentence_end_date = serializers.SerializerMethodField()
     has_fulfilled_fractions = serializers.SerializerMethodField()
+    has_defect_task = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -20,6 +21,7 @@ class ConvictedPersonListSerializer(serializers.ModelSerializer):
             'active_sentences_count',
             'nearest_fraction_date', 'nearest_fraction_type',
             'active_sentence_end_date', 'has_fulfilled_fractions',
+            'has_defect_task',
             'created_by', 'created_by_name', 'created_at', 'updated_at'
         ]
 
@@ -36,6 +38,14 @@ class ConvictedPersonListSerializer(serializers.ModelSerializer):
 
     def get_has_fulfilled_fractions(self, obj):
         return obj.has_fulfilled_fractions
+
+    def get_has_defect_task(self, obj):
+        from tasks.models import Task
+        task = Task.objects.filter(
+            title=obj.full_name,
+            status__in=[Task.Status.TODO, Task.Status.IN_PROGRESS]
+        ).first()
+        return str(task.id) if task else None
 
     def get_created_by_name(self, obj):
         if obj.created_by:
