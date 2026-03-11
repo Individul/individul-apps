@@ -8,6 +8,7 @@ import { ro } from 'date-fns/locale'
 import { Plus, Scale, FileSpreadsheet, FileText, Calendar, User, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useUserRole } from '@/lib/use-user-role'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -28,6 +29,7 @@ import {
 
 function CommissionsContent() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -176,12 +178,19 @@ function CommissionsContent() {
           <h1 className="text-2xl font-bold text-slate-900">Comisia Penitenciara</h1>
           <p className="text-sm text-slate-500 mt-1">Evaluarea condamnatilor in cadrul comisiei</p>
         </div>
-        <Link href="/comisia/new">
-          <Button size="sm" className="gap-2">
+        {isViewer ? (
+          <Button size="sm" className="gap-2" disabled>
             <Plus className="h-4 w-4" />
             Adauga sedinta
           </Button>
-        </Link>
+        ) : (
+          <Link href="/comisia/new">
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Adauga sedinta
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
@@ -339,12 +348,14 @@ function CommissionsContent() {
                   Nu exista sedinte pentru {MONTH_NAMES_RO[month]} {year}
                 </h3>
                 <p className="text-sm text-slate-500 mt-1 mb-4">Adaugati o sedinta noua a comisiei.</p>
-                <Link href="/comisia/new">
-                  <Button size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Adauga sedinta
-                  </Button>
-                </Link>
+                {!isViewer && (
+                  <Link href="/comisia/new">
+                    <Button size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Adauga sedinta
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           )}
@@ -362,12 +373,14 @@ function CommissionsContent() {
                 <Scale className="h-12 w-12 text-slate-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-700">Nu exista date pentru {MONTH_NAMES_RO[month]} {year}</h3>
                 <p className="text-sm text-slate-500 mt-1 mb-4">Adaugati sedinte de comisie pentru aceasta luna.</p>
-                <Link href="/comisia/new">
-                  <Button size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Adauga sedinta
-                  </Button>
-                </Link>
+                {!isViewer && (
+                  <Link href="/comisia/new">
+                    <Button size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Adauga sedinta
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           )}

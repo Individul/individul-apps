@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Calendar } from 'lucide-react'
@@ -8,10 +8,19 @@ import { toast } from 'sonner'
 import { DatePicker } from '@/components/ui/date-picker'
 import { personsApi, ApiError, PersonCreate } from '@/lib/api'
 import { formatDateForApi } from '@/lib/utils'
+import { useUserRole } from '@/lib/use-user-role'
 
 export default function NewPersonPage() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (isViewer) {
+      toast.error('Nu aveți permisiunea de a crea înregistrări noi')
+      router.push('/termene')
+    }
+  }, [isViewer, router])
   const [formData, setFormData] = useState<PersonCreate>({
     first_name: '',
     last_name: '',

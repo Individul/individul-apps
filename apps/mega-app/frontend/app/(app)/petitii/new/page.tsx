@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { petitionsApi, ApiError } from '@/lib/api'
+import { useUserRole } from '@/lib/use-user-role'
 
 const petitionerTypes = [
   { value: 'condamnat', label: 'Condamnat' },
@@ -62,7 +63,15 @@ type FormData = z.infer<typeof formSchema>
 
 export default function NewPetitionPage() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (isViewer) {
+      toast.error('Nu aveți permisiunea de a crea înregistrări noi')
+      router.push('/petitii')
+    }
+  }, [isViewer, router])
 
   const {
     register,

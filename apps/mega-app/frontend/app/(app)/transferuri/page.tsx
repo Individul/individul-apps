@@ -8,6 +8,7 @@ import { ro } from 'date-fns/locale'
 import { Plus, ArrowLeftRight, FileSpreadsheet, FileText, Calendar, User, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useUserRole } from '@/lib/use-user-role'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -28,6 +29,7 @@ import {
 
 function TransfersContent() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -111,12 +113,19 @@ function TransfersContent() {
           <h1 className="text-2xl font-bold text-slate-900">Transferuri</h1>
           <p className="text-sm text-slate-500 mt-1">Gestionarea transferurilor de condamnati</p>
         </div>
-        <Link href="/transferuri/new">
-          <Button size="sm" className="gap-2">
+        {isViewer ? (
+          <Button size="sm" className="gap-2" disabled>
             <Plus className="h-4 w-4" />
             Adauga transfer
           </Button>
-        </Link>
+        ) : (
+          <Link href="/transferuri/new">
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Adauga transfer
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
@@ -257,12 +266,14 @@ function TransfersContent() {
                   Nu exista transferuri pentru {MONTH_NAMES_RO[month]} {year}
                 </h3>
                 <p className="text-sm text-slate-500 mt-1 mb-4">Adaugati un transfer nou pentru aceasta luna.</p>
-                <Link href="/transferuri/new">
-                  <Button size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Adauga transfer
-                  </Button>
-                </Link>
+                {!isViewer && (
+                  <Link href="/transferuri/new">
+                    <Button size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Adauga transfer
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           )}
@@ -332,12 +343,14 @@ function TransfersContent() {
                 <ArrowLeftRight className="h-12 w-12 text-slate-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-700">Nu exista date pentru {MONTH_NAMES_RO[month]} {year}</h3>
                 <p className="text-sm text-slate-500 mt-1 mb-4">Adaugati date de transfer pentru aceasta luna.</p>
-                <Link href="/transferuri/new">
-                  <Button size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Adauga transfer
-                  </Button>
-                </Link>
+                {!isViewer && (
+                  <Link href="/transferuri/new">
+                    <Button size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Adauga transfer
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           )}

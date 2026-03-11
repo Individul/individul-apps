@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { petitionsApi, Petition, ApiError } from '@/lib/api'
+import { useUserRole } from '@/lib/use-user-role'
 import { formatDate, formatDateTime } from '@/lib/utils'
 
 const statusOptions = [
@@ -79,6 +80,7 @@ export default function PetitionDetailPage() {
   const router = useRouter()
   const params = useParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { isViewer } = useUserRole()
 
   const [petition, setPetition] = useState<Petition | null>(null)
   const [loading, setLoading] = useState(true)
@@ -421,7 +423,7 @@ export default function PetitionDetailPage() {
               variant="default"
               size="default"
               onClick={handleFinalize}
-              disabled={finalizing}
+              disabled={isViewer || finalizing}
               className="h-10 px-4 bg-green-600 hover:bg-green-700"
             >
               {finalizing ? (
@@ -436,7 +438,7 @@ export default function PetitionDetailPage() {
             variant="destructive"
             size="default"
             onClick={handleDeletePetition}
-            disabled={deleting}
+            disabled={isViewer || deleting}
             className="h-10 px-4"
           >
             {deleting ? (
@@ -459,7 +461,7 @@ export default function PetitionDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setEditingDetails(true)}
-                disabled={editingStatus}
+                disabled={isViewer || editingStatus}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Editare
@@ -599,7 +601,7 @@ export default function PetitionDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setEditingStatus(true)}
-                disabled={editingDetails}
+                disabled={isViewer || editingDetails}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Editare
@@ -683,7 +685,7 @@ export default function PetitionDetailPage() {
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={isViewer || uploading}
             >
               {uploading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -732,6 +734,7 @@ export default function PetitionDetailPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteAttachment(attachment.id)}
+                      disabled={isViewer}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

@@ -21,6 +21,7 @@ import {
   PenitentiaryOption,
   TransferCreate,
 } from '@/lib/api'
+import { useUserRole } from '@/lib/use-user-role'
 
 interface RowData {
   penitentiary: number
@@ -35,6 +36,14 @@ interface RowData {
 
 export default function NewTransferPage() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
+
+  useEffect(() => {
+    if (isViewer) {
+      toast.error('Nu aveți permisiunea de a crea înregistrări noi')
+      router.push('/transferuri')
+    }
+  }, [isViewer, router])
 
   const [transferDate, setTransferDate] = useState<Date | undefined>(new Date())
   const [description, setDescription] = useState('')

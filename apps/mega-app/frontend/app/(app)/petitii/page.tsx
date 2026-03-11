@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Search, Download, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useUserRole } from '@/lib/use-user-role'
 import { Badge } from '@/components/ui/badge'
 import {
   Select,
@@ -46,6 +47,7 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
 function PetitionsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isViewer } = useUserRole()
   const [data, setData] = useState<PaginatedResponse<Petition> | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -93,12 +95,19 @@ function PetitionsContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Petitii</h1>
-        <Link href="/petitii/new">
-          <Button>
+        {isViewer ? (
+          <Button disabled>
             <Plus className="h-4 w-4 mr-2" />
             Petitie noua
           </Button>
-        </Link>
+        ) : (
+          <Link href="/petitii/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Petitie noua
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filters Card */}

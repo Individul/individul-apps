@@ -25,6 +25,7 @@ import {
   tasksApi,
 } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
+import { useUserRole } from "@/lib/use-user-role";
 import {
   ArrowLeft,
   Loader2,
@@ -63,6 +64,7 @@ interface TaskDetailPageProps {
 
 export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const router = useRouter();
+  const { isViewer } = useUserRole();
   const [task, setTask] = useState<TaskDetail | null>(null);
   const [users, setUsers] = useState<TaskUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,10 +270,10 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isViewer || deleting}>
             {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={isViewer || saving}>
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Salveaza
           </Button>
@@ -290,12 +292,13 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Titlul sarcinii"
+                disabled={isViewer}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Descriere</Label>
-              {isEditingDescription ? (
+              {isEditingDescription && !isViewer ? (
                 <Textarea
                   id="description"
                   value={description}
@@ -314,11 +317,12 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                   }}
                   placeholder="Descrierea sarcinii"
                   className="min-h-[100px] resize-none overflow-hidden"
+                  disabled={isViewer}
                 />
               ) : (
                 <div
-                  onClick={() => setIsEditingDescription(true)}
-                  className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm cursor-text whitespace-pre-wrap break-words"
+                  onClick={() => !isViewer && setIsEditingDescription(true)}
+                  className={`min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm whitespace-pre-wrap break-words ${isViewer ? "cursor-default opacity-50" : "cursor-text"}`}
                 >
                   {description ? renderTextWithLinks(description) : <span className="text-muted-foreground">Descrierea sarcinii</span>}
                 </div>
@@ -328,7 +332,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}>
+                <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)} disabled={isViewer}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -342,7 +346,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
               <div className="space-y-2">
                 <Label>Prioritate</Label>
-                <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
+                <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)} disabled={isViewer}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -357,7 +361,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
             <div className="space-y-2">
               <Label>Responsabil</Label>
-              <Select value={assignee} onValueChange={setAssignee}>
+              <Select value={assignee} onValueChange={setAssignee} disabled={isViewer}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteaza responsabil" />
                 </SelectTrigger>
@@ -374,7 +378,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
             <div className="space-y-2">
               <Label>Categorie</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={setCategory} disabled={isViewer}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteaza categorie" />
                 </SelectTrigger>
@@ -393,6 +397,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 placeholder="ex: urgent, frontend, bug (separate prin virgula)"
+                disabled={isViewer}
               />
             </div>
 
@@ -403,6 +408,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
+                disabled={isViewer}
               />
             </div>
           </div>
@@ -452,8 +458,9 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
+                disabled={isViewer}
               />
-              <Button size="icon" onClick={handleAddComment} disabled={sendingComment || !comment.trim()}>
+              <Button size="icon" onClick={handleAddComment} disabled={isViewer || sendingComment || !comment.trim()}>
                 {sendingComment ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (

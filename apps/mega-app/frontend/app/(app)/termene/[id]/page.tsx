@@ -24,6 +24,7 @@ import {
   RELEASE_TYPES,
 } from '@/lib/api'
 import { formatDate, formatDateForApi } from '@/lib/utils'
+import { useUserRole } from '@/lib/use-user-role'
 
 // Calculate time served percentage
 function calculateTimeServed(startDate: string, endDate: string): number {
@@ -111,6 +112,7 @@ function SentenceCard({
   onEditSentence,
   onAddZpm,
   onDeleteZpm,
+  isViewer,
 }: {
   sentence: Sentence
   onAddReduction: (sentenceId: string) => void
@@ -121,6 +123,7 @@ function SentenceCard({
   onEditSentence: (sentence: Sentence) => void
   onAddZpm: (sentenceId: string) => void
   onDeleteZpm: (sentenceId: string, zpmId: string) => void
+  isViewer: boolean
 }) {
   const [reductionsExpanded, setReductionsExpanded] = useState(false)
   const [arrestExpanded, setArrestExpanded] = useState(false)
@@ -155,26 +158,30 @@ function SentenceCard({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onEditSentence(sentence)}
-              className="text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 px-2 py-1 rounded transition-colors"
+              disabled={isViewer}
+              className={`text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 px-2 py-1 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
               title="Editeaza sentinta"
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
             <button
               onClick={() => onAddReduction(sentence.id)}
-              className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+              disabled={isViewer}
+              className={`text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
             >
               + Reducere
             </button>
             <button
               onClick={() => onAddPreventiveArrest(sentence.id)}
-              className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+              disabled={isViewer}
+              className={`text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
             >
               + Arest Prev.
             </button>
             <button
               onClick={() => onAddZpm(sentence.id)}
-              className="text-xs text-teal-600 hover:text-teal-800 hover:bg-teal-50 px-2 py-1 rounded transition-colors"
+              disabled={isViewer}
+              className={`text-xs text-teal-600 hover:text-teal-800 hover:bg-teal-50 px-2 py-1 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
             >
               + ZPM
             </button>
@@ -296,7 +303,8 @@ function SentenceCard({
                 </span>
                 <button
                   onClick={() => onDeleteReduction(sentence.id, reduction.id)}
-                  className="p-1 text-amber-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  disabled={isViewer}
+                  className={`p-1 text-amber-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
                   title="Sterge reducerea"
                 >
                   <X className="h-3.5 w-3.5" strokeWidth={2} />
@@ -344,14 +352,16 @@ function SentenceCard({
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => onEditPreventiveArrest(sentence.id, pa)}
-                  className="p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  disabled={isViewer}
+                  className={`p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
                   title="Editează arestul preventiv"
                 >
                   <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
                 </button>
                 <button
                   onClick={() => onDeletePreventiveArrest(sentence.id, pa.id)}
-                  className="p-1 text-blue-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  disabled={isViewer}
+                  className={`p-1 text-blue-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
                   title="Șterge arestul preventiv"
                 >
                   <X className="h-3.5 w-3.5" strokeWidth={2} />
@@ -400,7 +410,8 @@ function SentenceCard({
               </div>
               <button
                 onClick={() => onDeleteZpm(sentence.id, zpm.id)}
-                className="p-1 text-teal-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                disabled={isViewer}
+                className={`p-1 text-teal-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
                 title="Sterge ZPM"
               >
                 <X className="h-3.5 w-3.5" strokeWidth={2} />
@@ -417,6 +428,7 @@ export default function PersonDetailPage() {
   const router = useRouter()
   const params = useParams()
   const personId = params.id as string
+  const { isViewer } = useUserRole()
 
   const [person, setPerson] = useState<PersonDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -986,14 +998,16 @@ export default function PersonDetailPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleOpenEditForm}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md border border-gray-200 transition-colors"
+            disabled={isViewer}
+            className={`inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md border border-gray-200 transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <Pencil className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
             Editeaza
           </button>
           <button
             onClick={handleDeletePerson}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 transition-colors"
+            disabled={isViewer}
+            className={`inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md border border-gray-200 transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <Trash2 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
             Sterge
@@ -1007,6 +1021,7 @@ export default function PersonDetailPage() {
           type="checkbox"
           id="mai_notification"
           checked={person.mai_notification}
+          disabled={isViewer}
           onChange={async (e) => {
             const token = localStorage.getItem('access_token')
             if (!token) return
@@ -1019,7 +1034,7 @@ export default function PersonDetailPage() {
               toast.error('Eroare la actualizarea instiintarii MAI')
             }
           }}
-          className="h-4 w-4 rounded border-gray-300 text-slate-800 focus:ring-slate-500 cursor-pointer"
+          className={`h-4 w-4 rounded border-gray-300 text-slate-800 focus:ring-slate-500 cursor-pointer ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
         />
         <label htmlFor="mai_notification" className="text-sm font-medium text-slate-700 cursor-pointer select-none">
           Instiintare MAI
@@ -1040,6 +1055,7 @@ export default function PersonDetailPage() {
                 onSelect={setReleaseDate}
                 placeholder="Selecteaza data eliberarii"
                 className="pl-10"
+                disabled={isViewer}
               />
             </div>
           </div>
@@ -1047,8 +1063,8 @@ export default function PersonDetailPage() {
             <label className="block text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-1.5">
               Modalitatea eliberarii
             </label>
-            <Select value={releaseType} onValueChange={setReleaseType}>
-              <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+            <Select value={releaseType} onValueChange={setReleaseType} disabled={isViewer}>
+              <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500" disabled={isViewer}>
                 <SelectValue placeholder="Selecteaza modalitatea" />
               </SelectTrigger>
               <SelectContent>
@@ -1062,7 +1078,7 @@ export default function PersonDetailPage() {
           </div>
           <button
             onClick={handleReleasePerson}
-            disabled={!releaseDate || !releaseType || isReleasing}
+            disabled={!releaseDate || !releaseType || isReleasing || isViewer}
             className="inline-flex items-center justify-center px-4 h-10 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isReleasing ? (
@@ -1092,7 +1108,10 @@ export default function PersonDetailPage() {
           <h2 className="text-sm font-semibold text-slate-800">Dosare Sentinte</h2>
           <Sheet open={sentenceFormOpen} onOpenChange={setSentenceFormOpen}>
             <SheetTrigger asChild>
-              <button className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-md shadow-sm transition-colors">
+              <button
+                disabled={isViewer}
+                className={`inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-md shadow-sm transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
+              >
                 <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
                 Adauga Sentinta
               </button>
@@ -1122,8 +1141,9 @@ export default function PersonDetailPage() {
                     <Select
                       value={newSentence.crime_type}
                       onValueChange={(value) => setNewSentence({ ...newSentence, crime_type: value })}
+                      disabled={isViewer}
                     >
-                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500" disabled={isViewer}>
                         <SelectValue placeholder="Selecteaza tipul infractiunii" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1146,6 +1166,7 @@ export default function PersonDetailPage() {
                       onChange={(e) => setNewSentence({ ...newSentence, crime_description: e.target.value })}
                       placeholder="Descriere suplimentara a infractiunii..."
                       rows={3}
+                      disabled={isViewer}
                       className="w-full px-3 py-2 bg-white border border-gray-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 resize-none"
                     />
                   </div>
@@ -1163,6 +1184,7 @@ export default function PersonDetailPage() {
                             min="0"
                             value={newSentence.sentence_years}
                             onChange={(e) => setNewSentence({ ...newSentence, sentence_years: parseInt(e.target.value) || 0 })}
+                            disabled={isViewer}
                             className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1178,6 +1200,7 @@ export default function PersonDetailPage() {
                             max="11"
                             value={newSentence.sentence_months}
                             onChange={(e) => setNewSentence({ ...newSentence, sentence_months: parseInt(e.target.value) || 0 })}
+                            disabled={isViewer}
                             className="w-full h-10 px-3 pr-11 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1193,6 +1216,7 @@ export default function PersonDetailPage() {
                             max="29"
                             value={newSentence.sentence_days}
                             onChange={(e) => setNewSentence({ ...newSentence, sentence_days: parseInt(e.target.value) || 0 })}
+                            disabled={isViewer}
                             className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1215,6 +1239,7 @@ export default function PersonDetailPage() {
                         onSelect={setSentenceStartDate}
                         placeholder="Selecteaza data"
                         className="pl-10"
+                        disabled={isViewer}
                       />
                     </div>
                   </div>
@@ -1227,8 +1252,9 @@ export default function PersonDetailPage() {
                     <Select
                       value={newSentence.status}
                       onValueChange={(value) => setNewSentence({ ...newSentence, status: value })}
+                      disabled={isViewer}
                     >
-                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                      <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500" disabled={isViewer}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1251,6 +1277,7 @@ export default function PersonDetailPage() {
                       onChange={(e) => setNewSentence({ ...newSentence, notes: e.target.value })}
                       placeholder="Adauga note sau observatii..."
                       rows={3}
+                      disabled={isViewer}
                       className="w-full px-3 py-2 bg-white border border-gray-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 resize-none"
                     />
                   </div>
@@ -1261,7 +1288,7 @@ export default function PersonDetailPage() {
               <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
                 <button
                   onClick={handleAddSentence}
-                  disabled={isAddingSentence}
+                  disabled={isAddingSentence || isViewer}
                   className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAddingSentence ? (
@@ -1300,6 +1327,7 @@ export default function PersonDetailPage() {
                 onEditSentence={handleOpenEditSentenceForm}
                 onAddZpm={handleOpenZpmForm}
                 onDeleteZpm={handleDeleteZpm}
+                isViewer={isViewer}
               />
             ))}
           </div>
@@ -1334,6 +1362,7 @@ export default function PersonDetailPage() {
                   value={editData.last_name}
                   onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
                   placeholder="Introduceti numele"
+                  disabled={isViewer}
                   className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 transition-colors"
                 />
               </div>
@@ -1346,6 +1375,7 @@ export default function PersonDetailPage() {
                   value={editData.first_name}
                   onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
                   placeholder="Introduceti prenumele"
+                  disabled={isViewer}
                   className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 transition-colors"
                 />
               </div>
@@ -1356,7 +1386,7 @@ export default function PersonDetailPage() {
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
             <button
               onClick={handleEditPerson}
-              disabled={isEditing}
+              disabled={isEditing || isViewer}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isEditing ? (
@@ -1403,6 +1433,7 @@ export default function PersonDetailPage() {
                     onSelect={setEditSentenceStartDate}
                     placeholder="Selecteaza data"
                     className="pl-10"
+                    disabled={isViewer}
                   />
                 </div>
               </div>
@@ -1420,6 +1451,7 @@ export default function PersonDetailPage() {
                         min="0"
                         value={editSentenceData.sentence_years}
                         onChange={(e) => setEditSentenceData({ ...editSentenceData, sentence_years: parseInt(e.target.value) || 0 })}
+                        disabled={isViewer}
                         className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1435,6 +1467,7 @@ export default function PersonDetailPage() {
                         max="11"
                         value={editSentenceData.sentence_months}
                         onChange={(e) => setEditSentenceData({ ...editSentenceData, sentence_months: parseInt(e.target.value) || 0 })}
+                        disabled={isViewer}
                         className="w-full h-10 px-3 pr-11 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1450,6 +1483,7 @@ export default function PersonDetailPage() {
                         max="29"
                         value={editSentenceData.sentence_days}
                         onChange={(e) => setEditSentenceData({ ...editSentenceData, sentence_days: parseInt(e.target.value) || 0 })}
+                        disabled={isViewer}
                         className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1468,8 +1502,9 @@ export default function PersonDetailPage() {
                 <Select
                   value={editSentenceData.status}
                   onValueChange={(value) => setEditSentenceData({ ...editSentenceData, status: value })}
+                  disabled={isViewer}
                 >
-                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500" disabled={isViewer}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1488,7 +1523,7 @@ export default function PersonDetailPage() {
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
             <button
               onClick={handleEditSentence}
-              disabled={isEditingSentence}
+              disabled={isEditingSentence || isViewer}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isEditingSentence ? (
@@ -1535,6 +1570,7 @@ export default function PersonDetailPage() {
                     onSelect={setReductionDate}
                     placeholder="Selecteaza data"
                     className="pl-10"
+                    disabled={isViewer}
                   />
                 </div>
               </div>
@@ -1547,8 +1583,9 @@ export default function PersonDetailPage() {
                 <Select
                   value={newReduction.legal_article}
                   onValueChange={(value) => setNewReduction({ ...newReduction, legal_article: value })}
+                  disabled={isViewer}
                 >
-                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500" disabled={isViewer}>
                     <SelectValue placeholder="Selecteaza articolul" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1572,6 +1609,7 @@ export default function PersonDetailPage() {
                         min="0"
                         value={newReduction.reduction_years}
                         onChange={(e) => setNewReduction({ ...newReduction, reduction_years: parseInt(e.target.value) || 0 })}
+                        disabled={isViewer}
                         className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1587,6 +1625,7 @@ export default function PersonDetailPage() {
                         max="11"
                         value={newReduction.reduction_months}
                         onChange={(e) => setNewReduction({ ...newReduction, reduction_months: parseInt(e.target.value) || 0 })}
+                        disabled={isViewer}
                         className="w-full h-10 px-3 pr-11 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1602,6 +1641,7 @@ export default function PersonDetailPage() {
                         max="29"
                         value={newReduction.reduction_days}
                         onChange={(e) => setNewReduction({ ...newReduction, reduction_days: parseInt(e.target.value) || 0 })}
+                        disabled={isViewer}
                         className="w-full h-10 px-3 pr-10 bg-white border border-gray-200 rounded-md text-center text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
@@ -1618,7 +1658,7 @@ export default function PersonDetailPage() {
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
             <button
               onClick={handleAddReduction}
-              disabled={isAddingReduction || !newReduction.legal_article || !reductionDate}
+              disabled={isAddingReduction || !newReduction.legal_article || !reductionDate || isViewer}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAddingReduction ? (
@@ -1665,6 +1705,7 @@ export default function PersonDetailPage() {
                     onSelect={setPaStartDate}
                     placeholder="Selecteaza data"
                     className="pl-10"
+                    disabled={isViewer}
                   />
                 </div>
               </div>
@@ -1681,6 +1722,7 @@ export default function PersonDetailPage() {
                     onSelect={setPaEndDate}
                     placeholder="Selecteaza data"
                     className="pl-10"
+                    disabled={isViewer}
                   />
                 </div>
               </div>
@@ -1691,7 +1733,7 @@ export default function PersonDetailPage() {
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
             <button
               onClick={handleAddPreventiveArrest}
-              disabled={isAddingPa || !paStartDate || !paEndDate}
+              disabled={isAddingPa || !paStartDate || !paEndDate || isViewer}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAddingPa ? (
@@ -1738,6 +1780,7 @@ export default function PersonDetailPage() {
                     onSelect={setEditPaStartDate}
                     placeholder="Selecteaza data"
                     className="pl-10"
+                    disabled={isViewer}
                   />
                 </div>
               </div>
@@ -1754,6 +1797,7 @@ export default function PersonDetailPage() {
                     onSelect={setEditPaEndDate}
                     placeholder="Selecteaza data"
                     className="pl-10"
+                    disabled={isViewer}
                   />
                 </div>
               </div>
@@ -1764,7 +1808,7 @@ export default function PersonDetailPage() {
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
             <button
               onClick={handleEditPreventiveArrest}
-              disabled={isEditingPa || !editPaStartDate || !editPaEndDate}
+              disabled={isEditingPa || !editPaStartDate || !editPaEndDate || isViewer}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isEditingPa ? (
@@ -1807,8 +1851,9 @@ export default function PersonDetailPage() {
                 <Select
                   value={zpmMonth}
                   onValueChange={setZpmMonth}
+                  disabled={isViewer}
                 >
-                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500">
+                  <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm text-slate-900 focus:ring-1 focus:ring-slate-500 focus:border-slate-500" disabled={isViewer}>
                     <SelectValue placeholder="Selecteaza luna" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1839,6 +1884,7 @@ export default function PersonDetailPage() {
                   max="2100"
                   value={zpmYear}
                   onChange={(e) => setZpmYear(parseInt(e.target.value) || new Date().getFullYear())}
+                  disabled={isViewer}
                   className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                 />
               </div>
@@ -1856,6 +1902,7 @@ export default function PersonDetailPage() {
                   value={zpmDays}
                   onChange={(e) => setZpmDays(e.target.value)}
                   placeholder="ex: 1.11"
+                  disabled={isViewer}
                   className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-sm text-slate-900 tabular-nums placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                 />
               </div>
@@ -1866,7 +1913,7 @@ export default function PersonDetailPage() {
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100">
             <button
               onClick={handleAddZpm}
-              disabled={isAddingZpm || !zpmMonth || !zpmDays}
+              disabled={isAddingZpm || !zpmMonth || !zpmDays || isViewer}
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAddingZpm ? (

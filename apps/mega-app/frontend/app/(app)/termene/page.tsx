@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Search, ChevronRight, User } from 'lucide-react'
 import { personsApi, Person, PaginatedResponse } from '@/lib/api'
+import { useUserRole } from '@/lib/use-user-role'
 import { formatDate } from '@/lib/utils'
 
 // Filter tabs configuration
@@ -226,6 +227,7 @@ function PersonCard({ person, showReleaseDate = false }: { person: Person; showR
 
 export default function PersonsPage() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
   const [persons, setPersons] = useState<Person[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
@@ -329,13 +331,20 @@ export default function PersonsPage() {
             {totalCount} {totalCount === 1 ? 'inregistrare' : 'inregistrari'} in total
           </p>
         </div>
-        <Link
-          href="/termene/new"
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-md shadow-sm transition-colors"
-        >
-          <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
-          Adauga persoana
-        </Link>
+        {isViewer ? (
+          <span className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 rounded-md shadow-sm opacity-50 cursor-not-allowed">
+            <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
+            Adauga persoana
+          </span>
+        ) : (
+          <Link
+            href="/termene/new"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-md shadow-sm transition-colors"
+          >
+            <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
+            Adauga persoana
+          </Link>
+        )}
       </div>
 
       {/* Toolbar */}
@@ -399,7 +408,7 @@ export default function PersonsPage() {
               : 'Incercati sa schimbati filtrul sau criteriile de cautare'
             }
           </p>
-          {activeFilter === 'all' && (
+          {activeFilter === 'all' && !isViewer && (
             <Link
               href="/termene/new"
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-md shadow-sm transition-colors"

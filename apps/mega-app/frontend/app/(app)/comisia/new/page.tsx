@@ -25,6 +25,7 @@ import {
   BEHAVIOR_RESULTS,
   DECISION_OPTIONS,
 } from '@/lib/api'
+import { useUserRole } from '@/lib/use-user-role'
 
 interface ArticleData {
   article: string
@@ -45,6 +46,14 @@ interface PersonEvaluation {
 
 export default function NewCommissionSessionPage() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
+
+  useEffect(() => {
+    if (isViewer) {
+      toast.error('Nu aveți permisiunea de a crea înregistrări noi')
+      router.push('/comisia')
+    }
+  }, [isViewer, router])
 
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date())
   const [sessionNumber, setSessionNumber] = useState('')

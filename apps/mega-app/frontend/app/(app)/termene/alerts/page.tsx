@@ -7,6 +7,7 @@ import { Check, RefreshCw, AlertTriangle, Clock, X, CheckCircle2, ExternalLink }
 import { toast } from 'sonner'
 import { alertsApi, Alert, PaginatedResponse } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
+import { useUserRole } from '@/lib/use-user-role'
 
 // Tab configuration
 const TABS = [
@@ -50,11 +51,13 @@ function getIconBgColor(alertType: string): string {
 function AlertCard({
   alert,
   onMarkRead,
-  onDismiss
+  onDismiss,
+  isViewer
 }: {
   alert: Alert
   onMarkRead: (id: string) => void
   onDismiss: (id: string) => void
+  isViewer: boolean
 }) {
   const borderColor = getAlertBorderColor(alert.alert_type)
   const iconBgColor = getIconBgColor(alert.alert_type)
@@ -118,7 +121,8 @@ function AlertCard({
           {!alert.is_read && (
             <button
               onClick={() => onMarkRead(alert.id)}
-              className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+              disabled={isViewer}
+              className={`p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
               title="Marcheaza ca citit"
             >
               <Check className="h-4 w-4" strokeWidth={2} />
@@ -126,7 +130,8 @@ function AlertCard({
           )}
           <button
             onClick={() => onDismiss(alert.id)}
-            className="p-1.5 text-gray-400 hover:text-slate-600 hover:bg-gray-100 rounded-full transition-colors"
+            disabled={isViewer}
+            className={`p-1.5 text-gray-400 hover:text-slate-600 hover:bg-gray-100 rounded-full transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
             title="Dismiss"
           >
             <X className="h-4 w-4" strokeWidth={2} />
@@ -165,6 +170,7 @@ function EmptyState({ activeTab }: { activeTab: TabId }) {
 
 export default function AlertsPage() {
   const router = useRouter()
+  const { isViewer } = useUserRole()
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [activeTab, setActiveTab] = useState<TabId>('all')
   const [isLoading, setIsLoading] = useState(true)
@@ -312,15 +318,16 @@ export default function AlertsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleGenerateAlerts}
-            disabled={isGenerating}
-            className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors disabled:opacity-50"
+            disabled={isGenerating || isViewer}
+            className={`inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors disabled:opacity-50 ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <RefreshCw className={`h-4 w-4 mr-1.5 ${isGenerating ? 'animate-spin' : ''}`} strokeWidth={1.5} />
             Regenereaza
           </button>
           <button
             onClick={handleMarkAllRead}
-            className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+            disabled={isViewer}
+            className={`inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors ${isViewer ? 'opacity-50 pointer-events-none' : ''}`}
           >
             <Check className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
             Marcheaza toate
@@ -385,6 +392,7 @@ export default function AlertsPage() {
                 alert={alert}
                 onMarkRead={handleMarkRead}
                 onDismiss={handleDismiss}
+                isViewer={isViewer}
               />
             ))}
           </div>
