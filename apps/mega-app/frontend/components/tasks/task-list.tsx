@@ -9,6 +9,7 @@ import { TaskForm } from "@/components/tasks/task-form";
 import { SidebarFilters } from "@/components/tasks/sidebar-filters";
 import { Task, TaskFilters, tasksApi } from "@/lib/api";
 import { Plus, Loader2 } from "lucide-react";
+import { useUserRole } from "@/lib/use-user-role";
 
 type TaskStatus = Task["status"];
 type TaskPriority = Task["priority"];
@@ -28,6 +29,7 @@ interface TaskListProps {
 }
 
 export function TaskList({ initialStatus }: TaskListProps) {
+  const { isViewer } = useUserRole();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "ALL">("ALL");
@@ -143,7 +145,7 @@ export function TaskList({ initialStatus }: TaskListProps) {
               <TabsTrigger value="done">Finalizat</TabsTrigger>
             </TabsList>
 
-            <Button onClick={handleNewTask}>
+            <Button onClick={handleNewTask} disabled={isViewer}>
               <Plus className="h-4 w-4 mr-2" />
               Sarcina Noua
             </Button>
@@ -157,9 +159,11 @@ export function TaskList({ initialStatus }: TaskListProps) {
             ) : tasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                 <p>Nu s-au gasit sarcini</p>
-                <Button variant="outline" className="mt-4" onClick={handleNewTask}>
-                  Creaza prima ta sarcina
-                </Button>
+                {!isViewer && (
+                  <Button variant="outline" className="mt-4" onClick={handleNewTask}>
+                    Creaza prima ta sarcina
+                  </Button>
+                )}
               </div>
             ) : (
               <ScrollArea className="h-[calc(100vh-12rem)]">
