@@ -1453,4 +1453,112 @@ export const monitorEmailApi = {
     }),
 }
 
+// =============================================================================
+// Types - Indicatii
+// =============================================================================
+
+export interface IndicatieDestinatarDetails {
+  id: string
+  full_name: string
+  username: string
+  first_name: string
+  last_name: string
+}
+
+export interface IndicatieDestinatar {
+  id: string
+  destinatar: number
+  destinatar_details: IndicatieDestinatarDetails
+  status: 'NOU' | 'IN_LUCRU' | 'INDEPLINIT'
+  status_display: string
+  data_indeplinire: string | null
+}
+
+export interface IndicatieComentariu {
+  id: string
+  autor: number
+  autor_details: { id: number; full_name: string; username: string }
+  text: string
+  created_at: string
+}
+
+export interface IndicatieFisier {
+  id: string
+  uploaded_by: number
+  uploaded_by_details: { id: number; full_name: string; username: string }
+  fisier: string
+  nume_fisier: string
+  created_at: string
+}
+
+export interface Indicatie {
+  id: string
+  titlu: string
+  descriere: string
+  prioritate: 'URGENT' | 'NORMAL' | 'SCAZUT'
+  termen_limita: string | null
+  created_by: number
+  created_by_details: { id: number; full_name: string; username: string }
+  destinatari: IndicatieDestinatar[]
+  persoana_legata: string | null
+  persoana_legata_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface IndicatieDetail extends Indicatie {
+  comentarii: IndicatieComentariu[]
+  fisiere: IndicatieFisier[]
+}
+
+// =============================================================================
+// Indicatii API
+// =============================================================================
+
+export const indicatiiApi = {
+  list: (token: string, params?: Record<string, string>) => {
+    const query = params ? '?' + new URLSearchParams(params).toString() : ''
+    return fetchApi<Indicatie[]>(`/api/v1/indicatii/${query}`, { token })
+  },
+  get: (token: string, id: string) =>
+    fetchApi<IndicatieDetail>(`/api/v1/indicatii/${id}/`, { token }),
+  create: (token: string, data: any) =>
+    fetchApi<Indicatie>('/api/v1/indicatii/', {
+      method: 'POST', token, body: JSON.stringify(data)
+    }),
+  update: (token: string, id: string, data: any) =>
+    fetchApi<Indicatie>(`/api/v1/indicatii/${id}/`, {
+      method: 'PATCH', token, body: JSON.stringify(data)
+    }),
+  delete: (token: string, id: string) =>
+    fetchApi<void>(`/api/v1/indicatii/${id}/`, { method: 'DELETE', token }),
+  addComment: (token: string, id: string, text: string) =>
+    fetchApi<IndicatieComentariu>(`/api/v1/indicatii/${id}/comentarii/`, {
+      method: 'POST', token, body: JSON.stringify({ text })
+    }),
+  getComments: (token: string, id: string) =>
+    fetchApi<IndicatieComentariu[]>(`/api/v1/indicatii/${id}/lista_comentarii/`, { token }),
+  uploadFile: async (token: string, id: string, file: File) => {
+    const formData = new FormData()
+    formData.append('fisier', file)
+    const response = await fetch(`${API_URL}/api/v1/indicatii/${id}/fisiere/`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    })
+    if (!response.ok) throw new Error('Upload failed')
+    return response.json() as Promise<IndicatieFisier>
+  },
+  getFiles: (token: string, id: string) =>
+    fetchApi<IndicatieFisier[]>(`/api/v1/indicatii/${id}/lista_fisiere/`, { token }),
+  deleteFile: (token: string, indicatieId: string, fisierId: string) =>
+    fetchApi<void>(`/api/v1/indicatii/${indicatieId}/sterge_fisier/${fisierId}/`, {
+      method: 'DELETE', token
+    }),
+  updateStatus: (token: string, id: string, status: string) =>
+    fetchApi<IndicatieDestinatar>(`/api/v1/indicatii/${id}/status/`, {
+      method: 'PATCH', token, body: JSON.stringify({ status })
+    }),
+}
+
 export { ApiError }
