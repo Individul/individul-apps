@@ -24,6 +24,15 @@ class IsOperatorOrReadOnly(permissions.BasePermission):
         return request.user and request.user.is_authenticated and request.user.is_operator
 
 
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """Permite editare doar pentru admin, read-only pentru operatori și vieweri."""
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return request.user and request.user.is_authenticated
+        return request.user and request.user.is_authenticated and request.user.is_admin
+
+
 class CanManageUsers(permissions.BasePermission):
     """Permite managementul utilizatorilor doar administratorilor."""
 

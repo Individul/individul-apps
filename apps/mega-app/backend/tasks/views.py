@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, action, permission_classes as pe
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter, DateFilter
 from django.contrib.auth import get_user_model
-from accounts.permissions import IsAdmin, IsOperatorOrReadOnly
+from accounts.permissions import IsAdmin, IsAdminOrReadOnly
 from .models import Task, TaskActivity
 from .serializers import TaskSerializer, TaskDetailSerializer, TaskActivitySerializer, UserSerializer
 from .monitor_sync import add_person_to_monitor, deactivate_person_in_monitor
@@ -31,7 +31,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     pagination_class = None
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_class = TaskFilter
     ordering_fields = ['deadline', 'priority', 'created_at', 'updated_at']

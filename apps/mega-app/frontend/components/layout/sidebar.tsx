@@ -31,7 +31,7 @@ const modules = [
   { name: 'Termene', href: '/termene', icon: Users },
   { name: 'Transferuri', href: '/transferuri', icon: ArrowLeftRight },
   { name: 'Comisia', href: '/comisia', icon: Scale },
-  { name: 'Indicatii', href: '/indicatii', icon: ClipboardList },
+  { name: 'Sarcini', href: '/indicatii', icon: ClipboardList },
 ]
 
 const secondary = [

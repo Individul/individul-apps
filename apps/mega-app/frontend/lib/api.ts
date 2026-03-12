@@ -1496,6 +1496,9 @@ export interface Indicatie {
   titlu: string
   descriere: string
   prioritate: 'URGENT' | 'NORMAL' | 'SCAZUT'
+  instanta: string
+  tip_hotarire: string
+  data_hotarire: string | null
   termen_limita: string | null
   created_by: number
   created_by_details: { id: number; full_name: string; username: string }
@@ -1509,6 +1512,48 @@ export interface Indicatie {
 export interface IndicatieDetail extends Indicatie {
   comentarii: IndicatieComentariu[]
   fisiere: IndicatieFisier[]
+}
+
+// =============================================================================
+// Sabloane Indicatii
+// =============================================================================
+
+export interface SablonIndicatie {
+  id: string
+  nume: string
+  titlu: string
+  descriere: string
+  prioritate: 'URGENT' | 'NORMAL' | 'SCAZUT'
+  instanta: string
+  tip_hotarire: string
+  data_hotarire: string | null
+  destinatari_default: number[]
+  destinatari_default_details: IndicatieDestinatarDetails[]
+  created_by: number
+  created_by_details: { id: number; full_name: string; username: string }
+  created_at: string
+  updated_at: string
+}
+
+export const sabloaneApi = {
+  list: (token: string) =>
+    fetchApi<SablonIndicatie[]>('/api/v1/indicatii/sabloane/', { token }),
+  get: (token: string, id: string) =>
+    fetchApi<SablonIndicatie>(`/api/v1/indicatii/sabloane/${id}/`, { token }),
+  create: (token: string, data: {
+    nume: string; titlu: string; descriere?: string;
+    prioritate?: string; instanta?: string; tip_hotarire?: string;
+    data_hotarire?: string | null; destinatari_default_ids?: number[]
+  }) =>
+    fetchApi<SablonIndicatie>('/api/v1/indicatii/sabloane/', {
+      method: 'POST', token, body: JSON.stringify(data)
+    }),
+  update: (token: string, id: string, data: any) =>
+    fetchApi<SablonIndicatie>(`/api/v1/indicatii/sabloane/${id}/`, {
+      method: 'PATCH', token, body: JSON.stringify(data)
+    }),
+  delete: (token: string, id: string) =>
+    fetchApi<void>(`/api/v1/indicatii/sabloane/${id}/`, { method: 'DELETE', token }),
 }
 
 // =============================================================================
@@ -1559,6 +1604,17 @@ export const indicatiiApi = {
     fetchApi<IndicatieDestinatar>(`/api/v1/indicatii/${id}/status/`, {
       method: 'PATCH', token, body: JSON.stringify({ status })
     }),
+  bulkCreate: (token: string, data: {
+    titlu: string; descriere: string; prioritate: string;
+    instanta?: string; tip_hotarire?: string; data_hotarire?: string | null;
+    destinatari_ids: number[]; termen_limita: string | null;
+    persoane_ids: string[]
+  }) =>
+    fetchApi<Indicatie[]>('/api/v1/indicatii/bulk/', {
+      method: 'POST', token, body: JSON.stringify(data)
+    }),
+  personsSearch: (token: string, search: string) =>
+    fetchApi<PaginatedResponse<Person>>(`/api/v1/persons/?search=${encodeURIComponent(search)}&page_size=50`, { token }),
 }
 
 export { ApiError }

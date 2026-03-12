@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from persons.models import ConvictedPerson
 from persons.serializers import ConvictedPersonListSerializer
-from accounts.permissions import IsOperatorOrReadOnly
+from accounts.permissions import IsAdminOrReadOnly
 from audit.utils import log_action
 
 from .models import (
@@ -27,7 +27,7 @@ class CommissionSessionViewSet(viewsets.ModelViewSet):
     queryset = CommissionSession.objects.select_related('created_by').prefetch_related(
         'evaluations__person', 'evaluations__article_results'
     )
-    permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     filterset_fields = {
         'year': ['exact'],
         'month': ['exact'],

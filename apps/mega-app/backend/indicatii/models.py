@@ -17,6 +17,9 @@ class Indicatie(models.Model):
         choices=Prioritate.choices,
         default=Prioritate.NORMAL
     )
+    instanta = models.CharField(max_length=255, blank=True, default='')
+    tip_hotarire = models.CharField(max_length=50, blank=True, default='')
+    data_hotarire = models.DateField(null=True, blank=True)
     termen_limita = models.DateField(null=True, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -92,6 +95,39 @@ class IndicatieComentariu(models.Model):
 
     def __str__(self):
         return f"Comentariu de {self.autor} la {self.indicatie.titlu}"
+
+
+class SablonIndicatie(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nume = models.CharField(max_length=255, help_text='Numele șablonului')
+    titlu = models.CharField(max_length=255, help_text='Titlul indicației generate')
+    descriere = models.TextField(blank=True)
+    prioritate = models.CharField(
+        max_length=20,
+        choices=Indicatie.Prioritate.choices,
+        default=Indicatie.Prioritate.NORMAL
+    )
+    instanta = models.CharField(max_length=255, blank=True, default='')
+    tip_hotarire = models.CharField(max_length=50, blank=True, default='')
+    data_hotarire = models.DateField(null=True, blank=True)
+    destinatari_default = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='sabloane_indicatii'
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='sabloane_create'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['nume']
+
+    def __str__(self):
+        return self.nume
 
 
 class IndicatieFisier(models.Model):

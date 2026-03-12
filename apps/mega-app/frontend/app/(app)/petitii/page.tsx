@@ -47,7 +47,7 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
 function PetitionsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
   const [data, setData] = useState<PaginatedResponse<Petition> | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -95,7 +95,7 @@ function PetitionsContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Petitii</h1>
-        {isViewer ? (
+        {!isAdmin ? (
           <Button disabled>
             <Plus className="h-4 w-4 mr-2" />
             Petitie noua

@@ -15,7 +15,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Indicatie, TaskUser, indicatiiApi, tasksApi } from '@/lib/api'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Indicatie, TaskUser, SablonIndicatie, indicatiiApi, tasksApi, sabloaneApi } from '@/lib/api'
 import { useUserRole } from '@/lib/use-user-role'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -27,6 +34,8 @@ import {
   Search,
   CalendarClock,
   User,
+  FileText,
+  Trash2,
 } from 'lucide-react'
 
 type ViewMode = 'list' | 'kanban'
@@ -86,7 +95,7 @@ function getUserStatusForIndicatie(indicatie: Indicatie, userId: number | null):
 
 function IndicatiiContent() {
   const searchParams = useSearchParams()
-  const { isViewer } = useUserRole()
+  const { isViewer, canEdit } = useUserRole()
   const [indicatii, setIndicatii] = useState<Indicatie[]>([])
   const [users, setUsers] = useState<TaskUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,6 +104,12 @@ function IndicatiiContent() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [prioritateFilter, setPrioritateFilter] = useState<string>('ALL')
   const [destinatarFilter, setDestinatarFilter] = useState<string>('ALL')
+
+  // Sabloane management
+  const [sabloane, setSabloane] = useState<SablonIndicatie[]>([])
+  const [loadingSabloane, setLoadingSabloane] = useState(false)
+  const [showSabloaneDialog, setShowSabloaneDialog] = useState(false)
+  const [deletingSablonId, setDeletingSablonId] = useState<string | null>(null)
 
   const currentUserId = useMemo(() => getCurrentUserId(), [])
 
@@ -122,6 +137,34 @@ function IndicatiiContent() {
     if (!token) return
     tasksApi.users(token).then(setUsers).catch(console.error)
   }, [])
+
+  const loadSabloane = useCallback(async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    setLoadingSabloane(true)
+    try {
+      const data = await sabloaneApi.list(token)
+      setSabloane(data)
+    } catch (error) {
+      console.error('Failed to load sabloane:', error)
+    } finally {
+      setLoadingSabloane(false)
+    }
+  }, [])
+
+  async function handleDeleteSablon(id: string) {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    setDeletingSablonId(id)
+    try {
+      await sabloaneApi.delete(token, id)
+      setSabloane(prev => prev.filter(s => s.id !== id))
+    } catch (error) {
+      console.error('Failed to delete sablon:', error)
+    } finally {
+      setDeletingSablonId(null)
+    }
+  }
 
   useEffect(() => {
     loadData()
@@ -234,12 +277,78 @@ function IndicatiiContent() {
     <div className="flex-1 flex flex-col p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Indicatii</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Sarcini</h1>
         <div className="flex items-center gap-2">
+          {canEdit && (
+            <Dialog open={showSabloaneDialog} onOpenChange={(open) => {
+              setShowSabloaneDialog(open)
+              if (open) loadSabloane()
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Sabloane
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Gestiune sabloane</DialogTitle>
+                </DialogHeader>
+                {loadingSabloane ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : sabloane.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Nu exista sabloane salvate. Puteti crea un sablon din formularul de creare sarcina noua.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {sabloane.map(sablon => (
+                      <div key={sablon.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{sablon.nume}</p>
+                          <p className="text-xs text-muted-foreground truncate">{sablon.titlu}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge className={cn(
+                              'text-xs',
+                              sablon.prioritate === 'URGENT' ? 'bg-red-100 text-red-700 border-transparent' :
+                              sablon.prioritate === 'SCAZUT' ? 'bg-gray-100 text-gray-600 border-transparent' :
+                              'bg-blue-100 text-blue-700 border-transparent'
+                            )}>
+                              {sablon.prioritate === 'URGENT' ? 'Urgent' : sablon.prioritate === 'SCAZUT' ? 'Scazut' : 'Normal'}
+                            </Badge>
+                            {sablon.destinatari_default_details.length > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {sablon.destinatari_default_details.length} destinatar(i)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteSablon(sablon.id)}
+                          disabled={deletingSablonId === sablon.id}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          {deletingSablonId === sablon.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+          )}
           <Link href="/indicatii/nou">
             <Button disabled={isViewer}>
               <Plus className="h-4 w-4 mr-2" />
-              Indicatie noua
+              Sarcina noua
             </Button>
           </Link>
         </div>
@@ -250,7 +359,7 @@ function IndicatiiContent() {
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Cauta indicatii..."
+            placeholder="Cauta sarcini..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -320,11 +429,11 @@ function IndicatiiContent() {
         </div>
       ) : indicatii.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-          <p>Nu s-au gasit indicatii</p>
+          <p>Nu s-au gasit sarcini</p>
           {!isViewer && (
             <Link href="/indicatii/nou">
               <Button variant="outline" className="mt-4">
-                Creeaza prima indicatie
+                Creeaza prima sarcina
               </Button>
             </Link>
           )}

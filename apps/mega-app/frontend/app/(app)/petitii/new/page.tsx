@@ -63,15 +63,15 @@ type FormData = z.infer<typeof formSchema>
 
 export default function NewPetitionPage() {
   const router = useRouter()
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (isViewer) {
+    if (!isAdmin) {
       toast.error('Nu aveți permisiunea de a crea înregistrări noi')
       router.push('/petitii')
     }
-  }, [isViewer, router])
+  }, [isAdmin, router])
 
   const {
     register,

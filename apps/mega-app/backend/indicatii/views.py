@@ -8,11 +8,13 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db.models import Q
 from accounts.permissions import IsOperatorOrReadOnly
-from .models import Indicatie, IndicatieDestinatari, IndicatieComentariu, IndicatieFisier
+from .models import Indicatie, IndicatieDestinatari, IndicatieComentariu, IndicatieFisier, SablonIndicatie
 from .serializers import (
     IndicatieListSerializer, IndicatieDetailSerializer,
-    ComentariuSerializer, FisierSerializer, DestinatarSerializer
+    ComentariuSerializer, FisierSerializer, DestinatarSerializer,
+    SablonSerializer, BulkCreateSerializer
 )
+from persons.models import ConvictedPerson
 
 User = get_user_model()
 
@@ -61,33 +63,7 @@ class IndicatieViewSet(viewsets.ModelViewSet):
         return IndicatieListSerializer
 
     def perform_create(self, serializer):
-        indicatie = serializer.save(created_by=self.request.user)
-        # Create destinatari from destinatari_ids
-        destinatari_ids = self.request.data.get('destinatari_ids', [])
-        for user_id in destinatari_ids:
-            try:
-                user = User.objects.get(id=user_id)
-                IndicatieDestinatari.objects.create(indicatie=indicatie, destinatar=user)
-            except User.DoesNotExist:
-                pass
-
-    def perform_update(self, serializer):
-        indicatie = serializer.save()
-        # Update destinatari if provided
-        destinatari_ids = self.request.data.get('destinatari_ids')
-        if destinatari_ids is not None:
-            # Remove old, add new
-            current_ids = set(indicatie.destinatari.values_list('destinatar_id', flat=True))
-            new_ids = set(destinatari_ids)
-            # Remove
-            indicatie.destinatari.filter(destinatar_id__in=current_ids - new_ids).delete()
-            # Add
-            for user_id in new_ids - current_ids:
-                try:
-                    user = User.objects.get(id=user_id)
-                    IndicatieDestinatari.objects.create(indicatie=indicatie, destinatar=user)
-                except User.DoesNotExist:
-                    pass
+        serializer.save(created_by=self.request.user)
 
     @action(detail=True, methods=['post'])
     def comentarii(self, request, pk=None):
@@ -158,3 +134,53 @@ class IndicatieViewSet(viewsets.ModelViewSet):
             dest.data_indeplinire = None
         dest.save()
         return Response(DestinatarSerializer(dest).data)
+
+    @action(detail=False, methods=['post'], url_path='bulk')
+    def bulk_create(self, request):
+        """Create one indicatie per person in persoane_ids, all with same params."""
+        serializer = BulkCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        persoane = ConvictedPerson.objects.filter(id__in=data['persoane_ids'])
+        if persoane.count() != len(data['persoane_ids']):
+            return Response(
+                {'error': 'Una sau mai multe persoane nu au fost găsite.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        created = []
+        for persoana in persoane:
+            indicatie = Indicatie.objects.create(
+                titlu=data['titlu'],
+                descriere=data['descriere'],
+                prioritate=data['prioritate'],
+                instanta=data.get('instanta', ''),
+                tip_hotarire=data.get('tip_hotarire', ''),
+                data_hotarire=data.get('data_hotarire'),
+                termen_limita=data['termen_limita'],
+                persoana_legata=persoana,
+                created_by=request.user,
+            )
+            for user_id in data['destinatari_ids']:
+                IndicatieDestinatari.objects.create(
+                    indicatie=indicatie, destinatar_id=user_id
+                )
+            created.append(indicatie)
+
+        return Response(
+            IndicatieListSerializer(created, many=True).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+class SablonViewSet(viewsets.ModelViewSet):
+    serializer_class = SablonSerializer
+    permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
+    pagination_class = None
+
+    def get_queryset(self):
+        return SablonIndicatie.objects.all().select_related('created_by').prefetch_related('destinatari_default')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)

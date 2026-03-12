@@ -36,14 +36,14 @@ interface RowData {
 
 export default function NewTransferPage() {
   const router = useRouter()
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
 
   useEffect(() => {
-    if (isViewer) {
+    if (!isAdmin) {
       toast.error('Nu aveți permisiunea de a crea înregistrări noi')
       router.push('/transferuri')
     }
-  }, [isViewer, router])
+  }, [isAdmin, router])
 
   const [transferDate, setTransferDate] = useState<Date | undefined>(new Date())
   const [description, setDescription] = useState('')

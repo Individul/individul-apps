@@ -46,14 +46,14 @@ interface PersonEvaluation {
 
 export default function NewCommissionSessionPage() {
   const router = useRouter()
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
 
   useEffect(() => {
-    if (isViewer) {
+    if (!isAdmin) {
       toast.error('Nu aveți permisiunea de a crea înregistrări noi')
       router.push('/comisia')
     }
-  }, [isViewer, router])
+  }, [isAdmin, router])
 
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date())
   const [sessionNumber, setSessionNumber] = useState('')

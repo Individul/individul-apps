@@ -13,13 +13,13 @@ from .serializers import (
     TransferUpdateSerializer,
 )
 from .exports import export_transfers_xlsx, export_transfers_pdf
-from accounts.permissions import IsOperatorOrReadOnly
+from accounts.permissions import IsAdminOrReadOnly
 from audit.utils import log_action
 
 
 class TransferViewSet(viewsets.ModelViewSet):
     queryset = Transfer.objects.select_related('created_by').prefetch_related('entries')
-    permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     filterset_fields = {
         'year': ['exact'],
         'month': ['exact'],

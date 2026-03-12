@@ -80,7 +80,7 @@ export default function PetitionDetailPage() {
   const router = useRouter()
   const params = useParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
 
   const [petition, setPetition] = useState<Petition | null>(null)
   const [loading, setLoading] = useState(true)
@@ -423,7 +423,7 @@ export default function PetitionDetailPage() {
               variant="default"
               size="default"
               onClick={handleFinalize}
-              disabled={isViewer || finalizing}
+              disabled={!isAdmin || finalizing}
               className="h-10 px-4 bg-green-600 hover:bg-green-700"
             >
               {finalizing ? (
@@ -438,7 +438,7 @@ export default function PetitionDetailPage() {
             variant="destructive"
             size="default"
             onClick={handleDeletePetition}
-            disabled={isViewer || deleting}
+            disabled={!isAdmin || deleting}
             className="h-10 px-4"
           >
             {deleting ? (
@@ -461,7 +461,7 @@ export default function PetitionDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setEditingDetails(true)}
-                disabled={isViewer || editingStatus}
+                disabled={!isAdmin || editingStatus}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Editare
@@ -601,7 +601,7 @@ export default function PetitionDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setEditingStatus(true)}
-                disabled={isViewer || editingDetails}
+                disabled={!isAdmin || editingDetails}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Editare
@@ -685,7 +685,7 @@ export default function PetitionDetailPage() {
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isViewer || uploading}
+              disabled={!isAdmin || uploading}
             >
               {uploading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -734,7 +734,7 @@ export default function PetitionDetailPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteAttachment(attachment.id)}
-                      disabled={isViewer}
+                      disabled={!isAdmin}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

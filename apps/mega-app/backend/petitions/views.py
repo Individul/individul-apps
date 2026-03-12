@@ -20,7 +20,7 @@ from .serializers import (
     PetitionStatsSerializer,
 )
 from .exports import export_petitions_xlsx, export_petitions_pdf
-from accounts.permissions import IsOperatorOrReadOnly
+from accounts.permissions import IsAdminOrReadOnly
 from audit.utils import log_action
 
 
@@ -31,7 +31,7 @@ class LargePagePagination(PageNumberPagination):
 class PetitionViewSet(viewsets.ModelViewSet):
     queryset = Petition.objects.select_related('assigned_to', 'created_by').prefetch_related('attachments')
     pagination_class = LargePagePagination
-    permission_classes = [IsAuthenticated, IsOperatorOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     filterset_fields = {
         'status': ['exact', 'in'],
         'petitioner_type': ['exact', 'in'],

@@ -182,7 +182,7 @@ export default function IndicatieDetailPage({ params }: IndicatieDetailPageProps
   }
 
   async function handleDelete() {
-    if (!indicatie || !confirm('Esti sigur ca vrei sa stergi aceasta indicatie?')) return
+    if (!indicatie || !confirm('Esti sigur ca vrei sa stergi aceasta sarcina?')) return
     const token = localStorage.getItem('access_token')
     if (!token) return
     setDeleting(true)
@@ -302,7 +302,7 @@ export default function IndicatieDetailPage({ params }: IndicatieDetailPageProps
   if (!indicatie) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <p className="text-muted-foreground mb-4">Indicatia nu a fost gasita</p>
+        <p className="text-muted-foreground mb-4">Sarcina nu a fost gasita</p>
         <Link href="/indicatii">
           <Button variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -358,7 +358,7 @@ export default function IndicatieDetailPage({ params }: IndicatieDetailPageProps
                 id="titlu"
                 value={titlu}
                 onChange={(e) => setTitlu(e.target.value)}
-                placeholder="Titlul indicatiei"
+                placeholder="Titlul sarcinii"
                 disabled={isViewer}
               />
             </div>
@@ -382,7 +382,7 @@ export default function IndicatieDetailPage({ params }: IndicatieDetailPageProps
                       el.focus()
                     }
                   }}
-                  placeholder="Descrierea indicatiei"
+                  placeholder="Descrierea sarcinii"
                   className="min-h-[100px] resize-none overflow-hidden"
                   disabled={isViewer}
                 />
@@ -391,7 +391,7 @@ export default function IndicatieDetailPage({ params }: IndicatieDetailPageProps
                   onClick={() => !isViewer && setIsEditingDescriere(true)}
                   className={`min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm whitespace-pre-wrap break-words ${isViewer ? 'cursor-default opacity-50' : 'cursor-text'}`}
                 >
-                  {descriere ? renderTextWithLinks(descriere) : <span className="text-muted-foreground">Descrierea indicatiei</span>}
+                  {descriere ? renderTextWithLinks(descriere) : <span className="text-muted-foreground">Descrierea sarcinii</span>}
                 </div>
               )}
             </div>

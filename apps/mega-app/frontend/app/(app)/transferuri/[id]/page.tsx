@@ -42,7 +42,7 @@ interface RowData {
 export default function TransferDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
   const id = params.id as string
 
   const [transfer, setTransfer] = useState<TransferDetail | null>(null)
@@ -204,7 +204,7 @@ export default function TransferDetailPage() {
         <div className="flex gap-2">
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="destructive" size="sm" className="gap-2" disabled={isViewer}>
+              <Button variant="destructive" size="sm" className="gap-2" disabled={!isAdmin}>
                 <Trash2 className="h-4 w-4" />
                 Sterge
               </Button>
@@ -227,7 +227,7 @@ export default function TransferDetailPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button onClick={handleSave} disabled={isViewer || saving} className="gap-2">
+          <Button onClick={handleSave} disabled={!isAdmin || saving} className="gap-2">
             <Save className="h-4 w-4" />
             {saving ? 'Se salveaza...' : 'Salveaza'}
           </Button>
@@ -248,7 +248,7 @@ export default function TransferDetailPage() {
                   date={transferDate}
                   onSelect={setTransferDate}
                   placeholder="Selecteaza data"
-                  disabled={isViewer}
+                  disabled={!isAdmin}
                 />
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function TransferDetailPage() {
                 placeholder="ex: Transfer lot 1, Transfer urgenta..."
                 rows={2}
                 className="mt-1"
-                disabled={isViewer}
+                disabled={!isAdmin}
               />
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function TransferDetailPage() {
                       onChange={(e) => updateRow(idx, 'veniti_reintorsi', parseInt(e.target.value) || 0)}
                       className="text-center h-8 w-full"
                       placeholder="0"
-                      disabled={isViewer}
+                      disabled={!isAdmin}
                     />
                   </TableCell>
                   <TableCell className="p-1">
@@ -334,7 +334,7 @@ export default function TransferDetailPage() {
                       onChange={(e) => updateRow(idx, 'veniti_noi', parseInt(e.target.value) || 0)}
                       className="text-center h-8 w-full"
                       placeholder="0"
-                      disabled={isViewer}
+                      disabled={!isAdmin}
                     />
                   </TableCell>
                   <TableCell className="p-1">
@@ -345,7 +345,7 @@ export default function TransferDetailPage() {
                       onChange={(e) => updateRow(idx, 'plecati', parseInt(e.target.value) || 0)}
                       className="text-center h-8 w-full"
                       placeholder="0"
-                      disabled={isViewer}
+                      disabled={!isAdmin}
                     />
                   </TableCell>
                   <TableCell className="p-1">
@@ -357,7 +357,7 @@ export default function TransferDetailPage() {
                         onChange={(e) => updateRow(idx, 'plecati_izolator', parseInt(e.target.value) || 0)}
                         className="text-center h-8 w-full border-amber-200 focus:border-amber-400"
                         placeholder="0"
-                        disabled={isViewer}
+                        disabled={!isAdmin}
                       />
                     ) : (
                       <div className="text-center text-slate-300">&ndash;</div>

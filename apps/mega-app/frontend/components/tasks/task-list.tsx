@@ -29,7 +29,7 @@ interface TaskListProps {
 }
 
 export function TaskList({ initialStatus }: TaskListProps) {
-  const { isViewer } = useUserRole();
+  const { isAdmin } = useUserRole();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "ALL">("ALL");
@@ -145,7 +145,7 @@ export function TaskList({ initialStatus }: TaskListProps) {
               <TabsTrigger value="done">Finalizat</TabsTrigger>
             </TabsList>
 
-            <Button onClick={handleNewTask} disabled={isViewer}>
+            <Button onClick={handleNewTask} disabled={!isAdmin}>
               <Plus className="h-4 w-4 mr-2" />
               Sarcina Noua
             </Button>
@@ -159,7 +159,7 @@ export function TaskList({ initialStatus }: TaskListProps) {
             ) : tasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                 <p>Nu s-au gasit sarcini</p>
-                {!isViewer && (
+                {isAdmin && (
                   <Button variant="outline" className="mt-4" onClick={handleNewTask}>
                     Creaza prima ta sarcina
                   </Button>

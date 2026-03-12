@@ -53,7 +53,7 @@ interface PersonEvaluation {
 export default function CommissionDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
   const id = params.id as string
 
   const [session, setSession] = useState<CommissionSessionDetail | null>(null)
@@ -331,7 +331,7 @@ export default function CommissionDetailPage() {
         <div className="flex gap-2">
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="destructive" size="sm" className="gap-2" disabled={isViewer}>
+              <Button variant="destructive" size="sm" className="gap-2" disabled={!isAdmin}>
                 <Trash2 className="h-4 w-4" />
                 Sterge
               </Button>
@@ -354,7 +354,7 @@ export default function CommissionDetailPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button onClick={handleSave} disabled={isViewer || saving} className="gap-2">
+          <Button onClick={handleSave} disabled={!isAdmin || saving} className="gap-2">
             <Save className="h-4 w-4" />
             {saving ? 'Se salveaza...' : 'Salveaza'}
           </Button>
@@ -375,7 +375,7 @@ export default function CommissionDetailPage() {
                   date={sessionDate}
                   onSelect={setSessionDate}
                   placeholder="Selecteaza data"
-                  disabled={isViewer}
+                  disabled={!isAdmin}
                 />
               </div>
             </div>
@@ -386,7 +386,7 @@ export default function CommissionDetailPage() {
                 onChange={(e) => setSessionNumber(e.target.value)}
                 placeholder="ex: Sedinta nr. 5"
                 className="mt-1"
-                disabled={isViewer}
+                disabled={!isAdmin}
               />
             </div>
             <div className="flex-1 min-w-[300px]">
@@ -397,7 +397,7 @@ export default function CommissionDetailPage() {
                 placeholder="Descriere sedinta..."
                 rows={2}
                 className="mt-1"
-                disabled={isViewer}
+                disabled={!isAdmin}
               />
             </div>
           </div>
@@ -434,7 +434,7 @@ export default function CommissionDetailPage() {
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Cautati dupa nume, prenume sau CNP..."
                 className="pl-10"
-                disabled={isViewer}
+                disabled={!isAdmin}
               />
             </div>
             {showResults && searchResults.length > 0 && (
@@ -512,7 +512,7 @@ export default function CommissionDetailPage() {
                           size="icon"
                           className="h-8 w-8 text-slate-400 hover:text-red-500"
                           onClick={() => removePerson(ev.person_id)}
-                          disabled={isViewer}
+                          disabled={!isAdmin}
                         >
                           <X className="h-3.5 w-3.5" />
                         </Button>
@@ -532,7 +532,7 @@ export default function CommissionDetailPage() {
                                     id={`${ev.person_id}-${art.article}`}
                                     checked={art.enabled}
                                     onCheckedChange={(checked) => updateArticle(personIdx, artIdx, 'enabled', !!checked)}
-                                    disabled={isViewer}
+                                    disabled={!isAdmin}
                                   />
                                   <label
                                     htmlFor={`${ev.person_id}-${art.article}`}
@@ -545,7 +545,7 @@ export default function CommissionDetailPage() {
                                       <Select
                                         value={art.program_result}
                                         onValueChange={(v) => updateArticle(personIdx, artIdx, 'program_result', v)}
-                                        disabled={isViewer}
+                                        disabled={!isAdmin}
                                       >
                                         <SelectTrigger className="h-8 text-xs w-[130px]">
                                           <SelectValue />
@@ -559,7 +559,7 @@ export default function CommissionDetailPage() {
                                       <Select
                                         value={art.behavior_result}
                                         onValueChange={(v) => updateArticle(personIdx, artIdx, 'behavior_result', v)}
-                                        disabled={isViewer}
+                                        disabled={!isAdmin}
                                       >
                                         <SelectTrigger className="h-8 text-xs w-[110px]">
                                           <SelectValue />
@@ -573,7 +573,7 @@ export default function CommissionDetailPage() {
                                       <Select
                                         value={art.decision}
                                         onValueChange={(v) => updateArticle(personIdx, artIdx, 'decision', v)}
-                                        disabled={isViewer}
+                                        disabled={!isAdmin}
                                       >
                                         <SelectTrigger className="h-8 text-xs w-[110px]">
                                           <SelectValue />
@@ -589,7 +589,7 @@ export default function CommissionDetailPage() {
                                         onChange={(e) => updateArticle(personIdx, artIdx, 'notes', e.target.value)}
                                         placeholder="Obs..."
                                         className="h-8 text-xs flex-1"
-                                        disabled={isViewer}
+                                        disabled={!isAdmin}
                                       />
                                     </div>
                                   )}
@@ -604,7 +604,7 @@ export default function CommissionDetailPage() {
                             onChange={(e) => updateEvalNotes(personIdx, e.target.value)}
                             placeholder="Observatii generale pentru aceasta persoana..."
                             className="text-xs h-8"
-                            disabled={isViewer}
+                            disabled={!isAdmin}
                           />
                         </div>
                       </div>

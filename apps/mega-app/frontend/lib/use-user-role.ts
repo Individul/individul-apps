@@ -4,15 +4,15 @@ import { useMemo } from 'react'
 
 export type UserRole = 'viewer' | 'operator' | 'admin'
 
-export function useUserRole(): { role: UserRole | null; isViewer: boolean; canEdit: boolean } {
+export function useUserRole(): { role: UserRole | null; isViewer: boolean; isAdmin: boolean; canEdit: boolean } {
   return useMemo(() => {
     if (typeof window === 'undefined') {
-      return { role: null, isViewer: false, canEdit: true }
+      return { role: null, isViewer: false, isAdmin: false, canEdit: true }
     }
 
     const token = localStorage.getItem('access_token')
     if (!token) {
-      return { role: null, isViewer: false, canEdit: true }
+      return { role: null, isViewer: false, isAdmin: false, canEdit: true }
     }
 
     try {
@@ -21,10 +21,11 @@ export function useUserRole(): { role: UserRole | null; isViewer: boolean; canEd
       return {
         role,
         isViewer: role === 'viewer',
+        isAdmin: role === 'admin',
         canEdit: role !== 'viewer',
       }
     } catch {
-      return { role: null, isViewer: false, canEdit: true }
+      return { role: null, isViewer: false, isAdmin: false, canEdit: true }
     }
   }, [])
 }

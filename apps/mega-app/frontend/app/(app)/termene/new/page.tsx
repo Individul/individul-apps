@@ -12,15 +12,15 @@ import { useUserRole } from '@/lib/use-user-role'
 
 export default function NewPersonPage() {
   const router = useRouter()
-  const { isViewer } = useUserRole()
+  const { isAdmin } = useUserRole()
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (isViewer) {
+    if (!isAdmin) {
       toast.error('Nu aveți permisiunea de a crea înregistrări noi')
       router.push('/termene')
     }
-  }, [isViewer, router])
+  }, [isAdmin, router])
   const [formData, setFormData] = useState<PersonCreate>({
     first_name: '',
     last_name: '',
