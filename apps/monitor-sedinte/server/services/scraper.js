@@ -368,9 +368,10 @@ export async function scrapeHotarariInstanta(codInstanta, numePersoana) {
 
   for (const { path, tip } of types) {
     // Try with /ro/ prefix first, fallback without it
+    // Court decisions use pdf_content parameter (not dossier_part)
     const urls = [
-      `${baseUrl}/ro/${path}?dossier_part=${encodeURIComponent(numePersoana)}&apply_filter=1`,
-      `${baseUrl}/${path}?dossier_part=${encodeURIComponent(numePersoana)}&apply_filter=1`
+      `${baseUrl}/ro/${path}?pdf_content=${encodeURIComponent(numePersoana)}&type=Any&apply_filter=1`,
+      `${baseUrl}/${path}?pdf_content=${encodeURIComponent(numePersoana)}&type=Any&apply_filter=1`
     ];
 
     for (const url of urls) {
@@ -393,12 +394,14 @@ export async function scrapeHotarariInstanta(codInstanta, numePersoana) {
 
         $('table tbody tr').each((_, row) => {
           const cells = $(row).find('td');
-          if (cells.length < 4) return;
+          if (cells.length < 7) return;
 
+          // Columns: 0=Nr.dosar, 1=Denumire, 2=Data pronuntare, 3=Data inregistrare,
+          //          4=Data publicare, 5=Tip dosar, 6=Tematica, 7=Judecator, 8=Act(PDF)
           const numarDosar = $(cells[0]).text().trim();
-          const dataPronuntare = $(cells[1]).text().trim();
-          const judecator = $(cells[2]).text().trim();
-          const solutie = $(cells[3]).text().trim();
+          const dataPronuntare = $(cells[2]).text().trim();
+          const judecator = cells.length > 7 ? $(cells[7]).text().trim() : '';
+          const solutie = $(cells[1]).text().trim();
 
           let pdfLink = '';
           const link = $(cells[cells.length - 1]).find('a');
