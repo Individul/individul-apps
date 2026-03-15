@@ -45,6 +45,7 @@ services:
     volumes:
       - media_data:/app/media
       - static_data:/app/staticfiles
+      - ./raport-data:/app/raport-data:ro
     depends_on:
       db:
         condition: service_healthy

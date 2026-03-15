@@ -1,26 +1,20 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Search, ChevronDown, ChevronRight, Calendar, Users } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { Search, ChevronDown, ChevronRight, Calendar } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import rawData from '@/data/raport-termen.json'
-
-interface ConvictedPerson {
-  nr: number
-  nume: string
-  prenume: string
-  patronimic: string | null
-  datasfarsit: string
-}
+import { Skeleton } from '@/components/ui/skeleton'
+import { reportsApi, type RaportTermenPerson } from '@/lib/api'
 
 interface MonthGroup {
   month: number
   monthName: string
-  persons: ConvictedPerson[]
+  persons: RaportTermenPerson[]
 }
 
 interface YearGroup {
@@ -34,7 +28,7 @@ const MONTH_NAMES = [
   'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'
 ]
 
-function buildGroupedData(data: ConvictedPerson[], searchQuery: string): YearGroup[] {
+function buildGroupedData(data: RaportTermenPerson[], searchQuery: string): YearGroup[] {
   const query = searchQuery.toLowerCase().trim()
   const filtered = query
     ? data.filter(p =>
@@ -44,7 +38,7 @@ function buildGroupedData(data: ConvictedPerson[], searchQuery: string): YearGro
       )
     : data
 
-  const yearMap = new Map<number, Map<number, ConvictedPerson[]>>()
+  const yearMap = new Map<number, Map<number, RaportTermenPerson[]>>()
 
   for (const person of filtered) {
     if (!person.datasfarsit) continue
@@ -79,11 +73,26 @@ function formatDate(dateStr: string): string {
 }
 
 export default function StatisticiPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedYears, setExpandedYears] = useState<Set<number>>(() => new Set([2026, 2027]))
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => new Set(['2026-3']))
+  const [data, setData] = useState<RaportTermenPerson[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const data = rawData as ConvictedPerson[]
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    reportsApi.getRaportTermen(token)
+      .then(setData)
+      .catch(() => setError('Nu s-au putut incarca datele.'))
+      .finally(() => setIsLoading(false))
+  }, [router])
+
   const groupedData = useMemo(() => buildGroupedData(data, searchQuery), [data, searchQuery])
   const totalFiltered = useMemo(() => groupedData.reduce((sum, y) => sum + y.totalCount, 0), [groupedData])
 
@@ -116,6 +125,34 @@ export default function StatisticiPage() {
   const collapseAll = () => {
     setExpandedYears(new Set())
     setExpandedMonths(new Set())
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-24 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-72" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-96 rounded-lg" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-sm text-red-500">{error}</p>
+      </div>
+    )
   }
 
   return (

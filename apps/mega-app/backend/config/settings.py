@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'transfers',
     'commissions',
     'indicatii',
+    'reports',
 ]
 
 MIDDLEWARE = [

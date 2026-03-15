@@ -1617,4 +1617,25 @@ export const indicatiiApi = {
     fetchApi<PaginatedResponse<Person>>(`/api/v1/persons/?search=${encodeURIComponent(search)}&page_size=50`, { token }),
 }
 
+// =============================================================================
+// Types - Reports (rapoarte statice)
+// =============================================================================
+
+export interface RaportTermenPerson {
+  nr: number
+  nume: string
+  prenume: string
+  patronimic: string | null
+  datasfarsit: string
+}
+
+// =============================================================================
+// Reports API
+// =============================================================================
+
+export const reportsApi = {
+  getRaportTermen: (token: string) =>
+    fetchApi<RaportTermenPerson[]>('/api/v1/reports/raport-termen/', { token }),
+}
+
 export { ApiError }
