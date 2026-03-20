@@ -283,6 +283,42 @@ export default function TransferDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Summary */}
+      {rows.some(r => (r.veniti_reintorsi + r.veniti_noi) > 0 || r.plecati > 0) && (
+        <Card className="border-blue-100 bg-blue-50/30">
+          <CardContent className="py-3 px-4">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              {(() => {
+                const sositiRows = rows.filter(r => (r.veniti_reintorsi + r.veniti_noi) > 0)
+                const plecatiRows = rows.filter(r => r.plecati > 0)
+                const totalSositi = sositiRows.reduce((s, r) => s + r.veniti_reintorsi + r.veniti_noi, 0)
+                const totalPlecati = plecatiRows.reduce((s, r) => s + r.plecati, 0)
+                return (
+                  <>
+                    {sositiRows.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-blue-700">Sosiți — {totalSositi}: </span>
+                        <span className="text-slate-700">
+                          {sositiRows.map(r => `${r.label} — ${r.veniti_reintorsi + r.veniti_noi}`).join('; ')}
+                        </span>
+                      </div>
+                    )}
+                    {plecatiRows.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-green-700">Plecați — {totalPlecati}: </span>
+                        <span className="text-slate-700">
+                          {plecatiRows.map(r => `${r.label} — ${r.plecati}`).join('; ')}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Entries Table */}
       <Card>
         <CardContent className="p-0">

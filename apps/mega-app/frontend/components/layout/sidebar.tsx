@@ -19,6 +19,7 @@ import {
   ClipboardList,
   CalendarClock,
   Settings,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -43,6 +44,7 @@ const secondary = [
 ]
 
 const external = [
+  { name: 'E-Biblioteca', href: '/e-biblioteca/', icon: BookOpen },
   { name: 'Clasificare', href: '/clasificare/', icon: Calculator },
   { name: 'PDF Toolbox', href: '/pdf/', icon: FileBox },
   { name: 'Monitor Ședințe', href: '/monitor/', icon: Gavel },

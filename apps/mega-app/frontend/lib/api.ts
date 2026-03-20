@@ -1629,6 +1629,13 @@ export interface RaportTermenPerson {
   datasfarsit: string
 }
 
+export interface DosarDefectPerson {
+  nume: string
+  prenume: string
+  status: string
+  category: string
+}
+
 // =============================================================================
 // Reports API
 // =============================================================================
@@ -1636,6 +1643,12 @@ export interface RaportTermenPerson {
 export const reportsApi = {
   getRaportTermen: (token: string) =>
     fetchApi<RaportTermenPerson[]>('/api/v1/reports/raport-termen/', { token }),
+  getDosarDefect: (token: string) =>
+    fetchApi<DosarDefectPerson[]>('/api/v1/reports/dosar-defect/', { token }),
+  getLastSync: (token: string) =>
+    fetchApi<{ last_sync: string | null }>('/api/v1/reports/raport-termen/last-sync/', { token }),
+  requestSync: (token: string) =>
+    fetchApi<{ status: string; message: string }>('/api/v1/reports/raport-termen/request-sync/', { token, method: 'POST' }),
 }
 
 export { ApiError }

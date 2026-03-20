@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, ChevronDown, ChevronRight, Calendar } from 'lucide-react'
+import { Search, ChevronDown, ChevronRight, Calendar, AlertTriangle, RefreshCw } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
-import { reportsApi, type RaportTermenPerson } from '@/lib/api'
+import { reportsApi, type RaportTermenPerson, type DosarDefectPerson } from '@/lib/api'
 
 interface MonthGroup {
   month: number
@@ -27,6 +28,12 @@ const MONTH_NAMES = [
   '', 'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
   'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'
 ]
+
+const CATEGORY_LABELS: Record<string, string> = {
+  CUMULARE: 'Cumulare',
+  AREST_PREVENTIV: 'Arest preventiv',
+  NECLARITATI: 'Neclarități',
+}
 
 function buildGroupedData(data: RaportTermenPerson[], searchQuery: string): YearGroup[] {
   const query = searchQuery.toLowerCase().trim()
@@ -72,29 +79,93 @@ function formatDate(dateStr: string): string {
   return `${d}.${m}.${y}`
 }
 
+// Build a lookup set for dosar defect matching
+function buildDefectLookup(defectList: DosarDefectPerson[]): Map<string, DosarDefectPerson> {
+  const map = new Map<string, DosarDefectPerson>()
+  for (const d of defectList) {
+    // Key: "NUME|PRENUME" normalized
+    const key = `${d.nume.toLowerCase()}|${d.prenume.toLowerCase()}`
+    map.set(key, d)
+  }
+  return map
+}
+
+function getDefectInfo(person: RaportTermenPerson, lookup: Map<string, DosarDefectPerson>): DosarDefectPerson | null {
+  const key = `${person.nume.toLowerCase()}|${person.prenume.toLowerCase()}`
+  return lookup.get(key) || null
+}
+
 export default function StatisticiPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedYears, setExpandedYears] = useState<Set<number>>(() => new Set([2026, 2027]))
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => new Set(['2026-3']))
   const [data, setData] = useState<RaportTermenPerson[]>([])
+  const [defectList, setDefectList] = useState<DosarDefectPerson[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastSync, setLastSync] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
 
-  useEffect(() => {
+  const loadData = () => {
     const token = localStorage.getItem('access_token')
     if (!token) {
       router.push('/login')
       return
     }
-    reportsApi.getRaportTermen(token)
-      .then(setData)
+    Promise.all([
+      reportsApi.getRaportTermen(token),
+      reportsApi.getDosarDefect(token).catch(() => [] as DosarDefectPerson[]),
+      reportsApi.getLastSync(token).catch(() => ({ last_sync: null })),
+    ])
+      .then(([raportData, defectData, syncInfo]) => {
+        setData(raportData)
+        setDefectList(defectData)
+        setLastSync(syncInfo.last_sync)
+      })
       .catch(() => setError('Nu s-au putut incarca datele.'))
       .finally(() => setIsLoading(false))
+  }
+
+  useEffect(() => {
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
+
+  const handleRequestSync = async () => {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    setSyncing(true)
+    setSyncMessage(null)
+    try {
+      await reportsApi.requestSync(token)
+      setSyncMessage('Sincronizare solicitată. Datele se vor actualiza în 1-2 minute.')
+      // Poll for updated data after a delay
+      setTimeout(() => {
+        loadData()
+        setSyncMessage(null)
+      }, 90000) // Re-fetch after 90s
+    } catch {
+      setSyncMessage('Eroare la solicitarea sincronizării.')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const formatSyncTime = (iso: string) => {
+    try {
+      const d = new Date(iso)
+      return d.toLocaleString('ro-RO', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      })
+    } catch { return '' }
+  }
 
   const groupedData = useMemo(() => buildGroupedData(data, searchQuery), [data, searchQuery])
   const totalFiltered = useMemo(() => groupedData.reduce((sum, y) => sum + y.totalCount, 0), [groupedData])
+  const defectLookup = useMemo(() => buildDefectLookup(defectList), [defectList])
 
   const toggleYear = (year: number) => {
     setExpandedYears(prev => {
@@ -163,19 +234,50 @@ export default function StatisticiPage() {
           <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Statistici Termen</h1>
           <p className="text-sm text-gray-500 mt-1">
             {searchQuery ? `${totalFiltered} din ${data.length}` : `${data.length}`} persoane
+            {defectList.length > 0 && (
+              <span className="ml-2 text-orange-600">
+                ({defectList.length} dosare defecte)
+              </span>
+            )}
           </p>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Cauta dupa nume..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent"
-          />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {lastSync && (
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                {formatSyncTime(lastSync)}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleRequestSync}
+              disabled={syncing}
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              Actualizează
+            </Button>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cauta dupa nume..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+            />
+          </div>
         </div>
       </div>
+
+      {/* Sync message */}
+      {syncMessage && (
+        <div className="px-4 py-2.5 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-700">
+          {syncMessage}
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -277,20 +379,37 @@ export default function StatisticiPage() {
                                 <TableHead className="text-xs">Prenume</TableHead>
                                 <TableHead className="text-xs">Patronimic</TableHead>
                                 <TableHead className="text-xs w-28">Sfarsit termen</TableHead>
+                                <TableHead className="text-xs w-10"></TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {monthGroup.persons.map((person, idx) => (
-                                <TableRow key={`${person.nr}-${idx}`} className="border-b border-gray-50">
-                                  <TableCell className="text-xs text-gray-400 tabular-nums py-1.5">{person.nr}</TableCell>
-                                  <TableCell className="text-sm font-medium text-slate-800 py-1.5">{person.nume}</TableCell>
-                                  <TableCell className="text-sm text-slate-700 py-1.5">{person.prenume}</TableCell>
-                                  <TableCell className="text-sm text-slate-500 py-1.5">{person.patronimic || '—'}</TableCell>
-                                  <TableCell className="text-sm font-mono text-slate-700 tabular-nums py-1.5">
-                                    {formatDate(person.datasfarsit)}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                              {monthGroup.persons.map((person, idx) => {
+                                const defect = getDefectInfo(person, defectLookup)
+                                return (
+                                  <TableRow
+                                    key={`${person.nr}-${idx}`}
+                                    className={`border-b border-gray-50 ${defect ? 'bg-orange-50/50' : ''}`}
+                                  >
+                                    <TableCell className="text-xs text-gray-400 tabular-nums py-1.5">{person.nr}</TableCell>
+                                    <TableCell className="text-sm font-medium text-slate-800 py-1.5">{person.nume}</TableCell>
+                                    <TableCell className="text-sm text-slate-700 py-1.5">{person.prenume}</TableCell>
+                                    <TableCell className="text-sm text-slate-500 py-1.5">{person.patronimic || '—'}</TableCell>
+                                    <TableCell className="text-sm font-mono text-slate-700 tabular-nums py-1.5">
+                                      {formatDate(person.datasfarsit)}
+                                    </TableCell>
+                                    <TableCell className="py-1.5">
+                                      {defect && (
+                                        <span
+                                          title={`Dosar defect: ${CATEGORY_LABELS[defect.category] || defect.category} (${defect.status === 'TODO' ? 'De facut' : 'In progress'})`}
+                                          className="inline-flex items-center"
+                                        >
+                                          <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                        </span>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              })}
                             </TableBody>
                           </Table>
                         </div>
