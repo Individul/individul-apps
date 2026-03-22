@@ -38,6 +38,7 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
   const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState<TaskUser[]>([]);
   const [assignee, setAssignee] = useState<string>("none");
+  const [csjExaminare, setCsjExaminare] = useState(false);
 
   const isEditing = !!task;
 
@@ -48,6 +49,7 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
         tasksApi.users(token).then(setUsers).catch(console.error);
       }
       setAssignee(task?.assignee?.toString() || "none");
+      setCsjExaminare(task?.csj_examinare || false);
     }
   }, [open, task]);
 
@@ -72,6 +74,7 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
       tags,
       deadline: formData.get("deadline") as string || null,
       assignee: assignee && assignee !== "none" ? parseInt(assignee) : null,
+      csj_examinare: csjExaminare,
     };
 
     try {
@@ -218,6 +221,19 @@ export function TaskForm({ task, open, onOpenChange, onSuccess }: TaskFormProps)
               type="date"
               defaultValue={task?.deadline || ""}
             />
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <input
+              type="checkbox"
+              id="csj_examinare_form"
+              checked={csjExaminare}
+              onChange={(e) => setCsjExaminare(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <Label htmlFor="csj_examinare_form" className="cursor-pointer">
+              În examinare la CSJ
+            </Label>
           </div>
 
           <SheetFooter className="flex gap-2 pt-4">

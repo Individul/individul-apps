@@ -50,6 +50,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'deadline',
             'assignee',
             'assignee_details',
+            'csj_examinare',
             'created_at',
             'updated_at',
         ]

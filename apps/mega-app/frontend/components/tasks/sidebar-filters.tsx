@@ -233,6 +233,7 @@ export function SidebarFilters({
           </div>
         </div>
       </div>
+
     </aside>
   );
 }

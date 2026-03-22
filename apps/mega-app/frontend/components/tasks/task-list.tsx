@@ -40,6 +40,7 @@ export function TaskList({ initialStatus }: TaskListProps) {
   const [deadlineFrom, setDeadlineFrom] = useState<string>("");
   const [deadlineTo, setDeadlineTo] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>(statusToTab(initialStatus));
+  const [csjFilter, setCsjFilter] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
 
   const loadTasks = useCallback(async () => {
@@ -53,7 +54,7 @@ export function TaskList({ initialStatus }: TaskListProps) {
       // Use sidebar filter or tab filter for status
       if (statusFilter !== "ALL") {
         params.append("status", statusFilter);
-      } else if (activeTab !== "all") {
+      } else if (activeTab !== "all" && activeTab !== "csj") {
         params.append("status", activeTab.toUpperCase().replace("-", "_"));
       }
 
@@ -111,7 +112,8 @@ export function TaskList({ initialStatus }: TaskListProps) {
 
   function handleTabChange(tab: string) {
     setActiveTab(tab);
-    if (tab !== "all") {
+    setCsjFilter(tab === "csj");
+    if (tab !== "all" && tab !== "csj") {
       setStatusFilter("ALL"); // Reset sidebar filter when using tabs
     }
   }
@@ -143,6 +145,7 @@ export function TaskList({ initialStatus }: TaskListProps) {
               <TabsTrigger value="todo">De facut</TabsTrigger>
               <TabsTrigger value="in-progress">In progres</TabsTrigger>
               <TabsTrigger value="done">Finalizat</TabsTrigger>
+              <TabsTrigger value="csj">Examinare CSJ</TabsTrigger>
             </TabsList>
 
             <Button onClick={handleNewTask} disabled={!isAdmin}>
@@ -152,28 +155,31 @@ export function TaskList({ initialStatus }: TaskListProps) {
           </div>
 
           <TabsContent value={activeTab} className="flex-1 mt-0">
-            {loading ? (
-              <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : tasks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                <p>Nu s-au gasit sarcini</p>
-                {isAdmin && (
-                  <Button variant="outline" className="mt-4" onClick={handleNewTask}>
-                    Creaza prima ta sarcina
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <ScrollArea className="h-[calc(100vh-12rem)]">
-                <div className="grid gap-4 pr-4">
-                  {tasks.map((task) => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
+            {(() => {
+              const filtered = csjFilter ? tasks.filter(t => t.csj_examinare) : tasks;
+              return loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              </ScrollArea>
-            )}
+              ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  <p>Nu s-au gasit sarcini</p>
+                  {isAdmin && !csjFilter && (
+                    <Button variant="outline" className="mt-4" onClick={handleNewTask}>
+                      Creaza prima ta sarcina
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <ScrollArea className="h-[calc(100vh-12rem)]">
+                  <div className="grid gap-4 pr-4">
+                    {filtered.map((task) => (
+                      <TaskCard key={task.id} task={task} />
+                    ))}
+                  </div>
+                </ScrollArea>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </div>

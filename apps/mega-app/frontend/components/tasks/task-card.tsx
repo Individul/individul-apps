@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, PriorityBadge } from "@/components/tasks/status-badge";
 import { Task } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
-import { Calendar, Tag, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Tag, User, Scale } from "lucide-react";
 
 interface TaskCardProps {
   task: Task;
@@ -23,9 +24,14 @@ function getCategoryLabel(category: string): string {
 export function TaskCard({ task }: TaskCardProps) {
   return (
     <Link href={`/tasks/${task.id}`}>
-      <Card className="cursor-pointer hover:shadow-md transition-shadow">
+      <Card className="cursor-pointer hover:shadow-md transition-shadow relative overflow-hidden">
+        {task.csj_examinare && (
+          <div className="absolute -right-11 top-4 rotate-45 bg-red-500 text-white text-[10px] font-bold py-1 shadow-sm z-10 text-center w-40">
+            Examinare CSJ
+          </div>
+        )}
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-medium line-clamp-1">
+          <CardTitle className="text-base font-medium line-clamp-1 pr-16">
             {task.title}
           </CardTitle>
         </CardHeader>

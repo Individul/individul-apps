@@ -155,12 +155,22 @@ for row in range(start_row, table.num_rows):
     else:
         nr = row + 1 - start_row
 
+    # Check for nota/mention in columns after the date column
+    nota = None
+    date_col_idx = col_map.get('datasfarsit', 3)
+    for c in range(date_col_idx + 1, num_cols):
+        v = table.cell(row, c).value
+        if v is not None and str(v).strip():
+            nota = str(v).strip()
+            break
+
     records.append({
         'nr': nr,
         'nume': nume,
         'prenume': prenume,
         'patronimic': patronimic,
         'datasfarsit': datasfarsit,
+        'nota': nota,
     })
 
 with open('$TEMP_JSON', 'w', encoding='utf-8') as f:

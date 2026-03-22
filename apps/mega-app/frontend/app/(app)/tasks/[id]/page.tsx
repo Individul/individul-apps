@@ -83,6 +83,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const [tags, setTags] = useState("");
   const [deadline, setDeadline] = useState("");
   const [assignee, setAssignee] = useState<string>("none");
+  const [csjExaminare, setCsjExaminare] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -108,6 +109,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
       setTags(data.tags?.join(", ") || "");
       setDeadline(data.deadline || "");
       setAssignee(data.assignee?.toString() || "none");
+      setCsjExaminare(data.csj_examinare || false);
     } catch (error) {
       console.error("Failed to load task:", error);
     } finally {
@@ -133,6 +135,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
         tags: tagsArray,
         deadline: deadline || null,
         assignee: assignee !== "none" ? parseInt(assignee) : null,
+        csj_examinare: csjExaminare,
       });
       await loadTask();
     } catch (error) {
@@ -267,6 +270,11 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           <div className="flex items-center gap-2">
             <StatusBadge status={task.status} />
             <PriorityBadge priority={task.priority} />
+            {task.csj_examinare && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded">
+                Examinare CSJ
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -410,6 +418,20 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 onChange={(e) => setDeadline(e.target.value)}
                 disabled={!isAdmin}
               />
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="csj_examinare"
+                checked={csjExaminare}
+                onChange={(e) => setCsjExaminare(e.target.checked)}
+                disabled={!isAdmin}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <Label htmlFor="csj_examinare" className="cursor-pointer">
+                În examinare la CSJ
+              </Label>
             </div>
           </div>
         </div>

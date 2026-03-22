@@ -46,6 +46,7 @@ class Task(models.Model):
         blank=True,
         related_name='tasks'
     )
+    csj_examinare = models.BooleanField(default=False, verbose_name='În examinare la CSJ')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

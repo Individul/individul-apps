@@ -35,15 +35,23 @@ const CATEGORY_LABELS: Record<string, string> = {
   NECLARITATI: 'Neclarități',
 }
 
-function buildGroupedData(data: RaportTermenPerson[], searchQuery: string): YearGroup[] {
+function hasZpm(person: RaportTermenPerson): boolean {
+  return !!(person.nota && /^\d+(\.\d+)?$/.test(person.nota.trim()))
+}
+
+function buildGroupedData(data: RaportTermenPerson[], searchQuery: string, onlyZpm: boolean): YearGroup[] {
   const query = searchQuery.toLowerCase().trim()
-  const filtered = query
+  let filtered = query
     ? data.filter(p =>
         p.nume.toLowerCase().includes(query) ||
         p.prenume.toLowerCase().includes(query) ||
         (p.patronimic && p.patronimic.toLowerCase().includes(query))
       )
     : data
+
+  if (onlyZpm) {
+    filtered = filtered.filter(hasZpm)
+  }
 
   const yearMap = new Map<number, Map<number, RaportTermenPerson[]>>()
 
@@ -107,6 +115,7 @@ export default function StatisticiPage() {
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
+  const [onlyZpm, setOnlyZpm] = useState(false)
 
   const loadData = () => {
     const token = localStorage.getItem('access_token')
@@ -163,7 +172,8 @@ export default function StatisticiPage() {
     } catch { return '' }
   }
 
-  const groupedData = useMemo(() => buildGroupedData(data, searchQuery), [data, searchQuery])
+  const groupedData = useMemo(() => buildGroupedData(data, searchQuery, onlyZpm), [data, searchQuery, onlyZpm])
+  const zpmCount = useMemo(() => data.filter(hasZpm).length, [data])
   const totalFiltered = useMemo(() => groupedData.reduce((sum, y) => sum + y.totalCount, 0), [groupedData])
   const defectLookup = useMemo(() => buildDefectLookup(defectList), [defectList])
 
@@ -297,8 +307,8 @@ export default function StatisticiPage() {
         ))}
       </div>
 
-      {/* Expand/Collapse buttons */}
-      <div className="flex gap-2">
+      {/* Expand/Collapse + Filter buttons */}
+      <div className="flex items-center gap-2">
         <button
           onClick={expandAll}
           className="text-xs text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded border border-gray-200 hover:border-slate-300 transition-colors"
@@ -311,6 +321,18 @@ export default function StatisticiPage() {
         >
           Colaseaza tot
         </button>
+        <div className="ml-auto">
+          <button
+            onClick={() => setOnlyZpm(!onlyZpm)}
+            className={`text-xs px-3 py-1.5 rounded border transition-colors font-medium ${
+              onlyZpm
+                ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200'
+                : 'text-slate-600 hover:text-slate-900 border-gray-200 hover:border-slate-300'
+            }`}
+          >
+            ZPM ({zpmCount})
+          </button>
+        </div>
       </div>
 
       {/* Year sections */}
@@ -379,6 +401,7 @@ export default function StatisticiPage() {
                                 <TableHead className="text-xs">Prenume</TableHead>
                                 <TableHead className="text-xs">Patronimic</TableHead>
                                 <TableHead className="text-xs w-28">Sfarsit termen</TableHead>
+                                <TableHead className="text-xs w-24">ZPM</TableHead>
                                 <TableHead className="text-xs w-10"></TableHead>
                               </TableRow>
                             </TableHeader>
@@ -396,6 +419,11 @@ export default function StatisticiPage() {
                                     <TableCell className="text-sm text-slate-500 py-1.5">{person.patronimic || '—'}</TableCell>
                                     <TableCell className="text-sm font-mono text-slate-700 tabular-nums py-1.5">
                                       {formatDate(person.datasfarsit)}
+                                    </TableCell>
+                                    <TableCell className="text-sm text-center tabular-nums py-1.5">
+                                      {person.nota && /^\d+(\.\d+)?$/.test(person.nota.trim()) && (
+                                        <span className="text-green-700 font-semibold">{Math.round(parseFloat(person.nota))}</span>
+                                      )}
                                     </TableCell>
                                     <TableCell className="py-1.5">
                                       {defect && (

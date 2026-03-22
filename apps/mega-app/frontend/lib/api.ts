@@ -655,6 +655,7 @@ export interface Task {
   deadline: string | null
   assignee: number | null
   assignee_details: TaskUser | null
+  csj_examinare: boolean
   created_at: string
   updated_at: string
 }
@@ -672,6 +673,7 @@ export interface TaskCreate {
   tags?: string[]
   deadline?: string | null
   assignee?: number | null
+  csj_examinare?: boolean
 }
 
 export interface TaskUser {
@@ -1627,6 +1629,7 @@ export interface RaportTermenPerson {
   prenume: string
   patronimic: string | null
   datasfarsit: string
+  nota: string | null
 }
 
 export interface DosarDefectPerson {
