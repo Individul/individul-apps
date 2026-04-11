@@ -6,6 +6,8 @@ ns.cache = {}
 -- Inspect queue: list of unitIDs waiting to be inspected
 ns.inspectQueue = {}
 ns.inspectBusy = false
+ns.inspectNonce = 0
+ns.inspectQueued = {} -- set of GUIDs already in queue (dedup)
 
 -- Main event frame
 local frame = CreateFrame("Frame")
@@ -49,6 +51,10 @@ local function ProcessInspectQueue()
     end
 
     local unit = table.remove(ns.inspectQueue, 1)
+    local guid = UnitGUID(unit)
+    if guid then
+        ns.inspectQueued[guid] = nil
+    end
 
     -- Skip invalid/out-of-range units
     if not UnitExists(unit) or not UnitIsVisible(unit) or not CanInspect(unit) then
@@ -58,23 +64,33 @@ local function ProcessInspectQueue()
     end
 
     ns.inspectBusy = true
+    ns.inspectNonce = ns.inspectNonce + 1
+    local myNonce = ns.inspectNonce
     NotifyInspect(unit)
 
     -- Safety timeout: if INSPECT_READY never fires, unblock after 3s
     C_Timer.After(3, function()
-        ns.inspectBusy = false
-        ProcessInspectQueue()
+        if ns.inspectNonce == myNonce then
+            ns.inspectBusy = false
+            ProcessInspectQueue()
+        end
     end)
+end
+
+local function QueueInspect(unit)
+    local guid = UnitGUID(unit)
+    if guid and not ns.cache[guid] and not ns.inspectQueued[guid] then
+        ns.inspectQueued[guid] = true
+        table.insert(ns.inspectQueue, unit)
+    end
 end
 
 local function QueueInspectAll()
     ns.inspectQueue = {}
+    ns.inspectQueued = {}
     local units = GetGroupUnitIDs()
     for _, unit in ipairs(units) do
-        local guid = UnitGUID(unit)
-        if guid and not ns.cache[guid] then
-            table.insert(ns.inspectQueue, unit)
-        end
+        QueueInspect(unit)
     end
     ProcessInspectQueue()
 end
@@ -103,6 +119,7 @@ function ns.GROUP_ROSTER_UPDATE()
 end
 
 function ns.INSPECT_READY(inspecteeGUID)
+    ns.inspectNonce = ns.inspectNonce + 1 -- invalidate pending safety timeout
     ns.inspectBusy = false
 
     -- Find the unit for this GUID
@@ -124,6 +141,8 @@ function ns.INSPECT_READY(inspecteeGUID)
         end
     end
 
+    ClearInspectPlayer()
+
     -- Process next in queue
     C_Timer.After(INSPECT_THROTTLE, ProcessInspectQueue)
 end
@@ -133,7 +152,7 @@ function ns.UNIT_INVENTORY_CHANGED(unit)
         local guid = UnitGUID(unit)
         if guid then
             ns.cache[guid] = nil
-            table.insert(ns.inspectQueue, unit)
+            QueueInspect(unit)
             ProcessInspectQueue()
         end
     end
@@ -163,7 +182,7 @@ TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tool
     else
         -- Queue inspect for next time
         if CanInspect(unit) then
-            table.insert(ns.inspectQueue, unit)
+            QueueInspect(unit)
             ProcessInspectQueue()
         end
     end
