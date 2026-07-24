@@ -62,3 +62,38 @@ export async function deleteTask(id: string): Promise<ActionResult> {
   revalidatePath("/tasks");
   return { success: true };
 }
+
+export async function createTag(name: string, color: string): Promise<{ error?: string; tag?: { id: string; name: string; color: string } }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Numele etichetei e obligatoriu." };
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("tags")
+    .insert({ name: trimmed, color })
+    .select()
+    .single();
+  if (error) return { error: error.message };
+  return { tag: data as { id: string; name: string; color: string } };
+}
+
+export async function attachTag(taskId: string, tagId: string): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createClient();
+  const { error } = await supabase.from("task_tags").insert({ task_id: taskId, tag_id: tagId });
+  if (error) return { error: error.message };
+  revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/tasks");
+  return { success: true };
+}
+
+export async function detachTag(taskId: string, tagId: string): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("task_tags")
+    .delete()
+    .eq("task_id", taskId)
+    .eq("tag_id", tagId);
+  if (error) return { error: error.message };
+  revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/tasks");
+  return { success: true };
+}
