@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 
@@ -111,14 +111,13 @@ export function makeColumns({ onEdit, onDelete }: ColumnHandlers): ColumnDef<Tas
     accessorKey: "due_date",
     header: ({ column }) => <SortableHeader column={column} label="Termen" />,
     cell: ({ row }) => {
-      const due = row.original.due_date;
-      if (!due) return <span className="text-muted-foreground">—</span>;
-      const date = new Date(due);
+      if (!row.original.due_date) return <span className="text-muted-foreground">—</span>;
+      const due = parseISO(row.original.due_date);
       const now = new Date();
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const overdue = date < startOfToday && row.original.status !== "done";
+      const overdue = due < startOfToday && row.original.status !== "done";
       return (
-        <span className={cn(overdue && "text-red-600")}>{format(date, "d MMM yyyy")}</span>
+        <span className={cn(overdue && "text-red-600")}>{format(due, "d MMM yyyy")}</span>
       );
     },
   },

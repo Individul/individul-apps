@@ -40,8 +40,13 @@ export async function updateTask(id: string, input: TaskInput): Promise<ActionRe
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Date invalide." };
 
   const supabase = createClient();
-  const { error } = await supabase.from("tasks").update(normalize(parsed.data)).eq("id", id);
+  const { data, error } = await supabase
+    .from("tasks")
+    .update(normalize(parsed.data))
+    .eq("id", id)
+    .select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Task inexistent sau fără permisiune." };
 
   revalidatePath("/tasks");
   revalidatePath(`/tasks/${id}`);
@@ -50,8 +55,10 @@ export async function updateTask(id: string, input: TaskInput): Promise<ActionRe
 
 export async function deleteTask(id: string): Promise<ActionResult> {
   const supabase = createClient();
-  const { error } = await supabase.from("tasks").delete().eq("id", id);
+  const { data, error } = await supabase.from("tasks").delete().eq("id", id).select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Task inexistent sau fără permisiune." };
+
   revalidatePath("/tasks");
   return { success: true };
 }
