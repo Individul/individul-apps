@@ -1,17 +1,7 @@
-# Backend
-backend/__pycache__/
-backend/**/__pycache__/
-backend/*.pyc
-backend/db.sqlite3
-backend/staticfiles/
-backend/.env
-
-# Frontend
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/.env.local
-frontend/.env
-
-# Docker
-.env
+node_modules/
+.next/
+.env*.local
+.vercel
+*.tsbuildinfo
+playwright-report/
+test-results/
