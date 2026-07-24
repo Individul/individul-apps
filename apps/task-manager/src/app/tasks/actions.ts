@@ -97,3 +97,47 @@ export async function detachTag(taskId: string, tagId: string): Promise<{ error?
   revalidatePath("/tasks");
   return { success: true };
 }
+
+export async function addComment(taskId: string, body: string): Promise<{ error?: string; success?: boolean }> {
+  const trimmed = body.trim();
+  if (!trimmed) return { error: "Comentariul nu poate fi gol." };
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+
+  const { error } = await supabase
+    .from("comments")
+    .insert({ task_id: taskId, author_id: userId, body: trimmed });
+  if (error) return { error: error.message };
+  revalidatePath(`/tasks/${taskId}`);
+  return { success: true };
+}
+
+export async function editComment(commentId: string, taskId: string, body: string): Promise<{ error?: string; success?: boolean }> {
+  const trimmed = body.trim();
+  if (!trimmed) return { error: "Comentariul nu poate fi gol." };
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .update({ body: trimmed })
+    .eq("id", commentId)
+    .select();
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Comentariu inexistent sau fără permisiune." };
+  revalidatePath(`/tasks/${taskId}`);
+  return { success: true };
+}
+
+export async function deleteComment(commentId: string, taskId: string): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .delete()
+    .eq("id", commentId)
+    .select();
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Comentariu inexistent sau fără permisiune." };
+  revalidatePath(`/tasks/${taskId}`);
+  return { success: true };
+}

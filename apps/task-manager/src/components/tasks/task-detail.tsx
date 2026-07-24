@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TagPicker } from "@/components/tasks/tag-picker";
+import { Comments } from "./comments";
 import type { Comment, Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
@@ -47,8 +48,6 @@ export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetai
   const status = STATUS_META[task.status];
   const priority = PRIORITY_META[task.priority];
   const assignee = task.assignee;
-  // currentUserId is available for the comments component (dropped in below).
-  void currentUserId;
 
   return (
     <article className="space-y-6">
@@ -117,11 +116,7 @@ export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetai
 
       <Separator />
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-medium text-muted-foreground">Comentarii</h2>
-        {/* TODO(comments): înlocuiește cu componenta reală de comentarii (currentUserId disponibil din props). */}
-        <div className="text-sm text-muted-foreground">(în curând)</div>
-      </section>
+      <Comments taskId={task.id} comments={task.comments} currentUserId={currentUserId} />
 
       <TaskFormDialog
         profiles={profiles}
