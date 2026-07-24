@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { format } from "date-fns";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PRIORITY_ORDER } from "@/lib/task-filters";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
@@ -48,7 +54,13 @@ function SortableHeader({ column, label }: { column: Column<Task, unknown>; labe
   );
 }
 
-export const columns: ColumnDef<Task>[] = [
+export interface ColumnHandlers {
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+}
+
+export function makeColumns({ onEdit, onDelete }: ColumnHandlers): ColumnDef<Task>[] {
+  return [
   {
     accessorKey: "title",
     header: "Titlu",
@@ -132,4 +144,38 @@ export const columns: ColumnDef<Task>[] = [
       );
     },
   },
-];
+  {
+    id: "actions",
+    header: "",
+    enableSorting: false,
+    cell: ({ row }) => {
+      const task = row.original;
+      return (
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Acțiuni</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => onEdit(task)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Editează
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={() => onDelete(task)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Șterge
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+    },
+  },
+  ];
+}

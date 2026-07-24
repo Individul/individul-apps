@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,6 +8,7 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table";
+import { toast } from "sonner";
 
 import {
   Table,
@@ -17,8 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { columns } from "@/components/tasks/columns";
+import { makeColumns } from "@/components/tasks/columns";
 import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
+import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
+import { deleteTask } from "@/app/tasks/actions";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
 import type { Profile, Task } from "@/lib/types";
 
@@ -31,8 +34,36 @@ interface TaskTableProps {
 export function TaskTable({ tasks, profiles, currentUserId }: TaskTableProps) {
   const [filter, setFilter] = useState<TaskFilter>({});
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [, startTransition] = useTransition();
 
   const data = useMemo(() => filterTasks(tasks, filter), [tasks, filter]);
+
+  const handleDelete = (task: Task) => {
+    if (!window.confirm("Ștergi acest task?")) return;
+    startTransition(async () => {
+      const result = await deleteTask(task.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Task șters");
+    });
+  };
+
+  const columns = useMemo(
+    () =>
+      makeColumns({
+        onEdit: (task) => {
+          setEditingTask(task);
+          setFormOpen(true);
+        },
+        onDelete: handleDelete,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const table = useReactTable({
     data,
@@ -50,6 +81,10 @@ export function TaskTable({ tasks, profiles, currentUserId }: TaskTableProps) {
         currentUserId={currentUserId}
         filter={filter}
         onFilterChange={setFilter}
+        onNewTask={() => {
+          setEditingTask(undefined);
+          setFormOpen(true);
+        }}
       />
       <div className="rounded-md border">
         <Table>
@@ -87,6 +122,13 @@ export function TaskTable({ tasks, profiles, currentUserId }: TaskTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <TaskFormDialog
+        profiles={profiles}
+        task={editingTask}
+        open={formOpen}
+        onOpenChange={setFormOpen}
+      />
     </div>
   );
 }
