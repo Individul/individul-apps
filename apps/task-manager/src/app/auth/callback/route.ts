@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/tasks";
+  // Acceptă doar căi interne relative (o singură bară inițială), ca să evităm
+  // open-redirect prin ?next=@evil.com sau ?next=//evil.com.
+  const nextParam = searchParams.get("next");
+  const next = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : "/tasks";
 
   if (code) {
     const supabase = createClient();

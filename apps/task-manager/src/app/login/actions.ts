@@ -14,7 +14,10 @@ export async function signInWithMagicLink(
   const origin = headers().get("origin") ?? "";
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${origin}/auth/callback` },
+    // invite-only: nu crea utilizatori noi la login. Doar userii adăugați manual
+    // în Supabase (Authentication → Users) pot primi link de acces. Backstop în cod
+    // pentru cazul în care toggle-ul "Enable email signups" nu e dezactivat în dashboard.
+    options: { emailRedirectTo: `${origin}/auth/callback`, shouldCreateUser: false },
   });
   if (error) return { error: error.message };
   return { success: true };

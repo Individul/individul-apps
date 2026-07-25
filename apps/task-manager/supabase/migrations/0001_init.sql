@@ -65,6 +65,13 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function handle_new_user();
 
+-- backfill: creează profiluri pentru userii deja existenți la momentul migrării
+-- (triggerul de mai sus acoperă doar userii adăugați DUPĂ migrare)
+insert into public.profiles (id, full_name, avatar_url)
+select id, raw_user_meta_data->>'full_name', raw_user_meta_data->>'avatar_url'
+from auth.users
+on conflict (id) do nothing;
+
 -- RLS
 alter table profiles enable row level security;
 alter table tasks enable row level security;
