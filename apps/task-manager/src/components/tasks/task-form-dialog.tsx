@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createTask, updateTask } from "@/app/tasks/actions";
+import { canReassignTask } from "@/lib/permissions";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import type { Profile, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
@@ -46,22 +47,42 @@ interface TaskFormDialogProps {
   task?: Task;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isAdmin: boolean;
+  currentUserId: string | null;
 }
 
-function defaultValues(task?: Task): TaskInput {
+function defaultValues(task: Task | undefined, canReassign: boolean, currentUserId: string | null): TaskInput {
+  let assignee_id: string;
+  if (task) {
+    // On edit, preserve the existing assignee regardless of role.
+    assignee_id = task.assignee_id ?? "";
+  } else if (!canReassign) {
+    // Members creating a task are auto-assigned to themselves.
+    assignee_id = currentUserId ?? "";
+  } else {
+    assignee_id = "";
+  }
   return {
     title: task?.title ?? "",
     description: task?.description ?? "",
     status: task?.status ?? "todo",
     priority: task?.priority ?? "medium",
     due_date: task?.due_date ?? "",
-    assignee_id: task?.assignee_id ?? "",
+    assignee_id,
   };
 }
 
-export function TaskFormDialog({ profiles, task, open, onOpenChange }: TaskFormDialogProps) {
+export function TaskFormDialog({
+  profiles,
+  task,
+  open,
+  onOpenChange,
+  isAdmin,
+  currentUserId,
+}: TaskFormDialogProps) {
   const [isPending, startTransition] = useTransition();
   const isEdit = Boolean(task);
+  const canReassign = canReassignTask(isAdmin);
 
   const {
     register,
@@ -71,12 +92,12 @@ export function TaskFormDialog({ profiles, task, open, onOpenChange }: TaskFormD
     formState: { errors },
   } = useForm<TaskInput>({
     resolver: zodResolver(taskSchema),
-    defaultValues: defaultValues(task),
+    defaultValues: defaultValues(task, canReassign, currentUserId),
   });
 
   useEffect(() => {
-    if (open) reset(defaultValues(task));
-  }, [open, task, reset]);
+    if (open) reset(defaultValues(task, canReassign, currentUserId));
+  }, [open, task, canReassign, currentUserId, reset]);
 
   const onSubmit = (values: TaskInput) => {
     startTransition(async () => {
@@ -86,7 +107,7 @@ export function TaskFormDialog({ profiles, task, open, onOpenChange }: TaskFormD
         return;
       }
       toast.success("Task salvat");
-      if (!task) reset(defaultValues());
+      if (!task) reset(defaultValues(undefined, canReassign, currentUserId));
       onOpenChange(false);
     });
   };
@@ -180,6 +201,7 @@ export function TaskFormDialog({ profiles, task, open, onOpenChange }: TaskFormD
                   <Select
                     value={field.value ? field.value : UNASSIGNED}
                     onValueChange={(v) => field.onChange(v === UNASSIGNED ? "" : v)}
+                    disabled={!canReassign}
                   >
                     <SelectTrigger>
                       <SelectValue />

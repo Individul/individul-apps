@@ -29,9 +29,10 @@ interface TaskTableProps {
   tasks: Task[];
   profiles: Profile[];
   currentUserId: string | null;
+  isAdmin: boolean;
 }
 
-export function TaskTable({ tasks, profiles, currentUserId }: TaskTableProps) {
+export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTableProps) {
   const [filter, setFilter] = useState<TaskFilter>({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -60,9 +61,11 @@ export function TaskTable({ tasks, profiles, currentUserId }: TaskTableProps) {
           setFormOpen(true);
         },
         onDelete: handleDelete,
+        currentUserId,
+        isAdmin,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [currentUserId, isAdmin],
   );
 
   const table = useReactTable({
@@ -128,6 +131,8 @@ export function TaskTable({ tasks, profiles, currentUserId }: TaskTableProps) {
         task={editingTask}
         open={formOpen}
         onOpenChange={setFormOpen}
+        isAdmin={isAdmin}
+        currentUserId={currentUserId}
       />
     </div>
   );

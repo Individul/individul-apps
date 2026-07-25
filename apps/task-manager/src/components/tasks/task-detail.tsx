@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TagPicker } from "@/components/tasks/tag-picker";
 import { Comments } from "./comments";
+import { canEditTask } from "@/lib/permissions";
 import type { Comment, Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
@@ -40,14 +41,16 @@ interface TaskDetailProps {
   profiles: Profile[];
   allTags: Tag[];
   currentUserId: string | null;
+  isAdmin: boolean;
 }
 
-export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetailProps) {
+export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: TaskDetailProps) {
   const [editOpen, setEditOpen] = useState(false);
 
   const status = STATUS_META[task.status];
   const priority = PRIORITY_META[task.priority];
   const assignee = task.assignee;
+  const canEdit = canEditTask(currentUserId ?? "", isAdmin, task);
 
   return (
     <article className="space-y-6">
@@ -59,9 +62,11 @@ export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetai
             <Badge className={priority.className}>{priority.label}</Badge>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editează
-        </Button>
+        {canEdit && (
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Pencil className="mr-2 h-4 w-4" /> Editează
+          </Button>
+        )}
       </header>
 
       <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
@@ -116,13 +121,20 @@ export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetai
 
       <Separator />
 
-      <Comments taskId={task.id} comments={task.comments} currentUserId={currentUserId} />
+      <Comments
+        taskId={task.id}
+        comments={task.comments}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
+      />
 
       <TaskFormDialog
         profiles={profiles}
         task={task}
         open={editOpen}
         onOpenChange={setEditOpen}
+        isAdmin={isAdmin}
+        currentUserId={currentUserId}
       />
     </article>
   );

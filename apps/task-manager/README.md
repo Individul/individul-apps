@@ -25,6 +25,30 @@ fără backend separat. Găzduire GitHub + Vercel.
 Autorizarea e impusă de baza de date prin Row-Level Security (RLS). Mutațiile se
 fac prin Server Actions; citirile prin Server Components.
 
+## Roluri
+
+Există două roluri: **membru** (`member`) și **administrator** (`admin`).
+Autorizarea e impusă de RLS + trigger-e în Postgres (vezi
+[`supabase/migrations/0002_roles.sql`](supabase/migrations/0002_roles.sql)).
+
+| Acțiune                        | Membru                          | Administrator            |
+| ------------------------------ | ------------------------------- | ------------------------ |
+| Creare task                    | doar pentru sine (auto-atribuit)| pentru oricine           |
+| Reatribuire task (assignee)    | nu                              | da                       |
+| Editare task                   | task-uri proprii                | orice task               |
+| Ștergere task                  | doar task-uri proprii           | orice task               |
+| Editare comentariu             | doar autorul                    | doar autorul             |
+| Ștergere comentariu            | doar autorul                    | autorul **sau** admin    |
+| Gestionare roluri (`/admin`)   | nu                              | da                       |
+
+Administratorii au acces la pagina **[`/admin`](src/app/admin/page.tsx)** unde pot
+promova/retrograda utilizatori între `member` și `admin` (nu-și pot schimba
+propriul rol, ca să nu se retrogradeze accidental).
+
+> Migrarea `supabase/migrations/0002_roles.sql` trebuie aplicată (după
+> `0001_init.sql`) și primul admin setat manual — vezi
+> [`supabase/README.md`](supabase/README.md#2b-roluri) pentru bootstrap.
+
 ## Dezvoltare locală
 
 1. Instalează dependențele:
