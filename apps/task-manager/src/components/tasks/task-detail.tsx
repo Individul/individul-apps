@@ -43,7 +43,7 @@ interface TaskDetailProps {
   isAdmin: boolean;
 }
 
-export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetailProps) {
+export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: TaskDetailProps) {
   const [editOpen, setEditOpen] = useState(false);
 
   const status = STATUS_META[task.status];
@@ -124,6 +124,8 @@ export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetai
         task={task}
         open={editOpen}
         onOpenChange={setEditOpen}
+        isAdmin={isAdmin}
+        currentUserId={currentUserId}
       />
     </article>
   );

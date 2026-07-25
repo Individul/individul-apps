@@ -131,6 +131,8 @@ export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTable
         task={editingTask}
         open={formOpen}
         onOpenChange={setFormOpen}
+        isAdmin={isAdmin}
+        currentUserId={currentUserId}
       />
     </div>
   );
