@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { addComment, deleteComment, editComment } from "@/app/tasks/actions";
-import { canEditComment } from "@/lib/permissions";
+import { canDeleteComment, canEditComment } from "@/lib/permissions";
 import type { Comment } from "@/lib/types";
 
 function initials(name: string | null | undefined): string {
@@ -31,9 +31,10 @@ interface CommentsProps {
   taskId: string;
   comments: Comment[];
   currentUserId: string | null;
+  isAdmin: boolean;
 }
 
-export function Comments({ taskId, comments, currentUserId }: CommentsProps) {
+export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [newBody, setNewBody] = useState("");
@@ -107,7 +108,8 @@ export function Comments({ taskId, comments, currentUserId }: CommentsProps) {
       ) : (
         <ul className="space-y-4">
           {comments.map((comment) => {
-            const canEdit = Boolean(currentUserId) && canEditComment(currentUserId as string, comment);
+            const canEdit = canEditComment(currentUserId ?? "", comment);
+            const canDelete = canDeleteComment(currentUserId ?? "", isAdmin, comment);
             const isEditing = editingId === comment.id;
             return (
               <li key={comment.id} className="flex gap-3">
@@ -154,24 +156,28 @@ export function Comments({ taskId, comments, currentUserId }: CommentsProps) {
                   ) : (
                     <>
                       <p className="whitespace-pre-wrap text-sm">{comment.body}</p>
-                      {canEdit && (
+                      {(canEdit || canDelete) && (
                         <div className="flex gap-3 text-xs">
-                          <button
-                            type="button"
-                            onClick={() => startEdit(comment)}
-                            disabled={isPending}
-                            className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
-                          >
-                            Editează
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(comment.id)}
-                            disabled={isPending}
-                            className="text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
-                          >
-                            Șterge
-                          </button>
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => startEdit(comment)}
+                              disabled={isPending}
+                              className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+                            >
+                              Editează
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(comment.id)}
+                              disabled={isPending}
+                              className="text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
+                            >
+                              Șterge
+                            </button>
+                          )}
                         </div>
                       )}
                     </>
