@@ -29,6 +29,7 @@ interface TaskTableProps {
   tasks: Task[];
   profiles: Profile[];
   currentUserId: string | null;
+  isAdmin: boolean;
 }
 
 export function TaskTable({ tasks, profiles, currentUserId }: TaskTableProps) {

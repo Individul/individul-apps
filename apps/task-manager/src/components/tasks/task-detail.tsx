@@ -40,6 +40,7 @@ interface TaskDetailProps {
   profiles: Profile[];
   allTags: Tag[];
   currentUserId: string | null;
+  isAdmin: boolean;
 }
 
 export function TaskDetail({ task, profiles, allTags, currentUserId }: TaskDetailProps) {
