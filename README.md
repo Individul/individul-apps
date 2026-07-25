@@ -85,7 +85,21 @@ Instrumente PDF pentru procesarea documentelor. (FastAPI + Docker)
 - Ștergere și extragere pagini
 
 ### Task Manager
-Dashboard pentru gestionarea sarcinilor. (Next.js + Django + Docker)
+Task manager de echipă (4-5 persoane), **Vercel-native**. Găzduire GitHub + Vercel (separat de serverul Hetzner). (Next.js + Supabase)
+
+**Funcționalități:**
+- Listă/tabel de task-uri cu sortare și filtrare (stare, prioritate, responsabil)
+- Atribuire către membri, termene și prioritate
+- Statusuri: De făcut / În lucru / Finalizat
+- Etichete colorate și comentarii pe task
+- Autentificare magic-link, invite-only
+
+**Tehnologii:**
+- Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, shadcn/ui, TanStack Table
+- Supabase (Postgres + Auth) via `@supabase/ssr`; Server Actions + Row-Level Security
+- Testare: Vitest + Playwright
+
+Vezi [`apps/task-manager/README.md`](apps/task-manager/README.md) pentru setup și deploy.
 
 ## Structura proiectului
 
@@ -104,9 +118,7 @@ individul-apps/
 │   │   └── frontend/    # Next.js App
 │   ├── clasificare/     # Calculator fracțiuni (Vite + React)
 │   ├── pdf/             # PDF Toolbox (FastAPI)
-│   └── task-manager/    # Task Manager
-│       ├── backend/     # Django API
-│       └── frontend/    # Next.js App
+│   └── task-manager/    # Task Manager (Next.js + Supabase, Vercel-native)
 ├── .github/
 │   └── workflows/       # GitHub Actions (deploy.yml)
 └── README.md
@@ -123,7 +135,6 @@ Automat via GitHub Actions la fiecare push pe branch-ul `main`.
 | Portal | 80 (nginx static) | - | `/` |
 | Clasificare | nginx static | - | `/clasificare/` |
 | PDF Toolbox | - | 8001 | `/pdf/` |
-| Task Manager | 3002 | 8000 | `/tasks/`, `/tasks-api/` |
 | Petiții | 3003 | 8002 | `/petitii/`, `/petitii-api/` |
 | Termene | 3004 | 8003 | `/termene/`, `/termene-api/` |
 | Hub | 3005 | 8004 | `/hub/`, `/hub-api/` |
@@ -144,4 +155,4 @@ Automat via GitHub Actions la fiecare push pe branch-ul `main`.
 - Petiții: http://46.224.209.71/petitii/
 - Clasificare: http://46.224.209.71/clasificare/
 - PDF Toolbox: http://46.224.209.71/pdf/
-- Task Manager: http://46.224.209.71/tasks/
+- Task Manager: găzduit pe Vercel (vezi `apps/task-manager/README.md`)

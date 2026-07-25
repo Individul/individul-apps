@@ -1,0 +1,8 @@
+## Interface: 110100
+## Title: PartyIlvl
+## Notes: Displays party/raid member item levels in tooltips
+## Author: Dumitru Prisacaru
+## Version: 1.0.0
+## DefaultState: enabled
+
+PartyIlvl.lua
