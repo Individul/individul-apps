@@ -21,6 +21,25 @@ once to provision the backend for the Vercel-native task manager.
 3. Verify in **Table Editor** that these tables exist: `profiles`, `tasks`,
    `tags`, `task_tags`, `comments`.
 
+## 2b. Roluri
+
+Autorizarea pe roluri (`admin` / `member`) e definită în
+[`migrations/0002_roles.sql`](./migrations/0002_roles.sql).
+
+1. În **SQL Editor**, rulează `migrations/0002_roles.sql` **DUPĂ**
+   `0001_init.sql`. Migrarea adaugă coloana `role`, politicile RLS pe roluri și
+   trigger-ul `profiles_role_guard` (doar un admin poate schimba roluri).
+2. **Bootstrap primul admin.** Deoarece încă nu există niciun admin care să
+   promoveze pe cineva din UI, setează manual primul administrator:
+
+   ```sql
+   update profiles set role = 'admin'
+   where id = (select id from auth.users where email = 'emailul-tău');
+   ```
+
+3. După bootstrap, promovările/retrogradările ulterioare se fac în aplicație la
+   [`/admin`](../README.md#roluri) — nu mai e nevoie de SQL manual.
+
 ## 3. Make the workspace invite-only
 
 1. Go to **Authentication → Providers → Email**.
