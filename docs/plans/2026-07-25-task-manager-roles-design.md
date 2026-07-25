@@ -24,7 +24,8 @@ mai mari decât subalternii (member). Coloana `profiles.role` există deja (defa
 | Reatribuie (schimbă responsabilul) | ❌ | ✅ |
 | Șterge task | ✅ doar cele create de el | ✅ orice task |
 | Comentează | ✅ | ✅ |
-| Editează/șterge comentariu | ✅ doar ale lui | ✅ ale oricui (moderare) |
+| Editează comentariu | ✅ doar ale lui | ✅ doar ale lui |
+| Șterge comentariu | ✅ doar ale lui | ✅ ale oricui (moderare) |
 | Gestionează roluri (member ↔ admin) | ❌ | ✅ |
 
 ## Abordare tehnică

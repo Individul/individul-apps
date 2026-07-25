@@ -1,11 +1,12 @@
 export type TaskStatus = "todo" | "in_progress" | "done";
 export type TaskPriority = "low" | "medium" | "high";
+export type Role = "admin" | "member";
 
 export interface Profile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
-  role: string;
+  role: Role;
 }
 export interface Tag {
   id: string;

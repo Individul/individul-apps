@@ -9,6 +9,13 @@ export async function setUserRole(
 ): Promise<{ error?: string; success?: boolean }> {
   if (role !== "admin" && role !== "member") return { error: "Rol invalid." };
   const supabase = createClient();
+
+  // Nu-ți poți retrograda propriul rol (protecție și în cod, nu doar în UI).
+  const { data: userData } = await supabase.auth.getUser();
+  if (userData.user?.id === userId && role === "member") {
+    return { error: "Nu-ți poți retrograda propriul rol." };
+  }
+
   const { data, error } = await supabase
     .from("profiles")
     .update({ role })

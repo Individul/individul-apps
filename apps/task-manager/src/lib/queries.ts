@@ -44,12 +44,6 @@ export async function getTags(): Promise<Tag[]> {
   return (data ?? []) as Tag[];
 }
 
-export async function getCurrentUserId(): Promise<string | null> {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getUser();
-  return data.user?.id ?? null;
-}
-
 export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
