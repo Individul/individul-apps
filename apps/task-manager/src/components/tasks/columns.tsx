@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PRIORITY_ORDER } from "@/lib/task-filters";
+import { canEditTask, canDeleteTask } from "@/lib/permissions";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
@@ -57,9 +58,16 @@ function SortableHeader({ column, label }: { column: Column<Task, unknown>; labe
 export interface ColumnHandlers {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  currentUserId: string | null;
+  isAdmin: boolean;
 }
 
-export function makeColumns({ onEdit, onDelete }: ColumnHandlers): ColumnDef<Task>[] {
+export function makeColumns({
+  onEdit,
+  onDelete,
+  currentUserId,
+  isAdmin,
+}: ColumnHandlers): ColumnDef<Task>[] {
   return [
   {
     accessorKey: "title",
@@ -149,6 +157,12 @@ export function makeColumns({ onEdit, onDelete }: ColumnHandlers): ColumnDef<Tas
     enableSorting: false,
     cell: ({ row }) => {
       const task = row.original;
+      const uid = currentUserId ?? "";
+      const canEdit = canEditTask(uid, isAdmin, task);
+      const canDelete = canDeleteTask(uid, isAdmin, task);
+      if (!canEdit && !canDelete) {
+        return <div className="flex justify-end text-muted-foreground">—</div>;
+      }
       return (
         <div className="flex justify-end">
           <DropdownMenu>
@@ -159,17 +173,21 @@ export function makeColumns({ onEdit, onDelete }: ColumnHandlers): ColumnDef<Tas
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => onEdit(task)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Editează
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onSelect={() => onDelete(task)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Șterge
-              </DropdownMenuItem>
+              {canEdit && (
+                <DropdownMenuItem onSelect={() => onEdit(task)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Editează
+                </DropdownMenuItem>
+              )}
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={() => onDelete(task)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Șterge
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
