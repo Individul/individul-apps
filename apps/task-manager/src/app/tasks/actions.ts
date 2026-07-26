@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
+import { notify } from "@/lib/notify";
+
+const STATUS_LABEL = { todo: "De făcut", in_progress: "În lucru", done: "Finalizat" } as const;
 
 type ActionResult = { error?: string; success?: boolean };
 
@@ -26,9 +29,10 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
 
+  const nt = normalize(parsed.data);
   const { data: newTask, error } = await supabase
     .from("tasks")
-    .insert({ ...normalize(parsed.data), created_by: userId })
+    .insert({ ...nt, created_by: userId })
     .select("id")
     .single();
   if (error || !newTask) return { error: error?.message ?? "Eroare la crearea sarcinii." };
@@ -37,6 +41,14 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
     const rows = tagIds.map((tag_id) => ({ task_id: newTask.id as string, tag_id }));
     const { error: tagErr } = await supabase.from("task_tags").insert(rows);
     if (tagErr) return { error: tagErr.message };
+  }
+
+  if (nt.assignee_id) {
+    await notify(
+      "assigned",
+      { id: newTask.id as string, title: nt.title, assignee_id: nt.assignee_id, created_by: userId },
+      userId,
+    );
   }
 
   revalidatePath("/");
@@ -52,11 +64,18 @@ export async function updateTask(
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Date invalide." };
 
   const supabase = createClient();
-  const { data, error } = await supabase
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+
+  const { data: prev } = await supabase
     .from("tasks")
-    .update(normalize(parsed.data))
+    .select("status, assignee_id, created_by")
     .eq("id", id)
-    .select();
+    .single();
+
+  const nt = normalize(parsed.data);
+  const { data, error } = await supabase.from("tasks").update(nt).eq("id", id).select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
 
@@ -80,6 +99,13 @@ export async function updateTask(
     if (remErr) return { error: remErr.message };
   }
 
+  if (prev) {
+    const task = { id, title: nt.title, assignee_id: nt.assignee_id, created_by: prev.created_by as string };
+    if (nt.assignee_id && nt.assignee_id !== prev.assignee_id) await notify("assigned", task, userId);
+    else if (nt.status !== prev.status) await notify("status", task, userId, STATUS_LABEL[nt.status]);
+    else await notify("edited", task, userId);
+  }
+
   revalidatePath("/");
   revalidatePath(`/tasks/${id}`);
   return { success: true };
@@ -87,9 +113,32 @@ export async function updateTask(
 
 export async function deleteTask(id: string): Promise<ActionResult> {
   const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+
+  const { data: prev } = await supabase
+    .from("tasks")
+    .select("title, assignee_id, created_by")
+    .eq("id", id)
+    .single();
+
   const { data, error } = await supabase.from("tasks").delete().eq("id", id).select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
+
+  if (prev) {
+    await notify(
+      "deleted",
+      {
+        id,
+        title: prev.title as string,
+        assignee_id: prev.assignee_id as string | null,
+        created_by: prev.created_by as string,
+      },
+      userId,
+    );
+  }
 
   revalidatePath("/");
   return { success: true };
@@ -100,6 +149,16 @@ export async function deleteTask(id: string): Promise<ActionResult> {
 // are drept, update-ul afectează 0 rânduri și întoarcem eroare.
 export async function finalizeTask(id: string): Promise<ActionResult> {
   const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+
+  const { data: prev } = await supabase
+    .from("tasks")
+    .select("title, assignee_id, created_by")
+    .eq("id", id)
+    .single();
+
   const { data, error } = await supabase
     .from("tasks")
     .update({ status: "done" })
@@ -107,6 +166,20 @@ export async function finalizeTask(id: string): Promise<ActionResult> {
     .select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
+
+  if (prev) {
+    await notify(
+      "status",
+      {
+        id,
+        title: prev.title as string,
+        assignee_id: prev.assignee_id as string | null,
+        created_by: prev.created_by as string,
+      },
+      userId,
+      "Finalizat",
+    );
+  }
 
   revalidatePath("/");
   revalidatePath(`/tasks/${id}`);
@@ -172,6 +245,25 @@ export async function addComment(taskId: string, body: string): Promise<{ error?
     .from("comments")
     .insert({ task_id: taskId, author_id: userId, body: trimmed });
   if (error) return { error: error.message };
+
+  const { data: t } = await supabase
+    .from("tasks")
+    .select("title, assignee_id, created_by")
+    .eq("id", taskId)
+    .single();
+  if (t) {
+    await notify(
+      "comment",
+      {
+        id: taskId,
+        title: t.title as string,
+        assignee_id: t.assignee_id as string | null,
+        created_by: t.created_by as string,
+      },
+      userId,
+    );
+  }
+
   revalidatePath(`/tasks/${taskId}`);
   return { success: true };
 }
