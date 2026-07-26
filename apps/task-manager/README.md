@@ -11,8 +11,8 @@ fără backend separat. Găzduire GitHub + Vercel.
 - Statusuri: De făcut / În lucru / Finalizat
 - Etichete colorate
 - Comentarii pe fiecare task (editare/ștergere doar de autor)
-- Autentificare cu **email + parolă**, **invite-only** (utilizatori adăugați manual în Supabase)
-- Fiecare utilizator își poate seta numele afișat („Profilul meu") și schimba parola din aplicație
+- Autentificare cu **email sau username + parolă**, **invite-only** (utilizatori adăugați manual în Supabase)
+- Fiecare utilizator își poate seta numele afișat și username-ul („Profilul meu") și schimba parola din aplicație
 
 ## Stack
 
@@ -49,6 +49,9 @@ propriul rol, ca să nu se retrogradeze accidental).
 > Migrarea `supabase/migrations/0002_roles.sql` trebuie aplicată (după
 > `0001_init.sql`) și primul admin setat manual — vezi
 > [`supabase/README.md`](supabase/README.md#2b-roluri) pentru bootstrap.
+
+> Pentru login cu username, aplică și `supabase/migrations/0003_username.sql`
+> (după `0002_roles.sql`) — vezi [`supabase/README.md`](supabase/README.md#2c-username).
 
 ## Dezvoltare locală
 

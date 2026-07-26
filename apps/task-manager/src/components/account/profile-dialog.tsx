@@ -27,7 +27,12 @@ function SubmitButton() {
   );
 }
 
-export function ProfileDialog({ currentFullName }: { currentFullName: string }) {
+interface ProfileDialogProps {
+  currentFullName: string;
+  currentUsername: string;
+}
+
+export function ProfileDialog({ currentFullName, currentUsername }: ProfileDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [state, formAction] = useFormState(updateProfile, null);
@@ -50,7 +55,7 @@ export function ProfileDialog({ currentFullName }: { currentFullName: string }) 
           <DialogHeader>
             <DialogTitle>Profilul meu</DialogTitle>
             <DialogDescription>
-              Numele afișat pe task-uri și comentarii.
+              Numele apare pe task-uri și comentarii. Username-ul îl poți folosi la login.
             </DialogDescription>
           </DialogHeader>
           <form action={formAction} className="space-y-4">
@@ -63,6 +68,19 @@ export function ProfileDialog({ currentFullName }: { currentFullName: string }) 
                 placeholder="Nume Prenume"
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                defaultValue={currentUsername}
+                placeholder="ex: dprisacaru"
+                autoComplete="username"
+              />
+              <p className="text-xs text-muted-foreground">
+                Opțional. 3-30 caractere: litere, cifre, . _ - (fără spații). Folosit la login.
+              </p>
             </div>
             {state?.error ? (
               <p className="text-sm text-destructive" role="alert">

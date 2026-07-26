@@ -28,7 +28,10 @@ export default async function TasksPage() {
               </Button>
             </Link>
           )}
-          <ProfileDialog currentFullName={currentProfile?.full_name ?? ""} />
+          <ProfileDialog
+            currentFullName={currentProfile?.full_name ?? ""}
+            currentUsername={currentProfile?.username ?? ""}
+          />
           <ChangePasswordDialog />
           <form action="/auth/signout" method="post">
             <Button variant="outline" size="sm" type="submit">
