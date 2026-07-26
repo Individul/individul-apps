@@ -8,6 +8,7 @@ interface View {
   key: string;
   label: string;
   filter: TaskFilter;
+  dot: string;
   danger?: boolean;
 }
 
@@ -29,19 +30,26 @@ interface QuickViewsProps {
 
 export function QuickViews({ tasks, currentUserId, filter, onFilterChange }: QuickViewsProps) {
   const views: View[] = [
-    { key: "all", label: "Toate", filter: {} },
+    { key: "all", label: "Toate", filter: {}, dot: "bg-slate-300" },
     ...(currentUserId
-      ? [{ key: "mine", label: "Ale mele", filter: { assigneeId: currentUserId } as TaskFilter }]
+      ? [
+          {
+            key: "mine",
+            label: "Ale mele",
+            filter: { assigneeId: currentUserId } as TaskFilter,
+            dot: "bg-slate-500",
+          },
+        ]
       : []),
-    { key: "overdue", label: "Restante", filter: { due: "overdue" }, danger: true },
-    { key: "soon", label: "Scadente 7 zile", filter: { due: "soon" } },
-    { key: "todo", label: "De făcut", filter: { status: "todo" } },
-    { key: "in_progress", label: "În lucru", filter: { status: "in_progress" } },
-    { key: "done", label: "Finalizat", filter: { status: "done" } },
+    { key: "overdue", label: "Restante", filter: { due: "overdue" }, dot: "bg-red-400", danger: true },
+    { key: "soon", label: "Scadente 7 zile", filter: { due: "soon" }, dot: "bg-amber-400" },
+    { key: "todo", label: "De făcut", filter: { status: "todo" }, dot: "bg-slate-400" },
+    { key: "in_progress", label: "În lucru", filter: { status: "in_progress" }, dot: "bg-sky-500" },
+    { key: "done", label: "Finalizat", filter: { status: "done" }, dot: "bg-emerald-500" },
   ];
 
   return (
-    <nav className="space-y-1">
+    <nav className="space-y-0.5">
       <h2 className="mb-2 px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Vederi
       </h2>
@@ -55,17 +63,18 @@ export function QuickViews({ tasks, currentUserId, filter, onFilterChange }: Qui
             type="button"
             onClick={() => onFilterChange(v.filter)}
             className={cn(
-              "flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors",
+              "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
               active
-                ? "bg-accent font-medium text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                ? "bg-accent font-medium text-foreground"
+                : "text-foreground/80 hover:bg-accent/50 hover:text-foreground",
             )}
           >
-            <span className={cn(danger && "text-red-600")}>{v.label}</span>
+            <span className={cn("h-2 w-2 shrink-0 rounded-full", v.dot)} aria-hidden />
+            <span className="flex-1 text-left">{v.label}</span>
             <span
               className={cn(
-                "tabular-nums text-xs",
-                danger ? "text-red-600" : "text-muted-foreground",
+                "min-w-[1.5rem] rounded px-1.5 py-0.5 text-center text-xs tabular-nums",
+                danger ? "bg-red-50 text-red-700" : "bg-muted text-muted-foreground",
               )}
             >
               {count}
