@@ -34,6 +34,33 @@ describe("filterTasks", () => {
   });
 });
 
+const ymd = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const shiftDays = (n: number) => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + n);
+};
+
+describe("filterTasks după termen (due)", () => {
+  it("restante = termen trecut și nefinalizat", () => {
+    const tasks = [
+      t({ id: "a", due_date: ymd(shiftDays(-1)), status: "todo" }),
+      t({ id: "b", due_date: ymd(shiftDays(-1)), status: "done" }),
+      t({ id: "c", due_date: ymd(shiftDays(3)), status: "todo" }),
+      t({ id: "d", due_date: null, status: "todo" }),
+    ];
+    expect(filterTasks(tasks, { due: "overdue" }).map((x) => x.id)).toEqual(["a"]);
+  });
+  it("scadente în 7 zile (fără restante)", () => {
+    const tasks = [
+      t({ id: "a", due_date: ymd(shiftDays(3)), status: "todo" }),
+      t({ id: "b", due_date: ymd(shiftDays(30)), status: "todo" }),
+      t({ id: "c", due_date: ymd(shiftDays(-1)), status: "todo" }),
+    ];
+    expect(filterTasks(tasks, { due: "soon" }).map((x) => x.id)).toEqual(["a"]);
+  });
+});
+
 describe("sortByPriority", () => {
   it("high înaintea medium înaintea low", () => {
     const tasks = [t({ id: "a", priority: "low" }), t({ id: "b", priority: "high" }), t({ id: "c", priority: "medium" })];

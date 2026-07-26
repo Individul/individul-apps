@@ -30,10 +30,18 @@ interface TaskTableProps {
   profiles: Profile[];
   currentUserId: string | null;
   isAdmin: boolean;
+  filter: TaskFilter;
+  onFilterChange: (f: TaskFilter) => void;
 }
 
-export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTableProps) {
-  const [filter, setFilter] = useState<TaskFilter>({});
+export function TaskTable({
+  tasks,
+  profiles,
+  currentUserId,
+  isAdmin,
+  filter,
+  onFilterChange,
+}: TaskTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
@@ -95,7 +103,7 @@ export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTable
         profiles={profiles}
         currentUserId={currentUserId}
         filter={filter}
-        onFilterChange={setFilter}
+        onFilterChange={onFilterChange}
         onNewTask={() => {
           setEditingTask(undefined);
           setFormOpen(true);

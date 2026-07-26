@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTasks, getProfiles, getCurrentProfile } from "@/lib/queries";
-import { TaskTable } from "@/components/tasks/task-table";
+import { TasksWorkspace } from "@/components/tasks/tasks-workspace";
 import { ProfileDialog } from "@/components/account/profile-dialog";
 import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ export default async function TasksPage() {
   const isAdmin = currentProfile?.role === "admin";
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
+    <main className="mx-auto max-w-7xl p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Sarcini</h1>
         <div className="flex items-center gap-2">
@@ -40,7 +40,7 @@ export default async function TasksPage() {
           </form>
         </div>
       </div>
-      <TaskTable
+      <TasksWorkspace
         tasks={tasks}
         profiles={profiles}
         currentUserId={currentUserId}
