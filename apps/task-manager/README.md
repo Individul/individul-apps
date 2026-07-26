@@ -9,7 +9,7 @@ fără backend separat. Găzduire GitHub + Vercel.
 - Atribuire către membrii echipei
 - Termene (due date) și prioritate (scăzută/medie/ridicată)
 - Statusuri: De făcut / În lucru / Finalizat
-- Etichete colorate
+- Etichete colorate (create doar de admin; utilizatorii le pot alege)
 - Comentarii pe fiecare task (editare/ștergere doar de autor)
 - Autentificare cu **email sau username + parolă**, **invite-only** (utilizatori adăugați manual în Supabase)
 - Fiecare utilizator își poate seta numele afișat și username-ul („Profilul meu") și schimba parola din aplicație
