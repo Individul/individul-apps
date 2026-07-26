@@ -19,31 +19,31 @@ import { PRIORITY_ORDER } from "@/lib/task-filters";
 import { canEditTask, canDeleteTask, canFinalizeTask } from "@/lib/permissions";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
 
-const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
+export const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
   in_progress: { label: "În lucru", className: "border-transparent bg-blue-100 text-blue-700" },
   done: { label: "Finalizat", className: "border-transparent bg-green-100 text-green-700" },
 };
 
-const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> = {
+export const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> = {
   low: { label: "Scăzută", className: "border-transparent bg-slate-100 text-slate-700" },
   medium: { label: "Medie", className: "border-transparent bg-amber-100 text-amber-800" },
   high: { label: "Ridicată", className: "border-transparent bg-red-100 text-red-700" },
 };
 
-const PRIORITY_BAR: Record<TaskPriority, string> = {
+export const PRIORITY_BAR: Record<TaskPriority, string> = {
   high: "bg-red-500",
   medium: "bg-amber-500",
   low: "bg-slate-300",
 };
 
-const STATUS_DOT: Record<TaskStatus, string> = {
+export const STATUS_DOT: Record<TaskStatus, string> = {
   todo: "bg-slate-400",
   in_progress: "bg-blue-500",
   done: "bg-green-500",
 };
 
-function initials(name: string | null | undefined): string {
+export function initials(name: string | null | undefined): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -51,6 +51,16 @@ function initials(name: string | null | undefined): string {
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+// „Restant" = termen trecut (înainte de începutul zilei curente) și sarcina
+// nu e finalizată. Partajat între lista compactă și celula de coloană.
+export function isOverdue(task: Task): boolean {
+  if (!task.due_date) return false;
+  const due = parseISO(task.due_date);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return due < startOfToday && task.status !== "done";
 }
 
 function SortableHeader({ column, label }: { column: Column<Task, unknown>; label: string }) {
@@ -73,6 +83,66 @@ export interface ColumnHandlers {
   onFinalize: (task: Task) => void;
   currentUserId: string | null;
   isAdmin: boolean;
+}
+
+export interface TaskActionsMenuProps {
+  task: Task;
+  currentUserId: string | null;
+  isAdmin: boolean;
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+  onFinalize: (task: Task) => void;
+}
+
+// Meniul de acțiuni pe sarcină, cu gating de rol identic în listă și în coloană.
+export function TaskActionsMenu({
+  task,
+  currentUserId,
+  isAdmin,
+  onEdit,
+  onDelete,
+  onFinalize,
+}: TaskActionsMenuProps) {
+  const uid = currentUserId ?? "";
+  const canEdit = canEditTask(uid, isAdmin, task);
+  const canDelete = canDeleteTask(uid, isAdmin, task);
+  const canFinalize = canFinalizeTask(uid, isAdmin, task) && task.status !== "done";
+  if (!canEdit && !canDelete && !canFinalize) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Acțiuni</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {canFinalize && (
+          <DropdownMenuItem onSelect={() => onFinalize(task)}>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            Finalizează
+          </DropdownMenuItem>
+        )}
+        {canEdit && (
+          <DropdownMenuItem onSelect={() => onEdit(task)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Editează
+          </DropdownMenuItem>
+        )}
+        {canDelete && (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => onDelete(task)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Șterge
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 export function makeColumns({
@@ -156,12 +226,10 @@ export function makeColumns({
     header: ({ column }) => <SortableHeader column={column} label="Termen" />,
     cell: ({ row }) => {
       if (!row.original.due_date) return <span className="text-muted-foreground">—</span>;
-      const due = parseISO(row.original.due_date);
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const overdue = due < startOfToday && row.original.status !== "done";
       return (
-        <span className={cn(overdue && "text-red-600")}>{format(due, "d MMM yyyy")}</span>
+        <span className={cn(isOverdue(row.original) && "text-red-600")}>
+          {format(parseISO(row.original.due_date), "d MMM yyyy")}
+        </span>
       );
     },
   },
@@ -169,51 +237,18 @@ export function makeColumns({
     id: "actions",
     header: "",
     enableSorting: false,
-    cell: ({ row }) => {
-      const task = row.original;
-      const uid = currentUserId ?? "";
-      const canEdit = canEditTask(uid, isAdmin, task);
-      const canDelete = canDeleteTask(uid, isAdmin, task);
-      const canFinalize = canFinalizeTask(uid, isAdmin, task) && task.status !== "done";
-      if (!canEdit && !canDelete && !canFinalize) {
-        return <div className="flex justify-end text-muted-foreground">—</div>;
-      }
-      return (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Acțiuni</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {canFinalize && (
-                <DropdownMenuItem onSelect={() => onFinalize(task)}>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Finalizează
-                </DropdownMenuItem>
-              )}
-              {canEdit && (
-                <DropdownMenuItem onSelect={() => onEdit(task)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Editează
-                </DropdownMenuItem>
-              )}
-              {canDelete && (
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onSelect={() => onDelete(task)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Șterge
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
-    },
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <TaskActionsMenu
+          task={row.original}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onFinalize={onFinalize}
+        />
+      </div>
+    ),
   },
   ];
 }

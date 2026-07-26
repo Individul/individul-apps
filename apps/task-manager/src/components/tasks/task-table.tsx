@@ -1,28 +1,34 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import {
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
   type SortingState,
+  type Table as ReactTable,
 } from "@tanstack/react-table";
+import { format, parseISO } from "date-fns";
+import { ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { makeColumns } from "@/components/tasks/columns";
+  makeColumns,
+  TaskActionsMenu,
+  STATUS_META,
+  STATUS_DOT,
+  PRIORITY_META,
+  PRIORITY_BAR,
+  initials,
+  isOverdue,
+} from "@/components/tasks/columns";
 import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { deleteTask, finalizeTask } from "@/app/tasks/actions";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
+import { cn } from "@/lib/utils";
 import type { Profile, Tag, Task } from "@/lib/types";
 
 interface TaskTableProps {
@@ -33,6 +39,35 @@ interface TaskTableProps {
   isAdmin: boolean;
   filter: TaskFilter;
   onFilterChange: (f: TaskFilter) => void;
+}
+
+// Buton de sortare din antet: reflectă felul în care `SortableHeader`
+// comută sortarea coloanei TanStack (asc → desc), fără a folosi flexRender.
+function HeaderSortButton({
+  table,
+  columnId,
+  label,
+  className,
+}: {
+  table: ReactTable<Task>;
+  columnId: string;
+  label: string;
+  className?: string;
+}) {
+  const column = table.getColumn(columnId);
+  return (
+    <button
+      type="button"
+      onClick={() => column?.toggleSorting(column.getIsSorted() === "asc")}
+      className={cn(
+        "inline-flex items-center gap-1 transition-colors hover:text-foreground",
+        className,
+      )}
+    >
+      {label}
+      <ArrowUpDown className="h-3 w-3 opacity-60" />
+    </button>
+  );
 }
 
 export function TaskTable({
@@ -50,6 +85,11 @@ export function TaskTable({
   const [, startTransition] = useTransition();
 
   const data = useMemo(() => filterTasks(tasks, filter), [tasks, filter]);
+
+  const handleEdit = (task: Task) => {
+    setEditingTask(task);
+    setFormOpen(true);
+  };
 
   const handleDelete = (task: Task) => {
     if (!window.confirm("Ștergi această sarcină?")) return;
@@ -74,13 +114,12 @@ export function TaskTable({
     });
   };
 
+  // makeColumns rămâne sursa pentru instanța de tabel (sortare); corpul e
+  // randat ca DIV-uri custom, deci celulele/anteturile nu mai trec prin flexRender.
   const columns = useMemo(
     () =>
       makeColumns({
-        onEdit: (task) => {
-          setEditingTask(task);
-          setFormOpen(true);
-        },
+        onEdit: handleEdit,
         onDelete: handleDelete,
         onFinalize: handleFinalize,
         currentUserId,
@@ -99,6 +138,8 @@ export function TaskTable({
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const rows = table.getRowModel().rows;
+
   return (
     <div>
       <TaskFiltersBar
@@ -111,41 +152,131 @@ export function TaskTable({
           setFormOpen(true);
         }}
       />
+
       <div className="overflow-hidden rounded-xl border bg-card">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/50 transition-colors">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-28 text-center text-muted-foreground">
-                  Nicio sarcină.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        {/* Antet */}
+        <div className="flex items-stretch border-b bg-muted/30">
+          <span className="w-1 shrink-0" aria-hidden />
+          <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2.5 text-[11px] font-medium text-muted-foreground">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span>Sarcină</span>
+              <HeaderSortButton table={table} columnId="priority" label="Prioritate" />
+            </div>
+            <HeaderSortButton
+              table={table}
+              columnId="status"
+              label="Stare"
+              className="w-28 shrink-0"
+            />
+            <span className="w-40 shrink-0">Responsabil</span>
+            <HeaderSortButton
+              table={table}
+              columnId="due_date"
+              label="Termen"
+              className="w-24 shrink-0"
+            />
+            <span className="w-8 shrink-0" aria-hidden />
+          </div>
+        </div>
+
+        {/* Rânduri */}
+        {rows.length ? (
+          <div className="divide-y">
+            {rows.map((row) => {
+              const t = row.original;
+              return (
+                <div
+                  key={row.id}
+                  className="flex items-stretch transition-colors hover:bg-muted/50"
+                >
+                  <span
+                    aria-label={PRIORITY_META[t.priority].label}
+                    title={PRIORITY_META[t.priority].label}
+                    className={cn("w-1 shrink-0", PRIORITY_BAR[t.priority])}
+                  />
+                  <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3">
+                    {/* Sarcină */}
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <Link
+                        href={`/tasks/${t.id}`}
+                        className="truncate font-medium hover:underline"
+                      >
+                        {t.title}
+                      </Link>
+                      {(t.tags ?? []).length > 0 && (
+                        <div className="flex shrink-0 items-center gap-2">
+                          {t.tags!.map((tag) => (
+                            <span
+                              key={tag.id}
+                              className="rounded-md px-2 py-0.5 text-[11px]"
+                              style={{ backgroundColor: tag.color + "22", color: tag.color }}
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Stare */}
+                    <div className="flex w-28 shrink-0 items-center gap-2">
+                      <span
+                        className={cn("h-2 w-2 rounded-full", STATUS_DOT[t.status])}
+                        aria-hidden
+                      />
+                      <span className="text-[13px] text-muted-foreground">
+                        {STATUS_META[t.status].label}
+                      </span>
+                    </div>
+
+                    {/* Responsabil */}
+                    <div className="flex w-40 min-w-0 shrink-0 items-center gap-2">
+                      {t.assignee ? (
+                        <>
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-[10px]">
+                              {initials(t.assignee.full_name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="truncate text-[13px]">
+                            {t.assignee.full_name ?? "—"}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[13px] text-muted-foreground">Neatribuit</span>
+                      )}
+                    </div>
+
+                    {/* Termen */}
+                    <div className="w-24 shrink-0 text-[13px]">
+                      {t.due_date ? (
+                        <span className={cn(isOverdue(t) && "text-red-600")}>
+                          {format(parseISO(t.due_date), "d MMM yyyy")}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </div>
+
+                    {/* Acțiuni */}
+                    <div className="flex w-8 shrink-0 justify-end">
+                      <TaskActionsMenu
+                        task={t}
+                        currentUserId={currentUserId}
+                        isAdmin={isAdmin}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onFinalize={handleFinalize}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="px-4 py-12 text-center text-muted-foreground">Nicio sarcină.</div>
+        )}
       </div>
 
       <TaskFormDialog
