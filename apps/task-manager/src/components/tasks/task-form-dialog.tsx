@@ -114,12 +114,12 @@ export function TaskFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editează sarcina" : "Sarcină nouă"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="title">Titlu</Label>
             <Input id="title" placeholder="Titlul sarcinii" {...register("title")} />
@@ -140,7 +140,7 @@ export function TaskFormDialog({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             <div className="space-y-2">
               <Label>Stare</Label>
               <Controller
@@ -186,7 +186,7 @@ export function TaskFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             <div className="space-y-2">
               <Label htmlFor="due_date">Termen</Label>
               <Input id="due_date" type="date" {...register("due_date")} />
