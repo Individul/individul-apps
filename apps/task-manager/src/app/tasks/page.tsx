@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTasks, getProfiles, getCurrentProfile } from "@/lib/queries";
+import { getTasks, getProfiles, getTags, getCurrentProfile } from "@/lib/queries";
 import { TasksWorkspace } from "@/components/tasks/tasks-workspace";
 import { ProfileDialog } from "@/components/account/profile-dialog";
 import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
-  const [tasks, profiles, currentProfile] = await Promise.all([
+  const [tasks, profiles, allTags, currentProfile] = await Promise.all([
     getTasks(),
     getProfiles(),
+    getTags(),
     getCurrentProfile(),
   ]);
   const currentUserId = currentProfile?.id ?? null;
@@ -43,6 +44,7 @@ export default async function TasksPage() {
       <TasksWorkspace
         tasks={tasks}
         profiles={profiles}
+        allTags={allTags}
         currentUserId={currentUserId}
         isAdmin={isAdmin}
       />
