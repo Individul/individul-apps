@@ -106,7 +106,7 @@ export function TaskFormDialog({
         toast.error(result.error);
         return;
       }
-      toast.success("Task salvat");
+      toast.success("Sarcină salvată");
       if (!task) reset(defaultValues(undefined, canReassign, currentUserId));
       onOpenChange(false);
     });
@@ -116,13 +116,13 @@ export function TaskFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Editează task" : "Task nou"}</DialogTitle>
+          <DialogTitle>{isEdit ? "Editează sarcina" : "Sarcină nouă"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Titlu</Label>
-            <Input id="title" placeholder="Titlul task-ului" {...register("title")} />
+            <Input id="title" placeholder="Titlul sarcinii" {...register("title")} />
             {errors.title && (
               <p className="text-sm text-destructive">{errors.title.message}</p>
             )}

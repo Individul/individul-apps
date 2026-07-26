@@ -42,14 +42,14 @@ export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTable
   const data = useMemo(() => filterTasks(tasks, filter), [tasks, filter]);
 
   const handleDelete = (task: Task) => {
-    if (!window.confirm("Ștergi acest task?")) return;
+    if (!window.confirm("Ștergi această sarcină?")) return;
     startTransition(async () => {
       const result = await deleteTask(task.id);
       if (result.error) {
         toast.error(result.error);
         return;
       }
-      toast.success("Task șters");
+      toast.success("Sarcină ștearsă");
     });
   };
 
@@ -118,7 +118,7 @@ export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTable
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  Niciun task.
+                  Nicio sarcină.
                 </TableCell>
               </TableRow>
             )}

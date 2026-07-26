@@ -19,7 +19,7 @@ export default async function TasksPage() {
   return (
     <main className="mx-auto max-w-6xl p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Task-uri</h1>
+        <h1 className="text-2xl font-semibold">Sarcini</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <Link href="/admin">
