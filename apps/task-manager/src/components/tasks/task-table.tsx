@@ -160,7 +160,7 @@ export function TaskTable({
         {/* Antet */}
         <div className="flex items-stretch border-b bg-muted/30">
           <span className="w-1 shrink-0" aria-hidden />
-          <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2.5 text-[11px] font-medium text-muted-foreground">
+          <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2 text-[11px] font-medium text-muted-foreground">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span>Sarcină</span>
               <HeaderSortButton
@@ -203,7 +203,7 @@ export function TaskTable({
                     title={PRIORITY_META[t.priority].label}
                     className={cn("w-1 shrink-0", PRIORITY_BAR[t.priority])}
                   />
-                  <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3.5">
+                  <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2">
                     {/* Sarcină */}
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       <Link
