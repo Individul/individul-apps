@@ -42,6 +42,7 @@ export function TasksWorkspace({
         <TaskTable
           tasks={tasks}
           profiles={profiles}
+          allTags={allTags}
           currentUserId={currentUserId}
           isAdmin={isAdmin}
           filter={filter}

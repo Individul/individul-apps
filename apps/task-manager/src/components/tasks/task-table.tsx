@@ -23,11 +23,12 @@ import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { deleteTask, finalizeTask } from "@/app/tasks/actions";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
-import type { Profile, Task } from "@/lib/types";
+import type { Profile, Tag, Task } from "@/lib/types";
 
 interface TaskTableProps {
   tasks: Task[];
   profiles: Profile[];
+  allTags: Tag[];
   currentUserId: string | null;
   isAdmin: boolean;
   filter: TaskFilter;
@@ -37,6 +38,7 @@ interface TaskTableProps {
 export function TaskTable({
   tasks,
   profiles,
+  allTags,
   currentUserId,
   isAdmin,
   filter,
@@ -148,6 +150,7 @@ export function TaskTable({
 
       <TaskFormDialog
         profiles={profiles}
+        allTags={allTags}
         task={editingTask}
         open={formOpen}
         onOpenChange={setFormOpen}

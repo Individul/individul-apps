@@ -1,8 +1,9 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -54,6 +55,16 @@ export function TaskFiltersBar({
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="relative w-full sm:w-64">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={filter.search ?? ""}
+          onChange={(e) => onFilterChange({ ...filter, search: e.target.value || undefined })}
+          placeholder="Caută după titlu sau descriere…"
+          className="pl-9"
+        />
+      </div>
+
       <Select
         value={filter.status ?? ALL}
         onValueChange={(v) =>

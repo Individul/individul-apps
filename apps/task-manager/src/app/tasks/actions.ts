@@ -17,7 +17,7 @@ function normalize(input: TaskInput) {
   };
 }
 
-export async function createTask(input: TaskInput): Promise<ActionResult> {
+export async function createTask(input: TaskInput, tagIds: string[] = []): Promise<ActionResult> {
   const parsed = taskSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Date invalide." };
 
@@ -26,16 +26,28 @@ export async function createTask(input: TaskInput): Promise<ActionResult> {
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
 
-  const { error } = await supabase
+  const { data: newTask, error } = await supabase
     .from("tasks")
-    .insert({ ...normalize(parsed.data), created_by: userId });
-  if (error) return { error: error.message };
+    .insert({ ...normalize(parsed.data), created_by: userId })
+    .select("id")
+    .single();
+  if (error || !newTask) return { error: error?.message ?? "Eroare la crearea sarcinii." };
+
+  if (tagIds.length) {
+    const rows = tagIds.map((tag_id) => ({ task_id: newTask.id as string, tag_id }));
+    const { error: tagErr } = await supabase.from("task_tags").insert(rows);
+    if (tagErr) return { error: tagErr.message };
+  }
 
   revalidatePath("/tasks");
   return { success: true };
 }
 
-export async function updateTask(id: string, input: TaskInput): Promise<ActionResult> {
+export async function updateTask(
+  id: string,
+  input: TaskInput,
+  tagIds: string[] = [],
+): Promise<ActionResult> {
   const parsed = taskSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Date invalide." };
 
@@ -47,6 +59,26 @@ export async function updateTask(id: string, input: TaskInput): Promise<ActionRe
     .select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
+
+  // Sincronizează etichetele (adaugă cele noi, elimină cele deselectate).
+  const { data: existing } = await supabase.from("task_tags").select("tag_id").eq("task_id", id);
+  const current = new Set((existing ?? []).map((r) => r.tag_id as string));
+  const toAdd = tagIds.filter((t) => !current.has(t));
+  const toRemove = [...current].filter((t) => !tagIds.includes(t));
+  if (toAdd.length) {
+    const { error: addErr } = await supabase
+      .from("task_tags")
+      .insert(toAdd.map((tag_id) => ({ task_id: id, tag_id })));
+    if (addErr) return { error: addErr.message };
+  }
+  if (toRemove.length) {
+    const { error: remErr } = await supabase
+      .from("task_tags")
+      .delete()
+      .eq("task_id", id)
+      .in("tag_id", toRemove);
+    if (remErr) return { error: remErr.message };
+  }
 
   revalidatePath("/tasks");
   revalidatePath(`/tasks/${id}`);

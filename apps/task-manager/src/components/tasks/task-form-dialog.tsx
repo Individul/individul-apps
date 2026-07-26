@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -26,7 +26,8 @@ import {
 import { createTask, updateTask } from "@/app/tasks/actions";
 import { canReassignTask } from "@/lib/permissions";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
-import type { Profile, Task, TaskPriority, TaskStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import type { Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const UNASSIGNED = "unassigned";
 
@@ -44,6 +45,7 @@ const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
 
 interface TaskFormDialogProps {
   profiles: Profile[];
+  allTags: Tag[];
   task?: Task;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,6 +76,7 @@ function defaultValues(task: Task | undefined, canReassign: boolean, currentUser
 
 export function TaskFormDialog({
   profiles,
+  allTags,
   task,
   open,
   onOpenChange,
@@ -81,6 +84,7 @@ export function TaskFormDialog({
   currentUserId,
 }: TaskFormDialogProps) {
   const [isPending, startTransition] = useTransition();
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const isEdit = Boolean(task);
   const canReassign = canReassignTask(isAdmin);
 
@@ -96,18 +100,26 @@ export function TaskFormDialog({
   });
 
   useEffect(() => {
-    if (open) reset(defaultValues(task, canReassign, currentUserId));
+    if (open) {
+      reset(defaultValues(task, canReassign, currentUserId));
+      setSelectedTagIds((task?.tags ?? []).map((t) => t.id));
+    }
   }, [open, task, canReassign, currentUserId, reset]);
 
   const onSubmit = (values: TaskInput) => {
     startTransition(async () => {
-      const result = task ? await updateTask(task.id, values) : await createTask(values);
+      const result = task
+        ? await updateTask(task.id, values, selectedTagIds)
+        : await createTask(values, selectedTagIds);
       if (result.error) {
         toast.error(result.error);
         return;
       }
       toast.success("Sarcină salvată");
-      if (!task) reset(defaultValues(undefined, canReassign, currentUserId));
+      if (!task) {
+        reset(defaultValues(undefined, canReassign, currentUserId));
+        setSelectedTagIds([]);
+      }
       onOpenChange(false);
     });
   };
@@ -218,6 +230,45 @@ export function TaskFormDialog({
                 )}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Etichete</Label>
+            {allTags.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nu există etichete. Adminul le creează din pagina principală.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {allTags.map((tag) => {
+                  const active = selectedTagIds.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedTagIds((ids) =>
+                          ids.includes(tag.id)
+                            ? ids.filter((x) => x !== tag.id)
+                            : [...ids, tag.id],
+                        )
+                      }
+                      className={cn(
+                        "rounded-full border px-2 py-0.5 text-xs transition hover:opacity-80",
+                        active && "font-medium text-white",
+                      )}
+                      style={
+                        active
+                          ? { backgroundColor: tag.color, borderColor: tag.color }
+                          : { borderColor: tag.color, color: tag.color }
+                      }
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <DialogFooter>
