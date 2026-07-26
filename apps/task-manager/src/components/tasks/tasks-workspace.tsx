@@ -20,8 +20,8 @@ export function TasksWorkspace({ tasks, profiles, currentUserId, isAdmin }: Task
   const [filter, setFilter] = useState<TaskFilter>({});
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      <aside className="lg:w-52 lg:shrink-0">
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+      <aside className="lg:w-56 lg:shrink-0">
         <QuickViews
           tasks={tasks}
           currentUserId={currentUserId}
@@ -41,7 +41,7 @@ export function TasksWorkspace({ tasks, profiles, currentUserId, isAdmin }: Task
         />
       </div>
 
-      <aside className="space-y-4 lg:w-72 lg:shrink-0">
+      <aside className="space-y-4 lg:w-80 lg:shrink-0">
         <TaskSummary tasks={tasks} />
         <AssigneeBreakdown tasks={tasks} profiles={profiles} />
       </aside>
