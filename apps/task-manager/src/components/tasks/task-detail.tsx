@@ -177,6 +177,7 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
 
       <TaskFormDialog
         profiles={profiles}
+        allTags={allTags}
         task={task}
         open={editOpen}
         onOpenChange={setEditOpen}

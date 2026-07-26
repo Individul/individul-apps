@@ -49,6 +49,17 @@ describe("filterTasks după etichetă", () => {
   });
 });
 
+describe("filterTasks după căutare", () => {
+  it("caută în titlu și descriere (case-insensitive)", () => {
+    const tasks = [
+      t({ id: "a", title: "Cumulare pedepse" }),
+      t({ id: "b", title: "Altceva", description: "detaliu CUMULARE aici" }),
+      t({ id: "c", title: "Nimic relevant" }),
+    ];
+    expect(filterTasks(tasks, { search: "cumulare" }).map((x) => x.id)).toEqual(["a", "b"]);
+  });
+});
+
 describe("filterTasks după termen (due)", () => {
   it("restante = termen trecut și nefinalizat", () => {
     const tasks = [

@@ -62,7 +62,7 @@ export function QuickViews({ tasks, currentUserId, filter, onFilterChange }: Qui
           <button
             key={v.key}
             type="button"
-            onClick={() => onFilterChange(v.filter)}
+            onClick={() => onFilterChange({ ...v.filter, search: filter.search })}
             className={cn(
               "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
               active

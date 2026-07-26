@@ -11,6 +11,7 @@ export interface TaskFilter {
   priority?: TaskPriority;
   due?: DueFilter;
   tagId?: string;
+  search?: string;
 }
 
 export function filterTasks(tasks: Task[], f: TaskFilter): Task[] {
@@ -24,6 +25,16 @@ export function filterTasks(tasks: Task[], f: TaskFilter): Task[] {
     if (f.assigneeId && t.assignee_id !== f.assigneeId) return false;
     if (f.priority && t.priority !== f.priority) return false;
     if (f.tagId && !(t.tags ?? []).some((tag) => tag.id === f.tagId)) return false;
+    if (f.search) {
+      const q = f.search.trim().toLowerCase();
+      if (
+        q &&
+        !t.title.toLowerCase().includes(q) &&
+        !(t.description ?? "").toLowerCase().includes(q)
+      ) {
+        return false;
+      }
+    }
     if (f.due) {
       // „Restante"/„Scadente" ignoră sarcinile finalizate sau fără termen.
       if (!t.due_date || t.status === "done") return false;
