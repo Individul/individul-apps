@@ -5,6 +5,7 @@ import { ArrowLeft, Download } from "lucide-react";
 import { getCurrentProfile, getProfiles } from "@/lib/queries";
 import { UserRoleTable } from "@/components/admin/user-role-table";
 import { RestoreBackup } from "@/components/admin/restore-backup";
+import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,10 @@ export default async function AdminPage() {
       <h1 className="mb-6 text-2xl font-semibold">Administrare</h1>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Utilizatori</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Utilizatori</h2>
+          <CreateUserDialog />
+        </div>
         <UserRoleTable profiles={profiles} currentUserId={me.id} />
       </section>
 

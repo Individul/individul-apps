@@ -73,6 +73,21 @@ Pentru ca adminul să poată **restaura** dintr-un backup din aplicație (adaug�
 Relaxează politica de inserare a comentariilor ca adminul să le poată re-insera cu
 autorul original. Tasks/etichete/legături erau deja permise adminului (`0002`/`0004`).
 
+## 2f. Creare utilizatori din aplicație (opțional)
+
+Pentru butonul **„Adaugă utilizator"** din `/admin` (creează cont cu username +
+parolă, fără email real), adaugă cheia **service-role**:
+
+1. Supabase → **Project Settings → API** → copiază **service_role** (secret!).
+2. Pune-o în `apps/task-manager/.env.local` și în variabilele de mediu Vercel:
+   ```
+   SUPABASE_SERVICE_ROLE_KEY=...
+   ```
+   Este **doar pe server** (fără `NEXT_PUBLIC_`) — nu o expune niciodată în client.
+
+Contul se creează cu un email intern `username@intern.local` (userul se loghează
+doar cu username + parolă). Fără această cheie, butonul întoarce o eroare clară.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.
