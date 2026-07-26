@@ -40,26 +40,28 @@ Autorizarea pe roluri (`admin` / `member`) e definită în
 3. După bootstrap, promovările/retrogradările ulterioare se fac în aplicație la
    [`/admin`](../README.md#roluri) — nu mai e nevoie de SQL manual.
 
-## 3. Make the workspace invite-only
+## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.
-2. Turn **OFF** "Enable email signups" so only users you add manually can log in.
-3. Keep **magic link / email OTP** enabled so invited members can sign in with a
-   one-time link (no password required).
+2. Make sure the **Email** provider is **enabled** (password sign-in is on by default).
+3. Turn **OFF** "Enable email signups" so only users you add manually can log in.
+   Signing IN existing users with a password still works with signups off.
 
-## 4. Add the team members
+## 4. Add the team members (with passwords)
 
 1. Go to **Authentication → Users → Add user**.
-2. Add the 4-5 team members by email. They receive a magic link on first login.
+2. Add the 4-5 team members by email, **set a password for each**, and enable
+   **"Auto Confirm User"** so they can sign in immediately.
 3. Optionally set each user's `full_name` (and `avatar_url`) in **User metadata** —
    the `handle_new_user` trigger copies it into their `profiles` row on first sign-in.
+4. Users can change their own password later from the app ("Schimbă parola" in the
+   top-right of the tasks page).
 
-## 5. Configure redirect URLs
+## 5. Redirect URLs (optional)
 
-Go to **Authentication → URL Configuration → Redirect URLs** and add:
+Email + password login does **not** require redirect URLs. If you later add a
+password-reset or magic-link flow (which go through `/auth/callback`), configure
+**Authentication → URL Configuration → Redirect URLs**:
 
 - Local dev: `http://localhost:3006/auth/callback`
-- Production (after deploy): `https://<app>.vercel.app/auth/callback`
-
-These must match the auth callback route the app uses; without them the magic-link
-sign-in will fail to complete.
+- Production: `https://<app>.vercel.app/auth/callback`
