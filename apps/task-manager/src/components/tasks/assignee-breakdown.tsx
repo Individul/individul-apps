@@ -1,4 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { avatarColor } from "@/lib/avatar-color";
+import { cn } from "@/lib/utils";
 import type { Profile, Task } from "@/lib/types";
 
 interface Row {
@@ -47,7 +49,9 @@ export function AssigneeBreakdown({ tasks, profiles }: { tasks: Task[]; profiles
           {rows.map((r) => (
             <li key={r.id} className="flex items-center gap-2.5 py-2 first:pt-0 last:pb-0">
               <Avatar className="h-6 w-6">
-                <AvatarFallback className="text-xs">{initials(r.name)}</AvatarFallback>
+                <AvatarFallback className={cn("text-xs", avatarColor(r.id))}>
+                  {initials(r.name)}
+                </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm">{r.name}</div>
