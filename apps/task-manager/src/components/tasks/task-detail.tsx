@@ -165,7 +165,7 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
 
       <section className="space-y-3">
         <SectionLabel>Etichete</SectionLabel>
-        <TagPicker taskId={task.id} taskTags={task.tags ?? []} allTags={allTags} isAdmin={isAdmin} />
+        <TagPicker taskId={task.id} taskTags={task.tags ?? []} allTags={allTags} />
       </section>
 
       <Comments
