@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -28,6 +29,7 @@ import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { deleteTask, finalizeTask } from "@/app/tasks/actions";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
+import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
 import type { Profile, Tag, Task } from "@/lib/types";
 
@@ -79,6 +81,7 @@ export function TaskTable({
   filter,
   onFilterChange,
 }: TaskTableProps) {
+  const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
@@ -160,7 +163,12 @@ export function TaskTable({
           <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2.5 text-[11px] font-medium text-muted-foreground">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span>Sarcină</span>
-              <HeaderSortButton table={table} columnId="priority" label="Prioritate" />
+              <HeaderSortButton
+                table={table}
+                columnId="priority"
+                label="Prioritate"
+                className="ml-auto shrink-0 pl-2"
+              />
             </div>
             <HeaderSortButton
               table={table}
@@ -187,18 +195,20 @@ export function TaskTable({
               return (
                 <div
                   key={row.id}
-                  className="flex items-stretch transition-colors hover:bg-muted/50"
+                  onClick={() => router.push(`/tasks/${t.id}`)}
+                  className="flex cursor-pointer items-stretch transition-colors hover:bg-muted/50"
                 >
                   <span
                     aria-label={PRIORITY_META[t.priority].label}
                     title={PRIORITY_META[t.priority].label}
                     className={cn("w-1 shrink-0", PRIORITY_BAR[t.priority])}
                   />
-                  <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3.5">
                     {/* Sarcină */}
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       <Link
                         href={`/tasks/${t.id}`}
+                        onClick={(e) => e.stopPropagation()}
                         className="truncate font-medium hover:underline"
                       >
                         {t.title}
@@ -208,8 +218,12 @@ export function TaskTable({
                           {t.tags!.map((tag) => (
                             <span
                               key={tag.id}
-                              className="rounded-md px-2 py-0.5 text-[11px]"
-                              style={{ backgroundColor: tag.color + "22", color: tag.color }}
+                              className="rounded-md border px-2 py-0.5 text-[11px]"
+                              style={{
+                                backgroundColor: tag.color + "22",
+                                color: tag.color,
+                                borderColor: tag.color + "66",
+                              }}
                             >
                               {tag.name}
                             </span>
@@ -234,7 +248,9 @@ export function TaskTable({
                       {t.assignee ? (
                         <>
                           <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-[10px]">
+                            <AvatarFallback
+                              className={cn("text-[10px]", avatarColor(t.assignee.id))}
+                            >
                               {initials(t.assignee.full_name)}
                             </AvatarFallback>
                           </Avatar>
@@ -259,7 +275,10 @@ export function TaskTable({
                     </div>
 
                     {/* Acțiuni */}
-                    <div className="flex w-8 shrink-0 justify-end">
+                    <div
+                      className="flex w-8 shrink-0 justify-end"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <TaskActionsMenu
                         task={t}
                         currentUserId={currentUserId}

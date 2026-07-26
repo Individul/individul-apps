@@ -32,7 +32,7 @@ export function TaskSummary({ tasks }: { tasks: Task[] }) {
     <div className="space-y-4 rounded-xl border bg-card p-4">
       <h2 className="text-sm font-medium">Rezumat</h2>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <Stat label="Total" value={total} />
         <Stat label="De făcut" value={todo} dot="bg-slate-400" />
         <Stat label="În lucru" value={inProgress} dot="bg-blue-500" />
@@ -46,7 +46,7 @@ export function TaskSummary({ tasks }: { tasks: Task[] }) {
         </span>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Progres</span>
           <span className="tabular-nums">{progress}%</span>
