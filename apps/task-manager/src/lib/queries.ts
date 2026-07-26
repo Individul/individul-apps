@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Task, Profile, Tag, Comment } from "./types";
+import type { Task, Profile, Tag, Comment, AuditEntry } from "./types";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -42,6 +42,18 @@ export async function getTags(): Promise<Tag[]> {
   const { data, error } = await supabase.from("tags").select("*").order("name");
   if (error) throw error;
   return (data ?? []) as Tag[];
+}
+
+export async function getAuditLog(limit = 100): Promise<AuditEntry[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("audit_log")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  // Tabela poate lipsi până se aplică migrarea 0007 — nu bloca pagina /admin.
+  if (error) return [];
+  return (data ?? []) as unknown as AuditEntry[];
 }
 
 export async function getCurrentProfile(): Promise<Profile | null> {

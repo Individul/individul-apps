@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download } from "lucide-react";
 
-import { getCurrentProfile, getProfiles } from "@/lib/queries";
+import { getCurrentProfile, getProfiles, getAuditLog } from "@/lib/queries";
 import { UserRoleTable } from "@/components/admin/user-role-table";
 import { RestoreBackup } from "@/components/admin/restore-backup";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
+import { AuditTable } from "@/components/admin/audit-table";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const me = await getCurrentProfile();
   if (me?.role !== "admin") redirect("/tasks");
-  const profiles = await getProfiles();
+  const [profiles, audit] = await Promise.all([getProfiles(), getAuditLog()]);
   return (
     <main className="mx-auto max-w-3xl p-6">
       <Link href="/tasks">
@@ -46,6 +47,14 @@ export default async function AdminPage() {
           </a>
           <RestoreBackup />
         </div>
+      </section>
+
+      <section className="mt-10 space-y-3">
+        <h2 className="text-lg font-semibold">Audit</h2>
+        <p className="text-sm text-muted-foreground">
+          Ultimele modificări (cine, ce, când). Se înregistrează automat.
+        </p>
+        <AuditTable entries={audit} />
       </section>
     </main>
   );

@@ -88,6 +88,14 @@ parolă, fără email real), adaugă cheia **service-role**:
 Contul se creează cu un email intern `username@intern.local` (userul se loghează
 doar cu username + parolă). Fără această cheie, butonul întoarce o eroare clară.
 
+## 2g. Audit (opțional)
+
+Pentru secțiunea **Audit** din `/admin` (cine/ce/când), rulează
+[`migrations/0007_audit.sql`](./migrations/0007_audit.sql). Creează tabela
+`audit_log` + trigger-e pe tasks/comments/tags/task_tags/profiles care
+înregistrează modificările (nu e retroactiv — începe după aplicare). Citirea e
+permisă doar adminului.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.

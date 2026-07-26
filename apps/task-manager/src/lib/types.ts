@@ -36,3 +36,13 @@ export interface Comment {
   created_at: string;
   author?: Profile;
 }
+export interface AuditEntry {
+  id: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  action: "INSERT" | "UPDATE" | "DELETE";
+  entity: "tasks" | "comments" | "tags" | "task_tags" | "profiles";
+  entity_id: string | null;
+  details: Record<string, unknown>;
+  created_at: string;
+}
