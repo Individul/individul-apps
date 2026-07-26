@@ -46,3 +46,15 @@ export interface AuditEntry {
   details: Record<string, unknown>;
   created_at: string;
 }
+export type NotificationType = "assigned" | "comment" | "status" | "edited" | "deleted";
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  task_id: string | null;
+  actor_id: string | null;
+  actor_name: string | null;
+  message: string;
+  read: boolean;
+  created_at: string;
+}

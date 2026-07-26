@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Task, Profile, Tag, Comment, AuditEntry } from "./types";
+import type { Task, Profile, Tag, Comment, AuditEntry, Notification } from "./types";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -64,4 +64,25 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
   if (error) throw error;
   return (data ?? null) as Profile | null;
+}
+
+export async function getNotifications(limit = 20): Promise<Notification[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return (data ?? []) as unknown as Notification[];
+}
+
+export async function getUnreadCount(): Promise<number> {
+  const supabase = createClient();
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("read", false);
+  if (error) return 0;
+  return count ?? 0;
 }

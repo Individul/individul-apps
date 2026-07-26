@@ -96,6 +96,16 @@ Pentru secțiunea **Audit** din `/admin` (cine/ce/când), rulează
 înregistrează modificările (nu e retroactiv — începe după aplicare). Citirea e
 permisă doar adminului.
 
+## 2h. Notificări (opțional)
+
+Pentru notificările în aplicație (clopoțelul cu sarcini atribuite, comentarii,
+schimbări de stare etc.), rulează
+[`migrations/0008_notifications.sql`](./migrations/0008_notifications.sql)
+**DUPĂ** `0007_audit.sql`. Creează tabela `notifications` cu RLS (fiecare user
+își vede/actualizează/șterge doar propriile notificări), funcția `create_notifications`
+și **activează Realtime** pe tabelă (o adaugă la publicația `supabase_realtime`),
+ca clopoțelul să se actualizeze live.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.
