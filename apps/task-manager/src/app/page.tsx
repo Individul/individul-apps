@@ -30,7 +30,7 @@ export default async function Home() {
 
   return (
     <main className="mx-auto max-w-[1800px] p-6 xl:px-10">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Sarcini</h1>
         <div className="flex items-center gap-2">
           {currentUserId && (

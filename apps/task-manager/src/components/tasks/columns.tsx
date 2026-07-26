@@ -31,6 +31,18 @@ const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> 
   high: { label: "Ridicată", className: "border-transparent bg-red-100 text-red-700" },
 };
 
+const PRIORITY_BAR: Record<TaskPriority, string> = {
+  high: "bg-red-500",
+  medium: "bg-amber-500",
+  low: "bg-slate-300",
+};
+
+const STATUS_DOT: Record<TaskStatus, string> = {
+  todo: "bg-slate-400",
+  in_progress: "bg-blue-500",
+  done: "bg-green-500",
+};
+
 function initials(name: string | null | undefined): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -72,33 +84,55 @@ export function makeColumns({
 }: ColumnHandlers): ColumnDef<Task>[] {
   return [
   {
-    accessorKey: "title",
-    header: "Titlu",
+    id: "priority",
+    accessorFn: (task) => PRIORITY_ORDER[task.priority],
+    header: ({ column }) => <SortableHeader column={column} label="Prioritate" />,
     cell: ({ row }) => (
-      <Link
-        href={`/tasks/${row.original.id}`}
-        className="font-medium hover:underline"
-      >
-        {row.original.title}
-      </Link>
+      <span
+        aria-label={PRIORITY_META[row.original.priority].label}
+        title={PRIORITY_META[row.original.priority].label}
+        className={cn("block h-6 w-1 rounded-full", PRIORITY_BAR[row.original.priority])}
+      />
+    ),
+  },
+  {
+    accessorKey: "title",
+    header: "Sarcină",
+    cell: ({ row }) => (
+      <div className="space-y-1">
+        <Link href={`/tasks/${row.original.id}`} className="font-medium hover:underline">
+          {row.original.title}
+        </Link>
+        {(row.original.tags ?? []).length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {row.original.tags!.map((tag) => (
+              <Badge
+                key={tag.id}
+                className="border-transparent text-white"
+                style={{ backgroundColor: tag.color }}
+              >
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
     ),
   },
   {
     accessorKey: "status",
     header: ({ column }) => <SortableHeader column={column} label="Stare" />,
-    cell: ({ row }) => {
-      const meta = STATUS_META[row.original.status];
-      return <Badge className={meta.className}>{meta.label}</Badge>;
-    },
-  },
-  {
-    id: "priority",
-    accessorFn: (task) => PRIORITY_ORDER[task.priority],
-    header: ({ column }) => <SortableHeader column={column} label="Prioritate" />,
-    cell: ({ row }) => {
-      const meta = PRIORITY_META[row.original.priority];
-      return <Badge className={meta.className}>{meta.label}</Badge>;
-    },
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <span
+          className={cn("h-2 w-2 rounded-full", STATUS_DOT[row.original.status])}
+          aria-hidden
+        />
+        <span className="text-sm text-muted-foreground">
+          {STATUS_META[row.original.status].label}
+        </span>
+      </div>
+    ),
   },
   {
     accessorKey: "assignee",
@@ -109,10 +143,10 @@ export function makeColumns({
       if (!assignee) return <span className="text-muted-foreground">—</span>;
       return (
         <div className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
+          <Avatar className="h-6 w-6">
             <AvatarFallback className="text-xs">{initials(assignee.full_name)}</AvatarFallback>
           </Avatar>
-          <span>{assignee.full_name ?? "—"}</span>
+          <span className="text-sm text-muted-foreground">{assignee.full_name ?? "—"}</span>
         </div>
       );
     },
@@ -128,28 +162,6 @@ export function makeColumns({
       const overdue = due < startOfToday && row.original.status !== "done";
       return (
         <span className={cn(overdue && "text-red-600")}>{format(due, "d MMM yyyy")}</span>
-      );
-    },
-  },
-  {
-    accessorKey: "tags",
-    header: "Etichete",
-    enableSorting: false,
-    cell: ({ row }) => {
-      const tags = row.original.tags ?? [];
-      if (tags.length === 0) return <span className="text-muted-foreground">—</span>;
-      return (
-        <div className="flex flex-wrap gap-1">
-          {tags.map((tag) => (
-            <Badge
-              key={tag.id}
-              className="border-transparent text-white"
-              style={{ backgroundColor: tag.color }}
-            >
-              {tag.name}
-            </Badge>
-          ))}
-        </div>
       );
     },
   },
