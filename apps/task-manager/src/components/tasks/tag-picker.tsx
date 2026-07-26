@@ -23,9 +23,10 @@ interface TagPickerProps {
   taskId: string;
   taskTags: Tag[];
   allTags: Tag[];
+  isAdmin: boolean;
 }
 
-export function TagPicker({ taskId, taskTags, allTags }: TagPickerProps) {
+export function TagPicker({ taskId, taskTags, allTags, isAdmin }: TagPickerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [newName, setNewName] = useState("");
@@ -128,30 +129,32 @@ export function TagPicker({ taskId, taskTags, allTags }: TagPickerProps) {
         </DropdownMenu>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="Etichetă nouă"
-          className="h-8 w-40"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleCreate();
-            }
-          }}
-        />
-        <input
-          type="color"
-          value={newColor}
-          onChange={(e) => setNewColor(e.target.value)}
-          aria-label="Culoare etichetă"
-          className="h-8 w-10 cursor-pointer rounded-md border border-input bg-background p-1"
-        />
-        <Button size="sm" className="h-8" onClick={handleCreate} disabled={isPending}>
-          Creează
-        </Button>
-      </div>
+      {isAdmin && (
+        <div className="flex items-center gap-2">
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Etichetă nouă"
+            className="h-8 w-40"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleCreate();
+              }
+            }}
+          />
+          <input
+            type="color"
+            value={newColor}
+            onChange={(e) => setNewColor(e.target.value)}
+            aria-label="Culoare etichetă"
+            className="h-8 w-10 cursor-pointer rounded-md border border-input bg-background p-1"
+          />
+          <Button size="sm" className="h-8" onClick={handleCreate} disabled={isPending}>
+            Creează
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

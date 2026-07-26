@@ -85,6 +85,18 @@ export async function createTag(name: string, color: string): Promise<{ error?: 
   const trimmed = name.trim();
   if (!trimmed) return { error: "Numele etichetei e obligatoriu." };
   const supabase = createClient();
+
+  // Doar adminul poate crea etichete (impus și de RLS).
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.role !== "admin") return { error: "Doar adminul poate crea etichete." };
+
   const { data, error } = await supabase
     .from("tags")
     .insert({ name: trimmed, color })

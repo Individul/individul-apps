@@ -51,6 +51,12 @@ Pentru a permite login cu **username** (pe lângă email), rulează
 Userii își setează singuri username-ul din aplicație („Profilul meu"). Login-ul
 acceptă email **sau** username + parolă.
 
+## 2d. Etichete (creare doar de admin)
+
+Rulează [`migrations/0004_tags_admin_only.sql`](./migrations/0004_tags_admin_only.sql)
+**DUPĂ** `0002_roles.sql`. Doar adminul poate crea/modifica/șterge etichete; toți
+utilizatorii le pot citi și atașa pe sarcini.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.
