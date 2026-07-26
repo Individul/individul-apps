@@ -65,6 +65,14 @@ Rulează [`migrations/0004_tags_admin_only.sql`](./migrations/0004_tags_admin_on
 **DUPĂ** `0002_roles.sql`. Doar adminul poate crea/modifica/șterge etichete; toți
 utilizatorii le pot citi și atașa pe sarcini.
 
+## 2e. Restaurare backup (opțional)
+
+Pentru ca adminul să poată **restaura** dintr-un backup din aplicație (adaugă
+înregistrările lipsă, non-distructiv — vezi `/admin`), rulează
+[`migrations/0006_restore_comments.sql`](./migrations/0006_restore_comments.sql).
+Relaxează politica de inserare a comentariilor ca adminul să le poată re-insera cu
+autorul original. Tasks/etichete/legături erau deja permise adminului (`0002`/`0004`).
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.
