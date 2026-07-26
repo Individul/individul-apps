@@ -54,6 +54,7 @@ export function TasksWorkspace({
         <AssigneeBreakdown tasks={tasks} profiles={profiles} />
         <TagsPanel
           allTags={allTags}
+          tasks={tasks}
           filter={filter}
           onFilterChange={setFilter}
           isAdmin={isAdmin}

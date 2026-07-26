@@ -10,19 +10,28 @@ import { Input } from "@/components/ui/input";
 import { createTag } from "@/app/tasks/actions";
 import { cn } from "@/lib/utils";
 import type { TaskFilter } from "@/lib/task-filters";
-import type { Tag } from "@/lib/types";
+import type { Tag, Task } from "@/lib/types";
 
 const DEFAULT_COLOR = "#64748b";
 
 interface TagsPanelProps {
   allTags: Tag[];
+  tasks: Task[];
   filter: TaskFilter;
   onFilterChange: (f: TaskFilter) => void;
   isAdmin: boolean;
 }
 
-export function TagsPanel({ allTags, filter, onFilterChange, isAdmin }: TagsPanelProps) {
+export function TagsPanel({ allTags, tasks, filter, onFilterChange, isAdmin }: TagsPanelProps) {
   const router = useRouter();
+
+  // Număr de sarcini per etichetă (total, din toate sarcinile).
+  const counts = new Map<string, number>();
+  for (const task of tasks) {
+    for (const tg of task.tags ?? []) {
+      counts.set(tg.id, (counts.get(tg.id) ?? 0) + 1);
+    }
+  }
   const [isPending, startTransition] = useTransition();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
@@ -92,6 +101,7 @@ export function TagsPanel({ allTags, filter, onFilterChange, isAdmin }: TagsPane
                 }
               >
                 {tag.name}
+                <span className="ml-1.5 tabular-nums opacity-70">{counts.get(tag.id) ?? 0}</span>
               </button>
             );
           })}
