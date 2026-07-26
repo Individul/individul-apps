@@ -63,6 +63,24 @@ export async function deleteTask(id: string): Promise<ActionResult> {
   return { success: true };
 }
 
+// Marchează sarcina ca finalizată. Regula „proprie sau admin" e impusă de
+// politica RLS `tasks update` (admin OR created_by OR assignee); dacă userul nu
+// are drept, update-ul afectează 0 rânduri și întoarcem eroare.
+export async function finalizeTask(id: string): Promise<ActionResult> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ status: "done" })
+    .eq("id", id)
+    .select();
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
+
+  revalidatePath("/tasks");
+  revalidatePath(`/tasks/${id}`);
+  return { success: true };
+}
+
 export async function createTag(name: string, color: string): Promise<{ error?: string; tag?: { id: string; name: string; color: string } }> {
   const trimmed = name.trim();
   if (!trimmed) return { error: "Numele etichetei e obligatoriu." };

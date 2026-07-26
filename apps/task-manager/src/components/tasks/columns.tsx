@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ArrowUpDown, CheckCircle2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PRIORITY_ORDER } from "@/lib/task-filters";
-import { canEditTask, canDeleteTask } from "@/lib/permissions";
+import { canEditTask, canDeleteTask, canFinalizeTask } from "@/lib/permissions";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
@@ -58,6 +58,7 @@ function SortableHeader({ column, label }: { column: Column<Task, unknown>; labe
 export interface ColumnHandlers {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  onFinalize: (task: Task) => void;
   currentUserId: string | null;
   isAdmin: boolean;
 }
@@ -65,6 +66,7 @@ export interface ColumnHandlers {
 export function makeColumns({
   onEdit,
   onDelete,
+  onFinalize,
   currentUserId,
   isAdmin,
 }: ColumnHandlers): ColumnDef<Task>[] {
@@ -160,7 +162,8 @@ export function makeColumns({
       const uid = currentUserId ?? "";
       const canEdit = canEditTask(uid, isAdmin, task);
       const canDelete = canDeleteTask(uid, isAdmin, task);
-      if (!canEdit && !canDelete) {
+      const canFinalize = canFinalizeTask(uid, isAdmin, task) && task.status !== "done";
+      if (!canEdit && !canDelete && !canFinalize) {
         return <div className="flex justify-end text-muted-foreground">—</div>;
       }
       return (
@@ -173,6 +176,12 @@ export function makeColumns({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {canFinalize && (
+                <DropdownMenuItem onSelect={() => onFinalize(task)}>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Finalizează
+                </DropdownMenuItem>
+              )}
               {canEdit && (
                 <DropdownMenuItem onSelect={() => onEdit(task)}>
                   <Pencil className="mr-2 h-4 w-4" />
