@@ -12,7 +12,7 @@ fără backend separat. Găzduire GitHub + Vercel.
 - Etichete colorate
 - Comentarii pe fiecare task (editare/ștergere doar de autor)
 - Autentificare cu **email + parolă**, **invite-only** (utilizatori adăugați manual în Supabase)
-- Fiecare utilizator își poate schimba singur parola din aplicație
+- Fiecare utilizator își poate seta numele afișat („Profilul meu") și schimba parola din aplicație
 
 ## Stack
 
