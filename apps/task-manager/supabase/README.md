@@ -27,15 +27,23 @@ Autorizarea pe roluri (`admin` / `member`) e definită în
 [`migrations/0002_roles.sql`](./migrations/0002_roles.sql).
 
 1. În **SQL Editor**, rulează `migrations/0002_roles.sql` **DUPĂ**
-   `0001_init.sql`. Migrarea adaugă coloana `role`, politicile RLS pe roluri și
-   trigger-ul `profiles_role_guard` (doar un admin poate schimba roluri).
+   `0001_init.sql`, apoi `migrations/0005_role_guard_service_context.sql`.
+   `0002` adaugă coloana `role`, politicile RLS și trigger-ul `profiles_role_guard`
+   (doar un admin poate schimba roluri); `0005` corectează gărzile ca să blocheze
+   doar userii **autentificați** non-admin — altfel trigger-ul blochează chiar și
+   bootstrap-ul din SQL Editor (unde `auth.uid()` e null).
 2. **Bootstrap primul admin.** Deoarece încă nu există niciun admin care să
-   promoveze pe cineva din UI, setează manual primul administrator:
+   promoveze pe cineva din UI, setează manual primul administrator (merge direct
+   după ce ai aplicat `0005`):
 
    ```sql
    update profiles set role = 'admin'
    where id = (select id from auth.users where email = 'emailul-tău');
    ```
+
+   > Dacă nu ai aplicat `0005`, dezactivează temporar trigger-ul în jurul update-ului:
+   > `alter table profiles disable trigger profiles_role_guard;` … update … apoi
+   > `alter table profiles enable trigger profiles_role_guard;`
 
 3. După bootstrap, promovările/retrogradările ulterioare se fac în aplicație la
    [`/admin`](../README.md#roluri) — nu mai e nevoie de SQL manual.
