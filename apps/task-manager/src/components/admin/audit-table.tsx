@@ -33,6 +33,19 @@ function detailText(e: AuditEntry): string {
   return "";
 }
 
+function phrase(e: AuditEntry): string {
+  const verb = ACTION_META[e.action]?.verb ?? e.action;
+  // Etichetele sunt deja create — pe o sarcină ele se adaugă/elimină, nu se „creează".
+  if (e.entity === "task_tags") {
+    if (e.action === "INSERT") return "a adăugat o etichetă la o sarcină";
+    if (e.action === "DELETE") return "a eliminat o etichetă de la o sarcină";
+    return `${verb} o etichetă a unei sarcini`;
+  }
+  const label = ENTITY_LABEL[e.entity] ?? e.entity;
+  const detail = detailText(e);
+  return `${verb} ${label}${detail ? ` ${detail}` : ""}`;
+}
+
 export function AuditTable({ entries }: { entries: AuditEntry[] }) {
   if (entries.length === 0) {
     return <p className="text-sm text-muted-foreground">Nicio activitate înregistrată încă.</p>;
@@ -65,7 +78,6 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
             {g.items.map((e) => {
               const meta = ACTION_META[e.action];
               const Icon = meta?.Icon ?? Pencil;
-              const detail = detailText(e);
               return (
                 <li key={e.id} className="flex items-start gap-3">
                   <span
@@ -79,8 +91,7 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm leading-snug">
                       <span className="font-medium">{e.actor_name ?? "Sistem"}</span>{" "}
-                      {meta?.verb ?? e.action} {ENTITY_LABEL[e.entity] ?? e.entity}
-                      {detail ? ` ${detail}` : ""}
+                      {phrase(e)}
                     </p>
                     <p
                       className="mt-0.5 text-xs text-muted-foreground"
