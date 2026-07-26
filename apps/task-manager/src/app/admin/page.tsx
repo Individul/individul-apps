@@ -16,7 +16,7 @@ export default async function AdminPage() {
   if (me?.role !== "admin") redirect("/");
   const [profiles, audit] = await Promise.all([getProfiles(), getAuditLog()]);
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="mx-auto max-w-[1800px] p-6 xl:px-10">
       <Link href="/">
         <Button variant="ghost" size="sm" className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la sarcini
