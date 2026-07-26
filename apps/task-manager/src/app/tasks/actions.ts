@@ -39,7 +39,7 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
     if (tagErr) return { error: tagErr.message };
   }
 
-  revalidatePath("/tasks");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -80,7 +80,7 @@ export async function updateTask(
     if (remErr) return { error: remErr.message };
   }
 
-  revalidatePath("/tasks");
+  revalidatePath("/");
   revalidatePath(`/tasks/${id}`);
   return { success: true };
 }
@@ -91,7 +91,7 @@ export async function deleteTask(id: string): Promise<ActionResult> {
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
 
-  revalidatePath("/tasks");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -108,7 +108,7 @@ export async function finalizeTask(id: string): Promise<ActionResult> {
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
 
-  revalidatePath("/tasks");
+  revalidatePath("/");
   revalidatePath(`/tasks/${id}`);
   return { success: true };
 }
@@ -143,7 +143,7 @@ export async function attachTag(taskId: string, tagId: string): Promise<{ error?
   const { error } = await supabase.from("task_tags").insert({ task_id: taskId, tag_id: tagId });
   if (error) return { error: error.message };
   revalidatePath(`/tasks/${taskId}`);
-  revalidatePath("/tasks");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -156,7 +156,7 @@ export async function detachTag(taskId: string, tagId: string): Promise<{ error?
     .eq("tag_id", tagId);
   if (error) return { error: error.message };
   revalidatePath(`/tasks/${taskId}`);
-  revalidatePath("/tasks");
+  revalidatePath("/");
   return { success: true };
 }
 

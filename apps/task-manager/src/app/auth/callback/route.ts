@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   // Acceptă doar căi interne relative (o singură bară inițială), ca să evităm
   // open-redirect prin ?next=@evil.com sau ?next=//evil.com.
   const nextParam = searchParams.get("next");
-  const next = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : "/tasks";
+  const next = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : "/";
 
   if (code) {
     const supabase = createClient();
