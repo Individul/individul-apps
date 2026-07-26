@@ -25,5 +25,5 @@ export async function signInWithPassword(
   // Mesaj generic intenționat: nu dezvăluim ce email/username există.
   if (error) return { error: "Date de autentificare incorecte." };
 
-  redirect("/tasks");
+  redirect("/");
 }

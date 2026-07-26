@@ -60,7 +60,7 @@ export async function updateProfile(
   }
   if (!data || data.length === 0) return { error: "Nu s-a putut actualiza profilul." };
 
-  revalidatePath("/tasks");
+  revalidatePath("/");
   revalidatePath("/admin");
   return { success: true };
 }

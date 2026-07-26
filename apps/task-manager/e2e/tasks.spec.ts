@@ -18,7 +18,7 @@ test("create a task and add a comment", async ({ page }) => {
   const commentBody = `Comentariu E2E ${Date.now()}`;
 
   // 1. Tasks list.
-  await page.goto("/tasks");
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: "Sarcini" })).toBeVisible();
 
   // 2. Open the "Sarcină nouă" dialog and create a task with a unique title.

@@ -25,7 +25,7 @@ export async function setUserRole(
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Fără permisiune sau utilizator inexistent." };
   revalidatePath("/admin");
-  revalidatePath("/tasks");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -93,7 +93,7 @@ export async function restoreBackup(payload: unknown): Promise<RestoreResult> {
     inserted.comments = r?.length ?? 0;
   }
 
-  revalidatePath("/tasks");
+  revalidatePath("/");
   revalidatePath("/admin");
   return { inserted };
 }
@@ -169,6 +169,6 @@ export async function createUser(input: {
   }
 
   revalidatePath("/admin");
-  revalidatePath("/tasks");
+  revalidatePath("/");
   return { success: true };
 }
