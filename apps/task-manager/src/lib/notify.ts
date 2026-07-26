@@ -10,12 +10,17 @@ export async function notify(
 ): Promise<void> {
   const recipients = recipientsFor(type, task, actorId);
   if (recipients.length === 0) return;
-  const supabase = createClient();
-  await supabase.rpc("create_notifications", {
-    p_recipients: recipients,
-    p_type: type,
-    p_task_id: task.id,
-    p_message: messageFor(type, task.title, statusLabel),
-  });
-  // best-effort: nu bloca acțiunea dacă rpc eșuează
+  // best-effort: notificările nu trebuie să blocheze niciodată acțiunea de bază.
+  try {
+    const supabase = createClient();
+    await supabase.rpc("create_notifications", {
+      p_recipients: recipients,
+      p_type: type,
+      // la ștergere, sarcina nu mai există → link mort; nu referi un id inexistent (FK).
+      p_task_id: type === "deleted" ? null : task.id,
+      p_message: messageFor(type, task.title, statusLabel),
+    });
+  } catch {
+    // ignorat intenționat (ex: migrarea 0008 neaplicată, eroare de rețea).
+  }
 }

@@ -34,12 +34,33 @@ as $$
 declare
   v_actor uuid := auth.uid();
   v_actor_name text;
+  v_valid uuid[];
 begin
+  if v_actor is null then return; end if;
   select full_name into v_actor_name from profiles where id = v_actor;
+
+  -- Anti-spam: dacă notificarea e legată de o sarcină, destinatarii admiși sunt
+  -- doar creatorul sau responsabilul acelei sarcini (nu utilizatori arbitrari).
+  -- La ștergere (p_task_id null) nu se poate valida sarcina (a dispărut).
+  if p_task_id is not null then
+    select array_agg(r) into v_valid
+    from unnest(p_recipients) as r
+    where r is not null and r <> v_actor
+      and exists (
+        select 1 from tasks t
+        where t.id = p_task_id and (t.created_by = r or t.assignee_id = r)
+      );
+  else
+    select array_agg(r) into v_valid
+    from unnest(p_recipients) as r
+    where r is not null and r <> v_actor;
+  end if;
+
+  if v_valid is null then return; end if;
+
   insert into notifications (user_id, type, task_id, actor_id, actor_name, message)
   select r, p_type, p_task_id, v_actor, v_actor_name, p_message
-  from unnest(p_recipients) as r
-  where r is not null and r <> v_actor;
+  from unnest(v_valid) as r;
 end;
 $$;
 
