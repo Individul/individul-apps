@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function setUserRole(
   userId: string,
@@ -95,4 +96,79 @@ export async function restoreBackup(payload: unknown): Promise<RestoreResult> {
   revalidatePath("/tasks");
   revalidatePath("/admin");
   return { inserted };
+}
+
+// Creează un utilizator cu username + parolă (fără email real — se folosește un
+// email intern). Necesită cheia service-role. Doar admin.
+export async function createUser(input: {
+  full_name: string;
+  username: string;
+  password: string;
+}): Promise<{ error?: string; success?: boolean }> {
+  const fullName = input.full_name.trim();
+  const username = input.username.trim().toLowerCase();
+  const password = input.password;
+
+  if (!fullName) return { error: "Numele e obligatoriu." };
+  if (!/^[a-z0-9._-]{3,30}$/.test(username)) {
+    return { error: "Username invalid: 3-30 caractere, doar litere, cifre, . _ -" };
+  }
+  if (password.length < 8) return { error: "Parola trebuie să aibă minim 8 caractere." };
+
+  // Apelantul trebuie să fie admin.
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Neautentificat." };
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (me?.role !== "admin") return { error: "Doar adminul poate crea utilizatori." };
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { error: "Cheia service-role (SUPABASE_SERVICE_ROLE_KEY) nu e configurată." };
+  }
+
+  // Username unic (verificare prietenoasă înainte de a crea contul).
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+  if (existing) return { error: "Username-ul e deja folosit." };
+
+  const admin = createAdminClient();
+  const email = `${username}@intern.local`;
+
+  const { data: created, error: createErr } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
+  });
+  if (createErr || !created?.user) {
+    return { error: createErr?.message ?? "Nu s-a putut crea utilizatorul." };
+  }
+
+  // Trigger-ul handle_new_user a creat profilul (cu full_name din metadata).
+  // Setăm username-ul (service-role ocolește RLS).
+  const { error: profErr } = await admin
+    .from("profiles")
+    .update({ username, full_name: fullName })
+    .eq("id", created.user.id);
+  if (profErr) {
+    // Rollback: ștergem contul creat ca să nu rămână orfan.
+    await admin.auth.admin.deleteUser(created.user.id);
+    if ((profErr as { code?: string }).code === "23505") {
+      return { error: "Username-ul e deja folosit." };
+    }
+    return { error: `Nu s-a putut seta profilul: ${profErr.message}` };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/tasks");
+  return { success: true };
 }
