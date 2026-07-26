@@ -26,6 +26,16 @@ export function canEditTask(
   return isAdmin || userId === task.created_by || userId === task.assignee_id;
 }
 
+// Finalizarea (marcarea ca „done") e permisă pentru sarcina proprie
+// (creată de user sau atribuită lui) sau pentru admin pe oricare.
+export function canFinalizeTask(
+  userId: string,
+  isAdmin: boolean,
+  task: { created_by: string; assignee_id: string | null },
+): boolean {
+  return isAdmin || userId === task.created_by || userId === task.assignee_id;
+}
+
 export function canReassignTask(isAdmin: boolean): boolean {
   return isAdmin;
 }

@@ -4,6 +4,7 @@ import {
   canDeleteComment,
   canDeleteTask,
   canEditTask,
+  canFinalizeTask,
   canReassignTask,
 } from "./permissions";
 
@@ -32,6 +33,17 @@ describe("canEditTask", () => {
   it("asignatul poate edita", () =>
     expect(canEditTask("a", false, task({ assignee_id: "a" }))).toBe(true));
   it("altcineva nu poate", () => expect(canEditTask("other", false, task({}))).toBe(false));
+});
+
+describe("canFinalizeTask", () => {
+  it("adminul poate finaliza orice", () =>
+    expect(canFinalizeTask("x", true, task({}))).toBe(true));
+  it("creatorul poate finaliza", () =>
+    expect(canFinalizeTask("owner", false, task({}))).toBe(true));
+  it("asignatul poate finaliza", () =>
+    expect(canFinalizeTask("a", false, task({ assignee_id: "a" }))).toBe(true));
+  it("altcineva nu poate finaliza", () =>
+    expect(canFinalizeTask("other", false, task({}))).toBe(false));
 });
 
 describe("canReassignTask", () => {

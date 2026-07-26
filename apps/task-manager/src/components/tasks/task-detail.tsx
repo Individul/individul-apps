@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
-import { Pencil } from "lucide-react";
+import { CheckCircle2, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TagPicker } from "@/components/tasks/tag-picker";
 import { Comments } from "./comments";
-import { canEditTask } from "@/lib/permissions";
+import { finalizeTask } from "@/app/tasks/actions";
+import { canEditTask, canFinalizeTask } from "@/lib/permissions";
 import type { Comment, Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
@@ -45,12 +48,28 @@ interface TaskDetailProps {
 }
 
 export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: TaskDetailProps) {
+  const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const status = STATUS_META[task.status];
   const priority = PRIORITY_META[task.priority];
   const assignee = task.assignee;
   const canEdit = canEditTask(currentUserId ?? "", isAdmin, task);
+  const canFinalize =
+    canFinalizeTask(currentUserId ?? "", isAdmin, task) && task.status !== "done";
+
+  const handleFinalize = () => {
+    startTransition(async () => {
+      const res = await finalizeTask(task.id);
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success("Sarcină finalizată");
+      router.refresh();
+    });
+  };
 
   return (
     <article className="space-y-6">
@@ -62,11 +81,18 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
             <Badge className={priority.className}>{priority.label}</Badge>
           </div>
         </div>
-        {canEdit && (
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil className="mr-2 h-4 w-4" /> Editează
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canFinalize && (
+            <Button size="sm" onClick={handleFinalize} disabled={isPending}>
+              <CheckCircle2 className="mr-2 h-4 w-4" /> Finalizează
+            </Button>
+          )}
+          {canEdit && (
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" /> Editează
+            </Button>
+          )}
+        </div>
       </header>
 
       <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">

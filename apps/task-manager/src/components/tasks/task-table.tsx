@@ -21,7 +21,7 @@ import {
 import { makeColumns } from "@/components/tasks/columns";
 import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
-import { deleteTask } from "@/app/tasks/actions";
+import { deleteTask, finalizeTask } from "@/app/tasks/actions";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
 import type { Profile, Task } from "@/lib/types";
 
@@ -53,6 +53,17 @@ export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTable
     });
   };
 
+  const handleFinalize = (task: Task) => {
+    startTransition(async () => {
+      const result = await finalizeTask(task.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Sarcină finalizată");
+    });
+  };
+
   const columns = useMemo(
     () =>
       makeColumns({
@@ -61,6 +72,7 @@ export function TaskTable({ tasks, profiles, currentUserId, isAdmin }: TaskTable
           setFormOpen(true);
         },
         onDelete: handleDelete,
+        onFinalize: handleFinalize,
         currentUserId,
         isAdmin,
       }),
