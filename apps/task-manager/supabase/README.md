@@ -40,6 +40,17 @@ Autorizarea pe roluri (`admin` / `member`) e definită în
 3. După bootstrap, promovările/retrogradările ulterioare se fac în aplicație la
    [`/admin`](../README.md#roluri) — nu mai e nevoie de SQL manual.
 
+## 2c. Username
+
+Pentru a permite login cu **username** (pe lângă email), rulează
+[`migrations/0003_username.sql`](./migrations/0003_username.sql) **DUPĂ**
+`0002_roles.sql`. Adaugă coloana `username` (unică, case-insensitive) și funcția
+`email_for_login`, care rezolvă username→email la autentificare (apelabilă de rolul
+`anon`, fiindcă login-ul se face neautentificat).
+
+Userii își setează singuri username-ul din aplicație („Profilul meu"). Login-ul
+acceptă email **sau** username + parolă.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.

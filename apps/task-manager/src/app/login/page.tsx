@@ -24,19 +24,19 @@ export default function LoginPage() {
         <div className="mb-6 space-y-1.5 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Task Manager</h1>
           <p className="text-sm text-muted-foreground">
-            Conectează-te cu email și parolă.
+            Conectează-te cu email sau username și parolă.
           </p>
         </div>
 
         <form action={formAction} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="identifier">Email sau username</Label>
             <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="nume@exemplu.com"
+              id="identifier"
+              name="identifier"
+              type="text"
+              autoComplete="username"
+              placeholder="email@exemplu.com sau username"
               required
             />
           </div>

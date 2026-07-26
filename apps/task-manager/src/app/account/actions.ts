@@ -37,6 +37,12 @@ export async function updateProfile(
   if (!fullName) return { error: "Numele nu poate fi gol." };
   if (fullName.length > 200) return { error: "Numele e prea lung (max 200 caractere)." };
 
+  const usernameRaw = String(formData.get("username") || "").trim();
+  const username = usernameRaw ? usernameRaw.toLowerCase() : null;
+  if (username !== null && !/^[a-z0-9._-]{3,30}$/.test(username)) {
+    return { error: "Username invalid: 3-30 caractere, doar litere, cifre, . _ -" };
+  }
+
   const supabase = createClient();
   const {
     data: { user },
@@ -45,10 +51,13 @@ export async function updateProfile(
 
   const { data, error } = await supabase
     .from("profiles")
-    .update({ full_name: fullName })
+    .update({ full_name: fullName, username })
     .eq("id", user.id)
     .select();
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.code === "23505") return { error: "Username-ul e deja folosit." };
+    return { error: error.message };
+  }
   if (!data || data.length === 0) return { error: "Nu s-a putut actualiza profilul." };
 
   revalidatePath("/tasks");
