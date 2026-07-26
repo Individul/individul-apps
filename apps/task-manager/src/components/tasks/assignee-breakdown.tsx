@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Profile, Task } from "@/lib/types";
 
 interface Row {
@@ -6,6 +7,15 @@ interface Row {
   open: number;
   done: number;
   total: number;
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export function AssigneeBreakdown({ tasks, profiles }: { tasks: Task[]; profiles: Profile[] }) {
@@ -25,30 +35,29 @@ export function AssigneeBreakdown({ tasks, profiles }: { tasks: Task[]; profiles
     .sort((a, b) => b.total - a.total);
 
   const unassigned = tasks.filter((t) => !t.assignee_id).length;
-  const max = Math.max(1, ...rows.map((r) => r.total));
 
   return (
-    <div className="space-y-3 rounded-lg border p-4">
-      <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Pe responsabil
-      </h2>
+    <div className="space-y-3 rounded-xl border bg-card p-4">
+      <h2 className="text-sm font-medium">Pe responsabil</h2>
 
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nicio sarcină atribuită.</p>
       ) : (
-        <ul className="space-y-2.5">
+        <ul className="divide-y">
           {rows.map((r) => (
-            <li key={r.id} className="space-y-1">
-              <div className="flex items-center justify-between gap-2 text-sm">
-                <span className="truncate">{r.name}</span>
-                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            <li key={r.id} className="flex items-center gap-2.5 py-2 first:pt-0 last:pb-0">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-xs">{initials(r.name)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm">{r.name}</div>
+                <div className="text-xs tabular-nums text-muted-foreground">
                   {r.open} deschise · {r.done} gata
-                </span>
+                </div>
               </div>
-              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
-                <div className="h-full bg-blue-500" style={{ width: `${(r.open / max) * 100}%` }} />
-                <div className="h-full bg-green-500" style={{ width: `${(r.done / max) * 100}%` }} />
-              </div>
+              <span className="ml-auto shrink-0 text-sm tabular-nums text-muted-foreground">
+                {r.total}
+              </span>
             </li>
           ))}
         </ul>

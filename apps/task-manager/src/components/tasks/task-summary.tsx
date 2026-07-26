@@ -2,11 +2,14 @@ import { parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/types";
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, dot }: { label: string; value: number; dot?: string }) {
   return (
-    <div className="space-y-0.5">
-      <div className="text-2xl font-semibold tabular-nums leading-none">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+    <div className="space-y-1">
+      <div className="text-2xl font-medium tabular-nums leading-none">{value}</div>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {dot ? <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dot)} aria-hidden /> : null}
+        <span className="truncate">{label}</span>
+      </div>
     </div>
   );
 }
@@ -26,14 +29,14 @@ export function TaskSummary({ tasks }: { tasks: Task[] }) {
   const progress = total ? Math.round((done / total) * 100) : 0;
 
   return (
-    <div className="space-y-4 rounded-lg border p-4">
-      <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Rezumat</h2>
+    <div className="space-y-4 rounded-xl border bg-card p-4">
+      <h2 className="text-sm font-medium">Rezumat</h2>
 
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Total" value={total} />
-        <Stat label="De făcut" value={todo} />
-        <Stat label="În lucru" value={inProgress} />
-        <Stat label="Finalizate" value={done} />
+        <Stat label="De făcut" value={todo} dot="bg-slate-400" />
+        <Stat label="În lucru" value={inProgress} dot="bg-blue-500" />
+        <Stat label="Finalizate" value={done} dot="bg-green-500" />
       </div>
 
       <div className="flex items-center justify-between text-sm">

@@ -62,11 +62,9 @@ export function TagsPanel({ allTags, tasks, filter, onFilterChange, isAdmin }: T
   };
 
   return (
-    <div className="space-y-3 rounded-lg border p-4">
+    <div className="space-y-3 rounded-xl border bg-card p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Etichete
-        </h2>
+        <h2 className="text-sm font-medium">Etichete</h2>
         {isAdmin && (
           <Button
             variant="ghost"
@@ -91,7 +89,7 @@ export function TagsPanel({ allTags, tasks, filter, onFilterChange, isAdmin }: T
                 type="button"
                 onClick={() => toggle(tag.id)}
                 className={cn(
-                  "rounded-full border px-2 py-0.5 text-xs transition hover:opacity-80",
+                  "rounded-full border px-2.5 py-0.5 text-xs transition hover:opacity-80",
                   active && "font-medium text-white",
                 )}
                 style={

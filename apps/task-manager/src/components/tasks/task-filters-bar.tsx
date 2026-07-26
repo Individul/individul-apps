@@ -65,73 +65,74 @@ export function TaskFiltersBar({
         />
       </div>
 
-      <Select
-        value={filter.status ?? ALL}
-        onValueChange={(v) =>
-          onFilterChange({ ...filter, status: v === ALL ? undefined : (v as TaskStatus) })
-        }
-      >
-        <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Stare" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>Toate stările</SelectItem>
-          {STATUS_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select
+          value={filter.status ?? ALL}
+          onValueChange={(v) =>
+            onFilterChange({ ...filter, status: v === ALL ? undefined : (v as TaskStatus) })
+          }
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Stare" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Toate stările</SelectItem>
+            {STATUS_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select
-        value={filter.priority ?? ALL}
-        onValueChange={(v) =>
-          onFilterChange({ ...filter, priority: v === ALL ? undefined : (v as TaskPriority) })
-        }
-      >
-        <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Prioritate" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>Toate prioritățile</SelectItem>
-          {PRIORITY_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select
+          value={filter.priority ?? ALL}
+          onValueChange={(v) =>
+            onFilterChange({ ...filter, priority: v === ALL ? undefined : (v as TaskPriority) })
+          }
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Prioritate" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Toate prioritățile</SelectItem>
+            {PRIORITY_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select
-        value={filter.assigneeId ?? ALL}
-        onValueChange={(v) =>
-          onFilterChange({ ...filter, assigneeId: v === ALL ? undefined : v })
-        }
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Responsabil" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>Toți responsabilii</SelectItem>
-          {profiles.map((p) => (
-            <SelectItem key={p.id} value={p.id}>
-              {p.full_name ?? "(fără nume)"}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select
+          value={filter.assigneeId ?? ALL}
+          onValueChange={(v) =>
+            onFilterChange({ ...filter, assigneeId: v === ALL ? undefined : v })
+          }
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Responsabil" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Toți responsabilii</SelectItem>
+            {profiles.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.full_name ?? "(fără nume)"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Button
-        variant={mineActive ? "default" : "outline"}
-        size="sm"
-        onClick={toggleMine}
-        disabled={!currentUserId}
-      >
-        Doar ale mele
-      </Button>
+        <Button
+          variant={mineActive ? "default" : "outline"}
+          onClick={toggleMine}
+          disabled={!currentUserId}
+        >
+          Doar ale mele
+        </Button>
+      </div>
 
-      <Button size="sm" className="ml-auto" onClick={onNewTask}>
+      <Button className="ml-auto" onClick={onNewTask}>
         <Plus className="mr-1 h-4 w-4" />
         Sarcină nouă
       </Button>
