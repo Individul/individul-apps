@@ -99,7 +99,7 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-medium text-muted-foreground">
+      <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Comentarii ({comments.length})
       </h2>
 

@@ -9,12 +9,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TagPicker } from "@/components/tasks/tag-picker";
 import { Comments } from "./comments";
 import { finalizeTask } from "@/app/tasks/actions";
 import { canEditTask, canFinalizeTask } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 import type { Comment, Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
@@ -39,6 +39,22 @@ function initials(name: string | null | undefined): string {
     .join("");
 }
 
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      {children}
+    </dt>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      {children}
+    </h2>
+  );
+}
+
 interface TaskDetailProps {
   task: Task & { comments: Comment[] };
   profiles: Profile[];
@@ -59,6 +75,11 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
   const canFinalize =
     canFinalizeTask(currentUserId ?? "", isAdmin, task) && task.status !== "done";
 
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const overdue =
+    !!task.due_date && task.status !== "done" && parseISO(task.due_date) < startOfToday;
+
   const handleFinalize = () => {
     startTransition(async () => {
       const res = await finalizeTask(task.id);
@@ -72,37 +93,41 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
   };
 
   return (
-    <article className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold leading-tight">{task.title}</h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className={status.className}>{status.label}</Badge>
-            <Badge className={priority.className}>{priority.label}</Badge>
+    <article className="space-y-8">
+      <header className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-3">
+            <h1 className="text-2xl font-semibold leading-tight tracking-tight">{task.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className={status.className}>{status.label}</Badge>
+              <Badge className={priority.className}>{priority.label}</Badge>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {canFinalize && (
-            <Button size="sm" onClick={handleFinalize} disabled={isPending}>
-              <CheckCircle2 className="mr-2 h-4 w-4" /> Finalizează
-            </Button>
-          )}
-          {canEdit && (
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" /> Editează
-            </Button>
-          )}
+          <div className="flex shrink-0 items-center gap-2">
+            {canFinalize && (
+              <Button size="sm" onClick={handleFinalize} disabled={isPending}>
+                <CheckCircle2 className="mr-2 h-4 w-4" /> Finalizează
+              </Button>
+            )}
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Pencil className="mr-2 h-4 w-4" /> Editează
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
-      <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-        <div className="space-y-1">
-          <dt className="text-muted-foreground">Responsabil</dt>
+      <dl className="grid grid-cols-2 gap-x-8 gap-y-5 rounded-lg border bg-muted/20 p-5 text-sm sm:grid-cols-3">
+        <div className="space-y-1.5">
+          <FieldLabel>Responsabil</FieldLabel>
           <dd>
             {assignee ? (
               <div className="flex items-center gap-2">
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="text-xs">{initials(assignee.full_name)}</AvatarFallback>
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback className="text-[10px]">
+                    {initials(assignee.full_name)}
+                  </AvatarFallback>
                 </Avatar>
                 <span>{assignee.full_name ?? "(fără nume)"}</span>
               </div>
@@ -112,9 +137,9 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
           </dd>
         </div>
 
-        <div className="space-y-1">
-          <dt className="text-muted-foreground">Termen</dt>
-          <dd>
+        <div className="space-y-1.5">
+          <FieldLabel>Termen</FieldLabel>
+          <dd className={cn(overdue && "font-medium text-red-600")}>
             {task.due_date ? (
               format(parseISO(task.due_date), "d MMM yyyy")
             ) : (
@@ -123,29 +148,25 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
           </dd>
         </div>
 
-        <div className="space-y-1">
-          <dt className="text-muted-foreground">Creat</dt>
+        <div className="space-y-1.5">
+          <FieldLabel>Creat</FieldLabel>
           <dd>{format(parseISO(task.created_at), "d MMM yyyy")}</dd>
         </div>
       </dl>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-medium text-muted-foreground">Descriere</h2>
+        <SectionLabel>Descriere</SectionLabel>
         {task.description ? (
-          <p className="whitespace-pre-wrap text-sm">{task.description}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">{task.description}</p>
         ) : (
           <p className="text-sm text-muted-foreground">Fără descriere</p>
         )}
       </section>
 
-      <Separator />
-
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Etichete</h2>
+        <SectionLabel>Etichete</SectionLabel>
         <TagPicker taskId={task.id} taskTags={task.tags ?? []} allTags={allTags} />
       </section>
-
-      <Separator />
 
       <Comments
         taskId={task.id}
