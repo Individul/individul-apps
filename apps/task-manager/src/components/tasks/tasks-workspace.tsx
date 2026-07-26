@@ -6,17 +6,25 @@ import { QuickViews } from "@/components/tasks/quick-views";
 import { TaskTable } from "@/components/tasks/task-table";
 import { TaskSummary } from "@/components/tasks/task-summary";
 import { AssigneeBreakdown } from "@/components/tasks/assignee-breakdown";
+import { TagsPanel } from "@/components/tasks/tags-panel";
 import type { TaskFilter } from "@/lib/task-filters";
-import type { Profile, Task } from "@/lib/types";
+import type { Profile, Tag, Task } from "@/lib/types";
 
 interface TasksWorkspaceProps {
   tasks: Task[];
   profiles: Profile[];
+  allTags: Tag[];
   currentUserId: string | null;
   isAdmin: boolean;
 }
 
-export function TasksWorkspace({ tasks, profiles, currentUserId, isAdmin }: TasksWorkspaceProps) {
+export function TasksWorkspace({
+  tasks,
+  profiles,
+  allTags,
+  currentUserId,
+  isAdmin,
+}: TasksWorkspaceProps) {
   const [filter, setFilter] = useState<TaskFilter>({});
 
   return (
@@ -44,6 +52,12 @@ export function TasksWorkspace({ tasks, profiles, currentUserId, isAdmin }: Task
       <aside className="space-y-4 lg:w-80 lg:shrink-0">
         <TaskSummary tasks={tasks} />
         <AssigneeBreakdown tasks={tasks} profiles={profiles} />
+        <TagsPanel
+          allTags={allTags}
+          filter={filter}
+          onFilterChange={setFilter}
+          isAdmin={isAdmin}
+        />
       </aside>
     </div>
   );

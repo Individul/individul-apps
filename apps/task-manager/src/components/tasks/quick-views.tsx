@@ -17,7 +17,8 @@ function sameFilter(a: TaskFilter, b: TaskFilter): boolean {
     a.status === b.status &&
     a.assigneeId === b.assigneeId &&
     a.priority === b.priority &&
-    a.due === b.due
+    a.due === b.due &&
+    a.tagId === b.tagId
   );
 }
 

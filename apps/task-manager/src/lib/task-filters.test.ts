@@ -41,6 +41,14 @@ const shiftDays = (n: number) => {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate() + n);
 };
 
+describe("filterTasks după etichetă", () => {
+  it("filtrează după tagId", () => {
+    const tag = { id: "t1", name: "urgent", color: "#000000" };
+    const tasks = [t({ id: "a", tags: [tag] }), t({ id: "b", tags: [] })];
+    expect(filterTasks(tasks, { tagId: "t1" }).map((x) => x.id)).toEqual(["a"]);
+  });
+});
+
 describe("filterTasks după termen (due)", () => {
   it("restante = termen trecut și nefinalizat", () => {
     const tasks = [
