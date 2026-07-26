@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function changePassword(
@@ -25,5 +26,32 @@ export async function changePassword(
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
 
+  return { success: true };
+}
+
+export async function updateProfile(
+  _prev: { error?: string; success?: boolean } | null,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean }> {
+  const fullName = String(formData.get("full_name") || "").trim();
+  if (!fullName) return { error: "Numele nu poate fi gol." };
+  if (fullName.length > 200) return { error: "Numele e prea lung (max 200 caractere)." };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Neautentificat." };
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ full_name: fullName })
+    .eq("id", user.id)
+    .select();
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Nu s-a putut actualiza profilul." };
+
+  revalidatePath("/tasks");
+  revalidatePath("/admin");
   return { success: true };
 }
