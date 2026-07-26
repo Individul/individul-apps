@@ -19,10 +19,10 @@ test("create a task and add a comment", async ({ page }) => {
 
   // 1. Tasks list.
   await page.goto("/tasks");
-  await expect(page.getByRole("heading", { name: "Task-uri" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sarcini" })).toBeVisible();
 
-  // 2. Open the "Task nou" dialog and create a task with a unique title.
-  await page.getByRole("button", { name: "Task nou" }).click();
+  // 2. Open the "Sarcină nouă" dialog and create a task with a unique title.
+  await page.getByRole("button", { name: "Sarcină nouă" }).click();
   await page.getByLabel("Titlu").fill(title);
   await page.getByRole("button", { name: "Creează" }).click();
 

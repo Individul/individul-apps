@@ -122,7 +122,7 @@ export function TaskFiltersBar({
 
       <Button size="sm" className="ml-auto" onClick={onNewTask}>
         <Plus className="mr-1 h-4 w-4" />
-        Task nou
+        Sarcină nouă
       </Button>
     </div>
   );
