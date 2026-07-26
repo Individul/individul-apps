@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTasks, getProfiles, getCurrentProfile } from "@/lib/queries";
 import { TaskTable } from "@/components/tasks/task-table";
+import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export default async function TasksPage() {
               </Button>
             </Link>
           )}
+          <ChangePasswordDialog />
           <form action="/auth/signout" method="post">
             <Button variant="outline" size="sm" type="submit">
               Deconectare

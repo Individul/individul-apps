@@ -11,7 +11,8 @@ fără backend separat. Găzduire GitHub + Vercel.
 - Statusuri: De făcut / În lucru / Finalizat
 - Etichete colorate
 - Comentarii pe fiecare task (editare/ștergere doar de autor)
-- Autentificare magic-link (passwordless), **invite-only**
+- Autentificare cu **email + parolă**, **invite-only** (utilizatori adăugați manual în Supabase)
+- Fiecare utilizator își poate schimba singur parola din aplicație
 
 ## Stack
 
@@ -78,11 +79,13 @@ Detalii complete în [`supabase/README.md`](supabase/README.md). Pe scurt:
 
 1. Creează un proiect pe [supabase.com](https://supabase.com).
 2. În SQL Editor rulează [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-3. Dezactivează înregistrarea publică (Authentication → Providers → Email →
-   *Enable email signups* OFF) pentru a fi invite-only.
-4. Adaugă cei 4-5 membri din Authentication → Users.
-5. Authentication → URL Configuration → Redirect URLs: adaugă
-   `http://localhost:3006/auth/callback` și (după deploy) `https://<app>.vercel.app/auth/callback`.
+3. Activează providerul Email (Authentication → Providers → Email → *Enable Email
+   provider* ON; logarea cu parolă e activă implicit) și lasă *Enable email signups*
+   **OFF** — invite-only. Logarea userilor existenți cu parolă funcționează și cu
+   signups off.
+4. Adaugă cei 4-5 membri din Authentication → Users și **setează-le o parolă**
+   (Add user → cu parolă + „Auto Confirm User"). Userii își pot schimba ulterior
+   parola din aplicație („Schimbă parola", dreapta-sus pe pagina de task-uri).
 
 ## Deploy pe Vercel
 
@@ -99,7 +102,8 @@ Detalii complete în [`supabase/README.md`](supabase/README.md). Pe scurt:
 apps/task-manager/
 ├── src/
 │   ├── app/
-│   │   ├── login/           # pagină login (magic link)
+│   │   ├── login/           # pagină login (email + parolă)
+│   │   ├── account/         # schimbare parolă (Server Action)
 │   │   ├── auth/            # callback + signout (Route Handlers)
 │   │   ├── tasks/          # listă, [id] detaliu, actions.ts (Server Actions)
 │   │   ├── layout.tsx
