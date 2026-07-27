@@ -211,6 +211,62 @@ export async function createTag(name: string, color: string): Promise<{ error?: 
   return { tag: data as { id: string; name: string; color: string } };
 }
 
+export async function updateTag(
+  id: string,
+  name: string,
+  color: string,
+): Promise<{ error?: string; success?: boolean }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Numele etichetei e obligatoriu." };
+  const supabase = createClient();
+
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.role !== "admin") return { error: "Doar adminul poate modifica etichete." };
+
+  const { data, error } = await supabase
+    .from("tags")
+    .update({ name: trimmed, color })
+    .eq("id", id)
+    .select();
+  if (error) {
+    if ((error as { code?: string }).code === "23505") {
+      return { error: "Există deja o etichetă cu acest nume." };
+    }
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) return { error: "Etichetă inexistentă sau fără permisiune." };
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteTag(id: string): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createClient();
+
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.role !== "admin") return { error: "Doar adminul poate șterge etichete." };
+
+  // task_tags are ON DELETE CASCADE → eticheta se elimină automat de pe sarcini.
+  const { data, error } = await supabase.from("tags").delete().eq("id", id).select();
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Etichetă inexistentă sau fără permisiune." };
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function attachTag(taskId: string, tagId: string): Promise<{ error?: string; success?: boolean }> {
   const supabase = createClient();
   const { error } = await supabase.from("task_tags").insert({ task_id: taskId, tag_id: tagId });

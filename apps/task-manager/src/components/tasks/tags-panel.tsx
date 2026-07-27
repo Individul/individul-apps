@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTag } from "@/app/tasks/actions";
+import { ManageTagsDialog } from "@/components/tasks/manage-tags-dialog";
 import { cn } from "@/lib/utils";
 import type { TaskFilter } from "@/lib/task-filters";
 import type { Tag, Task } from "@/lib/types";
@@ -66,14 +67,17 @@ export function TagsPanel({ allTags, tasks, filter, onFilterChange, isAdmin }: T
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium">Etichete</h2>
         {isAdmin && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => setCreating((v) => !v)}
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" /> Adaugă
-          </Button>
+          <div className="flex items-center gap-1">
+            {allTags.length > 0 && <ManageTagsDialog tags={allTags} />}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => setCreating((v) => !v)}
+            >
+              <Plus className="mr-1 h-3.5 w-3.5" /> Adaugă
+            </Button>
+          </div>
         )}
       </div>
 
