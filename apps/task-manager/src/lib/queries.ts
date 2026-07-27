@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Task, Profile, Tag, Comment, AuditEntry, Notification } from "./types";
+import type { Task, Profile, Tag, Comment, AuditEntry, Notification, Subtask } from "./types";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -36,6 +36,18 @@ export async function getTaskHistory(taskId: string): Promise<AuditEntry[]> {
   // Grațios dacă migrarea 0009 nu e încă aplicată.
   if (error) return [];
   return (data ?? []) as unknown as AuditEntry[];
+}
+
+export async function getSubtasks(taskId: string): Promise<Subtask[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("subtasks")
+    .select("*")
+    .eq("task_id", taskId)
+    .order("position", { ascending: true });
+  // Grațios dacă migrarea 0010 nu e încă aplicată.
+  if (error) return [];
+  return (data ?? []) as unknown as Subtask[];
 }
 
 export async function getProfiles(): Promise<Profile[]> {

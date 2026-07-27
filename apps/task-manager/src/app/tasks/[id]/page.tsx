@@ -6,6 +6,7 @@ import {
   getTags,
   getCurrentProfile,
   getTaskHistory,
+  getSubtasks,
 } from "@/lib/queries";
 import { TaskDetail } from "@/components/tasks/task-detail";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,13 @@ import { ArrowLeft } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
-  const [task, profiles, allTags, currentProfile, history] = await Promise.all([
+  const [task, profiles, allTags, currentProfile, history, subtasks] = await Promise.all([
     getTask(params.id),
     getProfiles(),
     getTags(),
     getCurrentProfile(),
     getTaskHistory(params.id),
+    getSubtasks(params.id),
   ]);
   if (!task) notFound();
 
@@ -38,6 +40,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
         profiles={profiles}
         allTags={allTags}
         history={history}
+        subtasks={subtasks}
         currentUserId={currentUserId}
         isAdmin={isAdmin}
       />
