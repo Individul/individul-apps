@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTask, getProfiles, getTags, getCurrentProfile } from "@/lib/queries";
+import {
+  getTask,
+  getProfiles,
+  getTags,
+  getCurrentProfile,
+  getTaskHistory,
+} from "@/lib/queries";
 import { TaskDetail } from "@/components/tasks/task-detail";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -8,11 +14,12 @@ import { ArrowLeft } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
-  const [task, profiles, allTags, currentProfile] = await Promise.all([
+  const [task, profiles, allTags, currentProfile, history] = await Promise.all([
     getTask(params.id),
     getProfiles(),
     getTags(),
     getCurrentProfile(),
+    getTaskHistory(params.id),
   ]);
   if (!task) notFound();
 
@@ -30,6 +37,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
         task={task}
         profiles={profiles}
         allTags={allTags}
+        history={history}
         currentUserId={currentUserId}
         isAdmin={isAdmin}
       />

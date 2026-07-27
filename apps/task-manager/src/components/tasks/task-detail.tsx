@@ -12,11 +12,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TagPicker } from "@/components/tasks/tag-picker";
 import { Comments } from "./comments";
+import { TaskHistory } from "@/components/tasks/task-history";
 import { finalizeTask } from "@/app/tasks/actions";
 import { canEditTask, canFinalizeTask } from "@/lib/permissions";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
-import type { Comment, Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
+import type { AuditEntry, Comment, Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
@@ -56,11 +57,19 @@ interface TaskDetailProps {
   task: Task & { comments: Comment[] };
   profiles: Profile[];
   allTags: Tag[];
+  history: AuditEntry[];
   currentUserId: string | null;
   isAdmin: boolean;
 }
 
-export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: TaskDetailProps) {
+export function TaskDetail({
+  task,
+  profiles,
+  allTags,
+  history,
+  currentUserId,
+  isAdmin,
+}: TaskDetailProps) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -174,6 +183,8 @@ export function TaskDetail({ task, profiles, allTags, currentUserId, isAdmin }: 
             currentUserId={currentUserId}
             isAdmin={isAdmin}
           />
+
+          <TaskHistory entries={history} />
         </div>
       </div>
 

@@ -30,6 +30,14 @@ export async function getTask(id: string): Promise<(Task & { comments: Comment[]
   return task;
 }
 
+export async function getTaskHistory(taskId: string): Promise<AuditEntry[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("task_history", { p_task_id: taskId });
+  // Grațios dacă migrarea 0009 nu e încă aplicată.
+  if (error) return [];
+  return (data ?? []) as unknown as AuditEntry[];
+}
+
 export async function getProfiles(): Promise<Profile[]> {
   const supabase = createClient();
   const { data, error } = await supabase.from("profiles").select("*").order("full_name");
