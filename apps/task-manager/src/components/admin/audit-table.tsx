@@ -20,6 +20,7 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   tags: "eticheta",
   task_tags: "o etichetă a unei sarcini",
   profiles: "utilizatorul",
+  subtasks: "un pas",
 };
 
 function detailText(e: AuditEntry): string {
@@ -40,6 +41,15 @@ function phrase(e: AuditEntry): string {
     if (e.action === "INSERT") return "a adăugat o etichetă la o sarcină";
     if (e.action === "DELETE") return "a eliminat o etichetă de la o sarcină";
     return `${verb} o etichetă a unei sarcini`;
+  }
+  if (e.entity === "subtasks") {
+    const d = e.details ?? {};
+    const title = d.title ? `„${String(d.title)}”` : "un pas";
+    if (e.action === "INSERT") return `a adăugat pasul ${title}`;
+    if (e.action === "DELETE") return `a șters pasul ${title}`;
+    if (d.done_to === true) return `a bifat pasul ${title}`;
+    if (d.done_to === false) return `a debifat pasul ${title}`;
+    return `a modificat pasul ${title}`;
   }
   const label = ENTITY_LABEL[e.entity] ?? e.entity;
   const detail = detailText(e);

@@ -50,7 +50,7 @@ export interface AuditEntry {
   actor_id: string | null;
   actor_name: string | null;
   action: "INSERT" | "UPDATE" | "DELETE";
-  entity: "tasks" | "comments" | "tags" | "task_tags" | "profiles";
+  entity: "tasks" | "comments" | "tags" | "task_tags" | "profiles" | "subtasks";
   entity_id: string | null;
   details: Record<string, unknown>;
   created_at: string;
