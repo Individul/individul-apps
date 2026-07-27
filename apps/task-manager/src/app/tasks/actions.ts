@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { notify } from "@/lib/notify";
+import { templateStepsForTags } from "@/lib/subtask-templates";
 
 const STATUS_LABEL = { todo: "De făcut", in_progress: "În lucru", done: "Finalizat" } as const;
 
@@ -42,6 +43,9 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
     const { error: tagErr } = await supabase.from("task_tags").insert(rows);
     if (tagErr) return { error: tagErr.message };
   }
+
+  // Șabloane: adaugă pașii standard pentru etichetele cu șablon (best-effort).
+  await applyTemplateSubtasks(newTask.id as string);
 
   if (nt.assignee_id) {
     await notify(
@@ -350,4 +354,80 @@ export async function deleteComment(commentId: string, taskId: string): Promise<
   if (!data || data.length === 0) return { error: "Comentariu inexistent sau fără permisiune." };
   revalidatePath(`/tasks/${taskId}`);
   return { success: true };
+}
+
+// ===== Pași (subtask-uri) =====
+
+export async function addSubtask(taskId: string, title: string): Promise<{ error?: string }> {
+  const trimmed = title.trim();
+  if (!trimmed) return { error: "Pasul nu poate fi gol." };
+  const supabase = createClient();
+  const { data: last } = await supabase
+    .from("subtasks")
+    .select("position")
+    .eq("task_id", taskId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const position = ((last?.position as number | undefined) ?? -1) + 1;
+  const { error } = await supabase
+    .from("subtasks")
+    .insert({ task_id: taskId, title: trimmed, position });
+  if (error) return { error: error.message };
+  revalidatePath(`/tasks/${taskId}`);
+  return {};
+}
+
+export async function toggleSubtask(
+  id: string,
+  taskId: string,
+  done: boolean,
+): Promise<{ error?: string }> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("subtasks")
+    .update({ done, done_at: done ? new Date().toISOString() : null })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath(`/tasks/${taskId}`);
+  return {};
+}
+
+export async function deleteSubtask(id: string, taskId: string): Promise<{ error?: string }> {
+  const supabase = createClient();
+  const { error } = await supabase.from("subtasks").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath(`/tasks/${taskId}`);
+  return {};
+}
+
+// Adaugă pașii standard (din șabloanele etichetelor sarcinii) care lipsesc.
+export async function applyTemplateSubtasks(
+  taskId: string,
+): Promise<{ error?: string; added?: number }> {
+  const supabase = createClient();
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("tags(name)")
+    .eq("id", taskId)
+    .maybeSingle();
+  const tagNames = ((task?.tags as { name: string }[] | undefined) ?? []).map((t) => t.name);
+  const steps = templateStepsForTags(tagNames);
+  if (steps.length === 0) return { added: 0 };
+
+  const { data: existing } = await supabase
+    .from("subtasks")
+    .select("title, position")
+    .eq("task_id", taskId);
+  const have = new Set(((existing ?? []) as { title: string }[]).map((s) => s.title));
+  const toAdd = steps.filter((s) => !have.has(s));
+  if (toAdd.length === 0) return { added: 0 };
+
+  let position =
+    ((existing ?? []) as { position: number }[]).reduce((m, s) => Math.max(m, s.position), -1) + 1;
+  const rows = toAdd.map((title) => ({ task_id: taskId, title, position: position++ }));
+  const { error } = await supabase.from("subtasks").insert(rows);
+  if (error) return { error: error.message };
+  revalidatePath(`/tasks/${taskId}`);
+  return { added: rows.length };
 }

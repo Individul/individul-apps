@@ -36,6 +36,15 @@ export interface Comment {
   created_at: string;
   author?: Profile;
 }
+export interface Subtask {
+  id: string;
+  task_id: string;
+  title: string;
+  done: boolean;
+  position: number;
+  done_at: string | null;
+  created_at: string;
+}
 export interface AuditEntry {
   id: string;
   actor_id: string | null;

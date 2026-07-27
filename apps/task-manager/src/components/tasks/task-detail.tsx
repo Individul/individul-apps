@@ -12,12 +12,22 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TagPicker } from "@/components/tasks/tag-picker";
 import { Comments } from "./comments";
+import { SubtaskList } from "@/components/tasks/subtask-list";
 import { TaskHistory } from "@/components/tasks/task-history";
 import { finalizeTask } from "@/app/tasks/actions";
 import { canEditTask, canFinalizeTask } from "@/lib/permissions";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
-import type { AuditEntry, Comment, Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
+import type {
+  AuditEntry,
+  Comment,
+  Profile,
+  Subtask,
+  Tag,
+  Task,
+  TaskPriority,
+  TaskStatus,
+} from "@/lib/types";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
@@ -58,6 +68,7 @@ interface TaskDetailProps {
   profiles: Profile[];
   allTags: Tag[];
   history: AuditEntry[];
+  subtasks: Subtask[];
   currentUserId: string | null;
   isAdmin: boolean;
 }
@@ -67,6 +78,7 @@ export function TaskDetail({
   profiles,
   allTags,
   history,
+  subtasks,
   currentUserId,
   isAdmin,
 }: TaskDetailProps) {
@@ -171,6 +183,13 @@ export function TaskDetail({
               <p className="text-sm text-muted-foreground">Fără descriere</p>
             )}
           </section>
+
+          <SubtaskList
+            taskId={task.id}
+            subtasks={subtasks}
+            tagNames={(task.tags ?? []).map((t) => t.name)}
+            canEdit={canEdit}
+          />
 
           <section className="space-y-3">
             <SectionLabel>Etichete</SectionLabel>
