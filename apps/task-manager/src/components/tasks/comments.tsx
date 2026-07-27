@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
+import { MessageSquare, Pencil, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { addComment, deleteComment, editComment } from "@/app/tasks/actions";
 import { canDeleteComment, canEditComment } from "@/lib/permissions";
+import { avatarColor } from "@/lib/avatar-color";
+import { cn } from "@/lib/utils";
 import type { Comment } from "@/lib/types";
 
 function initials(name: string | null | undefined): string {
@@ -99,7 +102,8 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <h2 className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <MessageSquare className="h-3.5 w-3.5" />
         Comentarii ({comments.length})
       </h2>
 
@@ -113,59 +117,54 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
             const isEditing = editingId === comment.id;
             return (
               <li key={comment.id} className="flex gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="text-xs">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarFallback className={cn("text-xs", avatarColor(comment.author_id))}>
                     {initials(comment.author?.full_name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="font-medium">
-                      {comment.author?.full_name ?? "Utilizator"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {relativeTime(comment.created_at)}
-                    </span>
-                  </div>
 
+                <div className="min-w-0 flex-1">
                   {isEditing ? (
                     <div className="space-y-2">
                       <Textarea
                         value={editBody}
                         onChange={(e) => setEditBody(e.target.value)}
                         disabled={isPending}
+                        rows={3}
                       />
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleEdit(comment.id)}
-                          disabled={isPending}
-                        >
+                        <Button size="sm" onClick={() => handleEdit(comment.id)} disabled={isPending}>
                           Salvează
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={cancelEdit}
-                          disabled={isPending}
-                        >
+                        <Button size="sm" variant="outline" onClick={cancelEdit} disabled={isPending}>
                           Anulează
                         </Button>
                       </div>
                     </div>
                   ) : (
                     <>
-                      <p className="whitespace-pre-wrap text-sm">{comment.body}</p>
+                      <div className="rounded-lg bg-muted/50 px-3.5 py-2.5">
+                        <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
+                          <span className="text-sm font-medium">
+                            {comment.author?.full_name ?? "Utilizator"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {relativeTime(comment.created_at)}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed">{comment.body}</p>
+                      </div>
+
                       {(canEdit || canDelete) && (
-                        <div className="flex gap-3 text-xs">
+                        <div className="mt-1 flex gap-4 pl-1 text-xs">
                           {canEdit && (
                             <button
                               type="button"
                               onClick={() => startEdit(comment)}
                               disabled={isPending}
-                              className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+                              className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
                             >
-                              Editează
+                              <Pencil className="h-3 w-3" /> Editează
                             </button>
                           )}
                           {canDelete && (
@@ -173,9 +172,9 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
                               type="button"
                               onClick={() => handleDelete(comment.id)}
                               disabled={isPending}
-                              className="text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
+                              className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
                             >
-                              Șterge
+                              <Trash2 className="h-3 w-3" /> Șterge
                             </button>
                           )}
                         </div>
@@ -189,16 +188,19 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
         </ul>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2 pt-2">
         <Textarea
           value={newBody}
           onChange={(e) => setNewBody(e.target.value)}
           placeholder="Scrie un comentariu…"
           disabled={isPending}
+          rows={3}
         />
-        <Button onClick={handleAdd} disabled={isPending}>
-          Adaugă comentariu
-        </Button>
+        <div className="flex justify-end">
+          <Button onClick={handleAdd} disabled={isPending}>
+            <Send className="mr-2 h-4 w-4" /> Adaugă comentariu
+          </Button>
+        </div>
       </div>
     </section>
   );
