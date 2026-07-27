@@ -123,7 +123,7 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
                   </AvatarFallback>
                 </Avatar>
 
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 space-y-1">
                   {isEditing ? (
                     <div className="space-y-2">
                       <Textarea
@@ -143,20 +143,18 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
                     </div>
                   ) : (
                     <>
-                      <div className="rounded-lg bg-muted/50 px-3.5 py-2.5">
-                        <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
-                          <span className="text-sm font-medium">
-                            {comment.author?.full_name ?? "Utilizator"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {relativeTime(comment.created_at)}
-                          </span>
-                        </div>
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed">{comment.body}</p>
+                      <div className="flex flex-wrap items-baseline gap-x-2">
+                        <span className="text-sm font-medium">
+                          {comment.author?.full_name ?? "Utilizator"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {relativeTime(comment.created_at)}
+                        </span>
                       </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{comment.body}</p>
 
                       {(canEdit || canDelete) && (
-                        <div className="mt-1 flex gap-4 pl-1 text-xs">
+                        <div className="flex gap-4 text-xs">
                           {canEdit && (
                             <button
                               type="button"
