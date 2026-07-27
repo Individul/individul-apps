@@ -18,6 +18,12 @@ const TEMPLATES: Record<string, string[]> = {
   "solicitare hotariri": ["Solicitare întocmită", "Solicitare expediată", "Hotărâre primită"],
 };
 
+// Un pas de „expediere" (demers/solicitare expediat/ă) — bifarea lui avansează
+// sarcina de la „De făcut" la „În lucru".
+export function isDispatchStep(title: string): boolean {
+  return norm(title).includes("expediat");
+}
+
 // Pașii standard (fără duplicate) pentru un set de nume de etichete.
 export function templateStepsForTags(tagNames: string[]): string[] {
   const steps: string[] = [];

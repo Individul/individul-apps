@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { notify } from "@/lib/notify";
-import { templateStepsForTags } from "@/lib/subtask-templates";
+import { templateStepsForTags, isDispatchStep } from "@/lib/subtask-templates";
 
 const STATUS_LABEL = { todo: "De făcut", in_progress: "În lucru", done: "Finalizat" } as const;
 
@@ -384,12 +384,28 @@ export async function toggleSubtask(
   done: boolean,
 ): Promise<{ error?: string }> {
   const supabase = createClient();
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("subtasks")
     .update({ done, done_at: done ? new Date().toISOString() : null })
-    .eq("id", id);
+    .eq("id", id)
+    .select("title")
+    .single();
   if (error) return { error: error.message };
+
+  // Bifarea unui pas de „expediere" mută automat sarcina De făcut → În lucru.
+  if (done && updated && isDispatchStep(updated.title as string)) {
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("status")
+      .eq("id", taskId)
+      .maybeSingle();
+    if (task?.status === "todo") {
+      await supabase.from("tasks").update({ status: "in_progress" }).eq("id", taskId);
+    }
+  }
+
   revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/");
   return {};
 }
 
