@@ -43,6 +43,20 @@ const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
   { value: "high", label: "Ridicată" },
 ];
 
+const DUE_SHORTCUTS = [
+  { label: "1 zi", days: 1 },
+  { label: "3 zile", days: 3 },
+  { label: "5 zile", days: 5 },
+  { label: "14 zile", days: 14 },
+  { label: "30 zile", days: 30 },
+];
+
+function inDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 interface TaskFormDialogProps {
   profiles: Profile[];
   allTags: Tag[];
@@ -93,6 +107,8 @@ export function TaskFormDialog({
     handleSubmit,
     control,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<TaskInput>({
     resolver: zodResolver(taskSchema),
@@ -202,6 +218,27 @@ export function TaskFormDialog({
             <div className="space-y-2">
               <Label htmlFor="due_date">Termen</Label>
               <Input id="due_date" type="date" {...register("due_date")} />
+              <div className="flex flex-wrap gap-1.5">
+                {DUE_SHORTCUTS.map((s) => {
+                  const value = inDays(s.days);
+                  const active = watch("due_date") === value;
+                  return (
+                    <button
+                      key={s.days}
+                      type="button"
+                      onClick={() => setValue("due_date", value, { shouldDirty: true })}
+                      className={cn(
+                        "rounded-full border px-2 py-0.5 text-xs transition-colors",
+                        active
+                          ? "border-transparent bg-primary text-primary-foreground"
+                          : "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                      )}
+                    >
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="space-y-2">
