@@ -1,6 +1,6 @@
 import { format, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
-import { Clock, Pencil, Plus } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Pencil, Plus, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { AuditEntry } from "@/lib/types";
@@ -14,6 +14,13 @@ const PRIORITY_LABEL: Record<string, string> = {
   low: "Scăzută",
   medium: "Medie",
   high: "Ridicată",
+};
+
+const TONE: Record<string, string> = {
+  green: "bg-emerald-50 text-emerald-600",
+  blue: "bg-sky-50 text-sky-600",
+  red: "bg-red-50 text-red-600",
+  gray: "bg-muted text-muted-foreground",
 };
 
 function fmtDue(v: unknown): string {
@@ -49,6 +56,27 @@ function changeLines(e: AuditEntry): string[] {
   return out;
 }
 
+function describe(e: AuditEntry): {
+  Icon: typeof Plus;
+  tone: string;
+  text: string;
+  changes: string[];
+} {
+  if (e.entity === "subtasks") {
+    const d = e.details ?? {};
+    const title = d.title ? `„${String(d.title)}”` : "un pas";
+    if (e.action === "INSERT") return { Icon: Plus, tone: "gray", text: `a adăugat pasul ${title}`, changes: [] };
+    if (e.action === "DELETE") return { Icon: X, tone: "red", text: `a șters pasul ${title}`, changes: [] };
+    if (d.done_to === true)
+      return { Icon: CheckCircle2, tone: "green", text: `a bifat pasul ${title}`, changes: [] };
+    if (d.done_to === false)
+      return { Icon: Circle, tone: "gray", text: `a debifat pasul ${title}`, changes: [] };
+    return { Icon: Pencil, tone: "blue", text: `a modificat pasul ${title}`, changes: [] };
+  }
+  if (e.action === "INSERT") return { Icon: Plus, tone: "green", text: "a creat sarcina", changes: [] };
+  return { Icon: Pencil, tone: "blue", text: "a modificat sarcina", changes: changeLines(e) };
+}
+
 export function TaskHistory({ entries }: { entries: AuditEntry[] }) {
   if (!entries || entries.length === 0) return null;
 
@@ -60,27 +88,25 @@ export function TaskHistory({ entries }: { entries: AuditEntry[] }) {
       </h2>
       <ul className="space-y-3">
         {entries.map((e) => {
-          const created = e.action === "INSERT";
-          const cl = created ? [] : changeLines(e);
-          const Icon = created ? Plus : Pencil;
+          const info = describe(e);
+          const Icon = info.Icon;
           return (
             <li key={e.id} className="flex gap-3 text-sm">
               <span
                 className={cn(
                   "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
-                  created ? "bg-emerald-50 text-emerald-600" : "bg-sky-50 text-sky-600",
+                  TONE[info.tone],
                 )}
               >
                 <Icon className="h-3 w-3" />
               </span>
               <div className="min-w-0 flex-1">
                 <p>
-                  <span className="font-medium">{e.actor_name ?? "Sistem"}</span>{" "}
-                  {created ? "a creat sarcina" : "a modificat sarcina"}
+                  <span className="font-medium">{e.actor_name ?? "Sistem"}</span> {info.text}
                 </p>
-                {cl.length > 0 && (
+                {info.changes.length > 0 && (
                   <ul className="mt-0.5 space-y-0.5 text-xs text-muted-foreground">
-                    {cl.map((l, i) => (
+                    {info.changes.map((l, i) => (
                       <li key={i}>{l}</li>
                     ))}
                   </ul>
