@@ -318,7 +318,12 @@ export function PetitionFormDialog({
           <div className="space-y-2 border-t pt-4">
             <h3 className="text-sm font-medium">Fișiere</h3>
             {petition ? (
-              <PetitionAttachments petitionId={petition.id} canEdit={!readOnly} />
+              <PetitionAttachments
+                petitionId={petition.id}
+                petitionNumber={petition.number}
+                petitioner={petition.petitioner}
+                canEdit={!readOnly}
+              />
             ) : (
               <p className="text-[13px] text-muted-foreground">
                 Salvează petiția, apoi atașează fișierele.
