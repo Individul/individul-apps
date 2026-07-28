@@ -26,6 +26,8 @@ export function TasksWorkspace({
   isAdmin,
 }: TasksWorkspaceProps) {
   const [filter, setFilter] = useState<TaskFilter>({});
+  // Membrii văd rezumatul propriilor sarcini; adminul vede totalul + per utilizator.
+  const summaryTasks = isAdmin ? tasks : tasks.filter((t) => t.assignee_id === currentUserId);
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
@@ -51,8 +53,8 @@ export function TasksWorkspace({
       </div>
 
       <aside className="space-y-4 lg:w-80 lg:shrink-0">
-        <TaskSummary tasks={tasks} />
-        <AssigneeBreakdown tasks={tasks} profiles={profiles} />
+        <TaskSummary tasks={summaryTasks} label={isAdmin ? "Rezumat" : "Rezumatul meu"} />
+        {isAdmin && <AssigneeBreakdown tasks={tasks} profiles={profiles} />}
         <TagsPanel
           allTags={allTags}
           tasks={tasks}
