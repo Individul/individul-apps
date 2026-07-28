@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { taskStats, petitionStats, countsByAssignee } from "./hub-stats";
+import {
+  taskStats,
+  petitionStats,
+  countsByAssignee,
+  isTaskOverdue,
+  isPetitionOverdue,
+} from "./hub-stats";
 import type { Task, Petition, Profile } from "./types";
 
 const prof = (id: string, name: string | null): Profile => ({
@@ -78,8 +84,8 @@ describe("countsByAssignee", () => {
       profiles,
     );
     expect(r).toEqual([
-      { id: "b", name: "Bogdan", count: 2 },
-      { id: "a", name: "Ana", count: 1 },
+      { id: "b", name: "Bogdan", count: 2, overdue: 0 },
+      { id: "a", name: "Ana", count: 1, overdue: 0 },
     ]);
   });
 
@@ -94,7 +100,7 @@ describe("countsByAssignee", () => {
 
   it("tratează profil lipsă ca Neatribuit", () => {
     const r = countsByAssignee([{ assignee_id: "zzz" }], profiles);
-    expect(r).toEqual([{ id: null, name: "Neatribuit", count: 1 }]);
+    expect(r).toEqual([{ id: null, name: "Neatribuit", count: 1, overdue: 0 }]);
   });
 
   it("nume lipsă → (fără nume)", () => {
@@ -109,5 +115,37 @@ describe("countsByAssignee", () => {
 
   it("listă goală", () => {
     expect(countsByAssignee([], profiles)).toEqual([]);
+  });
+
+  it("numără restanțele per persoană cu predicatul dat", () => {
+    const items = [
+      { assignee_id: "a", late: true },
+      { assignee_id: "a", late: false },
+      { assignee_id: "b", late: true },
+      { assignee_id: "b", late: true },
+    ];
+    // count egal (2 vs 2) → la egalitate sortarea e alfabetică
+    const r = countsByAssignee(items, profiles, (i) => i.late);
+    expect(r).toEqual([
+      { id: "a", name: "Ana", count: 2, overdue: 1 },
+      { id: "b", name: "Bogdan", count: 2, overdue: 2 },
+    ]);
+  });
+});
+
+describe("isTaskOverdue / isPetitionOverdue", () => {
+  it("sarcină restantă doar dacă nu e finalizată", () => {
+    expect(isTaskOverdue(t({ due_date: "2026-07-20" }), today)).toBe(true);
+    expect(isTaskOverdue(t({ due_date: "2026-07-20", status: "done" }), today)).toBe(false);
+    expect(isTaskOverdue(t({ due_date: "2026-08-10" }), today)).toBe(false);
+    expect(isTaskOverdue(t({ due_date: null }), today)).toBe(false);
+  });
+
+  it("petiție restantă doar dacă e în examinare", () => {
+    expect(isPetitionOverdue(p({ response_deadline: "2026-07-20" }), today)).toBe(true);
+    expect(
+      isPetitionOverdue(p({ response_deadline: "2026-07-20", status: "solutionat" }), today),
+    ).toBe(false);
+    expect(isPetitionOverdue(p({ response_deadline: "2026-09-01" }), today)).toBe(false);
   });
 });
