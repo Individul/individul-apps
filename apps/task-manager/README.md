@@ -22,11 +22,12 @@ Pagina de start (`/`) e un **hub**, cu câte un card pentru fiecare modul —
 examinare), scadente în 7 zile și restante. După autentificare aterizezi tot
 pe `/`.
 
-Paginile de modul (`/`, `/sarcini`, `/petitii`) au un **antet comun**: link
-„Acasă", tab-urile **Sarcini | Petiții**, clopoțelul de notificări și acțiunile
-de cont („Profilul meu", „Schimbă parola", „Deconectare"; adminii au în plus
-„Administrare"). Detaliul unei sarcini și pagina de administrare au în locul
-antetului un buton „Înapoi la sarcini" (→ `/sarcini`).
+Toate paginile autentificate au un **antet comun**: link „Acasă", tab-urile
+**Sarcini | Petiții**, clopoțelul de notificări și acțiunile de cont („Profilul
+meu", „Schimbă parola", „Deconectare"; adminii au în plus „Administrare"). Tabul
+**Sarcini** rămâne activ și pe detaliul unei sarcini (`/tasks/[id]`). Detaliul
+sarcinii și pagina de administrare au, sub antet, și un buton „Înapoi la
+sarcini" (→ `/sarcini`).
 
 | Rută          | Conținut                                 |
 | ------------- | ---------------------------------------- |
