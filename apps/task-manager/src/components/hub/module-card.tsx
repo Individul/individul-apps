@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
+import type { AssigneeCount } from "@/lib/hub-stats";
 
 export interface ModuleCardStat {
   label: string;
@@ -7,16 +10,28 @@ export interface ModuleCardStat {
   tone?: "default" | "danger" | "warning";
 }
 
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export function ModuleCard({
   href,
   title,
   description,
   stats,
+  breakdown,
 }: {
   href: string;
   title: string;
   description: string;
   stats: ModuleCardStat[];
+  /** Defalcare pe responsabil (doar pentru admin). Lipsă → cardul arată doar cifrele. */
+  breakdown?: AssigneeCount[];
 }) {
   return (
     <Link
@@ -41,6 +56,21 @@ export function ModuleCard({
           </div>
         ))}
       </div>
+      {breakdown && breakdown.length > 0 && (
+        <div className="mt-5 space-y-2 border-t pt-4">
+          {breakdown.map((row) => (
+            <div key={row.id ?? "none"} className="flex items-center gap-2 text-sm">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className={cn("text-[10px]", avatarColor(row.id ?? "none"))}>
+                  {initialsOf(row.name)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="truncate">{row.name}</span>
+              <span className="ml-auto tabular-nums text-muted-foreground">{row.count}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </Link>
   );
 }

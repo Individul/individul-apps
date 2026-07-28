@@ -1,26 +1,50 @@
 import {
   getTasks,
   getPetitions,
+  getProfiles,
   getCurrentProfile,
   getNotifications,
   getUnreadCount,
 } from "@/lib/queries";
-import { taskStats, petitionStats } from "@/lib/hub-stats";
+import { taskStats, petitionStats, countsByAssignee } from "@/lib/hub-stats";
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleCard } from "@/components/hub/module-card";
 
 export const dynamic = "force-dynamic";
 
 export default async function HubPage() {
-  const [tasks, petitions, profile, notifications, unread] = await Promise.all([
+  const [tasks, petitions, profiles, profile, notifications, unread] = await Promise.all([
     getTasks(),
     getPetitions(),
+    getProfiles(),
     getCurrentProfile(),
     getNotifications(),
     getUnreadCount(),
   ]);
-  const ts = taskStats(tasks);
-  const ps = petitionStats(petitions);
+
+  const isAdmin = profile?.role === "admin";
+  const me = profile?.id ?? null;
+
+  // Adminul vede tot; membrul doar ce-i e atribuit.
+  const myTasks = isAdmin ? tasks : tasks.filter((t) => t.assignee_id === me);
+  const myPetitions = isAdmin ? petitions : petitions.filter((p) => p.assignee_id === me);
+
+  const ts = taskStats(myTasks);
+  const ps = petitionStats(myPetitions);
+
+  // Defalcarea (doar admin) se face peste elementele relevante, nu peste arhivă.
+  const taskBreakdown = isAdmin
+    ? countsByAssignee(
+        tasks.filter((t) => t.status !== "done"),
+        profiles,
+      )
+    : undefined;
+  const petitionBreakdown = isAdmin
+    ? countsByAssignee(
+        petitions.filter((p) => p.status === "in_examinare"),
+        profiles,
+      )
+    : undefined;
 
   return (
     <>
@@ -33,24 +57,34 @@ export default async function HubPage() {
           <ModuleCard
             href="/sarcini"
             title="Sarcini"
-            description="Evidența sarcinilor echipei, cu termene și responsabili."
+            description={
+              isAdmin
+                ? "Evidența sarcinilor echipei, cu termene și responsabili."
+                : "Sarcinile atribuite ție, cu termene și priorități."
+            }
             stats={[
               { label: "Total", value: ts.total },
               { label: "Active", value: ts.active },
               { label: "Scadente 7 zile", value: ts.dueSoon, tone: "warning" },
               { label: "Restante", value: ts.overdue, tone: "danger" },
             ]}
+            breakdown={taskBreakdown}
           />
           <ModuleCard
             href="/petitii"
             title="Petiții"
-            description="Registrul petițiilor, cu termene de răspuns."
+            description={
+              isAdmin
+                ? "Registrul petițiilor, cu termene de răspuns."
+                : "Petițiile atribuite ție, cu termene de răspuns."
+            }
             stats={[
               { label: "Total", value: ps.total },
               { label: "În examinare", value: ps.open },
               { label: "Scadente 7 zile", value: ps.dueSoon, tone: "warning" },
               { label: "Restante", value: ps.overdue, tone: "danger" },
             ]}
+            breakdown={petitionBreakdown}
           />
         </div>
       </main>
