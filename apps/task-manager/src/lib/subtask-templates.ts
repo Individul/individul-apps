@@ -15,6 +15,7 @@ const TEMPLATES: Record<string, string[]> = {
   cumulare: DEMERS,
   "arest preventiv": DEMERS,
   neclaritati: DEMERS,
+  "erori materiale": DEMERS,
   "solicitare hotariri": ["Solicitare întocmită", "Solicitare expediată", "Hotărâre primită"],
 };
 
