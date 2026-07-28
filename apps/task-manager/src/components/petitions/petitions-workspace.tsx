@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 
+import { PetitionAssigneeBreakdown } from "@/components/petitions/petition-assignee-breakdown";
+import { PetitionQuickViews } from "@/components/petitions/petition-quick-views";
+import { PetitionSummary } from "@/components/petitions/petition-summary";
 import { PetitionsList } from "@/components/petitions/petitions-list";
 import type { PetitionFilter } from "@/lib/petition-filters";
 import type { Petition, Profile } from "@/lib/types";
@@ -23,7 +26,14 @@ export function PetitionsWorkspace({
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
-      <aside className="lg:w-56 lg:shrink-0">{/* Vederi rapide */}</aside>
+      <aside className="lg:w-56 lg:shrink-0">
+        <PetitionQuickViews
+          petitions={petitions}
+          currentUserId={currentUserId}
+          filter={filter}
+          onFilterChange={setFilter}
+        />
+      </aside>
 
       <div className="min-w-0 flex-1">
         <PetitionsList
@@ -36,7 +46,10 @@ export function PetitionsWorkspace({
         />
       </div>
 
-      <aside className="space-y-4 lg:w-80 lg:shrink-0">{/* Rezumat + pe responsabil */}</aside>
+      <aside className="space-y-4 lg:w-80 lg:shrink-0">
+        <PetitionSummary petitions={petitions} />
+        <PetitionAssigneeBreakdown petitions={petitions} profiles={profiles} />
+      </aside>
     </div>
   );
 }
