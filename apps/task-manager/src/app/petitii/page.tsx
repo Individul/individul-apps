@@ -5,7 +5,7 @@ import {
   getNotifications,
   getUnreadCount,
 } from "@/lib/queries";
-import { PetitionsList } from "@/components/petitions/petitions-list";
+import { PetitionsWorkspace } from "@/components/petitions/petitions-workspace";
 import { AppHeader } from "@/components/layout/app-header";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export default async function PetitiiPage() {
       />
       <main className="mx-auto max-w-[1800px] p-4 xl:px-10">
         <h1 className="mb-4 text-2xl font-semibold">Petiții</h1>
-        <PetitionsList
+        <PetitionsWorkspace
           petitions={petitions}
           profiles={profiles}
           currentUserId={currentUserId}

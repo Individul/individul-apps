@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { Plus, Search } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PetitionFiltersBar } from "@/components/petitions/petition-filters-bar";
 import { PetitionFormDialog } from "./petition-form-dialog";
-import { STATUS_LABEL, STATUS_DOT, PETITIONER_LABEL, daysUntil, fold } from "./meta";
+import { STATUS_LABEL, STATUS_DOT, PETITIONER_LABEL, daysUntil } from "./meta";
 import { avatarColor } from "@/lib/avatar-color";
+import { filterPetitions, type PetitionFilter } from "@/lib/petition-filters";
 import { cn } from "@/lib/utils";
 import type { Petition, Profile } from "@/lib/types";
 
@@ -24,6 +23,8 @@ interface PetitionsListProps {
   profiles: Profile[];
   currentUserId: string | null;
   isAdmin: boolean;
+  filter: PetitionFilter;
+  onFilterChange: (f: PetitionFilter) => void;
 }
 
 export function PetitionsList({
@@ -31,21 +32,14 @@ export function PetitionsList({
   profiles,
   currentUserId,
   isAdmin,
+  filter,
+  onFilterChange,
 }: PetitionsListProps) {
-  const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Petition | undefined>(undefined);
 
   const rows = useMemo(() => {
-    const q = fold(search.trim());
-    const filtered = q
-      ? petitions.filter(
-          (p) =>
-            fold(p.number).includes(q) ||
-            fold(p.petitioner).includes(q) ||
-            fold(p.subject ?? "").includes(q),
-        )
-      : petitions;
+    const filtered = filterPetitions(petitions, filter);
     // Nesoluționate primele, apoi după termen (cele mai apropiate sus).
     return [...filtered].sort((a, b) => {
       const solvedA = a.status === "solutionat" ? 1 : 0;
@@ -55,12 +49,12 @@ export function PetitionsList({
         b.response_deadline ?? "9999-12-31",
       );
     });
-  }, [petitions, search]);
+  }, [petitions, filter]);
 
-  const openNew = () => {
-    setEditing(undefined);
-    setFormOpen(true);
-  };
+  const filtersActive = Boolean(
+    filter.search || filter.status || filter.assigneeId || filter.due,
+  );
+
   const openEdit = (p: Petition) => {
     setEditing(p);
     setFormOpen(true);
@@ -68,22 +62,16 @@ export function PetitionsList({
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[200px] max-w-sm flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Caută după număr, petiționar, obiect…"
-            className="pl-8"
-          />
-        </div>
-        <div className="ml-auto">
-          <Button size="sm" onClick={openNew}>
-            <Plus className="mr-2 h-4 w-4" /> Petiție nouă
-          </Button>
-        </div>
-      </div>
+      <PetitionFiltersBar
+        profiles={profiles}
+        currentUserId={currentUserId}
+        filter={filter}
+        onFilterChange={onFilterChange}
+        onNewPetition={() => {
+          setEditing(undefined);
+          setFormOpen(true);
+        }}
+      />
 
       <div className="overflow-hidden rounded-xl border bg-card">
         {/* Antet */}
@@ -177,7 +165,7 @@ export function PetitionsList({
           </div>
         ) : (
           <div className="px-4 py-12 text-center text-muted-foreground">
-            {search ? "Nicio petiție găsită." : "Nicio petiție înregistrată."}
+            {filtersActive ? "Nicio petiție găsită." : "Nicio petiție înregistrată."}
           </div>
         )}
       </div>
