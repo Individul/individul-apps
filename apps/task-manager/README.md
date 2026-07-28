@@ -15,6 +15,29 @@ fără backend separat. Găzduire GitHub + Vercel.
 - Autentificare cu **email sau username + parolă**, **invite-only** (utilizatori adăugați manual în Supabase)
 - Fiecare utilizator își poate seta numele afișat și username-ul („Profilul meu") și schimba parola din aplicație
 
+## Navigare
+
+Pagina de start (`/`) e un **hub**, cu câte un card pentru fiecare modul —
+**Sarcini** și **Petiții** — și cifre live: total, active (respectiv în
+examinare), scadente în 7 zile și restante. După autentificare aterizezi tot
+pe `/`.
+
+Paginile de modul (`/`, `/sarcini`, `/petitii`) au un **antet comun**: link
+„Acasă", tab-urile **Sarcini | Petiții**, clopoțelul de notificări și acțiunile
+de cont („Profilul meu", „Schimbă parola", „Deconectare"; adminii au în plus
+„Administrare"). Detaliul unei sarcini și pagina de administrare au în locul
+antetului un buton „Înapoi la sarcini" (→ `/sarcini`).
+
+| Rută          | Conținut                                 |
+| ------------- | ---------------------------------------- |
+| `/`           | hub — carduri de modul cu cifre live     |
+| `/sarcini`    | lista de sarcini                         |
+| `/petitii`    | registrul petițiilor                     |
+| `/tasks/[id]` | detaliul unei sarcini                    |
+| `/admin`      | administrare (doar admin)                |
+
+`/tasks` redirecționează la `/sarcini`, pentru linkuri și bookmark-uri vechi.
+
 ## Stack
 
 - **Next.js 14.1** (App Router) + TypeScript
@@ -56,7 +79,7 @@ propriul rol, ca să nu se retrogradeze accidental).
 
 ## Notificări
 
-Fiecare utilizator are un **clopoțel** (dreapta-sus, pe pagina de task-uri) cu
+Fiecare utilizator are un **clopoțel** (dreapta-sus, în antetul comun) cu
 notificările proprii și un contor de necitite. Deschis, afișează ultimele
 notificări; la click pe una o marchează citită și navighează la task, iar
 „Marchează toate citite" le marchează pe toate deodată.
@@ -116,7 +139,7 @@ Detalii complete în [`supabase/README.md`](supabase/README.md). Pe scurt:
    signups off.
 4. Adaugă cei 4-5 membri din Authentication → Users și **setează-le o parolă**
    (Add user → cu parolă + „Auto Confirm User"). Userii își pot schimba ulterior
-   parola din aplicație („Schimbă parola", dreapta-sus pe pagina de task-uri).
+   parola din aplicație („Schimbă parola", dreapta-sus în antetul comun).
 
 ## Deploy pe Vercel
 
@@ -136,11 +159,17 @@ apps/task-manager/
 │   │   ├── login/           # pagină login (email + parolă)
 │   │   ├── account/         # schimbare parolă (Server Action)
 │   │   ├── auth/            # callback + signout (Route Handlers)
-│   │   ├── tasks/          # listă, [id] detaliu, actions.ts (Server Actions)
+│   │   ├── sarcini/         # lista de sarcini
+│   │   ├── petitii/         # registrul petițiilor + actions.ts
+│   │   ├── tasks/           # [id] detaliu, actions.ts; /tasks → redirect /sarcini
+│   │   ├── admin/           # administrare (doar admin)
 │   │   ├── layout.tsx
-│   │   └── page.tsx        # redirect → /tasks
+│   │   └── page.tsx         # hub (carduri de modul cu cifre live)
 │   ├── components/
 │   │   ├── ui/             # componente shadcn/ui
+│   │   ├── layout/         # antetul comun + tab-urile de modul
+│   │   ├── hub/            # cardul de modul de pe pagina de start
+│   │   ├── petitions/      # listă + formular petiții
 │   │   └── tasks/          # tabel, formular, detaliu, etichete, comentarii
 │   ├── lib/
 │   │   ├── supabase/       # clienți server/browser + middleware
@@ -148,6 +177,7 @@ apps/task-manager/
 │   │   ├── schemas.ts      # zod
 │   │   ├── types.ts
 │   │   ├── task-filters.ts # helper-e filtrare/sortare (testate)
+│   │   ├── hub-stats.ts    # cifrele de pe hub (testate)
 │   │   └── permissions.ts  # helper permisiuni (testat)
 │   └── middleware.ts       # refresh sesiune + protecție rute
 ├── supabase/
