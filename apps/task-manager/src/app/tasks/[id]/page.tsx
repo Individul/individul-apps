@@ -30,7 +30,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
 
   return (
     <main className="mx-auto max-w-6xl p-6">
-      <Link href="/">
+      <Link href="/sarcini">
         <Button variant="ghost" size="sm" className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la sarcini
         </Button>
