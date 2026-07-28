@@ -226,7 +226,9 @@ export function makeColumns({
     },
   },
   {
-    accessorKey: "due_date",
+    id: "due_date",
+    // Fără termen → la coadă (sentinelă). ISO „yyyy-mm-dd" se sortează cronologic.
+    accessorFn: (task) => task.due_date ?? "9999-12-31",
     header: ({ column }) => <SortableHeader column={column} label="Termen" />,
     cell: ({ row }) => {
       if (!row.original.due_date) return <span className="text-muted-foreground">—</span>;

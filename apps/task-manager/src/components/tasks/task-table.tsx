@@ -82,7 +82,10 @@ export function TaskTable({
   onFilterChange,
 }: TaskTableProps) {
   const router = useRouter();
-  const [sorting, setSorting] = useState<SortingState>([{ id: "status", desc: false }]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "status", desc: false },
+    { id: "due_date", desc: false },
+  ]);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
   const [, startTransition] = useTransition();
