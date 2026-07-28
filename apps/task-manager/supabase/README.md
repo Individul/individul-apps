@@ -106,6 +106,24 @@ schimbări de stare etc.), rulează
 și **activează Realtime** pe tabelă (o adaugă la publicația `supabase_realtime`),
 ca clopoțelul să se actualizeze live.
 
+## 2i. Atașamente la petiții (opțional)
+
+Pentru scanările atașate petițiilor (cererea și răspunsul), rulează
+[`migrations/0013_petition_attachments.sql`](./migrations/0013_petition_attachments.sql)
+**DUPĂ** `0012_petitions.sql`. Migrarea:
+
+1. creează bucket-ul **privat** `petitions` (PDF/JPG/PNG, max 10 MB per fișier);
+2. creează tabela `petition_attachments` (un rând per fișier, cu `kind` =
+   `petitie` sau `raspuns`), legată de petiție cu `on delete cascade`;
+3. adaugă funcția `can_modify_petition` și politicile RLS pe tabelă și pe
+   `storage.objects` — citesc toți utilizatorii autentificați, dar încarcă/șterg
+   doar cei care pot modifica petiția (admin / creator / responsabil, aceeași
+   regulă ca politica `petitions update`).
+
+> Bucket-ul trebuie să rămână **privat**. Fișierele se deschid prin URL-uri
+> semnate, generate la cerere — dacă bucket-ul devine public, orice scanare
+> devine accesibilă oricui are link-ul.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.

@@ -85,4 +85,17 @@ export interface Petition {
   created_at: string;
   updated_at: string;
   assignee?: Profile | null;
+  // Derivat din relația petition_attachments, nu o coloană.
+  attachments_count?: number;
+}
+export interface PetitionAttachment {
+  id: string;
+  petition_id: string;
+  kind: "petitie" | "raspuns";
+  path: string;
+  name: string;
+  mime: string | null;
+  size: number | null;
+  uploaded_by: string | null;
+  created_at: string;
 }

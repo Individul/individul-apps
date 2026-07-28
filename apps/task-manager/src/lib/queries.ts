@@ -108,13 +108,32 @@ export async function getNotifications(limit = 20): Promise<Notification[]> {
 
 export async function getPetitions(): Promise<Petition[]> {
   const supabase = createClient();
-  const { data, error } = await supabase
+  const base = "*, assignee:profiles!petitions_assignee_id_fkey(*)";
+
+  // Încercăm cu numărul de atașamente; dacă migrarea 0013 nu e aplicată,
+  // relația nu există și reluăm fără ea (lista trebuie să funcționeze oricum).
+  const withCounts = await supabase
     .from("petitions")
-    .select("*, assignee:profiles!petitions_assignee_id_fkey(*)")
+    .select(`${base}, petition_attachments(id)`)
     .order("response_deadline", { ascending: true });
-  // Grațios dacă migrarea 0012 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as Petition[];
+
+  let rows = withCounts.data;
+  if (withCounts.error) {
+    const plain = await supabase
+      .from("petitions")
+      .select(base)
+      .order("response_deadline", { ascending: true });
+    // Grațios dacă migrarea 0012 nu e încă aplicată.
+    if (plain.error) return [];
+    rows = plain.data;
+  }
+
+  return (
+    (rows ?? []) as unknown as (Petition & { petition_attachments?: { id: string }[] })[]
+  ).map(({ petition_attachments: atts, ...p }) => ({
+    ...p,
+    attachments_count: atts?.length ?? 0,
+  }));
 }
 
 export async function getUnreadCount(): Promise<number> {
