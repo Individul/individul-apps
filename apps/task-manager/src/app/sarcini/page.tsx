@@ -1,20 +1,22 @@
 import {
-  getPetitions,
+  getTasks,
   getProfiles,
+  getTags,
   getCurrentProfile,
   getNotifications,
   getUnreadCount,
 } from "@/lib/queries";
-import { PetitionsList } from "@/components/petitions/petitions-list";
+import { TasksWorkspace } from "@/components/tasks/tasks-workspace";
 import { AppHeader } from "@/components/layout/app-header";
 
 export const dynamic = "force-dynamic";
 
-export default async function PetitiiPage() {
-  const [petitions, profiles, currentProfile, notifications, unread] =
+export default async function SarciniPage() {
+  const [tasks, profiles, allTags, currentProfile, notifications, unread] =
     await Promise.all([
-      getPetitions(),
+      getTasks(),
       getProfiles(),
+      getTags(),
       getCurrentProfile(),
       getNotifications(),
       getUnreadCount(),
@@ -30,10 +32,11 @@ export default async function PetitiiPage() {
         unread={unread}
       />
       <main className="mx-auto max-w-[1800px] p-4 xl:px-10">
-        <h1 className="mb-4 text-2xl font-semibold">Petiții</h1>
-        <PetitionsList
-          petitions={petitions}
+        <h1 className="mb-4 text-2xl font-semibold">Sarcini</h1>
+        <TasksWorkspace
+          tasks={tasks}
           profiles={profiles}
+          allTags={allTags}
           currentUserId={currentUserId}
           isAdmin={isAdmin}
         />
