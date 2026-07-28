@@ -58,6 +58,10 @@ describe("filterTasks după căutare", () => {
     ];
     expect(filterTasks(tasks, { search: "cumulare" }).map((x) => x.id)).toEqual(["a", "b"]);
   });
+  it("ignoră diacriticele (crilov → Crîlov)", () => {
+    const tasks = [t({ id: "a", title: "Crîlov Pavel" }), t({ id: "b", title: "Altcineva" })];
+    expect(filterTasks(tasks, { search: "crilov" }).map((x) => x.id)).toEqual(["a"]);
+  });
 });
 
 describe("filterTasks după termen (due)", () => {

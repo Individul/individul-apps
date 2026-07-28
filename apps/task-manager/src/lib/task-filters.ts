@@ -1,6 +1,11 @@
 import { parseISO } from "date-fns";
 import type { Task, TaskStatus, TaskPriority } from "./types";
 
+// Normalizează pentru căutare: litere mici + fără diacritice (Crîlov ≈ Crilov).
+function fold(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
 export const PRIORITY_ORDER: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
 
 export type DueFilter = "overdue" | "soon";
@@ -26,12 +31,8 @@ export function filterTasks(tasks: Task[], f: TaskFilter): Task[] {
     if (f.priority && t.priority !== f.priority) return false;
     if (f.tagId && !(t.tags ?? []).some((tag) => tag.id === f.tagId)) return false;
     if (f.search) {
-      const q = f.search.trim().toLowerCase();
-      if (
-        q &&
-        !t.title.toLowerCase().includes(q) &&
-        !(t.description ?? "").toLowerCase().includes(q)
-      ) {
+      const q = fold(f.search.trim());
+      if (q && !fold(t.title).includes(q) && !fold(t.description ?? "").includes(q)) {
         return false;
       }
     }
