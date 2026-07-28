@@ -218,12 +218,8 @@ export function TaskTable({
                           {t.tags!.map((tag) => (
                             <span
                               key={tag.id}
-                              className="rounded-md border px-2 py-0.5 text-[11px]"
-                              style={{
-                                backgroundColor: tag.color + "22",
-                                color: tag.color,
-                                borderColor: tag.color + "66",
-                              }}
+                              className="rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
+                              style={{ backgroundColor: tag.color }}
                             >
                               {tag.name}
                             </span>
