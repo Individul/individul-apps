@@ -6,6 +6,8 @@ import {
   canEditTask,
   canFinalizeTask,
   canReassignTask,
+  canEditPetition,
+  canDeletePetition,
 } from "./permissions";
 
 describe("canEditComment", () => {
@@ -59,4 +61,26 @@ describe("canDeleteComment", () => {
     expect(canDeleteComment("u2", true, { author_id: "u1" })).toBe(true));
   it("alt user non-admin nu poate", () =>
     expect(canDeleteComment("u2", false, { author_id: "u1" })).toBe(false));
+});
+
+describe("canEditPetition / canDeletePetition", () => {
+  const pet = { created_by: "owner", assignee_id: null as string | null };
+
+  it("adminul poate edita și șterge orice", () => {
+    expect(canEditPetition("x", true, pet)).toBe(true);
+    expect(canDeletePetition("x", true, pet)).toBe(true);
+  });
+  it("creatorul poate edita și șterge", () => {
+    expect(canEditPetition("owner", false, pet)).toBe(true);
+    expect(canDeletePetition("owner", false, pet)).toBe(true);
+  });
+  it("responsabilul poate edita, dar nu șterge", () => {
+    const assigned = { created_by: "owner", assignee_id: "a" };
+    expect(canEditPetition("a", false, assigned)).toBe(true);
+    expect(canDeletePetition("a", false, assigned)).toBe(false);
+  });
+  it("un străin nu poate nimic", () => {
+    expect(canEditPetition("x", false, pet)).toBe(false);
+    expect(canDeletePetition("x", false, pet)).toBe(false);
+  });
 });

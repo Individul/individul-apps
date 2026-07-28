@@ -47,7 +47,6 @@ export function daysUntil(deadline: string | null): number | null {
   return Math.round((target.getTime() - startOfToday.getTime()) / 86_400_000);
 }
 
-// Normalizează pentru căutare: litere mici + fără diacritice (Crîlov ≈ Crilov).
-export function fold(s: string): string {
-  return s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-}
+// Normalizarea pentru căutare stă în @/lib/text; se re-exportă aici
+// pentru importatorii existenți din modulul de petiții.
+export { fold } from "@/lib/text";
