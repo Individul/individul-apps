@@ -11,7 +11,7 @@ import {
   type Table as ReactTable,
 } from "@tanstack/react-table";
 import { format, parseISO } from "date-fns";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -57,17 +57,27 @@ function HeaderSortButton({
   className?: string;
 }) {
   const column = table.getColumn(columnId);
+  // `getIsSorted()` întoarce false | "asc" | "desc" — îl folosim ca să arătăm
+  // direcția curentă și să evidențiem coloana activă.
+  const active = column?.getIsSorted() ?? false;
+  const Icon = active === "asc" ? ArrowUp : active === "desc" ? ArrowDown : ArrowUpDown;
   return (
     <button
       type="button"
+      title={
+        active
+          ? `Sortat după ${label} (${active === "asc" ? "crescător" : "descrescător"})`
+          : `Sortează după ${label}`
+      }
       onClick={() => column?.toggleSorting(column.getIsSorted() === "asc")}
       className={cn(
         "inline-flex items-center gap-1 transition-colors hover:text-foreground",
+        active && "font-medium text-foreground",
         className,
       )}
     >
       {label}
-      <ArrowUpDown className="h-3 w-3 opacity-60" />
+      <Icon className={cn("h-3 w-3", active ? "opacity-100" : "opacity-60")} />
     </button>
   );
 }
