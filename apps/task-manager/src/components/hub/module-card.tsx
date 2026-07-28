@@ -40,7 +40,7 @@ export function ModuleCard({
     >
       <h2 className="text-xl font-medium">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((s) => (
           <div key={s.label}>
             <div

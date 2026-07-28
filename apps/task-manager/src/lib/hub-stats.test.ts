@@ -50,7 +50,19 @@ describe("taskStats", () => {
     expect(s.dueSoon).toBe(2);
   });
   it("listă goală", () => {
-    expect(taskStats([], today)).toEqual({ total: 0, active: 0, dueSoon: 0, overdue: 0 });
+    expect(taskStats([], today)).toEqual({ total: 0, active: 0, done: 0, dueSoon: 0, overdue: 0 });
+  });
+});
+
+describe("taskStats — finalizate", () => {
+  it("numără sarcinile finalizate", () => {
+    const s = taskStats(
+      [t({}), t({ status: "done" }), t({ status: "done" }), t({ status: "in_progress" })],
+      today,
+    );
+    expect(s.done).toBe(2);
+    expect(s.active).toBe(2);
+    expect(s.total).toBe(4);
   });
 });
 
@@ -71,11 +83,20 @@ describe("petitionStats", () => {
     expect(s.dueSoon).toBe(1);
   });
   it("listă goală", () => {
-    expect(petitionStats([], today)).toEqual({ total: 0, open: 0, dueSoon: 0, overdue: 0 });
+    expect(petitionStats([], today)).toEqual({ total: 0, open: 0, solved: 0, dueSoon: 0, overdue: 0 });
   });
 });
 
-describe("countsByAssignee", () => {
+describe("petitionStats — soluționate", () => {
+  it("numără petițiile soluționate", () => {
+    const s = petitionStats([p({}), p({ status: "solutionat" }), p({ status: "solutionat" })], today);
+    expect(s.solved).toBe(2);
+    expect(s.open).toBe(1);
+    expect(s.total).toBe(3);
+  });
+});
+
+describe("countsByAssignee", () =>{
   const profiles = [prof("a", "Ana"), prof("b", "Bogdan")];
 
   it("grupează și sortează descrescător", () => {

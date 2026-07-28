@@ -8,9 +8,11 @@ export interface ModuleStats {
 }
 export interface TaskStats extends ModuleStats {
   active: number;
+  done: number;
 }
 export interface PetitionStats extends ModuleStats {
   open: number;
+  solved: number;
 }
 
 function startOfDay(d: Date): Date {
@@ -30,16 +32,20 @@ function classify(deadline: string | null, today: Date): "overdue" | "soon" | "n
 
 export function taskStats(tasks: Task[], today: Date = new Date()): TaskStats {
   let active = 0;
+  let done = 0;
   let dueSoon = 0;
   let overdue = 0;
   for (const t of tasks) {
-    if (t.status === "done") continue;
+    if (t.status === "done") {
+      done++;
+      continue;
+    }
     active++;
     const c = classify(t.due_date, today);
     if (c === "overdue") overdue++;
     else if (c === "soon") dueSoon++;
   }
-  return { total: tasks.length, active, dueSoon, overdue };
+  return { total: tasks.length, active, done, dueSoon, overdue };
 }
 
 export interface AssigneeCount {
@@ -102,14 +108,18 @@ export function countsByAssignee<T extends { assignee_id: string | null }>(
 
 export function petitionStats(petitions: Petition[], today: Date = new Date()): PetitionStats {
   let open = 0;
+  let solved = 0;
   let dueSoon = 0;
   let overdue = 0;
   for (const p of petitions) {
-    if (p.status !== "in_examinare") continue;
+    if (p.status !== "in_examinare") {
+      if (p.status === "solutionat") solved++;
+      continue;
+    }
     open++;
     const c = classify(p.response_deadline, today);
     if (c === "overdue") overdue++;
     else if (c === "soon") dueSoon++;
   }
-  return { total: petitions.length, open, dueSoon, overdue };
+  return { total: petitions.length, open, solved, dueSoon, overdue };
 }

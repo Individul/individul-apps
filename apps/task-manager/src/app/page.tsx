@@ -73,6 +73,7 @@ export default async function HubPage() {
             stats={[
               { label: "Total", value: ts.total },
               { label: "Active", value: ts.active },
+              { label: "Finalizate", value: ts.done },
               { label: "Scadente 7 zile", value: ts.dueSoon, tone: "warning" },
               { label: "Restante", value: ts.overdue, tone: "danger" },
             ]}
@@ -89,6 +90,7 @@ export default async function HubPage() {
             stats={[
               { label: "Total", value: ps.total },
               { label: "În examinare", value: ps.open },
+              { label: "Soluționate", value: ps.solved },
               { label: "Scadente 7 zile", value: ps.dueSoon, tone: "warning" },
               { label: "Restante", value: ps.overdue, tone: "danger" },
             ]}
