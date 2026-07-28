@@ -1,76 +1,59 @@
-import Link from "next/link";
 import {
   getTasks,
-  getProfiles,
-  getTags,
+  getPetitions,
   getCurrentProfile,
   getNotifications,
   getUnreadCount,
 } from "@/lib/queries";
-import { TasksWorkspace } from "@/components/tasks/tasks-workspace";
-import { ProfileDialog } from "@/components/account/profile-dialog";
-import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
-import { NotificationBell } from "@/components/notifications/notification-bell";
-import { Button } from "@/components/ui/button";
+import { taskStats, petitionStats } from "@/lib/hub-stats";
+import { AppHeader } from "@/components/layout/app-header";
+import { ModuleCard } from "@/components/hub/module-card";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const [tasks, profiles, allTags, currentProfile, notifications, unread] =
-    await Promise.all([
-      getTasks(),
-      getProfiles(),
-      getTags(),
-      getCurrentProfile(),
-      getNotifications(),
-      getUnreadCount(),
-    ]);
-  const currentUserId = currentProfile?.id ?? null;
-  const isAdmin = currentProfile?.role === "admin";
+export default async function HubPage() {
+  const [tasks, petitions, profile, notifications, unread] = await Promise.all([
+    getTasks(),
+    getPetitions(),
+    getCurrentProfile(),
+    getNotifications(),
+    getUnreadCount(),
+  ]);
+  const ts = taskStats(tasks);
+  const ps = petitionStats(petitions);
 
   return (
-    <main className="mx-auto max-w-[1800px] p-6 xl:px-10">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Sarcini</h1>
-        <div className="flex items-center gap-2">
-          {currentUserId && (
-            <NotificationBell
-              initialItems={notifications}
-              initialUnread={unread}
-              userId={currentUserId}
-            />
-          )}
-          <Link href="/petitii">
-            <Button variant="outline" size="sm">
-              Petiții
-            </Button>
-          </Link>
-          {isAdmin && (
-            <Link href="/admin">
-              <Button variant="outline" size="sm">
-                Administrare
-              </Button>
-            </Link>
-          )}
-          <ProfileDialog
-            currentFullName={currentProfile?.full_name ?? ""}
-            currentUsername={currentProfile?.username ?? ""}
+    <>
+      <AppHeader profile={profile} notifications={notifications} unread={unread} />
+      <main className="mx-auto max-w-5xl p-4 xl:px-10">
+        <h1 className="mb-6 text-2xl font-semibold">
+          {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
+        </h1>
+        <div className="grid gap-4 md:grid-cols-2">
+          <ModuleCard
+            href="/sarcini"
+            title="Sarcini"
+            description="Evidența sarcinilor echipei, cu termene și responsabili."
+            stats={[
+              { label: "Total", value: ts.total },
+              { label: "Active", value: ts.active },
+              { label: "Scadente 7 zile", value: ts.dueSoon, tone: "warning" },
+              { label: "Restante", value: ts.overdue, tone: "danger" },
+            ]}
           />
-          <ChangePasswordDialog />
-          <form action="/auth/signout" method="post">
-            <Button variant="outline" size="sm" type="submit">
-              Deconectare
-            </Button>
-          </form>
+          <ModuleCard
+            href="/petitii"
+            title="Petiții"
+            description="Registrul petițiilor, cu termene de răspuns."
+            stats={[
+              { label: "Total", value: ps.total },
+              { label: "În examinare", value: ps.open },
+              { label: "Scadente 7 zile", value: ps.dueSoon, tone: "warning" },
+              { label: "Restante", value: ps.overdue, tone: "danger" },
+            ]}
+          />
         </div>
-      </div>
-      <TasksWorkspace
-        tasks={tasks}
-        profiles={profiles}
-        allTags={allTags}
-        currentUserId={currentUserId}
-        isAdmin={isAdmin}
-      />
-    </main>
+      </main>
+    </>
   );
 }

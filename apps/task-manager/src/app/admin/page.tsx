@@ -2,7 +2,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download } from "lucide-react";
 
-import { getCurrentProfile, getProfiles, getAuditLog } from "@/lib/queries";
+import {
+  getCurrentProfile,
+  getProfiles,
+  getAuditLog,
+  getNotifications,
+  getUnreadCount,
+} from "@/lib/queries";
+import { AppHeader } from "@/components/layout/app-header";
 import { UserRoleTable } from "@/components/admin/user-role-table";
 import { RestoreBackup } from "@/components/admin/restore-backup";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
@@ -14,10 +21,17 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const me = await getCurrentProfile();
   if (me?.role !== "admin") redirect("/");
-  const [profiles, audit] = await Promise.all([getProfiles(), getAuditLog()]);
+  const [profiles, audit, notifications, unread] = await Promise.all([
+    getProfiles(),
+    getAuditLog(),
+    getNotifications(),
+    getUnreadCount(),
+  ]);
   return (
-    <main className="mx-auto max-w-[1800px] p-6 xl:px-10">
-      <Link href="/">
+    <>
+      <AppHeader profile={me} notifications={notifications} unread={unread} />
+      <main className="mx-auto max-w-[1800px] p-4 xl:px-10">
+      <Link href="/sarcini">
         <Button variant="ghost" size="sm" className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la sarcini
         </Button>
@@ -62,6 +76,7 @@ export default async function AdminPage() {
           </section>
         </aside>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

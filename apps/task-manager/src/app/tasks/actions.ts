@@ -55,6 +55,7 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
     );
   }
 
+  revalidatePath("/sarcini");
   revalidatePath("/");
   return { success: true };
 }
@@ -110,6 +111,7 @@ export async function updateTask(
     else await notify("edited", task, userId);
   }
 
+  revalidatePath("/sarcini");
   revalidatePath("/");
   revalidatePath(`/tasks/${id}`);
   return { success: true };
@@ -144,6 +146,7 @@ export async function deleteTask(id: string): Promise<ActionResult> {
     );
   }
 
+  revalidatePath("/sarcini");
   revalidatePath("/");
   return { success: true };
 }
@@ -185,6 +188,7 @@ export async function finalizeTask(id: string): Promise<ActionResult> {
     );
   }
 
+  revalidatePath("/sarcini");
   revalidatePath("/");
   revalidatePath(`/tasks/${id}`);
   return { success: true };
@@ -246,6 +250,7 @@ export async function updateTag(
     return { error: error.message };
   }
   if (!data || data.length === 0) return { error: "Etichetă inexistentă sau fără permisiune." };
+  revalidatePath("/sarcini");
   revalidatePath("/");
   return { success: true };
 }
@@ -267,6 +272,7 @@ export async function deleteTag(id: string): Promise<{ error?: string; success?:
   const { data, error } = await supabase.from("tags").delete().eq("id", id).select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Etichetă inexistentă sau fără permisiune." };
+  revalidatePath("/sarcini");
   revalidatePath("/");
   return { success: true };
 }
@@ -276,6 +282,7 @@ export async function attachTag(taskId: string, tagId: string): Promise<{ error?
   const { error } = await supabase.from("task_tags").insert({ task_id: taskId, tag_id: tagId });
   if (error) return { error: error.message };
   revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/sarcini");
   revalidatePath("/");
   return { success: true };
 }
@@ -289,6 +296,7 @@ export async function detachTag(taskId: string, tagId: string): Promise<{ error?
     .eq("tag_id", tagId);
   if (error) return { error: error.message };
   revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/sarcini");
   revalidatePath("/");
   return { success: true };
 }
@@ -405,6 +413,7 @@ export async function toggleSubtask(
   }
 
   revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/sarcini");
   revalidatePath("/");
   return {};
 }
