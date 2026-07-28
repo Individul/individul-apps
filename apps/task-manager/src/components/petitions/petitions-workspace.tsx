@@ -23,6 +23,10 @@ export function PetitionsWorkspace({
   isAdmin,
 }: PetitionsWorkspaceProps) {
   const [filter, setFilter] = useState<PetitionFilter>({});
+  // Membrii văd rezumatul propriilor petiții; adminul vede totalul + per utilizator.
+  const summaryPetitions = isAdmin
+    ? petitions
+    : petitions.filter((p) => p.assignee_id === currentUserId);
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
@@ -47,8 +51,11 @@ export function PetitionsWorkspace({
       </div>
 
       <aside className="space-y-4 lg:w-80 lg:shrink-0">
-        <PetitionSummary petitions={petitions} />
-        <PetitionAssigneeBreakdown petitions={petitions} profiles={profiles} />
+        <PetitionSummary
+          petitions={summaryPetitions}
+          label={isAdmin ? "Rezumat" : "Rezumatul meu"}
+        />
+        {isAdmin && <PetitionAssigneeBreakdown petitions={petitions} profiles={profiles} />}
       </aside>
     </div>
   );
