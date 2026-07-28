@@ -1,5 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Task, Profile, Tag, Comment, AuditEntry, Notification, Subtask } from "./types";
+import type {
+  Task,
+  Profile,
+  Tag,
+  Comment,
+  AuditEntry,
+  Notification,
+  Subtask,
+  Petition,
+} from "./types";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -95,6 +104,17 @@ export async function getNotifications(limit = 20): Promise<Notification[]> {
     .limit(limit);
   if (error) return [];
   return (data ?? []) as unknown as Notification[];
+}
+
+export async function getPetitions(): Promise<Petition[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("petitions")
+    .select("*, assignee:profiles!petitions_assignee_id_fkey(*)")
+    .order("response_deadline", { ascending: true });
+  // Grațios dacă migrarea 0012 nu e încă aplicată.
+  if (error) return [];
+  return (data ?? []) as unknown as Petition[];
 }
 
 export async function getUnreadCount(): Promise<number> {

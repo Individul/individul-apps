@@ -40,6 +40,11 @@ export default async function Home() {
               userId={currentUserId}
             />
           )}
+          <Link href="/petitii">
+            <Button variant="outline" size="sm">
+              Petiții
+            </Button>
+          </Link>
           {isAdmin && (
             <Link href="/admin">
               <Button variant="outline" size="sm">
