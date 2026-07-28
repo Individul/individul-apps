@@ -30,6 +30,7 @@ import {
   type PetitionInput,
 } from "@/app/petitii/actions";
 import { PETITIONER_OPTIONS, STATUS_OPTIONS, deadlineFrom } from "./meta";
+import { canEditPetition, canDeletePetition } from "@/lib/permissions";
 import type { Petition, Profile, PetitionStatus, PetitionerType } from "@/lib/types";
 
 const UNASSIGNED = "unassigned";
@@ -97,7 +98,11 @@ export function PetitionFormDialog({
     }
   }, [open, petition]);
 
-  const canDelete = isEdit && (isAdmin || petition?.created_by === currentUserId);
+  // O singură sursă de adevăr pentru drepturi (aceleași reguli ca RLS și ca meniul din listă).
+  const uid = currentUserId ?? "";
+  const canDelete = !!petition && canDeletePetition(uid, isAdmin, petition);
+  // La creare oricine poate scrie; la editare doar cine are dreptul — altfel doar vizualizare.
+  const readOnly = !!petition && !canEditPetition(uid, isAdmin, petition);
   const deadline = deadlineFrom(receivedDate);
   const yy = (receivedDate || today()).slice(2, 4);
 
@@ -154,7 +159,14 @@ export function PetitionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Editează petiția" : "Petiție nouă"}</DialogTitle>
+          <DialogTitle>
+            {readOnly ? "Petiția" : isEdit ? "Editează petiția" : "Petiție nouă"}
+          </DialogTitle>
+          {readOnly && (
+            <p className="text-sm text-muted-foreground">
+              Doar vizualizare — nu ai drept de editare pentru această petiție.
+            </p>
+          )}
         </DialogHeader>
 
         <form
@@ -171,6 +183,7 @@ export function PetitionFormDialog({
                 id="p-number"
                 value={numberField}
                 onChange={(e) => setNumberField(e.target.value)}
+                disabled={readOnly}
                 placeholder={isEdit ? "M-535/26" : "M-535"}
                 required
               />
@@ -185,6 +198,7 @@ export function PetitionFormDialog({
                 type="date"
                 value={receivedDate}
                 onChange={(e) => setReceivedDate(e.target.value)}
+                disabled={readOnly}
                 required
               />
               {deadline && (
@@ -202,13 +216,14 @@ export function PetitionFormDialog({
                 id="p-petitioner"
                 value={petitioner}
                 onChange={(e) => setPetitioner(e.target.value)}
+                disabled={readOnly}
                 placeholder="Nume, prenume"
                 required
               />
             </div>
             <div className="space-y-2">
               <Label>Tip petiționar</Label>
-              <Select
+              <Select disabled={readOnly}
                 value={petitionerType}
                 onValueChange={(v) => setPetitionerType(v as PetitionerType)}
               >
@@ -232,6 +247,7 @@ export function PetitionFormDialog({
               id="p-subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
+              disabled={readOnly}
               placeholder="Obiectul petiției (opțional)"
             />
           </div>
@@ -239,7 +255,7 @@ export function PetitionFormDialog({
           <div className="grid grid-cols-2 gap-5">
             <div className="space-y-2">
               <Label>Responsabil</Label>
-              <Select
+              <Select disabled={readOnly}
                 value={assigneeId ? assigneeId : UNASSIGNED}
                 onValueChange={(v) => setAssigneeId(v === UNASSIGNED ? "" : v)}
               >
@@ -258,7 +274,7 @@ export function PetitionFormDialog({
             </div>
             <div className="space-y-2">
               <Label>Stare</Label>
-              <Select value={status} onValueChange={(v) => onStatusChange(v as PetitionStatus)}>
+              <Select disabled={readOnly} value={status} onValueChange={(v) => onStatusChange(v as PetitionStatus)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -281,6 +297,7 @@ export function PetitionFormDialog({
                 type="date"
                 value={responseDate}
                 onChange={(e) => setResponseDate(e.target.value)}
+              disabled={readOnly}
               />
             </div>
           </div>
@@ -291,6 +308,7 @@ export function PetitionFormDialog({
               id="p-response"
               value={response}
               onChange={(e) => setResponse(e.target.value)}
+              disabled={readOnly}
               placeholder="Conținutul răspunsului (opțional)"
             />
           </div>
@@ -322,11 +340,13 @@ export function PetitionFormDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={isPending}
               >
-                Anulează
+                {readOnly ? "Închide" : "Anulează"}
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isEdit ? "Salvează" : "Înregistrează"}
-              </Button>
+              {!readOnly && (
+                <Button type="submit" disabled={isPending}>
+                  {isEdit ? "Salvează" : "Înregistrează"}
+                </Button>
+              )}
             </div>
           </DialogFooter>
         </form>
