@@ -4,6 +4,7 @@ import {
   validateAttachment,
   formatBytes,
   storageKey,
+  attachmentDisplayName,
 } from "./attachments";
 
 const f = (over: Partial<{ name: string; type: string; size: number }> = {}) => ({
@@ -59,5 +60,34 @@ describe("storageKey", () => {
   it("curăță diacriticele și spațiile din nume", () => {
     const key = storageKey("abc", "Petiție răspuns.PDF");
     expect(key).toMatch(/^abc\/[a-z0-9-]+-petitie-raspuns\.pdf$/);
+  });
+});
+
+describe("attachmentDisplayName", () => {
+  it("combină numărul petiției cu petiționarul", () => {
+    expect(attachmentDisplayName("M-535/26", "Ion Popescu", "scan.pdf")).toBe(
+      "M-535-26-Ion-Popescu.pdf",
+    );
+  });
+
+  it("înlocuiește bara din număr și spațiile din nume", () => {
+    expect(attachmentDisplayName("A/1/26", "Ana Maria Pop", "x.JPG")).toBe(
+      "A-1-26-Ana-Maria-Pop.jpg",
+    );
+  });
+
+  it("curăță diacriticele", () => {
+    expect(attachmentDisplayName("M-1/26", "Crîlov Pavel", "a.png")).toBe(
+      "M-1-26-Crilov-Pavel.png",
+    );
+  });
+
+  it("adaugă indice pentru fișierele următoare", () => {
+    expect(attachmentDisplayName("M-1/26", "Ion Pop", "a.pdf", 2)).toBe("M-1-26-Ion-Pop-2.pdf");
+    expect(attachmentDisplayName("M-1/26", "Ion Pop", "a.pdf", 1)).toBe("M-1-26-Ion-Pop.pdf");
+  });
+
+  it("se descurcă fără extensie și cu petiționar gol", () => {
+    expect(attachmentDisplayName("M-1/26", "", "fisier")).toBe("M-1-26.bin");
   });
 });

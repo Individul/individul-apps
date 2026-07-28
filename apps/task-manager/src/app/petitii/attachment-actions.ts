@@ -73,9 +73,14 @@ export async function deleteAttachment(id: string): Promise<Result> {
 }
 
 /** Link semnat, valabil 60 de secunde, pentru deschiderea fișierului. */
-export async function getAttachmentUrl(path: string): Promise<{ url?: string; error?: string }> {
+export async function getAttachmentUrl(
+  path: string,
+  downloadAs?: string,
+): Promise<{ url?: string; error?: string }> {
   const supabase = createClient();
-  const { data, error } = await supabase.storage.from("petitions").createSignedUrl(path, 60);
+  const { data, error } = await supabase.storage
+    .from("petitions")
+    .createSignedUrl(path, 60, downloadAs ? { download: downloadAs } : undefined);
   if (error || !data?.signedUrl) return { error: error?.message ?? "Nu s-a putut genera linkul." };
   return { url: data.signedUrl };
 }

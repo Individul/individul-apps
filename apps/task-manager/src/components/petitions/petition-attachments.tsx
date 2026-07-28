@@ -19,6 +19,7 @@ import {
   formatBytes,
   storageKey,
   validateAttachment,
+  attachmentDisplayName,
   type AttachmentKind,
 } from "@/lib/attachments";
 import type { PetitionAttachment } from "@/lib/types";
@@ -33,10 +34,18 @@ const EMPTY_LABEL: Record<AttachmentKind, string> = {
 
 interface PetitionAttachmentsProps {
   petitionId: string;
+  /** Folosite pentru numele automat al fișierului: „M-535-26-Ion-Popescu.pdf". */
+  petitionNumber: string;
+  petitioner: string;
   canEdit: boolean;
 }
 
-export function PetitionAttachments({ petitionId, canEdit }: PetitionAttachmentsProps) {
+export function PetitionAttachments({
+  petitionId,
+  petitionNumber,
+  petitioner,
+  canEdit,
+}: PetitionAttachmentsProps) {
   const router = useRouter();
   const [items, setItems] = useState<PetitionAttachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,11 +109,19 @@ export function PetitionAttachments({ petitionId, canEdit }: PetitionAttachments
         toast.error(up.error.message);
         return;
       }
+      // Numele afișat/descărcat e generat automat; indicele ține cont de toate
+      // fișierele petiției, ca două scanări să nu ajungă cu același nume.
+      const displayName = attachmentDisplayName(
+        petitionNumber,
+        petitioner,
+        file.name,
+        items.length + 1,
+      );
       const res = await recordAttachment({
         petitionId,
         kind,
         path,
-        name: file.name,
+        name: displayName,
         mime: file.type,
         size: file.size,
       });
@@ -137,6 +154,23 @@ export function PetitionAttachments({ petitionId, canEdit }: PetitionAttachments
       }
       if (tab) tab.location.replace(url);
       else window.open(url, "_blank", "noopener,noreferrer"); // fallback
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Descărcarea folosește numele generat automat, nu calea internă din bucket.
+  const downloadFile = async (a: PetitionAttachment) => {
+    setBusy(true);
+    try {
+      const { url, error } = await getAttachmentUrl(a.path, a.name);
+      if (error || !url) {
+        toast.error(error ?? "Nu s-a putut descărca fișierul.");
+        return;
+      }
+      // Content-Disposition e „attachment", deci navigarea declanșează salvarea
+      // fără să părăsim pagina.
+      window.location.href = url;
     } finally {
       setBusy(false);
     }
@@ -200,6 +234,19 @@ export function PetitionAttachments({ petitionId, canEdit }: PetitionAttachments
                         }}
                       >
                         Deschide
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 shrink-0 px-2 text-xs"
+                        disabled={busy}
+                        title={`Descarcă „${a.name}"`}
+                        onClick={() => {
+                          void downloadFile(a);
+                        }}
+                      >
+                        Descarcă
                       </Button>
                       {canEdit && (
                         <Button

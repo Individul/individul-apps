@@ -32,6 +32,37 @@ function trim(n: number): string {
   return Number.isInteger(r) ? String(r) : String(r).replace(".", ",");
 }
 
+/** Păstrează literele și cifrele, restul devine cratimă. Fără diacritice. */
+function slugify(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function extensionOf(fileName: string): string {
+  const dot = fileName.lastIndexOf(".");
+  return dot > -1 ? fileName.slice(dot + 1).toLowerCase() : "bin";
+}
+
+/**
+ * Numele sub care se vede și se descarcă fișierul: numărul petiției +
+ * petiționarul, ex. „M-535-26-Ion-Popescu.pdf". `index` (1-based) se adaugă
+ * de la al doilea fișier încolo, ca scanările multi-pagină să nu se confunde.
+ */
+export function attachmentDisplayName(
+  petitionNumber: string,
+  petitioner: string,
+  originalFileName: string,
+  index = 1,
+): string {
+  const parts = [slugify(petitionNumber), slugify(petitioner)].filter(Boolean);
+  if (index > 1) parts.push(String(index));
+  const base = parts.join("-") || "fisier";
+  return `${base}.${extensionOf(originalFileName)}`;
+}
+
 /** Cale în bucket: {petitionId}/{uuid}-{nume-curățat}.{ext} */
 export function storageKey(petitionId: string, fileName: string): string {
   const dot = fileName.lastIndexOf(".");
