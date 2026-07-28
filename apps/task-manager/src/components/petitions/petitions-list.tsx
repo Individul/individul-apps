@@ -2,7 +2,15 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CheckCircle2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,7 +24,7 @@ import {
 import { PetitionFiltersBar } from "@/components/petitions/petition-filters-bar";
 import { PetitionFormDialog } from "./petition-form-dialog";
 import { STATUS_LABEL, STATUS_DOT, PETITIONER_LABEL, daysUntil } from "./meta";
-import { deletePetition } from "@/app/petitii/actions";
+import { deletePetition, finalizePetition } from "@/app/petitii/actions";
 import { avatarColor } from "@/lib/avatar-color";
 import { canDeletePetition, canEditPetition } from "@/lib/permissions";
 import { filterPetitions, type PetitionFilter } from "@/lib/petition-filters";
@@ -116,6 +124,7 @@ interface PetitionActionsMenuProps {
   isAdmin: boolean;
   onEdit: (petition: Petition) => void;
   onDelete: (petition: Petition) => void;
+  onFinalize: (petition: Petition) => void;
 }
 
 // Gating identic cu RLS din 0012_petitions.sql, prin helperii din @/lib/permissions.
@@ -125,10 +134,14 @@ function PetitionActionsMenu({
   isAdmin,
   onEdit,
   onDelete,
+  onFinalize,
 }: PetitionActionsMenuProps) {
   const uid = currentUserId ?? "";
   const canEdit = canEditPetition(uid, isAdmin, petition);
   const canDelete = canDeletePetition(uid, isAdmin, petition);
+  // Finalizarea e tot o modificare — același drept ca editarea, dar doar cât
+  // timp petiția nu e deja soluționată.
+  const canFinalize = canEdit && petition.status !== "solutionat";
   if (!canEdit && !canDelete) {
     return <span className="text-muted-foreground">—</span>;
   }
@@ -141,6 +154,12 @@ function PetitionActionsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {canFinalize && (
+          <DropdownMenuItem onSelect={() => onFinalize(petition)}>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            Finalizează
+          </DropdownMenuItem>
+        )}
         {canEdit && (
           <DropdownMenuItem onSelect={() => onEdit(petition)}>
             <Pencil className="mr-2 h-4 w-4" />
@@ -226,6 +245,17 @@ export function PetitionsList({
         return;
       }
       toast.success("Petiție ștearsă");
+    });
+  };
+
+  const handleFinalize = (p: Petition) => {
+    startTransition(async () => {
+      const result = await finalizePetition(p.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Petiție soluționată");
     });
   };
 
@@ -364,6 +394,7 @@ export function PetitionsList({
                         isAdmin={isAdmin}
                         onEdit={openEdit}
                         onDelete={handleDelete}
+                        onFinalize={handleFinalize}
                       />
                     </div>
                   </div>
