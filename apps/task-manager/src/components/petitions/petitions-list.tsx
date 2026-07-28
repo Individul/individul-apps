@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -76,26 +76,36 @@ function comparePetitions(a: Petition, b: Petition, key: SortKey, dir: "asc" | "
 }
 
 // Buton de sortare din antet: același aspect ca `HeaderSortButton` de la sarcini.
+// `active` arată direcția curentă (săgeată plină); altfel iconița neutră.
 function HeaderSortButton({
   label,
   onClick,
+  active,
   className,
 }: {
   label: string;
   onClick: () => void;
+  active?: "asc" | "desc" | null;
   className?: string;
 }) {
+  const Icon = active === "asc" ? ArrowUp : active === "desc" ? ArrowDown : ArrowUpDown;
   return (
     <button
       type="button"
+      title={
+        active
+          ? `Sortat după ${label} (${active === "asc" ? "crescător" : "descrescător"})`
+          : `Sortează după ${label}`
+      }
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1 transition-colors hover:text-foreground",
+        active && "font-medium text-foreground",
         className,
       )}
     >
       {label}
-      <ArrowUpDown className="h-3 w-3 opacity-60" />
+      <Icon className={cn("h-3 w-3", active ? "opacity-100" : "opacity-60")} />
     </button>
   );
 }
@@ -240,6 +250,7 @@ export function PetitionsList({
             <HeaderSortButton
               label="Nr."
               onClick={() => toggleSort("number")}
+              active={sort?.key === "number" ? sort.dir : null}
               className="w-28 shrink-0"
             />
             <span className="w-48 shrink-0">Petiționar</span>
@@ -248,11 +259,13 @@ export function PetitionsList({
             <HeaderSortButton
               label="Termen"
               onClick={() => toggleSort("deadline")}
+              active={sort?.key === "deadline" ? sort.dir : null}
               className="w-28 shrink-0"
             />
             <HeaderSortButton
               label="Stare"
               onClick={() => toggleSort("status")}
+              active={sort?.key === "status" ? sort.dir : null}
               className="w-32 shrink-0"
             />
             <span className="w-8 shrink-0" aria-hidden />
