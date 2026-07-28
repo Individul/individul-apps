@@ -67,3 +67,22 @@ export interface Notification {
   read: boolean;
   created_at: string;
 }
+export type PetitionStatus = "in_examinare" | "solutionat";
+export type PetitionerType = "detinut" | "avocat" | "civil";
+export interface Petition {
+  id: string;
+  number: string;
+  petitioner: string;
+  petitioner_type: PetitionerType;
+  subject: string | null;
+  received_date: string;
+  response_deadline: string | null;
+  status: PetitionStatus;
+  response: string | null;
+  response_date: string | null;
+  assignee_id: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  assignee?: Profile | null;
+}
