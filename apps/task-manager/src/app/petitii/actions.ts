@@ -17,6 +17,12 @@ export interface PetitionInput {
   response_date: string;
 }
 
+// Data curentă în fusul local (nu UTC) — altfel seara/noaptea ar cădea pe altă zi.
+function todayLocal(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function yearSuffix(dateStr: string): string {
   const y = (dateStr || "").slice(0, 4);
   return (y || String(new Date().getFullYear())).slice(-2);
@@ -55,6 +61,7 @@ export async function createPetition(numberPrefix: string, input: PetitionInput)
     return { error: error.message };
   }
   revalidatePath("/petitii");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -81,6 +88,7 @@ export async function updatePetition(
   }
   if (!data || data.length === 0) return { error: "Petiție inexistentă sau fără permisiune." };
   revalidatePath("/petitii");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -90,5 +98,34 @@ export async function deletePetition(id: string): Promise<Result> {
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Petiție inexistentă sau fără permisiune." };
   revalidatePath("/petitii");
+  revalidatePath("/");
+  return { success: true };
+}
+
+// Finalizare rapidă: trece petiția în „Soluționat" și completează data
+// răspunsului cu ziua curentă dacă lipsește. Dreptul e impus de RLS
+// (admin / creator / responsabil) — dacă lipsește, update-ul atinge 0 rânduri.
+export async function finalizePetition(id: string): Promise<Result> {
+  const supabase = createClient();
+
+  const { data: prev } = await supabase
+    .from("petitions")
+    .select("response_date")
+    .eq("id", id)
+    .maybeSingle();
+
+  const { data, error } = await supabase
+    .from("petitions")
+    .update({
+      status: "solutionat",
+      response_date: (prev?.response_date as string | null) ?? todayLocal(),
+    })
+    .eq("id", id)
+    .select();
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Petiție inexistentă sau fără permisiune." };
+
+  revalidatePath("/petitii");
+  revalidatePath("/");
   return { success: true };
 }
