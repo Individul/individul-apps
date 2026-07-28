@@ -39,3 +39,21 @@ export function canFinalizeTask(
 export function canReassignTask(isAdmin: boolean): boolean {
   return isAdmin;
 }
+
+// Oglindesc RLS din 0012_petitions.sql:
+// update → admin/creator/responsabil, delete → admin/creator.
+export function canEditPetition(
+  userId: string,
+  isAdmin: boolean,
+  petition: { created_by: string; assignee_id: string | null },
+): boolean {
+  return isAdmin || userId === petition.created_by || userId === petition.assignee_id;
+}
+
+export function canDeletePetition(
+  userId: string,
+  isAdmin: boolean,
+  petition: { created_by: string },
+): boolean {
+  return isAdmin || userId === petition.created_by;
+}

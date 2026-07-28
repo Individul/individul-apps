@@ -1,10 +1,6 @@
 import { parseISO } from "date-fns";
 import type { Task, TaskStatus, TaskPriority } from "./types";
-
-// Normalizează pentru căutare: litere mici + fără diacritice (Crîlov ≈ Crilov).
-function fold(s: string): string {
-  return s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-}
+import { fold } from "./text";
 
 export const PRIORITY_ORDER: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
 
