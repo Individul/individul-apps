@@ -43,6 +43,9 @@ export const STATUS_DOT: Record<TaskStatus, string> = {
   done: "bg-green-500",
 };
 
+// Ordinea de sortare a stărilor: De făcut → În lucru → Finalizat.
+export const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, done: 2 };
+
 export function initials(name: string | null | undefined): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -190,7 +193,8 @@ export function makeColumns({
     ),
   },
   {
-    accessorKey: "status",
+    id: "status",
+    accessorFn: (task) => STATUS_ORDER[task.status],
     header: ({ column }) => <SortableHeader column={column} label="Stare" />,
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
