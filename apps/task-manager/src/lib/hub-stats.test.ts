@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { taskStats, petitionStats } from "./hub-stats";
-import type { Task, Petition } from "./types";
+import { taskStats, petitionStats, countsByAssignee } from "./hub-stats";
+import type { Task, Petition, Profile } from "./types";
+
+const prof = (id: string, name: string | null): Profile => ({
+  id, full_name: name, username: null, avatar_url: null, role: "member",
+});
 
 const t = (over: Partial<Task>): Task => ({
   id: "1", title: "x", description: null, status: "todo", priority: "medium",
@@ -62,5 +66,48 @@ describe("petitionStats", () => {
   });
   it("listă goală", () => {
     expect(petitionStats([], today)).toEqual({ total: 0, open: 0, dueSoon: 0, overdue: 0 });
+  });
+});
+
+describe("countsByAssignee", () => {
+  const profiles = [prof("a", "Ana"), prof("b", "Bogdan")];
+
+  it("grupează și sortează descrescător", () => {
+    const r = countsByAssignee(
+      [{ assignee_id: "b" }, { assignee_id: "a" }, { assignee_id: "b" }],
+      profiles,
+    );
+    expect(r).toEqual([
+      { id: "b", name: "Bogdan", count: 2 },
+      { id: "a", name: "Ana", count: 1 },
+    ]);
+  });
+
+  it("pune Neatribuit la final", () => {
+    const r = countsByAssignee(
+      [{ assignee_id: null }, { assignee_id: null }, { assignee_id: "a" }],
+      profiles,
+    );
+    expect(r.map((x) => x.name)).toEqual(["Ana", "Neatribuit"]);
+    expect(r[1].count).toBe(2);
+  });
+
+  it("tratează profil lipsă ca Neatribuit", () => {
+    const r = countsByAssignee([{ assignee_id: "zzz" }], profiles);
+    expect(r).toEqual([{ id: null, name: "Neatribuit", count: 1 }]);
+  });
+
+  it("nume lipsă → (fără nume)", () => {
+    const r = countsByAssignee([{ assignee_id: "c" }], [prof("c", null)]);
+    expect(r[0].name).toBe("(fără nume)");
+  });
+
+  it("la egalitate sortează alfabetic", () => {
+    const r = countsByAssignee([{ assignee_id: "b" }, { assignee_id: "a" }], profiles);
+    expect(r.map((x) => x.name)).toEqual(["Ana", "Bogdan"]);
+  });
+
+  it("listă goală", () => {
+    expect(countsByAssignee([], profiles)).toEqual([]);
   });
 });

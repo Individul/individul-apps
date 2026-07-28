@@ -1,5 +1,5 @@
 import { parseISO } from "date-fns";
-import type { Task, Petition } from "./types";
+import type { Task, Petition, Profile } from "./types";
 
 export interface ModuleStats {
   total: number;
@@ -40,6 +40,44 @@ export function taskStats(tasks: Task[], today: Date = new Date()): TaskStats {
     else if (c === "soon") dueSoon++;
   }
   return { total: tasks.length, active, dueSoon, overdue };
+}
+
+export interface AssigneeCount {
+  id: string | null;
+  name: string;
+  count: number;
+}
+
+const UNASSIGNED = "Neatribuit";
+
+/**
+ * Grupează elementele pe responsabil, descrescător după număr (alfabetic la
+ * egalitate). „Neatribuit” — inclusiv responsabilii care nu mai există în
+ * `profiles` — apare mereu la final.
+ */
+export function countsByAssignee(
+  items: { assignee_id: string | null }[],
+  profiles: Profile[],
+): AssigneeCount[] {
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  const counts = new Map<string | null, number>();
+
+  for (const item of items) {
+    const key = item.assignee_id && byId.has(item.assignee_id) ? item.assignee_id : null;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  const rows: AssigneeCount[] = [...counts].map(([id, count]) => ({
+    id,
+    name: id ? byId.get(id)!.full_name ?? "(fără nume)" : UNASSIGNED,
+    count,
+  }));
+
+  return rows.sort((a, b) => {
+    if (a.id === null) return 1;
+    if (b.id === null) return -1;
+    return b.count - a.count || a.name.localeCompare(b.name, "ro");
+  });
 }
 
 export function petitionStats(petitions: Petition[], today: Date = new Date()): PetitionStats {
