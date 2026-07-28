@@ -66,7 +66,12 @@ export function ModuleCard({
                 </AvatarFallback>
               </Avatar>
               <span className="truncate">{row.name}</span>
-              <span className="ml-auto tabular-nums text-muted-foreground">{row.count}</span>
+              <span className="ml-auto flex items-center gap-2 tabular-nums">
+                {row.overdue > 0 && (
+                  <span className="text-xs text-red-600">{row.overdue} restante</span>
+                )}
+                <span className="text-muted-foreground">{row.count}</span>
+              </span>
             </div>
           ))}
         </div>

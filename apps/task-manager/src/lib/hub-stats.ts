@@ -46,31 +46,51 @@ export interface AssigneeCount {
   id: string | null;
   name: string;
   count: number;
+  overdue: number;
 }
 
 const UNASSIGNED = "Neatribuit";
 
+/** O sarcină e restantă dacă are termen trecut și nu e finalizată. */
+export function isTaskOverdue(task: Task, today: Date = new Date()): boolean {
+  return task.status !== "done" && classify(task.due_date, today) === "overdue";
+}
+
+/** O petiție e restantă dacă are termen de răspuns trecut și e încă în examinare. */
+export function isPetitionOverdue(petition: Petition, today: Date = new Date()): boolean {
+  return (
+    petition.status === "in_examinare" &&
+    classify(petition.response_deadline, today) === "overdue"
+  );
+}
+
 /**
  * Grupează elementele pe responsabil, descrescător după număr (alfabetic la
  * egalitate). „Neatribuit” — inclusiv responsabilii care nu mai există în
- * `profiles` — apare mereu la final.
+ * `profiles` — apare mereu la final. Cu `isOverdue` se numără separat și câte
+ * dintre elementele fiecăruia sunt restante.
  */
-export function countsByAssignee(
-  items: { assignee_id: string | null }[],
+export function countsByAssignee<T extends { assignee_id: string | null }>(
+  items: T[],
   profiles: Profile[],
+  isOverdue?: (item: T) => boolean,
 ): AssigneeCount[] {
   const byId = new Map(profiles.map((p) => [p.id, p]));
-  const counts = new Map<string | null, number>();
+  const counts = new Map<string | null, { count: number; overdue: number }>();
 
   for (const item of items) {
     const key = item.assignee_id && byId.has(item.assignee_id) ? item.assignee_id : null;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    const row = counts.get(key) ?? { count: 0, overdue: 0 };
+    row.count++;
+    if (isOverdue?.(item)) row.overdue++;
+    counts.set(key, row);
   }
 
-  const rows: AssigneeCount[] = [...counts].map(([id, count]) => ({
+  const rows: AssigneeCount[] = [...counts].map(([id, { count, overdue }]) => ({
     id,
     name: id ? byId.get(id)!.full_name ?? "(fără nume)" : UNASSIGNED,
     count,
+    overdue,
   }));
 
   return rows.sort((a, b) => {

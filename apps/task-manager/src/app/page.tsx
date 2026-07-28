@@ -6,7 +6,13 @@ import {
   getNotifications,
   getUnreadCount,
 } from "@/lib/queries";
-import { taskStats, petitionStats, countsByAssignee } from "@/lib/hub-stats";
+import {
+  taskStats,
+  petitionStats,
+  countsByAssignee,
+  isTaskOverdue,
+  isPetitionOverdue,
+} from "@/lib/hub-stats";
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleCard } from "@/components/hub/module-card";
 
@@ -37,12 +43,14 @@ export default async function HubPage() {
     ? countsByAssignee(
         tasks.filter((t) => t.status !== "done"),
         profiles,
+        (t) => isTaskOverdue(t),
       )
     : undefined;
   const petitionBreakdown = isAdmin
     ? countsByAssignee(
         petitions.filter((p) => p.status === "in_examinare"),
         profiles,
+        (p) => isPetitionOverdue(p),
       )
     : undefined;
 
