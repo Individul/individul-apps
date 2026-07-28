@@ -8,6 +8,7 @@ import {
   ArrowUpDown,
   CheckCircle2,
   MoreHorizontal,
+  Paperclip,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -320,8 +321,19 @@ export function PetitionsList({
                     className={cn("w-1 shrink-0", URGENCY_BAR[urgency.key])}
                   />
                   <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2">
-                    {/* Nr. */}
-                    <span className="w-28 shrink-0 truncate text-sm font-medium">{p.number}</span>
+                    {/* Nr. + agrafa, dacă petiția are fișiere atașate */}
+                    <div className="flex w-28 shrink-0 items-center gap-1.5">
+                      <span className="min-w-0 truncate text-sm font-medium">{p.number}</span>
+                      {(p.attachments_count ?? 0) > 0 && (
+                        <span
+                          title={`${p.attachments_count} fișier(e) atașat(e)`}
+                          className="flex shrink-0 items-center gap-0.5 text-[11px] text-muted-foreground"
+                        >
+                          <Paperclip className="h-3.5 w-3.5" aria-hidden />
+                          {p.attachments_count}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Petiționar */}
                     <div className="w-48 min-w-0 shrink-0">

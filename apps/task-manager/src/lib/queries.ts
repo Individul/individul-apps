@@ -8,7 +8,6 @@ import type {
   Notification,
   Subtask,
   Petition,
-  PetitionAttachment,
 } from "./types";
 
 export async function getTasks(): Promise<Task[]> {
@@ -135,18 +134,6 @@ export async function getPetitions(): Promise<Petition[]> {
     ...p,
     attachments_count: atts?.length ?? 0,
   }));
-}
-
-export async function getPetitionAttachments(petitionId: string): Promise<PetitionAttachment[]> {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("petition_attachments")
-    .select("*")
-    .eq("petition_id", petitionId)
-    .order("created_at", { ascending: true });
-  // Grațios dacă migrarea 0013 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as PetitionAttachment[];
 }
 
 export async function getUnreadCount(): Promise<number> {

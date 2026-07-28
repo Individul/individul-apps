@@ -29,6 +29,7 @@ import {
   deletePetition,
   type PetitionInput,
 } from "@/app/petitii/actions";
+import { PetitionAttachments } from "./petition-attachments";
 import { PETITIONER_OPTIONS, STATUS_OPTIONS, deadlineFrom } from "./meta";
 import { canEditPetition, canDeletePetition } from "@/lib/permissions";
 import type { Petition, Profile, PetitionStatus, PetitionerType } from "@/lib/types";
@@ -157,7 +158,8 @@ export function PetitionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      {/* Secțiunea de fișiere alungește dialogul — îl lăsăm să deruleze, ca footerul să rămână accesibil. */}
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {readOnly ? "Petiția" : isEdit ? "Editează petiția" : "Petiție nouă"}
@@ -311,6 +313,17 @@ export function PetitionFormDialog({
               disabled={readOnly}
               placeholder="Conținutul răspunsului (opțional)"
             />
+          </div>
+
+          <div className="space-y-2 border-t pt-4">
+            <h3 className="text-sm font-medium">Fișiere</h3>
+            {petition ? (
+              <PetitionAttachments petitionId={petition.id} canEdit={!readOnly} />
+            ) : (
+              <p className="text-[13px] text-muted-foreground">
+                Salvează petiția, apoi atașează fișierele.
+              </p>
+            )}
           </div>
 
           {error && (
