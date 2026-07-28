@@ -123,14 +123,20 @@ export function PetitionAttachments({ petitionId, canEdit }: PetitionAttachments
   };
 
   const openFile = async (a: PetitionAttachment) => {
+    // Tab-ul se deschide sincron, în gestul utilizatorului: linkul semnat vine
+    // abia după un await, iar un `window.open` de acolo ar fi blocat ca pop-up.
+    const tab = window.open("", "_blank");
+    if (tab) tab.opener = null; // fără acces înapoi la fereastra noastră
     setBusy(true);
     try {
       const { url, error } = await getAttachmentUrl(a.path);
       if (error || !url) {
+        tab?.close();
         toast.error(error ?? "Nu s-a putut deschide fișierul.");
         return;
       }
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (tab) tab.location.replace(url);
+      else window.open(url, "_blank", "noopener,noreferrer"); // fallback
     } finally {
       setBusy(false);
     }
