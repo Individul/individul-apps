@@ -14,7 +14,7 @@ function Stat({ label, value, dot }: { label: string; value: number; dot?: strin
   );
 }
 
-export function TaskSummary({ tasks }: { tasks: Task[] }) {
+export function TaskSummary({ tasks, label = "Rezumat" }: { tasks: Task[]; label?: string }) {
   const total = tasks.length;
   const todo = tasks.filter((t) => t.status === "todo").length;
   const inProgress = tasks.filter((t) => t.status === "in_progress").length;
@@ -30,7 +30,7 @@ export function TaskSummary({ tasks }: { tasks: Task[] }) {
 
   return (
     <div className="space-y-4 rounded-xl border bg-card p-4">
-      <h2 className="text-sm font-medium">Rezumat</h2>
+      <h2 className="text-sm font-medium">{label}</h2>
 
       <div className="grid grid-cols-2 gap-4">
         <Stat label="Total" value={total} />
