@@ -209,7 +209,7 @@ export function TaskTable({
                       <Link
                         href={`/tasks/${t.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="truncate font-medium hover:underline"
+                        className="truncate text-sm font-medium hover:underline"
                       >
                         {t.title}
                       </Link>
