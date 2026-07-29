@@ -5,6 +5,7 @@ import { format, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 
 import type { SeriesPeriod } from "@/app/statistici/actions";
+import { SERIES_LABEL } from "@/lib/stats/labels";
 import {
   deriveTile,
   findValue,
@@ -14,8 +15,8 @@ import {
   type TileTone,
   type ValueRef,
 } from "@/lib/stats/report-views";
-import { hasMeaningfulValue } from "@/lib/stats/series";
-import type { StatKind, StatSeries } from "@/lib/stats/types";
+import { hasBothSeries, hasMeaningfulValue } from "@/lib/stats/series";
+import type { StatKind } from "@/lib/stats/types";
 import { cn } from "@/lib/utils";
 
 import { CategoricalChart, type CategoricalValue } from "./charts/categorical-chart";
@@ -45,16 +46,6 @@ interface ReportSectionProps {
   /** Perioadele raportului, în ordine cronologică (cum le dă `listSeries`). */
   periods: SeriesPeriod[];
 }
-
-/**
- * Seria, spusă omenește. În fișiere „cumulat" e coloana de bilanț de la
- * începutul anului, iar „perioada" rândul intervalului raportat; în tabelul de
- * mai jos citește lume care n-a văzut niciodată foaia de Excel.
- */
-const SERIES_TEXT: Record<StatSeries, string> = {
-  cumulat: "de la începutul anului",
-  perioada: "în perioadă",
-};
 
 /** Perioada, întreagă și în română: „30 iunie 2026". */
 function formatPeriodLong(iso: string): string {
@@ -306,6 +297,15 @@ function Charts({
 function AllValues({ latest }: { latest: SeriesPeriod }) {
   if (latest.values.length === 0) return null;
 
+  /*
+   * „Se referă la" apare doar unde raportul chiar are două serii — la comisia
+   * penitenciară și la mecanismul compensatoriu. Celelalte șase n-au rând de
+   * perioadă, deci parserul marchează totul „cumulat" din lipsă de altceva, iar
+   * coloana ar scrie „de la începutul anului" lângă „Plafonul de detenție" —
+   * ceva ce nimeni n-a raportat. Când toate rândurile spun același lucru, tăcem.
+   */
+  const showSeries = hasBothSeries(latest.values);
+
   return (
     <details className="overflow-hidden rounded-xl border bg-card">
       <summary className="cursor-pointer px-3.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted/50">
@@ -316,7 +316,9 @@ function AllValues({ latest }: { latest: SeriesPeriod }) {
           <thead className="sticky top-0 bg-muted/30 text-[11px] font-medium text-muted-foreground">
             <tr>
               <th className="px-3.5 py-2 text-left font-medium">Indicator</th>
-              <th className="w-52 px-3 py-2 text-left font-medium">Se referă la</th>
+              {showSeries && (
+                <th className="w-52 px-3 py-2 text-left font-medium">Se referă la</th>
+              )}
               <th className="w-28 px-3.5 py-2 text-right font-medium">Valoare</th>
             </tr>
           </thead>
@@ -324,7 +326,11 @@ function AllValues({ latest }: { latest: SeriesPeriod }) {
             {latest.values.map((value, index) => (
               <tr key={`${value.series}::${value.indicator}::${index}`}>
                 <td className="px-3.5 py-1.5">{value.indicator}</td>
-                <td className="px-3 py-1.5 text-muted-foreground">{SERIES_TEXT[value.series]}</td>
+                {showSeries && (
+                  <td className="px-3 py-1.5 text-muted-foreground">
+                    {SERIES_LABEL[value.series]}
+                  </td>
+                )}
                 <td className="px-3.5 py-1.5 text-right tabular-nums">
                   {formatNumber(value.value)}
                 </td>
