@@ -225,6 +225,16 @@ describe("columnParser — detect", () => {
     expect(get("r_lunar").detect(doarP6)).toBe(0);
   });
 
+  it("nu confundă un număr precum 1210 cu Legea nr. 210", () => {
+    const altRaport: Grid = [
+      ["Raport oarecare", 1210],
+      [null, "P-6"],
+      ["Indicator", 1],
+    ];
+    expect(get("amnistia_2016").detect(altRaport)).toBeLessThan(1);
+    expect(get("amnistia_2016").detect(amnistia2016Grid)).toBe(1);
+  });
+
   it("scorul e fracțiunea de cuvinte-cheie găsite", () => {
     const parser = columnParser("r_lunar", "Test", ["plafonul", "inexistent"]);
     expect(parser.detect(rLunarGrid)).toBeCloseTo(0.5);

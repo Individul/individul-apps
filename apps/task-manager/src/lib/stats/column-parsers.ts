@@ -55,6 +55,10 @@ export const COLUMN_PARSERS: StatParser[] = [
   columnParser("liberati", "Liberări din penitenciar", [
     "liberarea deținuților",
   ]),
-  columnParser("amnistia_2016", "Amnistia 2016 (Legea nr. 210)", ["210"]),
+  // „210" singur ar prinde și un simplu număr (1210) dintr-un raport străin.
+  columnParser("amnistia_2016", "Amnistia 2016 (Legea nr. 210)", [
+    "210",
+    "amnistia",
+  ]),
   columnParser("amnistia_2021", "Amnistia 2021", ["comisia specială"]),
 ];
