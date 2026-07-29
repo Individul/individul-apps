@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { recipientsFor, messageFor } from "./notifications";
+import { recipientsFor, observersFor, messageFor, observerMessageFor } from "./notifications";
 
 const T = { assignee_id: "a" as string | null, created_by: "c" };
 
@@ -23,10 +23,52 @@ describe("recipientsFor", () => {
   });
 });
 
+describe("recipientsFor — created", () => {
+  it("n-are destinatari direcți: e doar pentru observatori", () => {
+    expect(recipientsFor("created", T, "x")).toEqual([]);
+    expect(recipientsFor("created", T, "c")).toEqual([]);
+  });
+});
+
+describe("observersFor", () => {
+  it("adminii primesc copie", () => {
+    expect(observersFor(["adm"], "c", ["a"])).toEqual(["adm"]);
+  });
+  it("actorul nu se notifică pe sine, nici când e admin", () => {
+    expect(observersFor(["adm"], "adm", [])).toEqual([]);
+  });
+  it("adminul deja notificat direct nu primește dublură", () => {
+    expect(observersFor(["adm"], "c", ["adm"])).toEqual([]);
+  });
+  it("mai mulți admini, filtrați independent", () => {
+    expect(observersFor(["adm1", "adm2", "adm3"], "adm1", ["adm2"])).toEqual(["adm3"]);
+  });
+  it("gol dacă nu există admini", () => {
+    expect(observersFor([], "c", [])).toEqual([]);
+  });
+});
+
 describe("messageFor", () => {
   it("formulează mesaje în română cu titlul", () => {
     expect(messageFor("assigned", "Raport")).toContain("Raport");
     expect(messageFor("comment", "Raport")).toContain("Raport");
     expect(messageFor("status", "Raport", "Finalizat")).toContain("Finalizat");
+    expect(messageFor("created", "Raport")).toContain("Raport");
+  });
+});
+
+describe("observerMessageFor", () => {
+  it("rescrie mesajul de atribuire la persoana a treia", () => {
+    expect(messageFor("assigned", "Raport")).toContain("Ți-a fost");
+    expect(observerMessageFor("assigned", "Raport")).not.toContain("Ți-a fost");
+    expect(observerMessageFor("assigned", "Raport")).toContain("Raport");
+  });
+  it("lasă neatinse mesajele deja neutre", () => {
+    for (const type of ["comment", "edited", "deleted", "created"] as const) {
+      expect(observerMessageFor(type, "Raport")).toBe(messageFor(type, "Raport"));
+    }
+    expect(observerMessageFor("status", "Raport", "Finalizat")).toBe(
+      messageFor("status", "Raport", "Finalizat"),
+    );
   });
 });
