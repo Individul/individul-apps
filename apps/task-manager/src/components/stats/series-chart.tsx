@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { listSeries, type SeriesPeriod } from "@/app/statistici/actions";
 import { SERIES_LABEL } from "@/lib/stats/labels";
+import { hasMeaningfulValue } from "@/lib/stats/series";
 import type { StatSeries } from "@/lib/stats/types";
 import { cn } from "@/lib/utils";
 
@@ -69,18 +70,25 @@ interface Indicator {
   series: StatSeries;
 }
 
-/** Reuniunea indicatorilor din toate perioadele, în ordinea primei apariții. */
+/**
+ * Reuniunea indicatorilor din toate perioadele, în ordinea primei apariții.
+ * Cei care sunt 0 în toate perioadele nu se afișează — rapoartele conțin zeci
+ * de rânduri care nu s-au întâmplat niciodată. Valorile rămân salvate; e doar
+ * un filtru de afișare.
+ */
 function collectIndicators(periods: SeriesPeriod[]): Indicator[] {
   const seen = new Map<string, Indicator>();
+  const byKey = new Map<string, (number | null)[]>();
   for (const period of periods) {
     for (const value of period.values) {
       const key = keyOf(value.indicator, value.series);
       if (!seen.has(key)) {
         seen.set(key, { key, indicator: value.indicator, series: value.series });
       }
+      byKey.set(key, [...(byKey.get(key) ?? []), value.value]);
     }
   }
-  return [...seen.values()];
+  return [...seen.values()].filter((i) => hasMeaningfulValue(byKey.get(i.key) ?? []));
 }
 
 /** Un rând de grafic/tabel: perioada plus valoarea fiecărui indicator ales. */
@@ -271,7 +279,11 @@ export function SeriesChart({ kinds }: SeriesChartProps) {
             </>
           ) : (
             <p className="px-3.5 py-10 text-center text-[13px] text-muted-foreground">
-              {loading ? "Se încarcă…" : "Niciun raport importat pentru acest tip."}
+              {loading
+                ? "Se încarcă…"
+                : periods.length === 0
+                  ? "Niciun raport importat pentru acest tip."
+                  : "Toți indicatorii sunt 0 în perioadele importate."}
             </p>
           )}
         </div>
