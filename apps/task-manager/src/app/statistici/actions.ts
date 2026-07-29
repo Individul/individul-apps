@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getStatValues } from "@/lib/queries";
 import { readGrid } from "@/lib/stats/workbook";
-import { detectParser, parserFor } from "@/lib/stats/registry";
+import { PARSERS, detectParser, parserFor } from "@/lib/stats/registry";
 import { guessPeriod, type PeriodGuess, type PeriodType } from "@/lib/stats/period";
-import type { Grid, StatItem, StatKind, StatSeries } from "@/lib/stats/types";
+import type { Grid, StatItem, StatKind, StatParser, StatSeries } from "@/lib/stats/types";
 
 type Result = { error?: string; success?: boolean };
 
@@ -24,8 +24,10 @@ const ONLY_ADMIN = "Doar adminul poate importa statistici.";
 export interface StatPreview {
   kind: StatKind;
   kindLabel: string;
-  /** Cât de sigur e parserul ales (0..1). */
+  /** Cât de sigur e parserul ales (0..1); `0` când tipul a fost impus. */
   score: number;
+  /** Tipul a fost ales de om, nu recunoscut automat — `score` nu spune nimic. */
+  forced: boolean;
   /** Perioada ghicită din numele fișierului; `null` dacă n-am găsit-o. */
   suggested: PeriodGuess | null;
   items: StatItem[];
@@ -105,6 +107,30 @@ async function removeObject(supabase: ServerClient, path: string): Promise<void>
   await supabase.storage.from(BUCKET).remove([path]);
 }
 
+/**
+ * Există deja un raport pentru (tip, perioadă)? Doar pentru avertismentul din
+ * interfață — importul înlocuiește oricum, corect, prin `upsert`. E o citire,
+ * deci fără poartă de admin; RLS lasă orice utilizator autentificat să vadă
+ * rapoartele. Dacă migrarea 0016 nu e aplicată, interogarea eșuează și
+ * răspunsul rămâne `false`.
+ */
+export async function reportExists(
+  kind: StatKind,
+  periodDate: string,
+  periodType: PeriodType,
+): Promise<boolean> {
+  if (!isIsoDate(periodDate)) return false;
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("stat_reports")
+    .select("id")
+    .eq("kind", kind)
+    .eq("period_date", periodDate)
+    .eq("period_type", periodType)
+    .maybeSingle();
+  return Boolean(data);
+}
+
 export async function previewImport(formData: FormData): Promise<PreviewResult> {
   const supabase = createClient();
   const admin = await requireAdmin(supabase, ONLY_ADMIN);
@@ -119,6 +145,20 @@ export async function previewImport(formData: FormData): Promise<PreviewResult> 
   if (file.size <= 0) return { error: "Fișierul e gol." };
   if (file.size > MAX_XLSX_BYTES) return { error: "Fișierul depășește 10 MB." };
 
+  /*
+   * Tipul impus de utilizator, când recunoașterea automată a dat greș. Fără el
+   * un raport sosit într-o formă puțin schimbată ar fi o fundătură: parserul
+   * nu e altfel un parametru al citirii. Îl rezolvăm înainte de a deschide
+   * fișierul — un nume necunoscut nu merită osteneala de a citi 10 MB.
+   */
+  const requested = formData.get("kind");
+  const forcedKind = typeof requested === "string" ? requested.trim() : "";
+  let forced: StatParser | null = null;
+  if (forcedKind !== "") {
+    forced = PARSERS.find((parser) => parser.kind === forcedKind) ?? null;
+    if (!forced) return { error: "Tip de raport necunoscut." };
+  }
+
   let grid: Grid;
   try {
     grid = await readGrid(await file.arrayBuffer());
@@ -127,12 +167,25 @@ export async function previewImport(formData: FormData): Promise<PreviewResult> 
     return { error: "Nu am putut citi fișierul .xlsx. Verifică dacă e un Excel valid cu date." };
   }
 
-  const match = detectParser(grid);
-  if (!match) return { error: "Nu am recunoscut tipul de raport. Verifică fișierul." };
+  let parser: StatParser;
+  let score: number;
+  if (forced) {
+    parser = forced;
+    // Nimeni n-a măsurat nimic: potrivirea a fost afirmată, nu calculată.
+    score = 0;
+  } else {
+    const match = detectParser(grid);
+    if (!match) return { error: "Nu am recunoscut tipul de raport. Verifică fișierul." };
+    parser = match.parser;
+    score = match.score;
+  }
 
   let items: StatItem[];
   try {
-    items = match.parser.parse(grid);
+    // Parserul impus care nu-și găsește reperul aruncă propriul mesaj („nu
+    // găsesc coloana P-6"…) — exact ce trebuie auzit: fișierul chiar nu e de
+    // tipul ales.
+    items = parser.parse(grid);
   } catch (err) {
     // Parserele aruncă mesaje gata scrise pentru utilizator.
     return { error: err instanceof Error ? err.message : "Nu am putut citi datele din fișier." };
@@ -141,24 +194,17 @@ export async function previewImport(formData: FormData): Promise<PreviewResult> 
 
   const suggested = guessPeriod(file.name);
 
-  // Doar informativ, ca interfața să anunțe înlocuirea. Dacă migrarea 0016 nu e
-  // aplicată, interogarea eșuează și rămâne `false`.
-  let existing = false;
-  if (suggested) {
-    const { data } = await supabase
-      .from("stat_reports")
-      .select("id")
-      .eq("kind", match.parser.kind)
-      .eq("period_date", suggested.date)
-      .eq("period_type", suggested.type)
-      .maybeSingle();
-    existing = Boolean(data);
-  }
+  // Doar informativ, ca interfața să anunțe înlocuirea din capul locului;
+  // dialogul reia verificarea când omul schimbă data sau tipul perioadei.
+  const existing = suggested
+    ? await reportExists(parser.kind, suggested.date, suggested.type)
+    : false;
 
   return {
-    kind: match.parser.kind,
-    kindLabel: match.parser.label,
-    score: match.score,
+    kind: parser.kind,
+    kindLabel: parser.label,
+    score,
+    forced: forced !== null,
     suggested,
     items,
     fileName: file.name,
