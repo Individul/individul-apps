@@ -110,15 +110,15 @@ export async function getPetitions(): Promise<Petition[]> {
   const supabase = createClient();
   const base = "*, assignee:profiles!petitions_assignee_id_fkey(*)";
 
-  // Încercăm cu numărul de atașamente; dacă migrarea 0013 nu e aplicată,
-  // relația nu există și reluăm fără ea (lista trebuie să funcționeze oricum).
-  const withCounts = await supabase
+  // Încercăm cu fișierele atașate; dacă migrarea 0013 nu e aplicată, relația
+  // nu există și reluăm fără ea (lista trebuie să funcționeze oricum).
+  const withFiles = await supabase
     .from("petitions")
-    .select(`${base}, petition_attachments(id)`)
+    .select(`${base}, petition_attachments(id, path, name, kind)`)
     .order("response_deadline", { ascending: true });
 
-  let rows = withCounts.data;
-  if (withCounts.error) {
+  let rows = withFiles.data;
+  if (withFiles.error) {
     const plain = await supabase
       .from("petitions")
       .select(base)
@@ -129,10 +129,15 @@ export async function getPetitions(): Promise<Petition[]> {
   }
 
   return (
-    (rows ?? []) as unknown as (Petition & { petition_attachments?: { id: string }[] })[]
+    (rows ?? []) as unknown as (Petition & {
+      petition_attachments?: NonNullable<Petition["attachments"]>;
+    })[]
   ).map(({ petition_attachments: atts, ...p }) => ({
     ...p,
-    attachments_count: atts?.length ?? 0,
+    // Scanarea petiției înaintea răspunsului: e cea căutată din listă.
+    attachments: [...(atts ?? [])].sort((a, b) =>
+      a.kind === b.kind ? 0 : a.kind === "petitie" ? -1 : 1,
+    ),
   }));
 }
 

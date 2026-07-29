@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PetitionFiltersBar } from "@/components/petitions/petition-filters-bar";
 import { PetitionFormDialog } from "./petition-form-dialog";
+import { openAttachment } from "./open-attachment";
 import { STATUS_LABEL, STATUS_DOT, PETITIONER_LABEL, daysUntil } from "./meta";
 import { deletePetition, finalizePetition } from "@/app/petitii/actions";
 import { avatarColor } from "@/lib/avatar-color";
@@ -181,6 +182,58 @@ function PetitionActionsMenu({
   );
 }
 
+/**
+ * Agrafa din listă: un singur fișier se deschide dintr-un click, mai multe
+ * deschid un meniu. `stopPropagation` peste tot — altfel clickul ajunge la
+ * rând și deschide dialogul petiției.
+ */
+function AttachmentBadge({ files }: { files: NonNullable<Petition["attachments"]> }) {
+  if (files.length === 0) return null;
+
+  const badge = (
+    <>
+      <Paperclip className="h-3.5 w-3.5" aria-hidden />
+      {files.length}
+    </>
+  );
+  const className =
+    "flex shrink-0 items-center gap-0.5 rounded text-[11px] text-muted-foreground transition-colors hover:text-foreground";
+
+  if (files.length === 1) {
+    return (
+      <button
+        type="button"
+        title={`Deschide „${files[0].name}"`}
+        className={className}
+        onClick={(e) => {
+          e.stopPropagation();
+          void openAttachment(files[0].path);
+        }}
+      >
+        {badge}
+      </button>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <button type="button" title={`${files.length} fișiere atașate`} className={className}>
+          {badge}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+        {files.map((f) => (
+          <DropdownMenuItem key={f.id} onSelect={() => void openAttachment(f.path)}>
+            <Paperclip className="mr-2 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="truncate">{f.name}</span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 interface PetitionsListProps {
   petitions: Petition[];
   profiles: Profile[];
@@ -321,18 +374,10 @@ export function PetitionsList({
                     className={cn("w-1 shrink-0", URGENCY_BAR[urgency.key])}
                   />
                   <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2">
-                    {/* Nr. + agrafa, dacă petiția are fișiere atașate */}
+                    {/* Nr. + agrafa: deschide scanarea direct din listă */}
                     <div className="flex w-28 shrink-0 items-center gap-1.5">
                       <span className="min-w-0 truncate text-sm font-medium">{p.number}</span>
-                      {(p.attachments_count ?? 0) > 0 && (
-                        <span
-                          title={`${p.attachments_count} fișier(e) atașat(e)`}
-                          className="flex shrink-0 items-center gap-0.5 text-[11px] text-muted-foreground"
-                        >
-                          <Paperclip className="h-3.5 w-3.5" aria-hidden />
-                          {p.attachments_count}
-                        </span>
-                      )}
+                      <AttachmentBadge files={p.attachments ?? []} />
                     </div>
 
                     {/* Petiționar */}
