@@ -124,6 +124,24 @@ Pentru scanările atașate petițiilor (cererea și răspunsul), rulează
 > semnate, generate la cerere — dacă bucket-ul devine public, orice scanare
 > devine accesibilă oricui are link-ul.
 
+## 2j. Statistici (opțional)
+
+Pentru importul fișierelor de raportare (xlsx) și indicatorii extrași din ele,
+rulează [`migrations/0016_statistics.sql`](./migrations/0016_statistics.sql)
+**DUPĂ** `0015_petition_notifications.sql`. Migrarea:
+
+1. creează bucket-ul **privat** `statistics` (xlsx, max 10 MB per fișier);
+2. creează tabela `stat_reports` (un rând per raport: `kind`, `period_date`,
+   `period_type` — unice împreună — plus fișierul-sursă încărcat);
+3. creează tabela `stat_values` (valorile extrase, legate de raport cu
+   `on delete cascade`);
+4. adaugă politicile RLS pe cele două tabele și pe `storage.objects`: **citesc**
+   toți utilizatorii autentificați, dar **scriu** (încarcă/modifică/șterg) doar
+   adminii — sunt date de raportare instituțională.
+
+> Bucket-ul trebuie să rămână **privat**. Fișierele se deschid prin URL-uri
+> semnate, generate la cerere.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.
