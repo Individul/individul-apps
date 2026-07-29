@@ -107,3 +107,24 @@ export interface PetitionAttachment {
   uploaded_by: string | null;
   created_at: string;
 }
+export interface StatReport {
+  id: string;
+  /** Unul dintre `StatKind` (vezi lib/stats/types.ts); text în baza de date. */
+  kind: string;
+  period_date: string;
+  period_type: "saptamanal" | "lunar";
+  file_path: string | null;
+  file_name: string | null;
+  uploaded_by: string | null;
+  created_at: string;
+  // derivate
+  values_count?: number;
+}
+export interface StatValue {
+  id: string;
+  report_id: string;
+  indicator: string;
+  series: "cumulat" | "perioada";
+  value: number | null;
+  position: number;
+}

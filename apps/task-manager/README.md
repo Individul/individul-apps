@@ -23,8 +23,8 @@ examinare), scadente în 7 zile și restante. După autentificare aterizezi tot
 pe `/`.
 
 Toate paginile autentificate au un **antet comun**: link „Acasă", tab-urile
-**Sarcini | Petiții**, clopoțelul de notificări și acțiunile de cont („Profilul
-meu", „Schimbă parola", „Deconectare"; adminii au în plus „Administrare"). Tabul
+**Sarcini | Petiții | Statistici**, clopoțelul de notificări și acțiunile de cont
+(„Profilul meu", „Schimbă parola", „Deconectare"; adminii au în plus „Administrare"). Tabul
 **Sarcini** rămâne activ și pe detaliul unei sarcini (`/tasks/[id]`). Detaliul
 sarcinii și pagina de administrare au, sub antet, și un buton „Înapoi la
 sarcini" (→ `/sarcini`).
@@ -34,6 +34,7 @@ sarcini" (→ `/sarcini`).
 | `/`           | hub — carduri de modul cu cifre live     |
 | `/sarcini`    | lista de sarcini                         |
 | `/petitii`    | registrul petițiilor                     |
+| `/statistici` | rapoarte statistice importate din Excel  |
 | `/tasks/[id]` | detaliul unei sarcini                    |
 | `/admin`      | administrare (doar admin)                |
 
@@ -104,6 +105,50 @@ fără reîncărcarea paginii.
 > Migrarea [`supabase/migrations/0008_notifications.sql`](supabase/migrations/0008_notifications.sql)
 > trebuie aplicată (după `0007_audit.sql`); ea adaugă și tabelul `notifications`
 > la publicația `supabase_realtime`.
+
+## Statistici
+
+Rapoartele statistice se completează în continuare în Excel, ca până acum.
+Aplicația le **importă**, păstrează **istoricul** și arată **evoluția în timp**.
+Se extrag doar datele penitenciarului **P-6**.
+
+Tipuri de raport recunoscute (detectate automat din conținut):
+
+| Tip | Conținut |
+| --- | --- |
+| Raport lunar | plafon de detenție, deținuți, suprapopulare, femei, minori, liberați |
+| Liberări | liberări pe motive, decedați |
+| Comisia penitenciară | art. 91 / 92 CP — examinați, admiși, refuzați, expediați în judecată |
+| Grațiere | demersuri, examinați, grațiați, refuzați |
+| Amnistia 2016 / Amnistia 2021 | aplicarea legilor de amnistie |
+| Mecanism compensatoriu | reduceri de termen (art. 473/2 CPP) |
+| Ședințe de judecată | teleconferință, sediu, instanță, amânate |
+
+**Fluxul de import** (doar admin): alegi fișierul `.xlsx` → aplicația detectează
+tipul și propune perioada din numele fișierului → **previzualizezi** toți
+indicatorii extrași → confirmi perioada (dată + săptămânal/lunar) → se salvează.
+Fișierul original rămâne într-un bucket privat și se poate redeschide oricând.
+
+Câteva alegeri deliberate:
+
+- **Perioada se confirmă manual.** Datele din fișiere sunt contradictorii (un
+  fișier are „30.06.2023" în titlu și 31.03.2024 în celula alăturată), deci
+  ghicirea ar produce un istoric fals fără ca cineva să observe.
+- **Tipul detectat poate fi schimbat.** Dacă alegi alt tip, fișierul e recitit cu
+  el, așa că previzualizarea arată mereu exact ce se va salva.
+- **Reimportul aceleiași perioade înlocuiește** datele, nu le dublează.
+- Rapoartele cu **sub-rând de perioadă** (comisia, mecanism compensatoriu) se
+  salvează pe două serii: `cumulat` și `perioada`.
+- Localizarea coloanei/rândului P-6 se face **după text**, nu după coordonate, ca
+  o inserare de rând în Excel să nu strice importul. Un fișier nerecunoscut dă
+  eroare explicită, nu import tăcut greșit.
+
+Vizualizarea e pentru toți utilizatorii; importul și ștergerea, doar pentru admini
+(impus prin RLS, nu doar în interfață).
+
+> Migrarea [`supabase/migrations/0016_statistics.sql`](supabase/migrations/0016_statistics.sql)
+> trebuie aplicată (după `0015`); ea creează bucket-ul privat `statistics` și
+> tabelele `stat_reports` / `stat_values`.
 
 ## Dezvoltare locală
 
