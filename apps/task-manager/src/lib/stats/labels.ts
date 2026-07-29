@@ -30,9 +30,17 @@ export function kindLabel(kind: string): string {
   return LABEL_BY_KIND.get(kind) ?? kind;
 }
 
+/**
+ * Seria, spusă omenește. În fișiere „cumulat" e coloana de bilanț de la
+ * începutul anului, iar „perioada" rândul intervalului raportat; aici le citește
+ * lume care n-a văzut niciodată foaia de Excel, deci nu apar cuvintele din ea.
+ *
+ * Una și aceeași pentru previzualizarea importului și pentru tabelul „Toate
+ * valorile": aceeași cifră nu are voie să fie explicată în două feluri.
+ */
 export const SERIES_LABEL: Record<StatSeries, string> = {
-  cumulat: "cumulat",
-  perioada: "perioada",
+  cumulat: "de la începutul anului",
+  perioada: "în perioadă",
 };
 
 export const PERIOD_TYPE_LABEL: Record<PeriodType, string> = {
