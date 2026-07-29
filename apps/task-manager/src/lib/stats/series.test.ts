@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { hasMeaningfulValue } from "./series";
+import { hasMeaningfulValue, hasBothSeries } from "./series";
 
 describe("hasMeaningfulValue", () => {
   it("ascunde indicatorii care sunt 0 în toate perioadele", () => {
@@ -22,5 +22,22 @@ describe("hasMeaningfulValue", () => {
   it("ascunde indicatorii fără nicio valoare", () => {
     expect(hasMeaningfulValue([])).toBe(false);
     expect(hasMeaningfulValue([null, null])).toBe(false);
+  });
+});
+
+describe("hasBothSeries", () => {
+  it("adevărat doar când există și cumulat, și perioadă", () => {
+    expect(
+      hasBothSeries([{ series: "cumulat" }, { series: "perioada" }]),
+    ).toBe(true);
+  });
+
+  it("fals când toate rândurile sunt din aceeași serie", () => {
+    expect(hasBothSeries([{ series: "cumulat" }, { series: "cumulat" }])).toBe(false);
+    expect(hasBothSeries([{ series: "perioada" }])).toBe(false);
+  });
+
+  it("fals pentru listă goală", () => {
+    expect(hasBothSeries([])).toBe(false);
   });
 });
