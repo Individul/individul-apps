@@ -104,6 +104,10 @@ export const ROW_PARSERS: StatParser[] = [
     label: "Mecanismul compensatoriu (art. 473/2, 473/3 CPP)",
     keywords: ["mecanismul compensatoriu", "redus din termen"],
     rowPrefix: "Penitenciarul nr. 6",
+    // Rândul Excel 1 e titlul „…la data de 30.06.2026", deci antetul util e
+    // doar rândul 2. Fără asta, data raportării intra în numele fiecărui
+    // indicator și niciun indicator nu s-ar fi repetat de la o lună la alta.
+    headerFrom: 1,
     headerRows: 2,
     hasPeriodRow: true,
   }),
@@ -112,7 +116,11 @@ export const ROW_PARSERS: StatParser[] = [
     label: "Ședințe de judecată și acțiuni de urmărire penală",
     keywords: ["dispoziții de escortare", "teleconferință"],
     rowPrefix: "6 ",
-    headerRows: 3,
+    // La fel ca la mecanismul compensatoriu: rândul 1 poartă intervalul
+    // raportat. În plus, titlul lui nu acoperea toate coloanele, așa că unii
+    // indicatori îl primeau în nume și alții nu.
+    headerFrom: 1,
+    headerRows: 2,
     hasPeriodRow: false,
   }),
 ];

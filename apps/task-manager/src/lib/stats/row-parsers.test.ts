@@ -213,10 +213,20 @@ describe("rowParser — comisia", () => {
 describe("rowParser — mc", () => {
   const items = get("mc").parse(mcGrid);
 
-  it("compune eticheta din două rânduri de antet", () => {
+  it("compune eticheta doar din cele două rânduri de antet reale", () => {
     expect(pick(items, "Eliberați din momentul primirii încheierii").indicator).toBe(
-      `${MC_TITLU} / Eliberați din momentul primirii încheierii`,
+      "Eliberați din momentul primirii încheierii",
     );
+  });
+
+  it("nu bagă în etichete titlul cu data raportării", () => {
+    // Numele indicatorului ajunge în baza de date și e cheia după care se
+    // leagă perioadele între ele. Cu data raportării în nume, fiecare import
+    // ar aduce indicatori „noi" și nicio serie n-ar mai avea două puncte.
+    for (const item of items) {
+      expect(item.indicator).not.toContain(MC_TITLU);
+      expect(item.indicator).not.toMatch(/\d{2}\.\d{2}\.\d{4}/);
+    }
   });
 
   it("citește cumulat și perioada", () => {
@@ -235,16 +245,23 @@ describe("rowParser — sedinte", () => {
   const items = get("sedinte").parse(sedinteGrid);
 
   it("prinde „6 Soroca”, nu „60 Alt penitenciar”", () => {
-    const total = items.filter((i) => i.indicator === `${SEDINTE_TITLU} / Total`);
+    const total = items.filter((i) => i.indicator === "Total");
     expect(total).toHaveLength(1);
     expect(total[0].value).toBe(90);
     expect(items.map((i) => i.value)).not.toContain(11);
   });
 
-  it("compune eticheta din trei rânduri de antet", () => {
+  it("compune eticheta doar din cele două rânduri de antet reale", () => {
     expect(pick(items, "Teleconferință / Total ședințe").indicator).toBe(
-      `${SEDINTE_TITLU} / Teleconferință / Total ședințe`,
+      "Teleconferință / Total ședințe",
     );
+  });
+
+  it("nu bagă în etichete titlul cu intervalul raportat", () => {
+    for (const item of items) {
+      expect(item.indicator).not.toContain(SEDINTE_TITLU);
+      expect(item.indicator).not.toMatch(/\d{2}\.\d{2}\.\d{4}/);
+    }
   });
 
   it("sare peste celulele goale și păstrează zerourile", () => {
