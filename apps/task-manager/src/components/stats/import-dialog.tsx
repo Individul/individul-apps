@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { format, isValid, parseISO } from "date-fns";
+import { ro } from "date-fns/locale";
 import { AlertTriangle, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,8 +31,14 @@ import {
   type StatPreview,
 } from "@/app/statistici/actions";
 import type { PeriodType } from "@/lib/stats/period";
+import { hasBothSeries } from "@/lib/stats/series";
 import type { StatKind } from "@/lib/stats/types";
-import { KIND_OPTIONS, PERIOD_TYPE_LABEL, SERIES_LABEL } from "@/lib/stats/labels";
+import {
+  KIND_OPTIONS,
+  PERIOD_TYPE_LABEL,
+  SERIES_LABEL,
+  kindLabel,
+} from "@/lib/stats/labels";
 import { cn } from "@/lib/utils";
 
 const PERIOD_OPTIONS: PeriodType[] = ["lunar", "saptamanal"];
@@ -43,6 +51,28 @@ function readAsBase64(file: File): Promise<string> {
     reader.onerror = () => reject(new Error("Nu am putut citi fișierul de pe disc."));
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Perioada scrisă ca între oameni: „30 iunie 2026", nu „2026-06-30". `null` cât
+ * timp câmpul e gol sau ține o dată neterminată — propoziția de confirmare tace
+ * atunci despre perioadă, iar nota de sub calendar spune ce lipsește.
+ */
+function formatPeriod(iso: string): string | null {
+  if (!iso) return null;
+  const parsed = parseISO(iso);
+  return isValid(parsed) ? format(parsed, "d MMMM yyyy", { locale: ro }) : null;
+}
+
+/**
+ * „Vezi cele 27 de valori extrase". Româna cere „de" când ultimele două cifre
+ * trec de 20, iar o singură valoare nu se numără deloc.
+ */
+function extractedSummary(count: number): string {
+  if (count === 1) return "Vezi valoarea extrasă";
+  const lastTwo = count % 100;
+  const de = lastTwo === 0 || lastTwo >= 20 ? " de" : "";
+  return `Vezi cele ${count}${de} valori extrase`;
 }
 
 export function ImportDialog() {
@@ -205,6 +235,16 @@ export function ImportDialog() {
     }
   };
 
+  // Perioada scrisă omenește, pentru propoziția de confirmare; `null` cât timp
+  // calendarul e gol.
+  const periodLabel = formatPeriod(periodDate);
+  /*
+   * Coloana care explică seria are rost doar unde chiar sunt două serii de
+   * deosebit — la șase rapoarte din opt totul e „cumulat" fiindcă parserul n-are
+   * cu ce altceva să marcheze valorile.
+   */
+  const showSeries = preview !== null && hasBothSeries(preview.items);
+
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)}>
@@ -247,6 +287,28 @@ export function ImportDialog() {
 
             {preview && (
               <div className="space-y-4">
+                {/*
+                 * Confirmarea, într-o singură propoziție: ce raport am înțeles
+                 * că e și pe ce perioadă. Verbul spune și de unde vine tipul —
+                 * „am recunoscut" când l-a găsit programul, „ai ales" când l-a
+                 * pus omul din selectorul de dedesubt. Cât ține o recitire,
+                 * selectorul arată deja tipul cel nou, iar `preview` încă e al
+                 * celui vechi: comparația dintre ele ține propoziția sinceră.
+                 */}
+                <p className="text-[13px] leading-relaxed">
+                  {preview.forced || kind !== preview.kind ? "Ai ales:" : "Am recunoscut:"}{" "}
+                  <span className="font-medium text-foreground">
+                    {kindLabel(kind ?? preview.kind)}
+                  </span>
+                  {periodLabel && (
+                    <>
+                      , perioada{" "}
+                      <span className="font-medium text-foreground">{periodLabel}</span>
+                    </>
+                  )}
+                  . E corect?
+                </p>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   {/*
                    * Schimbarea tipului recitește fișierul cu parserul cerut, deci
@@ -274,11 +336,6 @@ export function ImportDialog() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-[11px] text-muted-foreground">
-                      {preview.forced
-                        ? "Ales manual — fișierul a fost recitit cu acest tip."
-                        : `Detectat automat (${Math.round(preview.score * 100)}% potrivire)`}
-                    </p>
                   </div>
 
                   <div className="space-y-1.5">
@@ -325,40 +382,43 @@ export function ImportDialog() {
                   </p>
                 )}
 
-                <div className="space-y-1.5">
-                  {/* Cât ține recitirea, lista veche rămâne pe ecran, estompată. */}
-                  {pending ? (
-                    <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                      Se recitesc indicatorii…
-                    </p>
-                  ) : (
-                    <p className="text-[13px] text-muted-foreground">
-                      {preview.items.length} indicatori
-                    </p>
-                  )}
+                {/*
+                 * Cifrele citite din fișier, strânse: cine importă un raport se
+                 * uită la ce scrie mai sus, nu la treizeci de rânduri de Excel.
+                 * Stau totuși la un click distanță, ca importul să poată fi
+                 * verificat înainte de salvare. Cât ține o recitire, lista veche
+                 * rămâne pe ecran, estompată.
+                 */}
+                <details className="overflow-hidden rounded-xl border bg-card">
+                  <summary className="cursor-pointer px-3.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted/50">
+                    {pending ? "Se recitesc valorile…" : extractedSummary(preview.items.length)}
+                  </summary>
                   <div
                     className={cn(
-                      "max-h-64 overflow-y-auto rounded-xl border bg-card",
+                      "max-h-64 overflow-auto border-t",
                       pending && "opacity-60",
                     )}
                   >
                     <table className="w-full text-[13px]">
                       <thead className="sticky top-0 bg-muted/30 text-[11px] font-medium text-muted-foreground">
                         <tr>
-                          <th className="px-3 py-2 text-left font-medium">Indicator</th>
-                          <th className="w-24 px-3 py-2 text-left font-medium">Serie</th>
-                          <th className="w-28 px-3 py-2 text-right font-medium">Valoare</th>
+                          <th className="px-3.5 py-2 text-left font-medium">Indicator</th>
+                          {showSeries && (
+                            <th className="w-52 px-3 py-2 text-left font-medium">Se referă la</th>
+                          )}
+                          <th className="w-28 px-3.5 py-2 text-right font-medium">Valoare</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {preview.items.map((item, i) => (
                           <tr key={`${item.series}-${item.indicator}-${i}`}>
-                            <td className="px-3 py-1.5">{item.indicator}</td>
-                            <td className="px-3 py-1.5 text-muted-foreground">
-                              {SERIES_LABEL[item.series]}
-                            </td>
-                            <td className="px-3 py-1.5 text-right tabular-nums">
+                            <td className="px-3.5 py-1.5">{item.indicator}</td>
+                            {showSeries && (
+                              <td className="px-3 py-1.5 text-muted-foreground">
+                                {SERIES_LABEL[item.series]}
+                              </td>
+                            )}
+                            <td className="px-3.5 py-1.5 text-right tabular-nums">
                               {item.value === null ? "—" : item.value.toLocaleString("ro-RO")}
                             </td>
                           </tr>
@@ -366,7 +426,7 @@ export function ImportDialog() {
                       </tbody>
                     </table>
                   </div>
-                </div>
+                </details>
               </div>
             )}
           </div>

@@ -112,6 +112,31 @@ Rapoartele statistice se completează în continuare în Excel, ca până acum.
 Aplicația le **importă**, păstrează **istoricul** și arată **evoluția în timp**.
 Se extrag doar datele penitenciarului **P-6**.
 
+Pagina are **o secțiune per raport**, fiecare cu graficele potrivite conținutului
+lui — forma urmează întrebarea, nu invers:
+
+| Raport | Întrebarea | Formă |
+| --- | --- | --- |
+| Populație | cum evoluează numărul de deținuți? | linie, cu plafonul ca reper punctat |
+| Liberări | din ce se compune totalul? | inel (sau bare, peste 6 motive) + linie în timp |
+| Comisia | art. 91 față de art. 92 | bare grupate |
+| Grațiere | ce s-a întâmplat cu demersurile? | bare |
+| Ședințe | teleconferință față de instanță | bare grupate |
+| Mecanism compensatoriu | cum evoluează? | două linii separate (persoane / termen) |
+| Amnistii | structura pe articole | bare orizontale |
+
+Fiecare secțiune are dedesubt **„Toate valorile"** — un tabel pliabil cu tot ce
+s-a importat pentru perioadă. Prezentarea aleasă nu ascunde niciodată date.
+
+Reguli de afișare care merită știute:
+
+- Indicatorii care sunt **0 în toate perioadele** nu apar în grafice (rapoartele
+  au zeci de rânduri care nu s-au întâmplat niciodată); rămân în „Toate valorile".
+- O valoare lipsă **rămâne lipsă** — linia se întrerupe, nu se completează cu 0.
+- Totalurile nu apar niciodată într-un grafic de compoziție, ca să nu stea totalul
+  ca felie lângă propriile lui părți.
+- „Suprapopularea" negativă se citește ca **locuri libere** (−5 → „Locuri libere 5").
+
 Tipuri de raport recunoscute (detectate automat din conținut):
 
 | Tip | Conținut |
