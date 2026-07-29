@@ -396,7 +396,7 @@ const SEDINTE: ReportView = {
   ],
 };
 
-const MC_VALORI: ValueRef[] = [
+const MC_PERSOANE: ValueRef[] = [
   {
     indicator: "Eliberați din momentul primirii încheierii",
     series: "cumulat",
@@ -407,17 +407,37 @@ const MC_VALORI: ValueRef[] = [
     series: "cumulat",
     label: "Eliberați după reducere",
   },
-  { indicator: "Redus din termen", series: "cumulat", label: "Redus din termen" },
 ];
+
+/**
+ * „Redus din termen" nu are unitate nicăieri în fișier: nici antet, nici notă,
+ * nici rând de subsol. Titlul de deasupra coloanelor spune „Numărul de
+ * deținuți…", ceea ce ar sugera tot persoane, dar nimic nu confirmă. De aceea
+ * eticheta rămâne cea din fișier, fără „zile" sau „luni" inventate de noi.
+ */
+const MC_TERMEN: ValueRef = {
+  indicator: "Redus din termen",
+  series: "cumulat",
+  label: "Redus din termen",
+};
 
 const MC: ReportView = {
   title: "Mecanism compensatoriu",
-  tiles: MC_VALORI.map((ref) => ({ ...ref })),
+  tiles: [...MC_PERSOANE.map((ref) => ({ ...ref })), { ...MC_TERMEN }],
   charts: [
     {
-      title: "Aplicarea mecanismului compensatoriu",
+      title: "Persoane eliberate",
       kind: "line",
-      series: MC_VALORI.map((ref) => ({ ...ref })),
+      series: MC_PERSOANE.map((ref) => ({ ...ref })),
+    },
+    {
+      // Grafic separat, nu din cochetărie: în iunie, 7 și 51 de persoane pe
+      // aceeași axă cu 306 s-ar fi lipit de zero. Două mărimi de ordine
+      // diferite nu împart o axă — și cu atât mai puțin când nu se știe sigur
+      // dacă măsoară același lucru.
+      title: "Redus din termen",
+      kind: "line",
+      series: [{ ...MC_TERMEN }],
     },
   ],
 };

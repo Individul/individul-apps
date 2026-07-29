@@ -522,9 +522,27 @@ describe("configurațiile cerute de fiecare raport", () => {
     expect(chart.series.map((r) => r.label)).toContain("Instanță");
   });
 
-  it("mecanism compensatoriu: o linie cu cele trei valori ale lui", () => {
-    const chart = chartsOf(viewFor("mc"), "line")[0];
-    expect(chart.series).toHaveLength(3);
+  it("mecanism compensatoriu: persoanele și termenul redus stau pe grafice separate", () => {
+    // 7 și 51 de persoane alături de 306 pe aceeași axă: cele două serii care
+    // numără oameni s-ar turti la baza graficului. În plus, fișierul nu spune
+    // în ce se măsoară „Redus din termen", deci nici nu se pot aduna.
+    const linii = chartsOf(viewFor("mc"), "line");
+    expect(linii).toHaveLength(2);
+
+    expect(linii[0].series.map((ref) => ref.indicator)).toEqual([
+      "Eliberați din momentul primirii încheierii",
+      "Eliberați după reducerea termenului",
+    ]);
+
+    expect(linii[1].series).toHaveLength(1);
+    expect(linii[1].series[0].indicator).toBe("Redus din termen");
+  });
+
+  it("mecanism compensatoriu: „Redus din termen” nu împarte axa cu nimeni", () => {
+    for (const chart of viewFor("mc").charts) {
+      const areTermen = chart.series.some((ref) => ref.indicator === "Redus din termen");
+      if (areTermen) expect(chart.series, chart.title).toHaveLength(1);
+    }
   });
 
   it("amnistiile: bare orizontale pe articole, etichetele sunt lungi", () => {
