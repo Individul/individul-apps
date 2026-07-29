@@ -25,7 +25,11 @@ export function TasksWorkspace({
   currentUserId,
   isAdmin,
 }: TasksWorkspaceProps) {
-  const [filter, setFilter] = useState<TaskFilter>({});
+  // Membrul deschide lista pe sarcinile lui — altfel caută printre ale tuturor.
+  // Adminul o deschide completă: rolul lui e să vadă ce face echipa.
+  const [filter, setFilter] = useState<TaskFilter>(
+    isAdmin || !currentUserId ? {} : { assigneeId: currentUserId },
+  );
   // Membrii văd rezumatul propriilor sarcini; adminul vede totalul + per utilizator.
   const summaryTasks = isAdmin ? tasks : tasks.filter((t) => t.assignee_id === currentUserId);
 

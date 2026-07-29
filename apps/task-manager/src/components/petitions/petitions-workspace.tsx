@@ -22,7 +22,11 @@ export function PetitionsWorkspace({
   currentUserId,
   isAdmin,
 }: PetitionsWorkspaceProps) {
-  const [filter, setFilter] = useState<PetitionFilter>({});
+  // Membrul deschide registrul pe petițiile lui — altfel caută printre toate.
+  // Adminul îl deschide complet: rolul lui e să vadă ce face echipa.
+  const [filter, setFilter] = useState<PetitionFilter>(
+    isAdmin || !currentUserId ? {} : { assigneeId: currentUserId },
+  );
   // Membrii văd rezumatul propriilor petiții; adminul vede totalul + per utilizator.
   const summaryPetitions = isAdmin
     ? petitions
