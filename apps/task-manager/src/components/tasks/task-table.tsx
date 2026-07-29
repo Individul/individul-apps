@@ -102,6 +102,12 @@ export function TaskTable({
 
   const data = useMemo(() => filterTasks(tasks, filter), [tasks, filter]);
 
+  // Lista poate fi goală pentru că nu există sarcini sau pentru că filtrele le
+  // ascund — inclusiv filtrul implicit „doar ale mele" al membrilor.
+  const filtersActive = Boolean(
+    filter.search || filter.status || filter.assigneeId || filter.priority || filter.due || filter.tagId,
+  );
+
   const handleEdit = (task: Task) => {
     setEditingTask(task);
     setFormOpen(true);
@@ -303,7 +309,9 @@ export function TaskTable({
             })}
           </div>
         ) : (
-          <div className="px-4 py-12 text-center text-muted-foreground">Nicio sarcină.</div>
+          <div className="px-4 py-12 text-center text-muted-foreground">
+            {filtersActive ? "Nicio sarcină găsită." : "Nicio sarcină."}
+          </div>
         )}
       </div>
 
