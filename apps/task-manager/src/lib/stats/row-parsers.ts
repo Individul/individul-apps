@@ -9,7 +9,14 @@ export interface RowParserConfig {
   keywords: string[];
   /** Prefixul primei celule nevide de pe rândul penitenciarului 6. */
   rowPrefix: string;
-  /** Câte rânduri de la începutul grilei formează antetul. */
+  /**
+   * De la ce rând (0-based) începe antetul. Implicit 0. Se setează când
+   * deasupra antetului stau rânduri dependente de perioadă (titlul cu
+   * intervalul de raportare, rândul cu anul) — acelea ar schimba numele
+   * indicatorilor la fiecare import și ar rupe comparația între perioade.
+   */
+  headerFrom?: number;
+  /** Câte rânduri, începând cu `headerFrom`, formează antetul. */
   headerRows: number;
   /**
    * Rândul imediat următor conține valorile pe perioadă. Eticheta lui diferă
@@ -25,13 +32,14 @@ export interface RowParserConfig {
  */
 export function rowParser(config: RowParserConfig): StatParser {
   const { kind, label, keywords, rowPrefix, headerRows, hasPeriodRow } = config;
+  const headerFrom = config.headerFrom ?? 0;
 
   return {
     kind,
     label,
     detect(grid: Grid): number {
       if (findRowStarting(grid, rowPrefix) === null) return 0;
-      return detectScore(grid, keywords, headerRows);
+      return detectScore(grid, keywords, headerFrom + headerRows);
     },
     parse(grid: Grid): StatItem[] {
       const penRow = findRowStarting(grid, rowPrefix);
@@ -39,7 +47,9 @@ export function rowParser(config: RowParserConfig): StatParser {
         throw new Error(`Nu am găsit rândul „${rowPrefix.trim()}” în fișier.`);
       }
 
-      const header = grid.slice(0, headerRows).map((row) => row ?? []);
+      const header = grid
+        .slice(headerFrom, headerFrom + headerRows)
+        .map((row) => row ?? []);
       const values = grid[penRow] ?? [];
       const period = hasPeriodRow ? grid[penRow + 1] ?? [] : [];
       const width = Math.max(
@@ -75,7 +85,10 @@ export const ROW_PARSERS: StatParser[] = [
     label: "Grațiere",
     keywords: ["grațiere", "demersuri parvenite"],
     rowPrefix: "Penitenciarul nr. 6",
-    headerRows: 6,
+    // Rândurile Excel 1-4 conțin titlul cu intervalul raportat și anul, deci
+    // antetul util e format doar din rândurile 5 și 6.
+    headerFrom: 4,
+    headerRows: 2,
     hasPeriodRow: false,
   }),
   rowParser({

@@ -149,13 +149,19 @@ describe("rowParser — gratiere", () => {
     expect(items.map((i) => i.value)).not.toContain(1);
   });
 
-  it("compune eticheta din toate rândurile de antet", () => {
+  it("compune eticheta doar din cele două rânduri de antet reale", () => {
     expect(pick(items, "Total demersuri parvenite").indicator).toBe(
-      `${GRATIERE_TITLU} / 2026 / Total demersuri parvenite de la Aparatul Președintelui`,
+      "Total demersuri parvenite de la Aparatul Președintelui",
     );
-    expect(pick(items, "grațiați").indicator).toBe(
-      `${GRATIERE_TITLU} / 2026 / Examinați de către AP / grațiați`,
-    );
+    expect(pick(items, "grațiați").indicator).toBe("Examinați de către AP / grațiați");
+  });
+
+  it("nu bagă în etichete titlul cu perioada sau rândul cu anul", () => {
+    for (const item of items) {
+      expect(item.indicator).not.toContain(GRATIERE_TITLU);
+      expect(item.indicator).not.toMatch(/\d{2}\.\d{2}\.\d{4}/);
+      expect(item.indicator).not.toMatch(/\b(19|20)\d{2}\b/);
+    }
   });
 
   it("sare peste numele penitenciarului și peste coloanele goale", () => {
