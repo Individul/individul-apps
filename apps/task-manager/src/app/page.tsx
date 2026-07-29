@@ -38,6 +38,11 @@ export default async function HubPage() {
   const ts = taskStats(myTasks);
   const ps = petitionStats(myPetitions);
 
+  // Membrul își vede cifrele proprii, cu totalul secției dedesubt („din N”).
+  // Adminul le are deja pe toate, deci n-ar avea ce compara.
+  const tsAll = isAdmin ? null : taskStats(tasks);
+  const psAll = isAdmin ? null : petitionStats(petitions);
+
   // Defalcarea (doar admin) se face peste elementele relevante, nu peste arhivă.
   const taskBreakdown = isAdmin
     ? countsByAssignee(
@@ -71,11 +76,11 @@ export default async function HubPage() {
                 : "Sarcinile atribuite ție, cu termene și priorități."
             }
             stats={[
-              { label: "Total", value: ts.total },
-              { label: "Active", value: ts.active },
-              { label: "Finalizate", value: ts.done },
-              { label: "Scadente 7 zile", value: ts.dueSoon, tone: "warning" },
-              { label: "Restante", value: ts.overdue, tone: "danger" },
+              { label: "Total", value: ts.total, of: tsAll?.total },
+              { label: "Active", value: ts.active, of: tsAll?.active },
+              { label: "Finalizate", value: ts.done, of: tsAll?.done },
+              { label: "Scadente 7 zile", value: ts.dueSoon, of: tsAll?.dueSoon, tone: "warning" },
+              { label: "Restante", value: ts.overdue, of: tsAll?.overdue, tone: "danger" },
             ]}
             breakdown={taskBreakdown}
           />
@@ -88,11 +93,11 @@ export default async function HubPage() {
                 : "Petițiile atribuite ție, cu termene de răspuns."
             }
             stats={[
-              { label: "Total", value: ps.total },
-              { label: "În examinare", value: ps.open },
-              { label: "Soluționate", value: ps.solved },
-              { label: "Scadente 7 zile", value: ps.dueSoon, tone: "warning" },
-              { label: "Restante", value: ps.overdue, tone: "danger" },
+              { label: "Total", value: ps.total, of: psAll?.total },
+              { label: "În examinare", value: ps.open, of: psAll?.open },
+              { label: "Soluționate", value: ps.solved, of: psAll?.solved },
+              { label: "Scadente 7 zile", value: ps.dueSoon, of: psAll?.dueSoon, tone: "warning" },
+              { label: "Restante", value: ps.overdue, of: psAll?.overdue, tone: "danger" },
             ]}
             breakdown={petitionBreakdown}
           />

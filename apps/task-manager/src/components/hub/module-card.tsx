@@ -8,6 +8,11 @@ export interface ModuleCardStat {
   label: string;
   value: number;
   tone?: "default" | "danger" | "warning";
+  /**
+   * Totalul pe toată secția, afișat discret sub etichetă („din N”). Se dă doar
+   * membrilor: la admin cifra proprie e deja totalul, deci ar fi redundant.
+   */
+  of?: number;
 }
 
 function initialsOf(name: string): string {
@@ -45,7 +50,7 @@ export function ModuleCard({
           <div key={s.label}>
             <div
               className={cn(
-                "text-2xl font-medium",
+                "text-2xl font-medium tabular-nums",
                 s.tone === "danger" && s.value > 0 && "text-red-600",
                 s.tone === "warning" && s.value > 0 && "text-amber-600",
               )}
@@ -53,6 +58,11 @@ export function ModuleCard({
               {s.value}
             </div>
             <div className="text-xs text-muted-foreground">{s.label}</div>
+            {s.of !== undefined && (
+              <div className="text-[11px] tabular-nums text-muted-foreground/70">
+                din {s.of}
+              </div>
+            )}
           </div>
         ))}
       </div>
