@@ -92,8 +92,9 @@ export interface Petition {
   created_at: string;
   updated_at: string;
   assignee?: Profile | null;
-  // Derivat din relația petition_attachments, nu o coloană.
-  attachments_count?: number;
+  // Derivate din relația petition_attachments, nu o coloană. Lista le folosește
+  // ca să deschidă scanarea direct, fără a mai trece prin dialogul petiției.
+  attachments?: Pick<PetitionAttachment, "id" | "path" | "name" | "kind">[];
 }
 export interface PetitionAttachment {
   id: string;
