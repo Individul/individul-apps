@@ -55,7 +55,13 @@ export interface AuditEntry {
   details: Record<string, unknown>;
   created_at: string;
 }
-export type NotificationType = "assigned" | "comment" | "status" | "edited" | "deleted";
+export type NotificationType =
+  | "assigned"
+  | "comment"
+  | "status"
+  | "edited"
+  | "deleted"
+  | "created";
 export interface Notification {
   id: string;
   user_id: string;

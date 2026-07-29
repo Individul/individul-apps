@@ -47,12 +47,17 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
   // Șabloane: adaugă pașii standard pentru etichetele cu șablon (best-effort).
   await applyTemplateSubtasks(newTask.id as string);
 
+  const created = {
+    id: newTask.id as string,
+    title: nt.title,
+    assignee_id: nt.assignee_id,
+    created_by: userId,
+  };
+  // Adminii află de orice sarcină nouă, chiar dacă autorul și-a atribuit-o singur.
+  await notify("created", created, userId);
   if (nt.assignee_id) {
-    await notify(
-      "assigned",
-      { id: newTask.id as string, title: nt.title, assignee_id: nt.assignee_id, created_by: userId },
-      userId,
-    );
+    // Adminii au primit deja „created" pentru aceeași acțiune — fără copie dublă.
+    await notify("assigned", created, userId, undefined, false);
   }
 
   revalidatePath("/sarcini");
