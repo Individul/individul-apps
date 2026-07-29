@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getStatValues } from "@/lib/queries";
 import { readGrid } from "@/lib/stats/workbook";
 import { detectParser, parserFor } from "@/lib/stats/registry";
 import { guessPeriod, type PeriodGuess, type PeriodType } from "@/lib/stats/period";
@@ -316,6 +317,32 @@ export async function deleteReport(id: string): Promise<Result> {
 
   revalidatePath("/statistici");
   return { success: true };
+}
+
+/** O perioadă din seria unui tip de raport, cu indicatorii ei. */
+export interface SeriesPeriod {
+  reportId: string;
+  periodDate: string;
+  periodType: PeriodType;
+  values: { indicator: string; series: StatSeries; value: number | null }[];
+}
+
+/**
+ * Seria unui singur tip de raport, în ordine cronologică. E o citire, deci n-are
+ * poartă de admin: RLS lasă orice utilizator autentificat să vadă statisticile.
+ * Se încarcă la cerere, ca pagina să nu ducă din start valorile tuturor tipurilor.
+ */
+export async function listSeries(kind: string): Promise<SeriesPeriod[]> {
+  if (!parserFor(kind as StatKind)) return [];
+  const rows = await getStatValues(kind);
+  return rows.map(({ report, values }) => ({
+    reportId: report.id,
+    periodDate: report.period_date,
+    periodType: report.period_type,
+    // Doar câmpurile de care are nevoie graficul — `id`/`report_id` ar umfla
+    // degeaba payloadul trimis către client.
+    values: values.map((v) => ({ indicator: v.indicator, series: v.series, value: v.value })),
+  }));
 }
 
 /** Link semnat, valabil 60 de secunde, pentru descărcarea fișierului-sursă. */

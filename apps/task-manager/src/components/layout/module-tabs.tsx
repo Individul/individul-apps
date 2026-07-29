@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const MODULES = [
   { href: "/sarcini", label: "Sarcini", matchPrefixes: ["/sarcini", "/tasks"] },
   { href: "/petitii", label: "Petiții", matchPrefixes: ["/petitii"] },
+  { href: "/statistici", label: "Statistici", matchPrefixes: ["/statistici"] },
 ] as const;
 
 export function ModuleTabs() {
