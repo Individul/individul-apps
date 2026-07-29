@@ -140,10 +140,16 @@ export function NotificationBell({
                 "block rounded-md px-2 py-2 text-left",
                 !n.read && "bg-accent/60",
               );
-              return n.task_id ? (
+              // Petițiile n-au pagină proprie — se deschid din registru.
+              const href = n.task_id
+                ? `/tasks/${n.task_id}`
+                : n.petition_id
+                  ? "/petitii"
+                  : null;
+              return href ? (
                 <Link
                   key={n.id}
-                  href={`/tasks/${n.task_id}`}
+                  href={href}
                   onClick={() => handleItemClick(n)}
                   className={cn(base, "transition-colors hover:bg-accent")}
                 >
