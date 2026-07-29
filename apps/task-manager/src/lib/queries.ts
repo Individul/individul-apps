@@ -8,6 +8,8 @@ import type {
   Notification,
   Subtask,
   Petition,
+  StatReport,
+  StatValue,
 } from "./types";
 
 export async function getTasks(): Promise<Task[]> {
@@ -139,6 +141,65 @@ export async function getPetitions(): Promise<Petition[]> {
       a.kind === b.kind ? 0 : a.kind === "petitie" ? -1 : 1,
     ),
   }));
+}
+
+/** Rândul brut cu relația încorporată; `stat_values` nu e o coloană. */
+type StatReportRow = StatReport & { stat_values?: { id: string }[] };
+
+/** Toate rapoartele, cele mai noi întâi, cu numărul de valori din fiecare. */
+export async function getStatReports(): Promise<StatReport[]> {
+  const supabase = createClient();
+
+  // Încercăm cu valorile atașate; dacă migrarea 0016 nu e aplicată, relația nu
+  // există și reluăm fără ea (pagina trebuie să funcționeze oricum).
+  const withValues = await supabase
+    .from("stat_reports")
+    .select("*, stat_values(id)")
+    .order("period_date", { ascending: false })
+    .order("kind", { ascending: true });
+
+  if (!withValues.error) {
+    return ((withValues.data ?? []) as unknown as StatReportRow[]).map(
+      ({ stat_values: values, ...report }) => ({ ...report, values_count: values?.length ?? 0 }),
+    );
+  }
+
+  const plain = await supabase
+    .from("stat_reports")
+    .select("*")
+    .order("period_date", { ascending: false })
+    .order("kind", { ascending: true });
+  // Grațios dacă nici tabela nu există încă.
+  if (plain.error) return [];
+  return ((plain.data ?? []) as unknown as StatReport[]).map((report) => ({
+    ...report,
+    values_count: 0,
+  }));
+}
+
+/**
+ * Rapoartele unui singur tip, cu valorile lor, în ordine cronologică — graficele
+ * se citesc de la stânga la dreapta.
+ */
+export async function getStatValues(
+  kind: string,
+): Promise<{ report: StatReport; values: StatValue[] }[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("stat_reports")
+    .select("*, stat_values(*)")
+    .eq("kind", kind)
+    .order("period_date", { ascending: true });
+  // Grațios dacă migrarea 0016 nu e încă aplicată.
+  if (error) return [];
+
+  return ((data ?? []) as unknown as (StatReport & { stat_values?: StatValue[] })[]).map(
+    ({ stat_values: values, ...report }) => {
+      // `position` păstrează ordinea indicatorilor din fișierul-sursă.
+      const sorted = [...(values ?? [])].sort((a, b) => a.position - b.position);
+      return { report: { ...report, values_count: sorted.length }, values: sorted };
+    },
+  );
 }
 
 export async function getUnreadCount(): Promise<number> {
