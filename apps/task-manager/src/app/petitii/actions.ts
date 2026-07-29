@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import type { PetitionStatus, PetitionerType } from "@/lib/types";
 
 type Result = { error?: string; success?: boolean };
+/** La creare întoarcem și identitatea rândului, ca dialogul să treacă direct
+ *  în modul editare și să permită atașarea fișierelor fără a fi redeschis. */
+type CreateResult = Result & { id?: string; number?: string };
 
 export interface PetitionInput {
   petitioner: string;
@@ -41,7 +44,10 @@ function normalize(input: PetitionInput) {
   };
 }
 
-export async function createPetition(numberPrefix: string, input: PetitionInput): Promise<Result> {
+export async function createPetition(
+  numberPrefix: string,
+  input: PetitionInput,
+): Promise<CreateResult> {
   const prefix = numberPrefix.trim();
   if (!prefix) return { error: "Numărul de înregistrare e obligatoriu." };
   if (!input.petitioner.trim()) return { error: "Petiționarul e obligatoriu." };
@@ -53,7 +59,11 @@ export async function createPetition(numberPrefix: string, input: PetitionInput)
 
   const nt = normalize(input);
   const number = `${prefix}/${yearSuffix(nt.received_date)}`;
-  const { error } = await supabase.from("petitions").insert({ ...nt, number, created_by: userId });
+  const { data, error } = await supabase
+    .from("petitions")
+    .insert({ ...nt, number, created_by: userId })
+    .select("id, number")
+    .single();
   if (error) {
     if ((error as { code?: string }).code === "23505") {
       return { error: "Există deja o petiție cu acest număr." };
@@ -62,7 +72,7 @@ export async function createPetition(numberPrefix: string, input: PetitionInput)
   }
   revalidatePath("/petitii");
   revalidatePath("/");
-  return { success: true };
+  return { success: true, id: data.id as string, number: data.number as string };
 }
 
 export async function updatePetition(

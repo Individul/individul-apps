@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -59,7 +59,6 @@ export function PetitionFormDialog({
   isAdmin,
 }: PetitionFormDialogProps) {
   const router = useRouter();
-  const isEdit = Boolean(petition);
   const [isPending, startTransition] = useTransition();
 
   const [numberField, setNumberField] = useState("");
@@ -72,10 +71,15 @@ export function PetitionFormDialog({
   const [response, setResponse] = useState("");
   const [responseDate, setResponseDate] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Petiția tocmai creată în acest dialog: o ține deschis, în modul editare,
+  // ca fișierele să poată fi atașate imediat (atașamentele au nevoie de id).
+  const [created, setCreated] = useState<{ id: string; number: string } | null>(null);
+  const filesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setCreated(null);
     if (petition) {
       setNumberField(petition.number);
       setPetitioner(petition.petitioner);
@@ -99,9 +103,20 @@ export function PetitionFormDialog({
     }
   }, [open, petition]);
 
+  // După înregistrare, aducem secțiunea de fișiere în dreptul ochilor.
+  useEffect(() => {
+    if (created) filesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [created]);
+
+  // Petiția pe care lucrează dialogul: cea deschisă din listă sau cea creată acum.
+  const activeId = petition?.id ?? created?.id ?? null;
+  const activeNumber = petition?.number ?? created?.number ?? "";
+  const isEdit = Boolean(activeId);
+
   // O singură sursă de adevăr pentru drepturi (aceleași reguli ca RLS și ca meniul din listă).
   const uid = currentUserId ?? "";
-  const canDelete = !!petition && canDeletePetition(uid, isAdmin, petition);
+  // Pe cea tocmai creată drepturile sunt implicite: utilizatorul curent e autorul.
+  const canDelete = petition ? canDeletePetition(uid, isAdmin, petition) : Boolean(created);
   // La creare oricine poate scrie; la editare doar cine are dreptul — altfel doar vizualizare.
   const readOnly = !!petition && !canEditPetition(uid, isAdmin, petition);
   const deadline = deadlineFrom(receivedDate);
@@ -121,25 +136,44 @@ export function PetitionFormDialog({
   const submit = () => {
     setError(null);
     startTransition(async () => {
-      const res = petition
-        ? await updatePetition(petition.id, numberField, buildInput())
-        : await createPetition(numberField, buildInput());
+      if (activeId) {
+        const res = await updatePetition(activeId, numberField, buildInput());
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        toast.success("Petiție salvată.");
+        onOpenChange(false);
+        router.refresh();
+        return;
+      }
+
+      const res = await createPetition(numberField, buildInput());
       if (res.error) {
         setError(res.error);
         return;
       }
-      toast.success(petition ? "Petiție salvată." : "Petiție înregistrată.");
-      onOpenChange(false);
+      if (!res.id || !res.number) {
+        // Rândul e scris, dar fără id nu putem atașa nimic aici.
+        toast.success("Petiție înregistrată.");
+        onOpenChange(false);
+        router.refresh();
+        return;
+      }
+      // Nu închidem: petiția există acum, deci se pot atașa fișierele pe loc.
+      setCreated({ id: res.id, number: res.number });
+      setNumberField(res.number);
+      toast.success("Petiție înregistrată. Atașează scanarea.");
       router.refresh();
     });
   };
 
   const remove = () => {
-    if (!petition) return;
+    if (!activeId) return;
     if (!window.confirm("Ștergi această petiție?")) return;
     setError(null);
     startTransition(async () => {
-      const res = await deletePetition(petition.id);
+      const res = await deletePetition(activeId);
       if (res.error) {
         setError(res.error);
         return;
@@ -162,8 +196,20 @@ export function PetitionFormDialog({
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {readOnly ? "Petiția" : isEdit ? "Editează petiția" : "Petiție nouă"}
+            {readOnly
+              ? "Petiția"
+              : created
+                ? "Atașează fișierele"
+                : isEdit
+                  ? "Editează petiția"
+                  : "Petiție nouă"}
           </DialogTitle>
+          {created && (
+            <p className="text-sm text-muted-foreground">
+              Petiția {created.number} a fost înregistrată. Atașează scanarea mai jos, apoi
+              închide.
+            </p>
+          )}
           {readOnly && (
             <p className="text-sm text-muted-foreground">
               Doar vizualizare — nu ai drept de editare pentru această petiție.
@@ -315,13 +361,13 @@ export function PetitionFormDialog({
             />
           </div>
 
-          <div className="space-y-2 border-t pt-4">
+          <div ref={filesRef} className="space-y-2 border-t pt-4">
             <h3 className="text-sm font-medium">Fișiere</h3>
-            {petition ? (
+            {activeId ? (
               <PetitionAttachments
-                petitionId={petition.id}
-                petitionNumber={petition.number}
-                petitioner={petition.petitioner}
+                petitionId={activeId}
+                petitionNumber={activeNumber}
+                petitioner={petition?.petitioner ?? petitioner}
                 canEdit={!readOnly}
               />
             ) : (
@@ -358,7 +404,7 @@ export function PetitionFormDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={isPending}
               >
-                {readOnly ? "Închide" : "Anulează"}
+                {readOnly || created ? "Închide" : "Anulează"}
               </Button>
               {!readOnly && (
                 <Button type="submit" disabled={isPending}>
