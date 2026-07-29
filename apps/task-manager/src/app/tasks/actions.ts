@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { notify } from "@/lib/notify";
+import { hasChanges } from "@/lib/changes";
 import { templateStepsForTags, isDispatchStep } from "@/lib/subtask-templates";
 
 const STATUS_LABEL = { todo: "De făcut", in_progress: "În lucru", done: "Finalizat" } as const;
@@ -78,11 +79,8 @@ export async function updateTask(
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
 
-  const { data: prev } = await supabase
-    .from("tasks")
-    .select("status, assignee_id, created_by")
-    .eq("id", id)
-    .single();
+  // Rândul întreg: spune ce s-a schimbat și dacă s-a schimbat ceva.
+  const { data: prev } = await supabase.from("tasks").select("*").eq("id", id).single();
 
   const nt = normalize(parsed.data);
   const { data, error } = await supabase.from("tasks").update(nt).eq("id", id).select();
@@ -109,7 +107,9 @@ export async function updateTask(
     if (remErr) return { error: remErr.message };
   }
 
-  if (prev) {
+  // Un „Salvează" care n-a schimbat nici câmpurile, nici etichetele, nu notifică.
+  const touched = hasChanges(prev ?? {}, nt) || toAdd.length > 0 || toRemove.length > 0;
+  if (prev && touched) {
     const task = { id, title: nt.title, assignee_id: nt.assignee_id, created_by: prev.created_by as string };
     if (nt.assignee_id && nt.assignee_id !== prev.assignee_id) await notify("assigned", task, userId);
     else if (nt.status !== prev.status) await notify("status", task, userId, STATUS_LABEL[nt.status]);

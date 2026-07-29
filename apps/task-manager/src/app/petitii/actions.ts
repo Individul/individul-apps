@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { notifyPetition } from "@/lib/notify-petition";
+import { hasChanges } from "@/lib/changes";
 import { STATUS_LABEL } from "@/components/petitions/meta";
 import type { PetitionStatus, PetitionerType } from "@/lib/types";
 
@@ -103,16 +104,17 @@ export async function updatePetition(
   const userId = userData.user?.id;
   const nt = normalize(input);
 
-  // Starea de dinainte, ca notificarea să spună ce anume s-a schimbat.
+  // Rândul de dinainte: spune ce anume s-a schimbat și dacă s-a schimbat ceva.
   const { data: prev } = await supabase
     .from("petitions")
-    .select("assignee_id, status, created_by")
+    .select("*")
     .eq("id", id)
     .maybeSingle();
 
+  const payload = { ...nt, number: number.trim() };
   const { data, error } = await supabase
     .from("petitions")
-    .update({ ...nt, number: number.trim() })
+    .update(payload)
     .eq("id", id)
     .select();
   if (error) {
@@ -123,7 +125,8 @@ export async function updatePetition(
   }
   if (!data || data.length === 0) return { error: "Petiție inexistentă sau fără permisiune." };
 
-  if (prev && userId) {
+  // Un „Salvează" care n-a schimbat nimic nu trebuie să notifice pe nimeni.
+  if (prev && userId && hasChanges(prev, payload)) {
     const ref = {
       id,
       number: number.trim(),
