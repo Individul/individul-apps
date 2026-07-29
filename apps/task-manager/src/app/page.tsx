@@ -15,6 +15,7 @@ import {
 } from "@/lib/hub-stats";
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleCard } from "@/components/hub/module-card";
+import { ChangelogSection } from "@/components/hub/changelog-section";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +103,7 @@ export default async function HubPage() {
             breakdown={petitionBreakdown}
           />
         </div>
+        <ChangelogSection />
       </main>
     </>
   );
