@@ -32,6 +32,12 @@ import {
 import { PetitionAttachments } from "./petition-attachments";
 import { PETITIONER_OPTIONS, STATUS_OPTIONS, deadlineFrom } from "./meta";
 import { canEditPetition, canDeletePetition } from "@/lib/permissions";
+import {
+  SUBJECT_PRESETS,
+  hasSubjectPreset,
+  toggleSubjectPreset,
+} from "@/lib/petition-subjects";
+import { cn } from "@/lib/utils";
 import type { Petition, Profile, PetitionStatus, PetitionerType } from "@/lib/types";
 
 const UNASSIGNED = "unassigned";
@@ -298,6 +304,30 @@ export function PetitionFormDialog({
               disabled={readOnly}
               placeholder="Obiectul petiției (opțional)"
             />
+            {!readOnly && (
+              <div className="flex flex-wrap gap-1.5">
+                {SUBJECT_PRESETS.map((preset) => {
+                  const active = hasSubjectPreset(subject, preset);
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      aria-pressed={active}
+                      // Se pot alege mai multe; reapăsat, scoate doar bucata lui.
+                      onClick={() => setSubject(toggleSubjectPreset(subject, preset))}
+                      className={cn(
+                        "rounded-full border px-2 py-0.5 text-xs transition-colors",
+                        active
+                          ? "border-transparent bg-primary text-primary-foreground"
+                          : "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                      )}
+                    >
+                      {preset}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-5">
