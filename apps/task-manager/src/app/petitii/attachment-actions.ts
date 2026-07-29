@@ -42,6 +42,8 @@ export async function recordAttachment(input: {
   });
   if (error) return { error: error.message };
 
+  // Fără notificare: scanarea se atașează imediat după înregistrare, deci ar
+  // dubla „Petiție nouă" la fiecare petiție.
   revalidatePath("/petitii");
   return { success: true };
 }

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyPetition } from "@/lib/notify-petition";
+import { STATUS_LABEL } from "@/components/petitions/meta";
 import type { PetitionStatus, PetitionerType } from "@/lib/types";
 
 type Result = { error?: string; success?: boolean };
@@ -70,9 +72,22 @@ export async function createPetition(
     }
     return { error: error.message };
   }
+  const ref = {
+    id: data.id as string,
+    number: data.number as string,
+    assignee_id: nt.assignee_id,
+    created_by: userId,
+  };
+  // Adminii află de orice petiție nouă, chiar dacă autorul și-a atribuit-o singur.
+  await notifyPetition("created", ref, userId);
+  if (nt.assignee_id) {
+    // Adminii au primit deja „created" pentru aceeași acțiune — fără copie dublă.
+    await notifyPetition("assigned", ref, userId, undefined, false);
+  }
+
   revalidatePath("/petitii");
   revalidatePath("/");
-  return { success: true, id: data.id as string, number: data.number as string };
+  return { success: true, id: ref.id, number: ref.number };
 }
 
 export async function updatePetition(
@@ -84,7 +99,17 @@ export async function updatePetition(
   if (!input.petitioner.trim()) return { error: "Petiționarul e obligatoriu." };
 
   const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
   const nt = normalize(input);
+
+  // Starea de dinainte, ca notificarea să spună ce anume s-a schimbat.
+  const { data: prev } = await supabase
+    .from("petitions")
+    .select("assignee_id, status, created_by")
+    .eq("id", id)
+    .maybeSingle();
+
   const { data, error } = await supabase
     .from("petitions")
     .update({ ...nt, number: number.trim() })
@@ -97,6 +122,23 @@ export async function updatePetition(
     return { error: error.message };
   }
   if (!data || data.length === 0) return { error: "Petiție inexistentă sau fără permisiune." };
+
+  if (prev && userId) {
+    const ref = {
+      id,
+      number: number.trim(),
+      assignee_id: nt.assignee_id,
+      created_by: prev.created_by as string,
+    };
+    if (nt.assignee_id && nt.assignee_id !== prev.assignee_id) {
+      await notifyPetition("assigned", ref, userId);
+    } else if (nt.status !== prev.status) {
+      await notifyPetition("status", ref, userId, STATUS_LABEL[nt.status]);
+    } else {
+      await notifyPetition("edited", ref, userId);
+    }
+  }
+
   revalidatePath("/petitii");
   revalidatePath("/");
   return { success: true };
@@ -104,9 +146,33 @@ export async function updatePetition(
 
 export async function deletePetition(id: string): Promise<Result> {
   const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+
+  // Datele se citesc înainte: după ștergere nu mai există de unde compune mesajul.
+  const { data: prev } = await supabase
+    .from("petitions")
+    .select("number, assignee_id, created_by")
+    .eq("id", id)
+    .maybeSingle();
+
   const { data, error } = await supabase.from("petitions").delete().eq("id", id).select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Petiție inexistentă sau fără permisiune." };
+
+  if (prev && userId) {
+    await notifyPetition(
+      "deleted",
+      {
+        id,
+        number: prev.number as string,
+        assignee_id: prev.assignee_id as string | null,
+        created_by: prev.created_by as string,
+      },
+      userId,
+    );
+  }
+
   revalidatePath("/petitii");
   revalidatePath("/");
   return { success: true };
@@ -118,9 +184,12 @@ export async function deletePetition(id: string): Promise<Result> {
 export async function finalizePetition(id: string): Promise<Result> {
   const supabase = createClient();
 
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+
   const { data: prev } = await supabase
     .from("petitions")
-    .select("response_date")
+    .select("response_date, number, assignee_id, created_by")
     .eq("id", id)
     .maybeSingle();
 
@@ -134,6 +203,20 @@ export async function finalizePetition(id: string): Promise<Result> {
     .select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Petiție inexistentă sau fără permisiune." };
+
+  if (prev && userId) {
+    await notifyPetition(
+      "status",
+      {
+        id,
+        number: prev.number as string,
+        assignee_id: prev.assignee_id as string | null,
+        created_by: prev.created_by as string,
+      },
+      userId,
+      STATUS_LABEL.solutionat,
+    );
+  }
 
   revalidatePath("/petitii");
   revalidatePath("/");
