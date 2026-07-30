@@ -61,7 +61,8 @@ export interface AuditEntry {
     | "subtasks"
     | "petitions"
     | "petition_attachments"
-    | "hearings";
+    | "hearings"
+    | "transfers";
   entity_id: string | null;
   details: Record<string, unknown>;
   created_at: string;

@@ -1,6 +1,7 @@
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 import {
+  ArrowLeftRight,
   Gavel,
   ListChecks,
   Mail,
@@ -31,6 +32,7 @@ const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
   petitions: Mail,
   petition_attachments: Paperclip,
   hearings: Gavel,
+  transfers: ArrowLeftRight,
   profiles: Users,
 };
 
@@ -44,6 +46,7 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   petitions: "petiția",
   petition_attachments: "un fișier al unei petiții",
   hearings: "evidența ședințelor",
+  transfers: "evidența transferurilor",
 };
 
 const PETITION_STATUS: Record<string, string> = {
