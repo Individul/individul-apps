@@ -9,6 +9,8 @@ import {
   endOfQuarter,
   startOfYear,
   endOfYear,
+  eachDayOfInterval,
+  isWeekend,
   format,
 } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -141,4 +143,28 @@ export function aggregate(rows: HearingCounts[]): Indicators {
       { ...EMPTY },
     ),
   );
+}
+
+/**
+ * Zilele lucrătoare din interval care n-au nicio înregistrare.
+ *
+ * Într-un registru oficial golul e informația importantă: o zi necompletată nu
+ * se vede nicăieri altundeva până la raportarea lunară. Sâmbetele și duminicile
+ * sunt excluse — nu se țin ședințe — la fel și zilele care încă n-au venit,
+ * fiindcă o zi viitoare nu poate lipsi.
+ *
+ * Sărbătorile legale nu-i sunt cunoscute aplicației, deci vor apărea ca lipsă.
+ */
+export function missingWorkdays(
+  range: DateRange,
+  entered: { session_date: string }[],
+  today: Date = new Date(),
+): string[] {
+  const have = new Set(entered.map((h) => h.session_date));
+  const last = range.to < today ? range.to : today;
+  if (last < range.from) return [];
+  return eachDayOfInterval({ start: range.from, end: last })
+    .filter((d) => !isWeekend(d))
+    .map(toISODate)
+    .filter((iso) => !have.has(iso));
 }

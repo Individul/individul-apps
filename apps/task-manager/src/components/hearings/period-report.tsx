@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -9,6 +10,7 @@ import {
   PERIODS,
   aggregate,
   computeIndicators,
+  missingWorkdays,
   parseISODate,
   rangeLabelRo,
   type DateRange,
@@ -34,6 +36,13 @@ export function PeriodReport({ period, range, hearings }: PeriodReportProps) {
 
   const total = aggregate(hearings);
   const zileCuDate = hearings.length;
+  const lipsa = missingWorkdays(range, hearings);
+
+  const dayHref = (iso: string) => {
+    const q = new URLSearchParams(params.toString());
+    q.set("zi", iso);
+    return `/sedinte?${q.toString()}`;
+  };
 
   return (
     <div className="space-y-4">
@@ -72,6 +81,27 @@ export function PeriodReport({ period, range, hearings }: PeriodReportProps) {
           </div>
         ))}
       </div>
+
+      {/* Golul e informația care nu se vede altundeva: o zi lucrătoare
+          necompletată ar trece neobservată până la raportare. */}
+      {lipsa.length > 0 && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-[13px] text-amber-900">
+          <span className="font-medium">
+            {lipsa.length} {lipsa.length === 1 ? "zi lucrătoare" : "zile lucrătoare"} fără date:
+          </span>{" "}
+          {lipsa.map((iso, i) => (
+            <span key={iso}>
+              {i > 0 && ", "}
+              <Link href={dayHref(iso)} className="underline underline-offset-2">
+                {format(parseISODate(iso), "d MMM", { locale: ro })}
+              </Link>
+            </span>
+          ))}
+          <span className="ml-1 text-amber-800/70">
+            (sâmbetele și duminicile nu se numără; sărbătorile legale, da)
+          </span>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-xl border bg-card">
         <div className="flex items-center gap-3 border-b bg-muted/30 px-3.5 py-2 text-[11px] font-medium text-muted-foreground">

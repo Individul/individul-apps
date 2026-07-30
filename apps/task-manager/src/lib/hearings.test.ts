@@ -4,6 +4,7 @@ import {
   computeIndicators,
   rangeForPeriod,
   toISODate,
+  missingWorkdays,
   type HearingCounts,
 } from "./hearings";
 
@@ -102,5 +103,48 @@ describe("rangeForPeriod", () => {
     const r = rangeForPeriod("an", ref);
     expect(toISODate(r.from)).toBe("2026-01-01");
     expect(toISODate(r.to)).toBe("2026-12-31");
+  });
+});
+
+describe("missingWorkdays", () => {
+  const luni = new Date(2026, 6, 27); // 27 iul 2026, luni
+  const range = { from: luni, to: new Date(2026, 7, 2, 23, 59) }; // luni–duminică
+
+  it("sare peste sâmbătă și duminică", () => {
+    const azi = new Date(2026, 7, 2); // duminică, deci toată săptămâna e trecută
+    const lipsa = missingWorkdays(range, [], azi);
+    expect(lipsa).toEqual([
+      "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-07-31",
+    ]);
+  });
+
+  it("scoate zilele deja introduse", () => {
+    const azi = new Date(2026, 7, 2);
+    const lipsa = missingWorkdays(
+      range,
+      [{ session_date: "2026-07-28" }, { session_date: "2026-07-30" }],
+      azi,
+    );
+    expect(lipsa).toEqual(["2026-07-27", "2026-07-29", "2026-07-31"]);
+  });
+
+  it("nu raportează zilele care încă n-au venit", () => {
+    const azi = new Date(2026, 6, 29); // miercuri
+    expect(missingWorkdays(range, [], azi)).toEqual(["2026-07-27", "2026-07-28", "2026-07-29"]);
+  });
+
+  it("interval întreg în viitor → nimic", () => {
+    const viitor = { from: new Date(2027, 0, 4), to: new Date(2027, 0, 8) };
+    expect(missingWorkdays(viitor, [], new Date(2026, 6, 30))).toEqual([]);
+  });
+
+  it("toate zilele introduse → nimic", () => {
+    const azi = new Date(2026, 6, 28);
+    const lipsa = missingWorkdays(
+      range,
+      [{ session_date: "2026-07-27" }, { session_date: "2026-07-28" }],
+      azi,
+    );
+    expect(lipsa).toEqual([]);
   });
 });
