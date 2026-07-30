@@ -19,10 +19,17 @@ const TEMPLATES: Record<string, string[]> = {
   "solicitare hotariri": ["Solicitare întocmită", "Solicitare expediată", "Hotărâre primită"],
 };
 
-// Un pas de „expediere" (demers/solicitare expediat/ă) — bifarea lui avansează
-// sarcina de la „De făcut" la „În lucru".
+// Un pas de „expediere" (demers/solicitare expediat/ă) — de la bifarea lui
+// sarcina depinde de instanță, nu de responsabil, deci trece „în așteptare".
 export function isDispatchStep(title: string): boolean {
   return norm(title).includes("expediat");
+}
+
+// Pasul prin care răspunsul a sosit — „Demers examinat de instanță",
+// „Hotărâre primită". Bifarea lui închide sarcina: nu mai e nimic de așteptat.
+export function isResponseStep(title: string): boolean {
+  const t = norm(title);
+  return t.includes("examinat") || t.includes("primit");
 }
 
 // Pașii standard (fără duplicate) pentru un set de nume de etichete.

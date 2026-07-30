@@ -79,6 +79,7 @@ export default async function HubPage() {
             stats={[
               { label: "Total", value: ts.total, of: tsAll?.total },
               { label: "Active", value: ts.active, of: tsAll?.active },
+              { label: "În așteptare", value: ts.waiting, of: tsAll?.waiting },
               { label: "Finalizate", value: ts.done, of: tsAll?.done },
               { label: "Scadente 7 zile", value: ts.dueSoon, of: tsAll?.dueSoon, tone: "warning" },
               { label: "Restante", value: ts.overdue, of: tsAll?.overdue, tone: "danger" },

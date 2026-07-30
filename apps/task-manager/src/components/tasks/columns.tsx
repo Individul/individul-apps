@@ -22,6 +22,10 @@ import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
 export const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
   in_progress: { label: "În lucru", className: "border-transparent bg-blue-100 text-blue-700" },
+  waiting: {
+    label: "În așteptare",
+    className: "border-transparent bg-violet-100 text-violet-700",
+  },
   done: { label: "Finalizat", className: "border-transparent bg-green-100 text-green-700" },
 };
 
@@ -40,11 +44,18 @@ export const PRIORITY_BAR: Record<TaskPriority, string> = {
 export const STATUS_DOT: Record<TaskStatus, string> = {
   todo: "bg-slate-400",
   in_progress: "bg-blue-500",
+  waiting: "bg-violet-500",
   done: "bg-green-500",
 };
 
 // Ordinea de sortare a stărilor: De făcut → În lucru → Finalizat.
-export const STATUS_ORDER: Record<TaskStatus, number> = { todo: 0, in_progress: 1, done: 2 };
+// Ordinea firească a lucrului: de făcut → în lucru → plecat la instanță → gata.
+export const STATUS_ORDER: Record<TaskStatus, number> = {
+  todo: 0,
+  in_progress: 1,
+  waiting: 2,
+  done: 3,
+};
 
 export function initials(name: string | null | undefined): string {
   if (!name) return "?";
@@ -57,13 +68,25 @@ export function initials(name: string | null | undefined): string {
 }
 
 // „Restant" = termen trecut (înainte de începutul zilei curente) și sarcina
-// nu e finalizată. Partajat între lista compactă și celula de coloană.
+// nu e finalizată. Cât așteaptă răspuns extern nu e restantă: întârzierea nu e
+// a responsabilului. Partajat între lista compactă și celula de coloană.
 export function isOverdue(task: Task): boolean {
   if (!task.due_date) return false;
+  if (task.status === "done" || task.status === "waiting") return false;
   const due = parseISO(task.due_date);
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return due < startOfToday && task.status !== "done";
+  return due < startOfToday;
+}
+
+/** De câte zile așteaptă sarcina răspuns extern; null dacă nu așteaptă. */
+export function waitingDays(task: Task): number | null {
+  if (task.status !== "waiting" || !task.waiting_since) return null;
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const since = new Date(task.waiting_since);
+  const startOfSince = new Date(since.getFullYear(), since.getMonth(), since.getDate());
+  return Math.max(0, Math.round((startOfToday.getTime() - startOfSince.getTime()) / 86_400_000));
 }
 
 function SortableHeader({ column, label }: { column: Column<Task, unknown>; label: string }) {

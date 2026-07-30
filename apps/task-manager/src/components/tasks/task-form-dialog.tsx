@@ -34,6 +34,7 @@ const UNASSIGNED = "unassigned";
 const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "todo", label: "De făcut" },
   { value: "in_progress", label: "În lucru" },
+  { value: "waiting", label: "În așteptare" },
   { value: "done", label: "Finalizat" },
 ];
 

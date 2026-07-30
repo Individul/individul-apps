@@ -9,6 +9,8 @@ export interface ModuleStats {
 export interface TaskStats extends ModuleStats {
   active: number;
   done: number;
+  /** Sarcini care depind de un răspuns extern — nu intră în restanțe. */
+  waiting: number;
 }
 export interface PetitionStats extends ModuleStats {
   open: number;
@@ -33,6 +35,7 @@ function classify(deadline: string | null, today: Date): "overdue" | "soon" | "n
 export function taskStats(tasks: Task[], today: Date = new Date()): TaskStats {
   let active = 0;
   let done = 0;
+  let waiting = 0;
   let dueSoon = 0;
   let overdue = 0;
   for (const t of tasks) {
@@ -41,11 +44,16 @@ export function taskStats(tasks: Task[], today: Date = new Date()): TaskStats {
       continue;
     }
     active++;
+    // Cât depinde de instanță, termenul nu curge: nici restantă, nici scadentă.
+    if (t.status === "waiting") {
+      waiting++;
+      continue;
+    }
     const c = classify(t.due_date, today);
     if (c === "overdue") overdue++;
     else if (c === "soon") dueSoon++;
   }
-  return { total: tasks.length, active, done, dueSoon, overdue };
+  return { total: tasks.length, active, done, waiting, dueSoon, overdue };
 }
 
 export interface AssigneeCount {
@@ -57,9 +65,13 @@ export interface AssigneeCount {
 
 const UNASSIGNED = "Neatribuit";
 
-/** O sarcină e restantă dacă are termen trecut și nu e finalizată. */
+/**
+ * O sarcină e restantă dacă are termen trecut și nu e finalizată — dar nu și
+ * cât timp așteaptă răspuns extern: acolo întârzierea nu e a responsabilului.
+ */
 export function isTaskOverdue(task: Task, today: Date = new Date()): boolean {
-  return task.status !== "done" && classify(task.due_date, today) === "overdue";
+  if (task.status === "done" || task.status === "waiting") return false;
+  return classify(task.due_date, today) === "overdue";
 }
 
 /** O petiție e restantă dacă are termen de răspuns trecut și e încă în examinare. */

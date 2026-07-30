@@ -32,6 +32,10 @@ import type {
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
   in_progress: { label: "În lucru", className: "border-transparent bg-blue-100 text-blue-700" },
+  waiting: {
+    label: "În așteptare",
+    className: "border-transparent bg-violet-100 text-violet-700",
+  },
   done: { label: "Finalizat", className: "border-transparent bg-green-100 text-green-700" },
 };
 
