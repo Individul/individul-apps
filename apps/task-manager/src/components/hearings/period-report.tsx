@@ -7,16 +7,18 @@ import { ro } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
 import {
-  PERIODS,
   aggregate,
   computeIndicators,
   missingWorkdays,
+  type Hearing,
+} from "@/lib/hearings";
+import {
+  PERIODS,
   parseISODate,
   rangeLabelRo,
   type DateRange,
-  type Hearing,
   type Period,
-} from "@/lib/hearings";
+} from "@/lib/periods";
 
 interface PeriodReportProps {
   period: Period;

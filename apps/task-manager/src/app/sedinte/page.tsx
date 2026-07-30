@@ -12,7 +12,7 @@ import {
   rangeForPeriod,
   toISODate,
   type Period,
-} from "@/lib/hearings";
+} from "@/lib/periods";
 
 export const dynamic = "force-dynamic";
 

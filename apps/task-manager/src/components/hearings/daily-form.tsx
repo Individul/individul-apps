@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { saveHearing } from "@/app/sedinte/actions";
-import { computeIndicators, formatDateRo, type Hearing } from "@/lib/hearings";
+import { computeIndicators, type Hearing } from "@/lib/hearings";
+import { formatDateRo } from "@/lib/periods";
 
 interface DailyFormProps {
   /** Ziua deschisă acum; goală dacă nu s-a introdus încă. */

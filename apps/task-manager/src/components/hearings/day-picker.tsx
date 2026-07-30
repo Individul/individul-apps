@@ -5,7 +5,7 @@ import { addDays } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { parseISODate, toISODate } from "@/lib/hearings";
+import { parseISODate, toISODate } from "@/lib/periods";
 
 interface DayPickerProps {
   /** Ziua deschisă acum (AAAA-LL-ZZ). */
