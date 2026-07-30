@@ -50,8 +50,11 @@ export function TransferRegister({ rows, onEdit }: TransferRegisterProps) {
   return (
     <div className="overflow-hidden rounded-xl border bg-card">
       {/* Direcția stă în antet, ca formă și cuvânt deodată: săgeata în sus e
-          plecarea, cea în jos sosirea, indiferent de culoare. */}
-      <div className="flex items-center gap-3 border-b bg-muted/30 px-3.5 py-2 text-[11px] font-medium text-muted-foreground">
+          plecarea, cea în jos sosirea, indiferent de culoare.
+
+          Fără fundal: umbrirea înseamnă un singur lucru în tabelul ăsta —
+          „aici începe o zi". Pusă și pe rândul de etichete, ar spune două. */}
+      <div className="flex items-center gap-3 border-b px-3.5 py-2 text-[11px] font-medium text-muted-foreground">
         <span className="min-w-0 flex-1">Ziua / penitenciarul</span>
         <span className="flex w-24 shrink-0 items-center justify-end gap-1">
           <ArrowUp className="h-3 w-3 text-red-600" aria-hidden="true" />

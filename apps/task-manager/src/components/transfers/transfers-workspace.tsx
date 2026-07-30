@@ -56,10 +56,12 @@ export function TransfersWorkspace({ transfers, today, isAdmin }: TransfersWorks
             {p.label}
           </button>
         ))}
+        {/* Aceeași înălțime ca butonul de lângă etichetele unei sarcini
+            (`tag-picker`): un rând de pastile cere un buton pe măsura lor. */}
         <Button
           type="button"
           size="sm"
-          className="ml-auto"
+          className="ml-auto h-7"
           onClick={() => {
             setEditing(null);
             setOpen(true);
