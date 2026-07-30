@@ -80,6 +80,21 @@ describe("zilele programate necompletate", () => {
     const entered = [{ transfer_date: "2026-07-06" }, { transfer_date: "2026-07-20" }];
     expect(missingScheduled(range, entered, new Date(2026, 6, 25))).toEqual([]);
   });
+
+  it("ziua de azi nu lipsește, transferul e în curs", () => {
+    // Nici la miezul nopții, nici în timpul zilei: munca nu e încă scadentă.
+    expect(missingScheduled(range, [], new Date(2026, 6, 6, 0, 0))).toEqual([]);
+    expect(missingScheduled(range, [], new Date(2026, 6, 6, 9, 0))).toEqual([]);
+  });
+
+  it("aceeași zi lipsește mâine, după ce s-a încheiat", () => {
+    expect(missingScheduled(range, [], new Date(2026, 6, 7, 9, 0))).toEqual(["2026-07-06"]);
+  });
+
+  it("un interval care începe chiar azi n-are ce semnala", () => {
+    const startsToday = { from: new Date(2026, 6, 6), to: new Date(2026, 6, 31) };
+    expect(missingScheduled(startsToday, [], new Date(2026, 6, 6, 9, 0))).toEqual([]);
+  });
 });
 
 describe("agregarea", () => {

@@ -1,4 +1,4 @@
-import { addDays, addMonths, isSameDay, startOfDay, startOfMonth } from "date-fns";
+import { addDays, addMonths, isSameDay, startOfDay, startOfMonth, subDays } from "date-fns";
 import { toISODate, type DateRange } from "./periods";
 
 /**
@@ -45,6 +45,11 @@ export function nextScheduled(from: Date): Date {
  * Într-un registru golul e informația importantă: o zi necompletată nu se vede
  * nicăieri altundeva. Zilele care încă n-au venit sunt sărite — o zi viitoare
  * nu poate lipsi.
+ *
+ * O zi lipsește abia după ce s-a încheiat, nu în timp ce se desfășoară: pe 6
+ * iulie la ora 9 transferul de pe 6 iulie e în curs, iar o avertizare atunci ar
+ * fi o alarmă falsă. Semnalate zilnic degeaba, avertizările ajung să fie
+ * ignorate și în zilele când chiar lipsește ceva — de aceea limita e ieri.
  */
 export function missingScheduled(
   range: DateRange,
@@ -52,7 +57,9 @@ export function missingScheduled(
   today: Date = new Date(),
 ): string[] {
   const have = new Set(entered.map((t) => t.transfer_date));
-  const last = range.to < today ? range.to : today;
+  const yesterday = subDays(startOfDay(today), 1);
+  const last = range.to < yesterday ? range.to : yesterday;
+  // Un interval care începe azi (sau mai târziu) rămâne fără nimic de verificat.
   if (last < range.from) return [];
 
   const out: string[] = [];
