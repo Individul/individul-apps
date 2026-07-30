@@ -161,7 +161,11 @@ export default async function HubPage() {
         <h1 className="mb-6 text-2xl font-semibold">
           {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
         </h1>
-        <div className="grid gap-4 md:grid-cols-2">
+        {/* `items-start`: fiecare card ține cât are de spus. Întinse la
+            înălțimea rândului, cele scurte capătă o baltă albă înăuntru, care
+            se citește ca lipsă, nu ca sfârșit. Un card mai scund decât vecinul
+            arată normal; unul gol pe dinăuntru, nu. */}
+        <div className="grid items-start gap-4 md:grid-cols-2">
           <ModuleCard
             href="/sarcini"
             title="Sarcini"
@@ -192,7 +196,12 @@ export default async function HubPage() {
             title="Transferuri"
             description="Transferurile deținuților între penitenciare, în luna curentă."
             stats={toStats(TRANSFER_COLUMNS, trs, null)}
-            footnote={`Următorul transfer programat: ${formatDateRo(nextScheduled(new Date()))}`}
+            /* Într-o lună fără niciun rând, cele trei zerouri nu spun dacă n-a
+               fost mișcare sau dacă n-a apucat nimeni să scrie. Nota o spune. */
+            footnote={
+              (thisMonth.length === 0 ? "Niciun transfer înregistrat luna aceasta. " : "") +
+              `Următorul transfer programat: ${formatDateRo(nextScheduled(new Date()))}`
+            }
             breakdown={transferBreakdown}
             breakdownHeader="Penitenciar"
             breakdownAvatars={false}
