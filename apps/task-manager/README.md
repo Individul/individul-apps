@@ -226,8 +226,14 @@ Detalii complete în [`supabase/README.md`](supabase/README.md). Pe scurt:
 `vercel.json` fixează `"regions": ["fra1"]` — Frankfurt. Nu e o preferință
 estetică: baza de date Supabase a proiectului stă în `eu-central-1`, tot
 Frankfurt. Regiunea implicită a Vercel e `iad1` (Washington), iar cu ea fiecare
-interogare traversa Atlanticul de două ori — ~135 ms pierduți pe cerere înainte
-ca vreo linie să fie citită din baza de date, plus ~90 ms per interogare.
+interogare traversa Atlanticul de două ori.
+
+Măsurat pe `/auth/callback` — o funcție Node care nu atinge baza de date —
+costul invocării peste o redirecționare tratată la edge era **~134 ms din
+Washington** și e **~66 ms din Frankfurt** (mediana a 12 cereri). Peste asta se
+adaugă ~90 ms pentru fiecare citire din Supabase, care din Frankfurt dispar
+aproape complet. Câștigul acela nu se vede în măsurătoarea de mai sus, fiindcă
+endpointul ales nu interoghează nimic — se vede pe paginile reale.
 
 Dacă vreodată se mută proiectul Supabase în altă regiune, **mută și asta odată
 cu el**. Codul și baza de date trebuie să stea în același oraș.
