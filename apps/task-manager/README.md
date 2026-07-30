@@ -221,6 +221,17 @@ Detalii complete în [`supabase/README.md`](supabase/README.md). Pe scurt:
    Redirect URLs (`https://<app>.vercel.app/auth/callback`).
 5. Push pe `main` → deploy automat.
 
+### Regiunea funcțiilor
+
+`vercel.json` fixează `"regions": ["fra1"]` — Frankfurt. Nu e o preferință
+estetică: baza de date Supabase a proiectului stă în `eu-central-1`, tot
+Frankfurt. Regiunea implicită a Vercel e `iad1` (Washington), iar cu ea fiecare
+interogare traversa Atlanticul de două ori — ~135 ms pierduți pe cerere înainte
+ca vreo linie să fie citită din baza de date, plus ~90 ms per interogare.
+
+Dacă vreodată se mută proiectul Supabase în altă regiune, **mută și asta odată
+cu el**. Codul și baza de date trebuie să stea în același oraș.
+
 ## Structură
 
 ```
