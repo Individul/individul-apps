@@ -52,7 +52,16 @@ export interface AuditEntry {
   actor_id: string | null;
   actor_name: string | null;
   action: "INSERT" | "UPDATE" | "DELETE";
-  entity: "tasks" | "comments" | "tags" | "task_tags" | "profiles" | "subtasks";
+  entity:
+    | "tasks"
+    | "comments"
+    | "tags"
+    | "task_tags"
+    | "profiles"
+    | "subtasks"
+    | "petitions"
+    | "petition_attachments"
+    | "hearings";
   entity_id: string | null;
   details: Record<string, unknown>;
   created_at: string;
