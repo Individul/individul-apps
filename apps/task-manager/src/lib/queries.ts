@@ -11,6 +11,7 @@ import type {
   StatReport,
   StatValue,
 } from "./types";
+import type { Hearing } from "./hearings";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -210,4 +211,28 @@ export async function getUnreadCount(): Promise<number> {
     .eq("read", false);
   if (error) return 0;
   return count ?? 0;
+}
+
+export async function getHearings(from: string, to: string): Promise<Hearing[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("hearings")
+    .select("*")
+    .gte("session_date", from)
+    .lte("session_date", to)
+    .order("session_date", { ascending: false });
+  // Grațios dacă migrarea 0018 nu e încă aplicată.
+  if (error) return [];
+  return (data ?? []) as unknown as Hearing[];
+}
+
+export async function getHearing(date: string): Promise<Hearing | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("hearings")
+    .select("*")
+    .eq("session_date", date)
+    .maybeSingle();
+  if (error) return null;
+  return (data ?? null) as Hearing | null;
 }

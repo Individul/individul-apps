@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-30",
+    text: "Modul nou: ședințe de judecată — evidența zilnică, cu rapoarte pe zi, săptămână, lună, trimestru, semestru și an.",
+  },
+  {
+    date: "2026-07-30",
     text: "Pe pagina principală, administratorul vede toate cifrele defalcate pe fiecare responsabil.",
   },
   {
