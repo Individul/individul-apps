@@ -1,0 +1,84 @@
+import { addDays, addMonths, isSameDay, startOfDay, startOfMonth } from "date-fns";
+import { toISODate, type DateRange } from "./periods";
+
+/**
+ * Penitenciarele partenere. Lipsesc două numere, din motive diferite: nr. 6
+ * suntem noi, iar nr. 14 nu există. Constrângerea din baza de date spune
+ * același lucru, ca să nu depindă de codul de aici.
+ */
+export const INSTITUTIONS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18];
+
+export function institutionLabel(n: number): string {
+  return `Penitenciarul nr. ${n}`;
+}
+
+/**
+ * Prima și a treia zi de luni din lună — zilele de transfer programat.
+ *
+ * `month` e 0-11, ca la `Date`. A treia luni e mereu prima + 14 zile, iar prima
+ * cade cel târziu pe 7, deci a treia nu poate ieși din lună.
+ */
+export function scheduledDays(year: number, month: number): Date[] {
+  const first = new Date(year, month, 1);
+  // getDay(): 0 = duminică … 6 = sâmbătă. Câte zile până la prima luni.
+  const offset = (8 - first.getDay()) % 7;
+  const firstMonday = addDays(first, offset);
+  return [firstMonday, addDays(firstMonday, 14)];
+}
+
+export function isScheduled(d: Date): boolean {
+  return scheduledDays(d.getFullYear(), d.getMonth()).some((s) => isSameDay(s, d));
+}
+
+/** Ziua de transfer programat următoare; azi, dacă azi e chiar ea. */
+export function nextScheduled(from: Date): Date {
+  const today = startOfDay(from);
+  const upcoming = scheduledDays(from.getFullYear(), from.getMonth()).find((d) => d >= today);
+  if (upcoming) return upcoming;
+  const next = addMonths(startOfMonth(from), 1);
+  return scheduledDays(next.getFullYear(), next.getMonth())[0];
+}
+
+/**
+ * Zilele programate din interval care n-au niciun rând.
+ *
+ * Într-un registru golul e informația importantă: o zi necompletată nu se vede
+ * nicăieri altundeva. Zilele care încă n-au venit sunt sărite — o zi viitoare
+ * nu poate lipsi.
+ */
+export function missingScheduled(
+  range: DateRange,
+  entered: { transfer_date: string }[],
+  today: Date = new Date(),
+): string[] {
+  const have = new Set(entered.map((t) => t.transfer_date));
+  const last = range.to < today ? range.to : today;
+  if (last < range.from) return [];
+
+  const out: string[] = [];
+  let cursor = startOfMonth(range.from);
+  while (cursor <= last) {
+    for (const d of scheduledDays(cursor.getFullYear(), cursor.getMonth())) {
+      if (d >= range.from && d <= last && !have.has(toISODate(d))) out.push(toISODate(d));
+    }
+    cursor = addMonths(cursor, 1);
+  }
+  return out;
+}
+
+export interface TransferCounts {
+  plecati: number;
+  sositi: number;
+}
+
+export interface TransferTotals extends TransferCounts {
+  total: number;
+  /** Sosiți minus plecați: negativ înseamnă că au plecat mai mulți decât au venit. */
+  sold: number;
+}
+
+export function aggregate(rows: TransferCounts[]): TransferTotals {
+  const plecati = rows.reduce((a, r) => a + (r.plecati || 0), 0);
+  const sositi = rows.reduce((a, r) => a + (r.sositi || 0), 0);
+  return { plecati, sositi, total: plecati + sositi, sold: sositi - plecati };
+}
