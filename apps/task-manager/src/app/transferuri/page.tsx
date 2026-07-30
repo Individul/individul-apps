@@ -27,7 +27,7 @@ export default async function TransferuriPage() {
         <div>
           <h1 className="text-2xl font-semibold">Transferuri</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Mișcarea efectivului între penitenciare: cifre pe zi și penitenciar, nu persoane.
+            Transferurile condamnaților între penitenciare: cifre pe zi și penitenciar, nu persoane.
           </p>
         </div>
 

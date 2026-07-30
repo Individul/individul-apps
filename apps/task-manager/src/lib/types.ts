@@ -141,8 +141,8 @@ export interface StatValue {
   position: number;
 }
 /**
- * O mișcare de efectiv: o zi + un penitenciar partener + planificat/urgent, cu
- * plecările și sosirile în același rând. Cifre, nu persoane.
+ * Un transfer de condamnați: o zi + un penitenciar partener + planificat/urgent,
+ * cu plecările și sosirile în același rând. Cifre, nu persoane.
  */
 export interface Transfer {
   id: string;
