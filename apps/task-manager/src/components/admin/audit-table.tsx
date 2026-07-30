@@ -1,17 +1,37 @@
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Gavel,
+  ListChecks,
+  Mail,
+  MessageSquare,
+  Paperclip,
+  Pencil,
+  Tag as TagIcon,
+  Users,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { AuditEntry } from "@/lib/types";
 
-const ACTION_META: Record<
-  AuditEntry["action"],
-  { verb: string; Icon: typeof Plus; className: string }
-> = {
-  INSERT: { verb: "a creat", Icon: Plus, className: "bg-emerald-50 text-emerald-600" },
-  UPDATE: { verb: "a modificat", Icon: Pencil, className: "bg-sky-50 text-sky-600" },
-  DELETE: { verb: "a șters", Icon: Trash2, className: "bg-red-50 text-red-600" },
+// Iconița spune din ce modul e intrarea, culoarea spune ce s-a întâmplat.
+// Verbul e oricum scris în frază, deci culoarea nu poartă singură înțelesul.
+const ACTION_META: Record<AuditEntry["action"], { verb: string; className: string }> = {
+  INSERT: { verb: "a creat", className: "bg-emerald-50 text-emerald-600" },
+  UPDATE: { verb: "a modificat", className: "bg-sky-50 text-sky-600" },
+  DELETE: { verb: "a șters", className: "bg-red-50 text-red-600" },
+};
+
+const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
+  tasks: ListChecks,
+  subtasks: ListChecks,
+  comments: MessageSquare,
+  tags: TagIcon,
+  task_tags: TagIcon,
+  petitions: Mail,
+  petition_attachments: Paperclip,
+  hearings: Gavel,
+  profiles: Users,
 };
 
 const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
@@ -21,6 +41,14 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   task_tags: "o etichetă a unei sarcini",
   profiles: "utilizatorul",
   subtasks: "un pas",
+  petitions: "petiția",
+  petition_attachments: "un fișier al unei petiții",
+  hearings: "evidența ședințelor",
+};
+
+const PETITION_STATUS: Record<string, string> = {
+  in_examinare: "În examinare",
+  solutionat: "Soluționat",
 };
 
 function detailText(e: AuditEntry): string {
@@ -50,6 +78,48 @@ function phrase(e: AuditEntry): string {
     if (d.done_to === true) return `a bifat pasul ${title}`;
     if (d.done_to === false) return `a debifat pasul ${title}`;
     return `a modificat pasul ${title}`;
+  }
+  if (e.entity === "petitions") {
+    const d = e.details ?? {};
+    const nr = d.number ? `petiția ${String(d.number)}` : "o petiție";
+    if (e.action === "INSERT") return `a înregistrat ${nr}`;
+    if (e.action === "DELETE") return `a șters ${nr}`;
+    // La modificare se scrie ce anume s-a schimbat; termenul legal atârnă de
+    // data înregistrării, deci mutarea ei nu are voie să treacă neobservată.
+    if (d.received_from && d.received_to) {
+      return `a mutat data înregistrării la ${nr}: ${String(d.received_from)} → ${String(d.received_to)}`;
+    }
+    if (d.status_to) {
+      const to = PETITION_STATUS[String(d.status_to)] ?? String(d.status_to);
+      return `a trecut ${nr} în „${to}”`;
+    }
+    if (d.assignee_to) return `a atribuit ${nr} lui ${String(d.assignee_to)}`;
+    if (d.assignee_from) return `a scos responsabilul de la ${nr}`;
+    if (d.number_from && d.number_to) {
+      return `a schimbat numărul petiției: ${String(d.number_from)} → ${String(d.number_to)}`;
+    }
+    return `a modificat ${nr}`;
+  }
+  if (e.entity === "petition_attachments") {
+    const d = e.details ?? {};
+    const la = d.number ? ` la petiția ${String(d.number)}` : " la o petiție";
+    const nume = d.name ? `„${String(d.name)}”` : "un fișier";
+    if (e.action === "INSERT") return `a atașat ${nume}${la}`;
+    if (e.action === "DELETE") return `a șters fișierul ${nume}${la}`;
+    return `a modificat fișierul ${nume}${la}`;
+  }
+  if (e.entity === "hearings") {
+    const d = e.details ?? {};
+    const zi = d.session_date
+      ? format(parseISO(String(d.session_date)), "d MMM yyyy", { locale: ro })
+      : "o zi";
+    if (e.action === "INSERT") return `a introdus ședințele din ${zi}`;
+    if (e.action === "DELETE") return `a șters ședințele din ${zi}`;
+    // La corectare, cifra e tot ce contează: altfel nu se vede ce s-a schimbat.
+    if (d.total_from !== undefined && d.total_to !== undefined) {
+      return `a corectat ședințele din ${zi}: total ${String(d.total_from)} → ${String(d.total_to)}`;
+    }
+    return `a modificat ședințele din ${zi}`;
   }
   const label = ENTITY_LABEL[e.entity] ?? e.entity;
   const detail = detailText(e);
@@ -87,7 +157,7 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
           <ul className="space-y-3">
             {g.items.map((e) => {
               const meta = ACTION_META[e.action];
-              const Icon = meta?.Icon ?? Pencil;
+              const Icon = ENTITY_ICON[e.entity] ?? Pencil;
               return (
                 <li key={e.id} className="flex items-start gap-3">
                   <span

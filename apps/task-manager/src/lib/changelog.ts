@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-30",
+    text: "Petițiile intră în audit: se vede cine a atribuit, a soluționat, a mutat data înregistrării sau a șters un fișier.",
+  },
+  {
+    date: "2026-07-30",
     text: "La ședințe, raportul semnalează zilele lucrătoare rămase fără date, cu link direct spre ele.",
   },
   {
