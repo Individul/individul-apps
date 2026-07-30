@@ -5,6 +5,7 @@ import {
   getCurrentProfile,
   getNotifications,
   getUnreadCount,
+  getTransfers,
 } from "@/lib/queries";
 import {
   taskStats,
@@ -13,6 +14,8 @@ import {
   type TaskStats,
   type PetitionStats,
 } from "@/lib/hub-stats";
+import { aggregate, type TransferTotals } from "@/lib/transfers";
+import { rangeForPeriod, toISODate } from "@/lib/periods";
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { ChangelogSection } from "@/components/hub/changelog-section";
@@ -54,6 +57,17 @@ const PETITION_COLUMNS: Column<PetitionStats>[] = [
   { label: "Restante", get: (s) => s.overdue, tone: "danger" },
 ];
 
+/**
+ * Fără `tone`: la sarcini și petiții roșul înseamnă „ai o problemă”, iar la
+ * transferuri plecările sunt doar o direcție, nu o alarmă. Pe pagina modulului
+ * direcția se vede din săgeți, canal pe care cardul nu-l are.
+ */
+const TRANSFER_COLUMNS: Column<TransferTotals>[] = [
+  { label: "Plecați", get: (s) => s.plecati },
+  { label: "Sosiți", get: (s) => s.sositi },
+  { label: "Sold", title: "Sosiți minus plecați", get: (s) => s.sold },
+];
+
 function toStats<S>(columns: Column<S>[], mine: S, all: S | null): ModuleCardStat[] {
   return columns.map((c) => ({
     label: c.label,
@@ -78,14 +92,16 @@ function toBreakdown<T extends { assignee_id: string | null }, S>(
 }
 
 export default async function HubPage() {
-  const [tasks, petitions, profiles, profile, notifications, unread] = await Promise.all([
-    getTasks(),
-    getPetitions(),
-    getProfiles(),
-    getCurrentProfile(),
-    getNotifications(),
-    getUnreadCount(),
-  ]);
+  const [tasks, petitions, profiles, profile, notifications, unread, transfers] =
+    await Promise.all([
+      getTasks(),
+      getPetitions(),
+      getProfiles(),
+      getCurrentProfile(),
+      getNotifications(),
+      getUnreadCount(),
+      getTransfers(),
+    ]);
 
   const isAdmin = profile?.role === "admin";
   const me = profile?.id ?? null;
@@ -101,6 +117,18 @@ export default async function HubPage() {
   // Adminul le are deja pe toate, deci n-ar avea ce compara.
   const tsAll = isAdmin ? null : taskStats(tasks);
   const psAll = isAdmin ? null : petitionStats(petitions);
+
+  // Registrul de transferuri e o evidență lunară: un total de la prima zi a
+  // registrului n-ar spune nimic despre cum stă luna curentă. Datele sunt
+  // AAAA-LL-ZZ, deci comparația de text e și comparație de calendar — la fel ca
+  // în pagina modulului. Cifrele sunt aceleași pentru toți: transferurile n-au
+  // responsabil, deci nici „ale mele” și nici defalcare pe persoane.
+  const month = rangeForPeriod("luna");
+  const from = toISODate(month.from);
+  const to = toISODate(month.to);
+  const trs = aggregate(
+    transfers.filter((t) => t.transfer_date >= from && t.transfer_date <= to),
+  );
 
   // Defalcarea (doar admin) primește toate elementele, nu doar cele active:
   // altfel coloanele „Total” și „Finalizate” n-ar avea ce număra.
@@ -141,6 +169,15 @@ export default async function HubPage() {
             }
             stats={toStats(PETITION_COLUMNS, ps, psAll)}
             breakdown={petitionBreakdown}
+          />
+          {/* O lună fără niciun rând dă 0 / 0 / 0. Cele trei cifre se citesc
+              împreună, deci spun „nimic luna asta”; pe pagina modulului soldul
+              stă singur sub o perioadă aleasă de om, de aceea acolo e „—”. */}
+          <ModuleCard
+            href="/transferuri"
+            title="Transferuri"
+            description="Mișcarea efectivului între penitenciare, în luna curentă."
+            stats={toStats(TRANSFER_COLUMNS, trs, null)}
           />
         </div>
         <ChangelogSection />

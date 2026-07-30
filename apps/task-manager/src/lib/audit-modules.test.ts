@@ -2,18 +2,27 @@ import { describe, it, expect } from "vitest";
 import { AUDIT_MODULES, entitiesFor, readAuditModule } from "./audit-modules";
 import type { AuditEntry } from "./types";
 
-// Toate entitățile pe care le scrie trigger-ul de audit.
-const ALL_ENTITIES: AuditEntry["entity"][] = [
-  "tasks",
-  "subtasks",
-  "comments",
-  "tags",
-  "task_tags",
-  "petitions",
-  "petition_attachments",
-  "hearings",
-  "profiles",
-];
+/**
+ * Toate entitățile pe care le scrie trigger-ul de audit.
+ *
+ * Un Record peste uniune: TypeScript refuză compilarea dacă lipsește o entitate,
+ * deci lista nu poate rămâne în urmă față de tip. Scrisă de mână, lista nu păzea
+ * nimic — o entitate nouă nu ajungea în ea, deci bucla de mai jos pur și simplu
+ * n-o verifica, iar testul trecea cu exact bug-ul pe care spune că-l prinde.
+ */
+const ENTITY_PRESENT: Record<AuditEntry["entity"], true> = {
+  tasks: true,
+  subtasks: true,
+  comments: true,
+  tags: true,
+  task_tags: true,
+  petitions: true,
+  petition_attachments: true,
+  hearings: true,
+  profiles: true,
+  transfers: true,
+};
+const ALL_ENTITIES = Object.keys(ENTITY_PRESENT) as AuditEntry["entity"][];
 
 describe("AUDIT_MODULES", () => {
   it("fiecare entitate aparține exact unui modul", () => {
@@ -36,12 +45,17 @@ describe("AUDIT_MODULES", () => {
   it("„Toate” nu filtrează nimic", () => {
     expect(entitiesFor("toate")).toEqual([]);
   });
+
+  it("„Transferuri” cere doar entitatea transfers", () => {
+    expect(entitiesFor("transferuri")).toEqual(["transfers"]);
+  });
 });
 
 describe("readAuditModule", () => {
   it("acceptă valorile cunoscute", () => {
     expect(readAuditModule("petitii")).toBe("petitii");
     expect(readAuditModule("sedinte")).toBe("sedinte");
+    expect(readAuditModule("transferuri")).toBe("transferuri");
   });
   it("cade pe „toate” la valori lipsă sau inventate", () => {
     expect(readAuditModule(undefined)).toBe("toate");

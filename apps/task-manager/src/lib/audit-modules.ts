@@ -1,6 +1,12 @@
 import type { AuditEntry } from "./types";
 
-export type AuditModule = "toate" | "sarcini" | "petitii" | "sedinte" | "utilizatori";
+export type AuditModule =
+  | "toate"
+  | "sarcini"
+  | "petitii"
+  | "sedinte"
+  | "transferuri"
+  | "utilizatori";
 
 /**
  * Ce entități din jurnal aparțin fiecărui modul.
@@ -22,6 +28,7 @@ export const AUDIT_MODULES: {
   },
   { value: "petitii", label: "Petiții", entities: ["petitions", "petition_attachments"] },
   { value: "sedinte", label: "Ședințe", entities: ["hearings"] },
+  { value: "transferuri", label: "Transferuri", entities: ["transfers"] },
   { value: "utilizatori", label: "Utilizatori", entities: ["profiles"] },
 ];
 
