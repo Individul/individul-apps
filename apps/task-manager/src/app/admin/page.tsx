@@ -14,16 +14,23 @@ import { UserRoleTable } from "@/components/admin/user-role-table";
 import { RestoreBackup } from "@/components/admin/restore-backup";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 import { AuditTable } from "@/components/admin/audit-table";
+import { AuditTabs } from "@/components/admin/audit-tabs";
+import { entitiesFor, readAuditModule } from "@/lib/audit-modules";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: { modul?: string };
+}) {
   const me = await getCurrentProfile();
   if (me?.role !== "admin") redirect("/");
+  const auditModule = readAuditModule(searchParams.modul);
   const [profiles, audit, notifications, unread] = await Promise.all([
     getProfiles(),
-    getAuditLog(),
+    getAuditLog(100, entitiesFor(auditModule)),
     getNotifications(),
     getUnreadCount(),
   ]);
@@ -72,6 +79,7 @@ export default async function AdminPage() {
             <p className="text-sm text-muted-foreground">
               Ultimele modificări (cine, ce, când). Se înregistrează automat.
             </p>
+            <AuditTabs active={auditModule} />
             <AuditTable entries={audit} />
           </section>
         </aside>

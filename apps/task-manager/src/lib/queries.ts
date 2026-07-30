@@ -76,11 +76,17 @@ export async function getTags(): Promise<Tag[]> {
   return (data ?? []) as Tag[];
 }
 
-export async function getAuditLog(limit = 100): Promise<AuditEntry[]> {
+export async function getAuditLog(
+  limit = 100,
+  /** Entitățile cerute; listă goală înseamnă tot jurnalul. */
+  entities: AuditEntry["entity"][] = [],
+): Promise<AuditEntry[]> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("audit_log")
-    .select("*")
+  // Filtrul intră în interogare: altfel un modul puțin activ ar părea gol doar
+  // pentru că ultimele N intrări aparțin altuia.
+  let query = supabase.from("audit_log").select("*");
+  if (entities.length) query = query.in("entity", entities);
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(limit);
   // Tabela poate lipsi până se aplică migrarea 0007 — nu bloca pagina /admin.
