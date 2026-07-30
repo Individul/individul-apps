@@ -9,15 +9,68 @@ import {
 import {
   taskStats,
   petitionStats,
-  countsByAssignee,
-  isTaskOverdue,
-  isPetitionOverdue,
+  groupByAssignee,
+  type TaskStats,
+  type PetitionStats,
 } from "@/lib/hub-stats";
 import { AppHeader } from "@/components/layout/app-header";
-import { ModuleCard } from "@/components/hub/module-card";
+import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { ChangelogSection } from "@/components/hub/changelog-section";
+import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * O coloană a cardului. Din aceeași definiție ies toate cele trei locuri unde
+ * apare cifra — cea mare, „din N” de sub ea și rândul fiecărei persoane din
+ * defalcare — deci nu pot ajunge să se contrazică.
+ */
+interface Column<S> {
+  label: string;
+  short?: string;
+  get: (stats: S) => number;
+  tone?: ModuleCardStat["tone"];
+}
+
+const TASK_COLUMNS: Column<TaskStats>[] = [
+  { label: "Total", get: (s) => s.total },
+  { label: "Active", get: (s) => s.active },
+  { label: "În așteptare", short: "Așteptare", get: (s) => s.waiting },
+  { label: "Finalizate", get: (s) => s.done },
+  { label: "Scadente 7 zile", short: "Scadente", get: (s) => s.dueSoon, tone: "warning" },
+  { label: "Restante", get: (s) => s.overdue, tone: "danger" },
+];
+
+const PETITION_COLUMNS: Column<PetitionStats>[] = [
+  { label: "Total", get: (s) => s.total },
+  { label: "În examinare", short: "Examinare", get: (s) => s.open },
+  { label: "Soluționate", short: "Soluț.", get: (s) => s.solved },
+  { label: "Scadente 7 zile", short: "Scadente", get: (s) => s.dueSoon, tone: "warning" },
+  { label: "Restante", get: (s) => s.overdue, tone: "danger" },
+];
+
+function toStats<S>(columns: Column<S>[], mine: S, all: S | null): ModuleCardStat[] {
+  return columns.map((c) => ({
+    label: c.label,
+    short: c.short,
+    tone: c.tone,
+    value: c.get(mine),
+    of: all ? c.get(all) : undefined,
+  }));
+}
+
+/** Câte un rând per responsabil, cu aceleași cifre ca ale cardului. */
+function toBreakdown<T extends { assignee_id: string | null }, S>(
+  items: T[],
+  profiles: Profile[],
+  columns: Column<S>[],
+  statsOf: (items: T[]) => S,
+) {
+  return groupByAssignee(items, profiles).map((group) => {
+    const stats = statsOf(group.items);
+    return { id: group.id, name: group.name, values: columns.map((c) => c.get(stats)) };
+  });
+}
 
 export default async function HubPage() {
   const [tasks, petitions, profiles, profile, notifications, unread] = await Promise.all([
@@ -44,26 +97,20 @@ export default async function HubPage() {
   const tsAll = isAdmin ? null : taskStats(tasks);
   const psAll = isAdmin ? null : petitionStats(petitions);
 
-  // Defalcarea (doar admin) se face peste elementele relevante, nu peste arhivă.
+  // Defalcarea (doar admin) primește toate elementele, nu doar cele active:
+  // altfel coloanele „Total” și „Finalizate” n-ar avea ce număra.
   const taskBreakdown = isAdmin
-    ? countsByAssignee(
-        tasks.filter((t) => t.status !== "done"),
-        profiles,
-        (t) => isTaskOverdue(t),
-      )
+    ? toBreakdown(tasks, profiles, TASK_COLUMNS, taskStats)
     : undefined;
   const petitionBreakdown = isAdmin
-    ? countsByAssignee(
-        petitions.filter((p) => p.status === "in_examinare"),
-        profiles,
-        (p) => isPetitionOverdue(p),
-      )
+    ? toBreakdown(petitions, profiles, PETITION_COLUMNS, petitionStats)
     : undefined;
 
   return (
     <>
       <AppHeader profile={profile} notifications={notifications} unread={unread} />
-      <main className="mx-auto max-w-5xl p-4 xl:px-10">
+      {/* Mai lat decât înainte: cardurile duc acum și defalcarea pe coloane. */}
+      <main className="mx-auto max-w-6xl p-4 xl:px-10">
         <h1 className="mb-6 text-2xl font-semibold">
           {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
         </h1>
@@ -76,14 +123,7 @@ export default async function HubPage() {
                 ? "Evidența sarcinilor echipei, cu termene și responsabili."
                 : "Sarcinile atribuite ție, cu termene și priorități."
             }
-            stats={[
-              { label: "Total", value: ts.total, of: tsAll?.total },
-              { label: "Active", value: ts.active, of: tsAll?.active },
-              { label: "În așteptare", value: ts.waiting, of: tsAll?.waiting },
-              { label: "Finalizate", value: ts.done, of: tsAll?.done },
-              { label: "Scadente 7 zile", value: ts.dueSoon, of: tsAll?.dueSoon, tone: "warning" },
-              { label: "Restante", value: ts.overdue, of: tsAll?.overdue, tone: "danger" },
-            ]}
+            stats={toStats(TASK_COLUMNS, ts, tsAll)}
             breakdown={taskBreakdown}
           />
           <ModuleCard
@@ -94,13 +134,7 @@ export default async function HubPage() {
                 ? "Registrul petițiilor, cu termene de răspuns."
                 : "Petițiile atribuite ție, cu termene de răspuns."
             }
-            stats={[
-              { label: "Total", value: ps.total, of: psAll?.total },
-              { label: "În examinare", value: ps.open, of: psAll?.open },
-              { label: "Soluționate", value: ps.solved, of: psAll?.solved },
-              { label: "Scadente 7 zile", value: ps.dueSoon, of: psAll?.dueSoon, tone: "warning" },
-              { label: "Restante", value: ps.overdue, of: psAll?.overdue, tone: "danger" },
-            ]}
+            stats={toStats(PETITION_COLUMNS, ps, psAll)}
             breakdown={petitionBreakdown}
           />
         </div>

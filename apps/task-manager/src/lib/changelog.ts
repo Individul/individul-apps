@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-30",
+    text: "Pe pagina principală, administratorul vede toate cifrele defalcate pe fiecare responsabil.",
+  },
+  {
+    date: "2026-07-30",
     text: "Sarcinile plecate la instanță trec „În așteptare”: nu mai apar ca restante, dar se vede de câte zile durează.",
   },
   {

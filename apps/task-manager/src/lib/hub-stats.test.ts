@@ -3,6 +3,7 @@ import {
   taskStats,
   petitionStats,
   countsByAssignee,
+  groupByAssignee,
   isTaskOverdue,
   isPetitionOverdue,
 } from "./hub-stats";
@@ -177,5 +178,54 @@ describe("isTaskOverdue / isPetitionOverdue", () => {
       isPetitionOverdue(p({ response_deadline: "2026-07-20", status: "solutionat" }), today),
     ).toBe(false);
     expect(isPetitionOverdue(p({ response_deadline: "2026-09-01" }), today)).toBe(false);
+  });
+});
+
+describe("groupByAssignee", () => {
+  const ana = prof("ana", "Ana Cojocari");
+  const nat = prof("nat", "Natalia Spinei");
+
+  it("grupează păstrând elementele, nu doar numărul", () => {
+    const rows = groupByAssignee(
+      [t({ id: "1", assignee_id: "ana" }), t({ id: "2", assignee_id: "ana" })],
+      [ana],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].items.map((x) => x.id)).toEqual(["1", "2"]);
+  });
+
+  it("cifrele grupurilor se adună la totalul general", () => {
+    // Proprietatea care justifică gruparea: defalcarea nu poate contrazice cardul.
+    const tasks = [
+      t({ assignee_id: "ana", status: "done" }),
+      t({ assignee_id: "ana", status: "waiting" }),
+      t({ assignee_id: "nat", status: "todo" }),
+      t({ assignee_id: null, status: "todo" }),
+    ];
+    const groups = groupByAssignee(tasks, [ana, nat]);
+    const sum = (pick: (s: ReturnType<typeof taskStats>) => number) =>
+      groups.reduce((n, g) => n + pick(taskStats(g.items)), 0);
+    const total = taskStats(tasks);
+    expect(sum((s) => s.total)).toBe(total.total);
+    expect(sum((s) => s.done)).toBe(total.done);
+    expect(sum((s) => s.waiting)).toBe(total.waiting);
+  });
+
+  it("descrescător după număr, „Neatribuit” la final", () => {
+    const rows = groupByAssignee(
+      [
+        t({ assignee_id: null }),
+        t({ assignee_id: "nat" }),
+        t({ assignee_id: "ana" }),
+        t({ assignee_id: "ana" }),
+      ],
+      [ana, nat],
+    );
+    expect(rows.map((r) => r.name)).toEqual(["Ana Cojocari", "Natalia Spinei", "Neatribuit"]);
+  });
+
+  it("responsabilul care nu mai există ajunge la „Neatribuit”", () => {
+    const rows = groupByAssignee([t({ assignee_id: "sters" })], [ana]);
+    expect(rows.map((r) => r.name)).toEqual(["Neatribuit"]);
   });
 });

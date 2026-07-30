@@ -2,10 +2,11 @@ import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
-import type { AssigneeCount } from "@/lib/hub-stats";
 
 export interface ModuleCardStat {
   label: string;
+  /** Antetul coloanei din defalcare, unde `label` n-ar încăpea. */
+  short?: string;
   value: number;
   tone?: "default" | "danger" | "warning";
   /**
@@ -13,6 +14,13 @@ export interface ModuleCardStat {
    * membrilor: la admin cifra proprie e deja totalul, deci ar fi redundant.
    */
   of?: number;
+}
+
+export interface ModuleCardBreakdownRow {
+  id: string | null;
+  name: string;
+  /** Câte o valoare pentru fiecare `stat`, în aceeași ordine. */
+  values: number[];
 }
 
 function initialsOf(name: string): string {
@@ -36,7 +44,7 @@ export function ModuleCard({
   description: string;
   stats: ModuleCardStat[];
   /** Defalcare pe responsabil (doar pentru admin). Lipsă → cardul arată doar cifrele. */
-  breakdown?: AssigneeCount[];
+  breakdown?: ModuleCardBreakdownRow[];
 }) {
   return (
     <Link
@@ -67,21 +75,46 @@ export function ModuleCard({
         ))}
       </div>
       {breakdown && breakdown.length > 0 && (
-        <div className="mt-5 space-y-2 border-t pt-4">
-          {breakdown.map((row) => (
-            <div key={row.id ?? "none"} className="flex items-center gap-2 text-sm">
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className={cn("text-[10px]", avatarColor(row.id ?? "none"))}>
-                  {initialsOf(row.name)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="truncate">{row.name}</span>
-              <span className="ml-auto flex items-center gap-2 tabular-nums">
-                {row.overdue > 0 && (
-                  <span className="text-xs text-red-600">{row.overdue} restante</span>
-                )}
-                <span className="text-muted-foreground">{row.count}</span>
+        <div className="mt-5 border-t pt-3">
+          {/* Antetul apare o singură dată: rândurile se citesc după poziția
+              coloanei, care e aceeași cu ordinea cifrelor de deasupra. */}
+          <div className="flex items-center gap-2 pb-1.5 text-[10px] text-muted-foreground">
+            <span className="min-w-0 flex-1" />
+            {stats.map((s) => (
+              <span key={s.label} className="w-[52px] shrink-0 text-right">
+                {s.short ?? s.label}
               </span>
+            ))}
+          </div>
+          {breakdown.map((row) => (
+            <div
+              key={row.id ?? "none"}
+              className="flex items-center gap-2 py-1 text-xs tabular-nums"
+            >
+              <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className={cn("text-[9px]", avatarColor(row.id ?? "none"))}>
+                    {initialsOf(row.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate" title={row.name}>
+                  {row.name}
+                </span>
+              </span>
+              {row.values.map((value, i) => (
+                <span
+                  key={stats[i]?.label ?? i}
+                  className={cn(
+                    "w-[52px] shrink-0 text-right",
+                    // Zerourile se estompează: privirea merge la ce chiar există.
+                    value === 0 && "text-muted-foreground/40",
+                    value > 0 && stats[i]?.tone === "warning" && "text-amber-600",
+                    value > 0 && stats[i]?.tone === "danger" && "text-red-600",
+                  )}
+                >
+                  {value}
+                </span>
+              ))}
             </div>
           ))}
         </div>
