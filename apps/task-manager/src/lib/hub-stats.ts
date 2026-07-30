@@ -88,6 +88,49 @@ export function isPetitionOverdue(petition: Petition, today: Date = new Date()):
  * `profiles` — apare mereu la final. Cu `isOverdue` se numără separat și câte
  * dintre elementele fiecăruia sunt restante.
  */
+export interface AssigneeGroup<T> {
+  id: string | null;
+  name: string;
+  items: T[];
+}
+
+/**
+ * Grupează elementele pe responsabil, păstrând elementele, nu doar numărul lor.
+ *
+ * Astfel fiecare grup poate fi trecut prin aceeași funcție de statistici ca
+ * totalul cardului: cifrele per persoană și cele de sus vin din același calcul,
+ * deci nu se pot contrazice la prima schimbare de regulă.
+ *
+ * Ordinea: descrescător după număr, alfabetic la egalitate, „Neatribuit” la
+ * final — inclusiv responsabilii care nu mai există în `profiles`.
+ */
+export function groupByAssignee<T extends { assignee_id: string | null }>(
+  items: T[],
+  profiles: Profile[],
+): AssigneeGroup<T>[] {
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  const groups = new Map<string | null, T[]>();
+
+  for (const item of items) {
+    const key = item.assignee_id && byId.has(item.assignee_id) ? item.assignee_id : null;
+    const list = groups.get(key);
+    if (list) list.push(item);
+    else groups.set(key, [item]);
+  }
+
+  const rows: AssigneeGroup<T>[] = [...groups].map(([id, list]) => ({
+    id,
+    name: id ? byId.get(id)!.full_name ?? "(fără nume)" : UNASSIGNED,
+    items: list,
+  }));
+
+  return rows.sort((a, b) => {
+    if (a.id === null) return 1;
+    if (b.id === null) return -1;
+    return b.items.length - a.items.length || a.name.localeCompare(b.name, "ro");
+  });
+}
+
 export function countsByAssignee<T extends { assignee_id: string | null }>(
   items: T[],
   profiles: Profile[],
