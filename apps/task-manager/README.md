@@ -112,7 +112,7 @@ fără reîncărcarea paginii.
 
 ## Transferuri
 
-Evidența transferurilor de condamnați între penitenciare. Un rând e **o zi + un
+Evidența transferurilor de deținuți între penitenciare. Un rând e **o zi + un
 penitenciar + planificat/urgent** și ține ambele sensuri deodată: `plecati` (din
 P-6 într-acolo) și `sositi` (de acolo la P-6). `total` e **coloană generată** în
 Postgres, deci nu poate ajunge să nu corespundă cu cele două cifre din care iese,

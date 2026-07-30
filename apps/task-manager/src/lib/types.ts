@@ -141,7 +141,7 @@ export interface StatValue {
   position: number;
 }
 /**
- * Un transfer de condamnați: o zi + un penitenciar partener + planificat/urgent,
+ * Un transfer de deținuți: o zi + un penitenciar partener + planificat/urgent,
  * cu plecările și sosirile în același rând. Cifre, nu persoane.
  */
 export interface Transfer {

@@ -176,7 +176,7 @@ export default async function HubPage() {
           <ModuleCard
             href="/transferuri"
             title="Transferuri"
-            description="Transferurile condamnaților între penitenciare, în luna curentă."
+            description="Transferurile deținuților între penitenciare, în luna curentă."
             stats={toStats(TRANSFER_COLUMNS, trs, null)}
           />
         </div>
