@@ -46,6 +46,7 @@ export function QuickViews({ tasks, currentUserId, filter, onFilterChange }: Qui
     { key: "soon", label: "Scadente 7 zile", filter: { due: "soon" }, dot: "bg-amber-400" },
     { key: "todo", label: "De făcut", filter: { status: "todo" }, dot: "bg-slate-400" },
     { key: "in_progress", label: "În lucru", filter: { status: "in_progress" }, dot: "bg-sky-500" },
+    { key: "waiting", label: "În așteptare", filter: { status: "waiting" }, dot: "bg-violet-500" },
     { key: "done", label: "Finalizat", filter: { status: "done" }, dot: "bg-emerald-500" },
   ];
 

@@ -5,9 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { notify } from "@/lib/notify";
 import { hasChanges } from "@/lib/changes";
-import { templateStepsForTags, isDispatchStep } from "@/lib/subtask-templates";
+import { templateStepsForTags, isDispatchStep, isResponseStep } from "@/lib/subtask-templates";
 
-const STATUS_LABEL = { todo: "De făcut", in_progress: "În lucru", done: "Finalizat" } as const;
+const STATUS_LABEL = {
+  todo: "De făcut",
+  in_progress: "În lucru",
+  waiting: "În așteptare",
+  done: "Finalizat",
+} as const;
 
 type ActionResult = { error?: string; success?: boolean };
 
@@ -22,6 +27,21 @@ function normalize(input: TaskInput) {
   };
 }
 
+/**
+ * De când așteaptă sarcina. Contorul pornește la intrarea în stare și se
+ * păstrează cât timp rămâne acolo — altfel fiecare salvare l-ar reseta și
+ * așteptările lungi ar arăta veșnic ca proaspete.
+ */
+function waitingSince(
+  nextStatus: TaskInput["status"],
+  prevStatus?: string,
+  prevSince?: string | null,
+): string | null {
+  if (nextStatus !== "waiting") return null;
+  if (prevStatus === "waiting" && prevSince) return prevSince;
+  return new Date().toISOString();
+}
+
 export async function createTask(input: TaskInput, tagIds: string[] = []): Promise<ActionResult> {
   const parsed = taskSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Date invalide." };
@@ -34,7 +54,7 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
   const nt = normalize(parsed.data);
   const { data: newTask, error } = await supabase
     .from("tasks")
-    .insert({ ...nt, created_by: userId })
+    .insert({ ...nt, waiting_since: waitingSince(nt.status), created_by: userId })
     .select("id")
     .single();
   if (error || !newTask) return { error: error?.message ?? "Eroare la crearea sarcinii." };
@@ -83,7 +103,15 @@ export async function updateTask(
   const { data: prev } = await supabase.from("tasks").select("*").eq("id", id).single();
 
   const nt = normalize(parsed.data);
-  const { data, error } = await supabase.from("tasks").update(nt).eq("id", id).select();
+  const payload = {
+    ...nt,
+    waiting_since: waitingSince(
+      nt.status,
+      prev?.status as string | undefined,
+      prev?.waiting_since as string | null | undefined,
+    ),
+  };
+  const { data, error } = await supabase.from("tasks").update(payload).eq("id", id).select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
 
@@ -173,7 +201,7 @@ export async function finalizeTask(id: string): Promise<ActionResult> {
 
   const { data, error } = await supabase
     .from("tasks")
-    .update({ status: "done" })
+    .update({ status: "done", waiting_since: null })
     .eq("id", id)
     .select();
   if (error) return { error: error.message };
@@ -405,15 +433,29 @@ export async function toggleSubtask(
     .single();
   if (error) return { error: error.message };
 
-  // Bifarea unui pas de „expediere" mută automat sarcina De făcut → În lucru.
-  if (done && updated && isDispatchStep(updated.title as string)) {
-    const { data: task } = await supabase
-      .from("tasks")
-      .select("status")
-      .eq("id", taskId)
-      .maybeSingle();
-    if (task?.status === "todo") {
-      await supabase.from("tasks").update({ status: "in_progress" }).eq("id", taskId);
+  // Pașii mută singuri sarcina prin fluxul demersului: expediat → așteaptă
+  // instanța (termenul nu mai curge), răspuns primit → gata.
+  if (done && updated) {
+    const title = updated.title as string;
+    if (isResponseStep(title)) {
+      await supabase
+        .from("tasks")
+        .update({ status: "done", waiting_since: null })
+        .eq("id", taskId)
+        .neq("status", "done");
+    } else if (isDispatchStep(title)) {
+      // Doar dintr-o stare activă: o sarcină deja finalizată nu se redeschide.
+      const { data: task } = await supabase
+        .from("tasks")
+        .select("status")
+        .eq("id", taskId)
+        .maybeSingle();
+      if (task?.status === "todo" || task?.status === "in_progress") {
+        await supabase
+          .from("tasks")
+          .update({ status: "waiting", waiting_since: new Date().toISOString() })
+          .eq("id", taskId);
+      }
     }
   }
 

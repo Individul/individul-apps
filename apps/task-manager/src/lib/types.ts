@@ -1,4 +1,4 @@
-export type TaskStatus = "todo" | "in_progress" | "done";
+export type TaskStatus = "todo" | "in_progress" | "waiting" | "done";
 export type TaskPriority = "low" | "medium" | "high";
 export type Role = "admin" | "member";
 
@@ -21,6 +21,8 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   due_date: string | null;
+  /** De când așteaptă răspuns extern; null în orice altă stare. */
+  waiting_since: string | null;
   assignee_id: string | null;
   created_by: string;
   created_at: string;

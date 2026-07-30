@@ -14,7 +14,8 @@ const prof = (id: string, name: string | null): Profile => ({
 
 const t = (over: Partial<Task>): Task => ({
   id: "1", title: "x", description: null, status: "todo", priority: "medium",
-  due_date: null, assignee_id: null, created_by: "u", created_at: "", updated_at: "", ...over,
+  due_date: null, waiting_since: null,
+  assignee_id: null, created_by: "u", created_at: "", updated_at: "", ...over,
 });
 
 const p = (over: Partial<Petition>): Petition => ({
@@ -50,7 +51,9 @@ describe("taskStats", () => {
     expect(s.dueSoon).toBe(2);
   });
   it("listă goală", () => {
-    expect(taskStats([], today)).toEqual({ total: 0, active: 0, done: 0, dueSoon: 0, overdue: 0 });
+    expect(taskStats([], today)).toEqual({
+      total: 0, active: 0, done: 0, waiting: 0, dueSoon: 0, overdue: 0,
+    });
   });
 });
 
@@ -160,6 +163,12 @@ describe("isTaskOverdue / isPetitionOverdue", () => {
     expect(isTaskOverdue(t({ due_date: "2026-07-20", status: "done" }), today)).toBe(false);
     expect(isTaskOverdue(t({ due_date: "2026-08-10" }), today)).toBe(false);
     expect(isTaskOverdue(t({ due_date: null }), today)).toBe(false);
+  });
+  it("în așteptare nu e restantă, oricât de vechi ar fi termenul", () => {
+    // Întârzierea e a instanței, nu a responsabilului.
+    const late = { due_date: "2020-01-01", status: "waiting" } as const;
+    expect(isTaskOverdue(t({ ...late }), today)).toBe(false);
+    expect(isTaskOverdue(t({ ...late, status: "in_progress" }), today)).toBe(true);
   });
 
   it("petiție restantă doar dacă e în examinare", () => {

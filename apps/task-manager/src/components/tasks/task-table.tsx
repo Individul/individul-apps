@@ -24,6 +24,7 @@ import {
   PRIORITY_BAR,
   initials,
   isOverdue,
+  waitingDays,
 } from "@/components/tasks/columns";
 import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
@@ -247,14 +248,20 @@ export function TaskTable({
                       )}
                     </div>
 
-                    {/* Stare */}
+                    {/* Stare — la așteptare arată și de cât timp durează, ca
+                        oprirea termenului să nu ascundă dosarele uitate. */}
                     <div className="flex w-28 shrink-0 items-center gap-2">
                       <span
                         className={cn("h-2 w-2 rounded-full", STATUS_DOT[t.status])}
                         aria-hidden
                       />
-                      <span className="text-[13px] text-muted-foreground">
-                        {STATUS_META[t.status].label}
+                      <span className="min-w-0 text-[13px] text-muted-foreground">
+                        <span className="block truncate">{STATUS_META[t.status].label}</span>
+                        {waitingDays(t) !== null && (
+                          <span className="block text-[11px] text-muted-foreground/70">
+                            de {waitingDays(t)} zile
+                          </span>
+                        )}
                       </span>
                     </div>
 

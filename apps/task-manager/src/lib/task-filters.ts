@@ -33,8 +33,9 @@ export function filterTasks(tasks: Task[], f: TaskFilter): Task[] {
       }
     }
     if (f.due) {
-      // „Restante"/„Scadente" ignoră sarcinile finalizate sau fără termen.
-      if (!t.due_date || t.status === "done") return false;
+      // „Restante"/„Scadente" ignoră sarcinile finalizate, pe cele fără termen
+      // și pe cele în așteptare — la acestea din urmă termenul nu curge.
+      if (!t.due_date || t.status === "done" || t.status === "waiting") return false;
       const due = parseISO(t.due_date);
       if (f.due === "overdue" && !(due < startOfToday)) return false;
       if (f.due === "soon" && !(due >= startOfToday && due <= soonLimit)) return false;
