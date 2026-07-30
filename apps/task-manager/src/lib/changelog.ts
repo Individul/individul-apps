@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-07-30",
+    text: "Modul nou, încă în testare: statistici — rapoartele se văd ca grafice, pe perioade.",
+  },
+  {
     date: "2026-07-29",
     text: "Scanarea petiției se deschide dintr-un click pe agrafă, direct din registru.",
   },
