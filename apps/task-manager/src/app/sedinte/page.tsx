@@ -4,6 +4,7 @@ import { getCurrentProfile, getNotifications, getUnreadCount } from "@/lib/queri
 import { getHearing, getHearings } from "@/lib/queries";
 import { AppHeader } from "@/components/layout/app-header";
 import { DailyForm } from "@/components/hearings/daily-form";
+import { DayPicker } from "@/components/hearings/day-picker";
 import { PeriodReport } from "@/components/hearings/period-report";
 import {
   PERIODS,
@@ -25,8 +26,11 @@ export default async function SedintePage({
   searchParams: { perioada?: string; zi?: string };
 }) {
   const period = readPeriod(searchParams.perioada);
-  // Ziua se ia din adresă, ca un raport să poată fi trimis prin link.
-  const day = searchParams.zi ?? toISODate(new Date());
+  const today = toISODate(new Date());
+  // Ziua se ia din adresă, ca o zi anume să poată fi trimisă prin link. Se
+  // limitează la azi și aici, nu doar în formular: adresa poate fi scrisă de mână.
+  const requested = searchParams.zi ?? today;
+  const day = requested > today ? today : requested;
   const range = rangeForPeriod(period, new Date());
 
   const [profile, notifications, unread, hearing, hearings] = await Promise.all([
@@ -51,25 +55,7 @@ export default async function SedintePage({
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-sm font-medium">Introducere — {formatDateRo(day)}</h2>
-            <form className="flex items-center gap-2">
-              <input type="hidden" name="perioada" value={period} />
-              <label htmlFor="zi" className="text-[13px] text-muted-foreground">
-                Alege ziua
-              </label>
-              <input
-                id="zi"
-                name="zi"
-                type="date"
-                defaultValue={day}
-                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-              />
-              <button
-                type="submit"
-                className="h-9 rounded-md border border-input px-3 text-sm transition-colors hover:bg-accent"
-              >
-                Deschide
-              </button>
-            </form>
+            <DayPicker day={day} today={today} />
           </div>
           <DailyForm date={day} hearing={hearing} />
         </section>
