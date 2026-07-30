@@ -17,13 +17,15 @@ fără backend separat. Găzduire GitHub + Vercel.
 
 ## Navigare
 
-Pagina de start (`/`) e un **hub**, cu câte un card pentru fiecare modul —
-**Sarcini** și **Petiții** — și cifre live: total, active (respectiv în
-examinare), scadente în 7 zile și restante. După autentificare aterizezi tot
-pe `/`.
+Pagina de start (`/`) e un **hub**, cu câte un card pentru **Sarcini**,
+**Petiții** și **Transferuri** — și cifre live: total, active (respectiv în
+examinare), scadente în 7 zile și restante; la transferuri, care n-au
+responsabil, plecați / sosiți / sold pe luna curentă. După autentificare
+aterizezi tot pe `/`.
 
 Toate paginile autentificate au un **antet comun**: link „Acasă", tab-urile
-**Sarcini | Petiții | Statistici**, clopoțelul de notificări și acțiunile de cont
+**Sarcini | Petiții | Ședințe | Transferuri | Statistici**, clopoțelul de
+notificări și acțiunile de cont
 („Profilul meu", „Schimbă parola", „Deconectare"; adminii au în plus „Administrare"). Tabul
 **Sarcini** rămâne activ și pe detaliul unei sarcini (`/tasks/[id]`). Detaliul
 sarcinii și pagina de administrare au, sub antet, și un buton „Înapoi la
@@ -34,6 +36,8 @@ sarcini" (→ `/sarcini`).
 | `/`           | hub — carduri de modul cu cifre live     |
 | `/sarcini`    | lista de sarcini                         |
 | `/petitii`    | registrul petițiilor                     |
+| `/sedinte`    | evidența ședințelor de judecată          |
+| `/transferuri`| registrul transferurilor                 |
 | `/statistici` | rapoarte statistice importate din Excel  |
 | `/tasks/[id]` | detaliul unei sarcini                    |
 | `/admin`      | administrare (doar admin)                |
@@ -105,6 +109,68 @@ fără reîncărcarea paginii.
 > Migrarea [`supabase/migrations/0008_notifications.sql`](supabase/migrations/0008_notifications.sql)
 > trebuie aplicată (după `0007_audit.sql`); ea adaugă și tabelul `notifications`
 > la publicația `supabase_realtime`.
+
+## Transferuri
+
+Evidența mișcării efectivului între penitenciare. Un rând e **o zi + un
+penitenciar + planificat/urgent** și ține ambele sensuri deodată: `plecati` (din
+P-6 într-acolo) și `sositi` (de acolo la P-6). `total` e **coloană generată** în
+Postgres, deci nu poate ajunge să nu corespundă cu cele două cifre din care iese,
+indiferent cine scrie în tabelă.
+
+Se înregistrează **cifre, nu nume**. Nu există rând per deținut, iar consecința
+merită spusă pe față: **din totaluri nu se poate reveni la persoane.** „Unde a
+fost transferat X" e o întrebare la care modulul acesta nu va răspunde niciodată,
+nici măcar retroactiv — ar trebui pornit un registru nominal de la zero, iar
+trecutul rămâne agregat. În schimb, niciun nume de deținut nu ajunge în baza de
+date.
+
+**Penitenciarul partener e un număr, nu text liber** — eticheta („Penitenciarul
+nr. 3") se compune în cod, deci nimeni nu scrie „Penit. 3" într-o zi și „P-3" în
+alta, iar sortarea e naturală. Constrângerea din bază
+(`institution between 1 and 18 and institution not in (6, 14)`) spune două lucruri
+deodată: **nr. 6 suntem noi**, deci nu te transferi la tine însuți, iar **nr. 14
+nu există**. Rămân 16 instituții.
+
+Transferurile sunt programate în **prima și a treia zi de luni** din lună.
+Aplicația le calculează singură, prin funcții pure — nu există un calendar de
+întreținut. Din același calcul ies toate cele trei comportamente: tipul
+„planificat" propus în formular când ziua aleasă e o luni programată, data
+următorului transfer, și semnalarea unei zile programate rămase necompletate.
+Golul e informația care nu se vede altundeva: o zi necompletată n-ar apărea
+nicăieri în registru.
+
+Ziua lipsă se semnalează însă **abia după ce s-a încheiat**, nu în timp ce se
+desfășoară: pe 6 iulie la ora 9 transferul de pe 6 iulie e încă în curs, iar o
+avertizare atunci ar fi o alarmă falsă. Semnalate degeaba, avertizările ajung
+ignorate și în zilele când chiar lipsește ceva.
+
+Pagina (`/transferuri`) are, pentru perioada aleasă: **trei cifre** — plecați,
+sosiți, sold (sosiți − plecați) —, avertizarea de mai sus cu data următorului
+transfer, și **registrul pe zile** în ordine inversă, cu un antet per zi și câte
+un rând per penitenciar dedesubt.
+
+Câteva alegeri de citit în pagină:
+
+- Plecările și sosirile se disting prin **săgeți care diferă ca direcție, nu doar
+  ca culoare** (↑ plecați, ↓ sosiți): cine nu distinge roșul de verde citește
+  corect după formă.
+- Unde nu s-a mișcat nimeni se scrie **„—", nu 0** — lipsa mișcării și mișcarea
+  de zero valori sunt lucruri diferite. Soldul face excepție: pe o perioadă cu
+  rânduri, 0 înseamnă „au venit câți au plecat".
+- Un rând cu 0 și 0 rămâne valid. Pe o zi programată în care n-a mișcat nimeni e
+  singurul fel de a spune că ziua a avut loc — altfel ar fi raportată ca lipsă.
+
+Drepturile sunt ca la ședințe, din același motiv: oricine autentificat citește și
+completează, altfel un coleg n-ar putea corecta ziua introdusă de altul.
+Ștergerea unui rând e doar a adminului (impusă prin RLS, nu doar în interfață).
+Cine a scris rămâne în jurnalul de audit de la `/admin`, sub modulul
+**Transferuri**.
+
+> Migrarea [`supabase/migrations/0020_transfers.sql`](supabase/migrations/0020_transfers.sql)
+> trebuie aplicată (după `0019`) — până atunci modulul nu funcționează. Creează
+> tabelul `transfers` cu RLS și adaugă ramura de transferuri în trigger-ul de
+> audit.
 
 ## Statistici
 
