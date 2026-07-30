@@ -27,17 +27,22 @@ export const dynamic = "force-dynamic";
  */
 interface Column<S> {
   label: string;
+  title?: string;
   short?: string;
   get: (stats: S) => number;
   tone?: ModuleCardStat["tone"];
 }
+
+// „Scadente 7 zile” se rupea pe două rânduri și strica alinierea; detaliul
+// trece în explicația de la hover.
+const DUE_SOON = { label: "Scadente", title: "Scadente în următoarele 7 zile" } as const;
 
 const TASK_COLUMNS: Column<TaskStats>[] = [
   { label: "Total", get: (s) => s.total },
   { label: "Active", get: (s) => s.active },
   { label: "În așteptare", short: "Așteptare", get: (s) => s.waiting },
   { label: "Finalizate", get: (s) => s.done },
-  { label: "Scadente 7 zile", short: "Scadente", get: (s) => s.dueSoon, tone: "warning" },
+  { ...DUE_SOON, get: (s) => s.dueSoon, tone: "warning" },
   { label: "Restante", get: (s) => s.overdue, tone: "danger" },
 ];
 
@@ -45,7 +50,7 @@ const PETITION_COLUMNS: Column<PetitionStats>[] = [
   { label: "Total", get: (s) => s.total },
   { label: "În examinare", short: "Examinare", get: (s) => s.open },
   { label: "Soluționate", short: "Soluț.", get: (s) => s.solved },
-  { label: "Scadente 7 zile", short: "Scadente", get: (s) => s.dueSoon, tone: "warning" },
+  { ...DUE_SOON, get: (s) => s.dueSoon, tone: "warning" },
   { label: "Restante", get: (s) => s.overdue, tone: "danger" },
 ];
 
