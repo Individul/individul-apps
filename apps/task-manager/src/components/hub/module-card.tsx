@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 
 export interface ModuleCardStat {
   label: string;
+  /** Explicația completă, la hover, când eticheta e prescurtată. */
+  title?: string;
   /** Antetul coloanei din defalcare, unde `label` n-ar încăpea. */
   short?: string;
   value: number;
@@ -53,7 +55,14 @@ export function ModuleCard({
     >
       <h2 className="text-xl font-medium">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Numărul de coloane urmează câte cifre are cardul: șase la sarcini,
+          cinci la petiții. Fixat pe cinci, a șasea cădea singură pe alt rând. */}
+      <div
+        className={cn(
+          "mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3",
+          stats.length >= 6 ? "lg:grid-cols-6" : "lg:grid-cols-5",
+        )}
+      >
         {stats.map((s) => (
           <div key={s.label}>
             <div
@@ -65,7 +74,9 @@ export function ModuleCard({
             >
               {s.value}
             </div>
-            <div className="text-xs text-muted-foreground">{s.label}</div>
+            <div className="text-xs text-muted-foreground" title={s.title}>
+              {s.label}
+            </div>
             {s.of !== undefined && (
               <div className="text-[11px] tabular-nums text-muted-foreground/70">
                 din {s.of}
