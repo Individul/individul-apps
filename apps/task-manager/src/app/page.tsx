@@ -14,16 +14,11 @@ import {
   type TaskStats,
   type PetitionStats,
 } from "@/lib/hub-stats";
-import {
-  aggregate,
-  byInstitution,
-  institutionLabel,
-  nextScheduled,
-  type TransferTotals,
-} from "@/lib/transfers";
+import { aggregate, byInstitution, nextScheduled } from "@/lib/transfers";
 import { formatDateRo, rangeForPeriod, toISODate } from "@/lib/periods";
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
+import { TransferBand } from "@/components/hub/transfer-band";
 import { ChangelogSection } from "@/components/hub/changelog-section";
 import type { Profile } from "@/lib/types";
 
@@ -61,17 +56,6 @@ const PETITION_COLUMNS: Column<PetitionStats>[] = [
   { label: "Soluționate", short: "Soluț.", get: (s) => s.solved },
   { ...DUE_SOON, get: (s) => s.dueSoon, tone: "warning" },
   { label: "Restante", get: (s) => s.overdue, tone: "danger" },
-];
-
-/**
- * Fără `tone`: la sarcini și petiții roșul înseamnă „ai o problemă”, iar la
- * transferuri plecările sunt doar o direcție, nu o alarmă. Pe pagina modulului
- * direcția se vede din săgeți, canal pe care cardul nu-l are.
- */
-const TRANSFER_COLUMNS: Column<TransferTotals>[] = [
-  { label: "Plecați", get: (s) => s.plecati },
-  { label: "Sosiți", get: (s) => s.sositi },
-  { label: "Sold", title: "Sosiți minus plecați", get: (s) => s.sold },
 ];
 
 function toStats<S>(columns: Column<S>[], mine: S, all: S | null): ModuleCardStat[] {
@@ -136,13 +120,8 @@ export default async function HubPage() {
   const trs = aggregate(thisMonth);
 
   // Penitenciarul e pentru transferuri ce e responsabilul pentru sarcini: a doua
-  // dimensiune firească a cifrelor. Fără ea cardul n-ar avea ce pune sub
-  // totaluri, fiindcă modulul n-are responsabil.
-  const transferBreakdown = byInstitution(thisMonth).map((r) => ({
-    id: String(r.institution),
-    name: institutionLabel(r.institution),
-    values: [r.plecati, r.sositi],
-  }));
+  // dimensiune firească a cifrelor. Fără ea banda ar arăta doar trei numere.
+  const transferInstitutions = byInstitution(thisMonth);
 
   // Defalcarea (doar admin) primește toate elementele, nu doar cele active:
   // altfel coloanele „Total” și „Finalizate” n-ar avea ce număra.
@@ -161,11 +140,10 @@ export default async function HubPage() {
         <h1 className="mb-6 text-2xl font-semibold">
           {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
         </h1>
-        {/* `items-start`: fiecare card ține cât are de spus. Întinse la
-            înălțimea rândului, cele scurte capătă o baltă albă înăuntru, care
-            se citește ca lipsă, nu ca sfârșit. Un card mai scund decât vecinul
-            arată normal; unul gol pe dinăuntru, nu. */}
-        <div className="grid items-start gap-4 md:grid-cols-2">
+        {/* Două carduri sus, egale. Al treilea modul ia rândul întreg dedesubt:
+            trei nu se împart la două coloane, iar transferurile n-au defalcare
+            pe persoane, deci într-o jumătate ar rămâne pe jumătate goale. */}
+        <div className="grid gap-4 md:grid-cols-2">
           <ModuleCard
             href="/sarcini"
             title="Sarcini"
@@ -188,26 +166,13 @@ export default async function HubPage() {
             stats={toStats(PETITION_COLUMNS, ps, psAll)}
             breakdown={petitionBreakdown}
           />
-          {/* O lună fără niciun rând dă 0 / 0 / 0. Cele trei cifre se citesc
-              împreună, deci spun „nimic luna asta”; pe pagina modulului soldul
-              stă singur sub o perioadă aleasă de om, de aceea acolo e „—”. */}
-          <ModuleCard
-            href="/transferuri"
-            title="Transferuri"
-            description="Transferurile deținuților între penitenciare, în luna curentă."
-            stats={toStats(TRANSFER_COLUMNS, trs, null)}
-            /* Într-o lună fără niciun rând, cele trei zerouri nu spun dacă n-a
-               fost mișcare sau dacă n-a apucat nimeni să scrie. Nota o spune. */
-            footnote={
-              (thisMonth.length === 0 ? "Niciun transfer înregistrat luna aceasta. " : "") +
-              `Următorul transfer programat: ${formatDateRo(nextScheduled(new Date()))}`
-            }
-            breakdown={transferBreakdown}
-            breakdownHeader="Penitenciar"
-            breakdownAvatars={false}
-          />
-          <ChangelogSection />
         </div>
+        <TransferBand
+          totals={trs}
+          institutions={transferInstitutions}
+          nextTransfer={formatDateRo(nextScheduled(new Date()))}
+        />
+        <ChangelogSection />
       </main>
     </>
   );
