@@ -87,47 +87,56 @@ export function ModuleCard({
       </div>
       {breakdown && breakdown.length > 0 && (
         <div className="mt-5 border-t pt-3">
-          {/* Antetul apare o singură dată: rândurile se citesc după poziția
-              coloanei, care e aceeași cu ordinea cifrelor de deasupra. */}
-          <div className="flex items-center gap-2 pb-1.5 text-[10px] text-muted-foreground">
-            <span className="min-w-0 flex-1" />
+          {/*
+            O singură grilă pentru antet și rânduri, ca celulele să se alinieze
+            pe coloane. Coloanele de cifre sunt „auto": fiecare se strânge după
+            propria etichetă, în loc să ia toate lățimea celei mai late — așa
+            rămâne loc pentru numele întreg. Rândurile folosesc `contents`,
+            deci celulele lor intră direct în grilă.
+          */}
+          <div
+            className="grid items-center gap-x-3"
+            style={{ gridTemplateColumns: `minmax(0,1fr) repeat(${stats.length}, auto)` }}
+          >
+            <span />
             {stats.map((s) => (
-              <span key={s.label} className="w-[52px] shrink-0 text-right">
+              <span
+                key={s.label}
+                className="pb-1.5 text-right text-[10px] text-muted-foreground"
+              >
                 {s.short ?? s.label}
               </span>
             ))}
+
+            {breakdown.map((row) => (
+              <div key={row.id ?? "none"} className="contents">
+                <span className="flex min-w-0 items-center gap-1.5 py-1 text-xs">
+                  <Avatar className="h-5 w-5 shrink-0">
+                    <AvatarFallback className={cn("text-[9px]", avatarColor(row.id ?? "none"))}>
+                      {initialsOf(row.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate" title={row.name}>
+                    {row.name}
+                  </span>
+                </span>
+                {row.values.map((value, i) => (
+                  <span
+                    key={stats[i]?.label ?? i}
+                    className={cn(
+                      "py-1 text-right text-xs tabular-nums",
+                      // Zerourile se estompează: privirea merge la ce chiar există.
+                      value === 0 && "text-muted-foreground/40",
+                      value > 0 && stats[i]?.tone === "warning" && "text-amber-600",
+                      value > 0 && stats[i]?.tone === "danger" && "text-red-600",
+                    )}
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
+            ))}
           </div>
-          {breakdown.map((row) => (
-            <div
-              key={row.id ?? "none"}
-              className="flex items-center gap-2 py-1 text-xs tabular-nums"
-            >
-              <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                <Avatar className="h-5 w-5">
-                  <AvatarFallback className={cn("text-[9px]", avatarColor(row.id ?? "none"))}>
-                    {initialsOf(row.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate" title={row.name}>
-                  {row.name}
-                </span>
-              </span>
-              {row.values.map((value, i) => (
-                <span
-                  key={stats[i]?.label ?? i}
-                  className={cn(
-                    "w-[52px] shrink-0 text-right",
-                    // Zerourile se estompează: privirea merge la ce chiar există.
-                    value === 0 && "text-muted-foreground/40",
-                    value > 0 && stats[i]?.tone === "warning" && "text-amber-600",
-                    value > 0 && stats[i]?.tone === "danger" && "text-red-600",
-                  )}
-                >
-                  {value}
-                </span>
-              ))}
-            </div>
-          ))}
         </div>
       )}
     </Link>
