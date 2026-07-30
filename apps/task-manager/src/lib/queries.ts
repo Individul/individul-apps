@@ -10,6 +10,7 @@ import type {
   Petition,
   StatReport,
   StatValue,
+  Transfer,
 } from "./types";
 import type { Hearing } from "./hearings";
 
@@ -241,4 +242,21 @@ export async function getHearing(date: string): Promise<Hearing | null> {
     .maybeSingle();
   if (error) return null;
   return (data ?? null) as Hearing | null;
+}
+
+/**
+ * Registrul întreg, zilele noi întâi, iar în aceeași zi penitenciarele în ordine
+ * crescătoare — ordinea în care le caută cineva care citește ziua.
+ *
+ * Eroarea nu se citește: dacă migrarea 0020 nu e încă aplicată, `data` e null și
+ * pagina se deschide goală în loc să crape.
+ */
+export async function getTransfers(): Promise<Transfer[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("transfers")
+    .select("*")
+    .order("transfer_date", { ascending: false })
+    .order("institution", { ascending: true });
+  return (data ?? []) as unknown as Transfer[];
 }

@@ -140,3 +140,23 @@ export interface StatValue {
   value: number | null;
   position: number;
 }
+/**
+ * O mișcare de efectiv: o zi + un penitenciar partener + planificat/urgent, cu
+ * plecările și sosirile în același rând. Cifre, nu persoane.
+ */
+export interface Transfer {
+  id: string;
+  transfer_date: string;
+  /** Numărul penitenciarului partener; eticheta se compune cu `institutionLabel`. */
+  institution: number;
+  kind: "planificat" | "urgent";
+  plecati: number;
+  sositi: number;
+  /** Coloană generată în Postgres (`plecati + sositi`) — nu se scrie niciodată. */
+  total: number;
+  note: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
