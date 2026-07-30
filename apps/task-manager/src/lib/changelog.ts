@@ -18,7 +18,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: "2026-07-29",
-    text: "Scanarea petiției se deschide dintr-un click pe agrafă, direct din registru.",
+    text: "Petiția se deschide dintr-un click pe agrafă, direct din registru.",
   },
   {
     date: "2026-07-29",
@@ -34,11 +34,11 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: "2026-07-29",
-    text: "Scanarea se atașează imediat după înregistrarea petiției, fără a o redeschide.",
+    text: "Fișierul petiției se atașează imediat după înregistrare, fără a o redeschide.",
   },
   {
     date: "2026-07-29",
-    text: "Registrul a fost completat cu petițiile din evidența veche, cu tot cu scanările lor.",
+    text: "Registrul a fost completat cu petițiile din evidența veche, cu tot cu fișierele lor.",
   },
   {
     date: "2026-07-29",
@@ -46,7 +46,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: "2026-07-28",
-    text: "Petițiile acceptă scanări atașate — PDF, JPG sau PNG, până la 10 MB.",
+    text: "La petiții se pot atașa fișiere — PDF, JPG sau PNG, până la 10 MB.",
   },
   {
     date: "2026-07-28",
