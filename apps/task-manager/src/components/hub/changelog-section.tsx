@@ -25,19 +25,24 @@ export function ChangelogSection() {
   if (shown.length === 0) return null;
 
   return (
-    <section className="mt-8 border-t pt-4">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-[13px] font-medium">Noutăți</h2>
+    // Aceeași formă ca a cardurilor de modul: stă alături de ele în grilă, nu
+    // dedesubt, deci ar arăta străin cu alt chenar și alt titlu.
+    <section className="rounded-xl border bg-card p-6">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-xl font-medium">Noutăți</h2>
         {CHANGELOG.length > shown.length && (
           <Link
             href="/noutati"
-            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             Vezi toate
           </Link>
         )}
       </div>
-      <ul className="space-y-1.5">
+      <p className="mt-1 text-sm text-muted-foreground">
+        Ce s-a schimbat în aplicație în ultima vreme.
+      </p>
+      <ul className="mt-5 space-y-1.5">
         {shown.map((entry) => (
           <li key={`${entry.date}-${entry.text}`} className="flex items-baseline gap-3">
             <span className="w-14 shrink-0 tabular-nums text-xs text-muted-foreground">

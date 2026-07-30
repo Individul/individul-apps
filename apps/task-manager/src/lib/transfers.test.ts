@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   INSTITUTIONS,
+  byInstitution,
   institutionLabel,
   scheduledDays,
   isScheduled,
@@ -113,5 +114,48 @@ describe("agregarea", () => {
 
   it("fără rânduri dă zerouri, nu NaN", () => {
     expect(aggregate([])).toEqual({ plecati: 0, sositi: 0, total: 0, sold: 0 });
+  });
+});
+
+describe("defalcarea pe penitenciar", () => {
+  it("adună rândurile aceleiași instituții, oricâte ar fi", () => {
+    // Aceeași instituție poate apărea de două ori într-o lună: o dată la
+    // transferul programat, o dată la unul urgent.
+    expect(
+      byInstitution([
+        { institution: 3, plecati: 5, sositi: 2 },
+        { institution: 3, plecati: 1, sositi: 0 },
+      ]),
+    ).toEqual([{ institution: 3, plecati: 6, sositi: 2 }]);
+  });
+
+  it("lasă afară instituțiile fără nicio mișcare", () => {
+    expect(
+      byInstitution([
+        { institution: 3, plecati: 5, sositi: 0 },
+        { institution: 11, plecati: 0, sositi: 0 },
+      ]),
+    ).toEqual([{ institution: 3, plecati: 5, sositi: 0 }]);
+  });
+
+  it("pune în față instituțiile cu cea mai multă mișcare", () => {
+    const out = byInstitution([
+      { institution: 3, plecati: 1, sositi: 0 },
+      { institution: 11, plecati: 4, sositi: 3 },
+      { institution: 5, plecati: 0, sositi: 2 },
+    ]);
+    expect(out.map((r) => r.institution)).toEqual([11, 5, 3]);
+  });
+
+  it("la mișcare egală merge după numărul instituției", () => {
+    const out = byInstitution([
+      { institution: 11, plecati: 2, sositi: 0 },
+      { institution: 3, plecati: 0, sositi: 2 },
+    ]);
+    expect(out.map((r) => r.institution)).toEqual([3, 11]);
+  });
+
+  it("fără rânduri dă listă goală", () => {
+    expect(byInstitution([])).toEqual([]);
   });
 });

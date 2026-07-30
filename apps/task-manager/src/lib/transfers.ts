@@ -89,3 +89,35 @@ export function aggregate(rows: TransferCounts[]): TransferTotals {
   const sositi = rows.reduce((a, r) => a + (r.sositi || 0), 0);
   return { plecati, sositi, total: plecati + sositi, sold: sositi - plecati };
 }
+
+export interface InstitutionCounts extends TransferCounts {
+  institution: number;
+}
+
+/**
+ * Cât s-a mișcat cu fiecare penitenciar, în ordinea în care merită privite.
+ *
+ * Instituțiile fără nicio mișcare lipsesc din listă: într-o lună obișnuită ai
+ * schimb cu trei-patru din cele șaisprezece, iar restul ar fi un șir de zerouri
+ * care îneacă cifrele care contează.
+ *
+ * Ordinea e după mișcarea totală, descrescător; la egalitate după numărul
+ * instituției, ca lista să nu-și schimbe ordinea de la o încărcare la alta.
+ *
+ * Aceeași instituție poate veni pe mai multe rânduri într-o lună — o dată la
+ * transferul programat, o dată la unul urgent — deci se adună, nu se suprascriu.
+ */
+export function byInstitution(rows: InstitutionCounts[]): InstitutionCounts[] {
+  const sums = new Map<number, InstitutionCounts>();
+  for (const r of rows) {
+    const acc = sums.get(r.institution) ?? { institution: r.institution, plecati: 0, sositi: 0 };
+    acc.plecati += r.plecati || 0;
+    acc.sositi += r.sositi || 0;
+    sums.set(r.institution, acc);
+  }
+  return [...sums.values()]
+    .filter((r) => r.plecati > 0 || r.sositi > 0)
+    .sort(
+      (a, b) => b.plecati + b.sositi - (a.plecati + a.sositi) || a.institution - b.institution,
+    );
+}

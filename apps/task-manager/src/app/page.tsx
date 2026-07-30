@@ -14,8 +14,14 @@ import {
   type TaskStats,
   type PetitionStats,
 } from "@/lib/hub-stats";
-import { aggregate, type TransferTotals } from "@/lib/transfers";
-import { rangeForPeriod, toISODate } from "@/lib/periods";
+import {
+  aggregate,
+  byInstitution,
+  institutionLabel,
+  nextScheduled,
+  type TransferTotals,
+} from "@/lib/transfers";
+import { formatDateRo, rangeForPeriod, toISODate } from "@/lib/periods";
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { ChangelogSection } from "@/components/hub/changelog-section";
@@ -126,9 +132,17 @@ export default async function HubPage() {
   const month = rangeForPeriod("luna");
   const from = toISODate(month.from);
   const to = toISODate(month.to);
-  const trs = aggregate(
-    transfers.filter((t) => t.transfer_date >= from && t.transfer_date <= to),
-  );
+  const thisMonth = transfers.filter((t) => t.transfer_date >= from && t.transfer_date <= to);
+  const trs = aggregate(thisMonth);
+
+  // Penitenciarul e pentru transferuri ce e responsabilul pentru sarcini: a doua
+  // dimensiune firească a cifrelor. Fără ea cardul n-ar avea ce pune sub
+  // totaluri, fiindcă modulul n-are responsabil.
+  const transferBreakdown = byInstitution(thisMonth).map((r) => ({
+    id: String(r.institution),
+    name: institutionLabel(r.institution),
+    values: [r.plecati, r.sositi],
+  }));
 
   // Defalcarea (doar admin) primește toate elementele, nu doar cele active:
   // altfel coloanele „Total” și „Finalizate” n-ar avea ce număra.
@@ -178,9 +192,13 @@ export default async function HubPage() {
             title="Transferuri"
             description="Transferurile deținuților între penitenciare, în luna curentă."
             stats={toStats(TRANSFER_COLUMNS, trs, null)}
+            footnote={`Următorul transfer programat: ${formatDateRo(nextScheduled(new Date()))}`}
+            breakdown={transferBreakdown}
+            breakdownHeader="Penitenciar"
+            breakdownAvatars={false}
           />
+          <ChangelogSection />
         </div>
-        <ChangelogSection />
       </main>
     </>
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
@@ -39,14 +40,26 @@ export function ModuleCard({
   title,
   description,
   stats,
+  footnote,
   breakdown,
+  breakdownHeader,
+  breakdownAvatars = true,
 }: {
   href: string;
   title: string;
   description: string;
   stats: ModuleCardStat[];
-  /** Defalcare pe responsabil (doar pentru admin). Lipsă → cardul arată doar cifrele. */
+  /** Un rând discret sub cifre, cu ceva propriu modulului („Următorul transfer: …”). */
+  footnote?: string;
+  /** Defalcarea cardului. Lipsă → cardul arată doar cifrele. */
   breakdown?: ModuleCardBreakdownRow[];
+  /** Antetul coloanei de nume. Lipsă → coloana rămâne fără antet, ca la persoane. */
+  breakdownHeader?: string;
+  /**
+   * Rândurile sunt persoane, deci primesc avatar cu inițiale. Transferurile se
+   * defalcă pe penitenciare, iar acolo inițialele n-ar însemna nimic.
+   */
+  breakdownAvatars?: boolean;
 }) {
   return (
     <Link
@@ -85,8 +98,14 @@ export function ModuleCard({
           </div>
         ))}
       </div>
-      {breakdown && breakdown.length > 0 && (
-        <div className="mt-5 border-t pt-3">
+      {(footnote || (breakdown && breakdown.length > 0)) && (
+        <div className="mt-5 space-y-3 border-t pt-3">
+          {footnote && (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+              {footnote}
+            </p>
+          )}
           {/*
             O singură grilă pentru antet și rânduri, ca celulele să se alinieze
             pe coloane. Coloanele de cifre sunt „auto": fiecare se strânge după
@@ -94,11 +113,12 @@ export function ModuleCard({
             rămâne loc pentru numele întreg. Rândurile folosesc `contents`,
             deci celulele lor intră direct în grilă.
           */}
+          {breakdown && breakdown.length > 0 && (
           <div
             className="grid items-center gap-x-3"
             style={{ gridTemplateColumns: `minmax(0,1fr) repeat(${stats.length}, auto)` }}
           >
-            <span />
+            <span className="pb-1.5 text-[10px] text-muted-foreground">{breakdownHeader}</span>
             {stats.map((s) => (
               <span
                 key={s.label}
@@ -111,11 +131,13 @@ export function ModuleCard({
             {breakdown.map((row) => (
               <div key={row.id ?? "none"} className="contents">
                 <span className="flex min-w-0 items-center gap-1.5 py-1 text-xs">
-                  <Avatar className="h-5 w-5 shrink-0">
-                    <AvatarFallback className={cn("text-[9px]", avatarColor(row.id ?? "none"))}>
-                      {initialsOf(row.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  {breakdownAvatars && (
+                    <Avatar className="h-5 w-5 shrink-0">
+                      <AvatarFallback className={cn("text-[9px]", avatarColor(row.id ?? "none"))}>
+                        {initialsOf(row.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   <span className="truncate" title={row.name}>
                     {row.name}
                   </span>
@@ -137,6 +159,7 @@ export function ModuleCard({
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
     </Link>
