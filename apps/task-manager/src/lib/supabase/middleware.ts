@@ -29,7 +29,20 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isPublic = pathname.startsWith("/login") || pathname.startsWith("/auth");
+  /**
+   * `/api/backup` e chemată de Vercel Cron, care trimite secretul într-un antet
+   * și **niciun cookie**. Fără excepția asta, cererea e redirecționată la
+   * `/login` înainte să ajungă la rută, iar copia de siguranță nu rulează
+   * niciodată — tăcut, fiindcă un 307 nu e o eroare pentru nimeni.
+   *
+   * Ruta se apără singură, comparând `CRON_SECRET`, și refuză să pornească dacă
+   * secretul nu e configurat. Excepția e scrisă pe cale exactă, nu pe `/api`:
+   * altfel orice rută API adăugată mai târziu ar deveni publică din neatenție.
+   */
+  const isPublic =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth") ||
+    pathname === "/api/backup";
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
