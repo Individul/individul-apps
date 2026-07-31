@@ -64,7 +64,15 @@ const FILE_BUDGET_MS = 40_000;
 /** Marcajul pe care Storage îl pune într-un folder gol; nu e un fișier real. */
 const EMPTY_FOLDER = ".emptyFolderPlaceholder";
 
-/** Mesajele lungi ar umfla dumpul de mâine, care conține și `backup_runs`. */
+/**
+ * Un mesaj de eroare netăiat poate fi un răspuns HTTP întreg. Rândul din
+ * evidență trebuie să spună ce s-a stricat, nu să reproducă tot ce a răspuns
+ * serverul — altfel pagina de administrare devine ilizibilă exact în ziua în
+ * care ai nevoie de ea.
+ *
+ * `backup_runs` nu intră în dump: e evidența copierii, nu date ale instituției.
+ * Dacă restaurezi din backup, istoricul rulărilor n-are ce să-ți spună.
+ */
 const MAX_ERROR_CHARS = 2000;
 
 interface Manifest {
