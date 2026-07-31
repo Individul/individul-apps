@@ -38,3 +38,34 @@ describe("cele două reguli nu se suprapun", () => {
     }
   });
 });
+
+describe("șablonul pentru dispoziție de executare", () => {
+  it("are aceiași pași ca solicitarea de hotărâri, cu alt act la final", () => {
+    const disp = templateStepsForTags(["Dispozitie de executare"]);
+    const hot = templateStepsForTags(["Solicitare hotărîri"]);
+    expect(disp.slice(0, 2)).toEqual(hot.slice(0, 2));
+    expect(disp[2]).toBe("Dispoziție de executare primită");
+  });
+
+  it("se potrivește și scris cu diacritice", () => {
+    // Eticheta din bază e „Dispozitie", fără ș — potrivirea nu depinde de asta.
+    expect(templateStepsForTags(["Dispoziție de executare"])).toHaveLength(3);
+  });
+
+  it("pasul final închide sarcina, expedierea o trece în așteptare", () => {
+    const steps = templateStepsForTags(["Dispozitie de executare"]);
+    expect(isDispatchStep(steps[1])).toBe(true);
+    expect(isResponseStep(steps[2])).toBe(true);
+    expect(isResponseStep(steps[1])).toBe(false);
+  });
+
+  it("cu ambele etichete, pașii comuni nu se dublează", () => {
+    const steps = templateStepsForTags(["Solicitare hotărîri", "Dispozitie de executare"]);
+    expect(steps).toEqual([
+      "Solicitare întocmită",
+      "Solicitare expediată",
+      "Hotărâre primită",
+      "Dispoziție de executare primită",
+    ]);
+  });
+});
