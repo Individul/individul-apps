@@ -40,6 +40,11 @@ interface TransferDialogProps {
   transfer: Transfer | null;
   /** Ziua curentă (AAAA-LL-ZZ), calculată pe server. */
   today: string;
+  /**
+   * Ziua propusă la rând nou: cel mai vechi gol rămas, altfel următorul
+   * transfer. Ziua curentă aproape niciodată nu e zi de transfer.
+   */
+  proposedDate: string;
   isAdmin: boolean;
 }
 
@@ -57,12 +62,13 @@ export function TransferDialog({
   onOpenChange,
   transfer,
   today,
+  proposedDate,
   isAdmin,
 }: TransferDialogProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(proposedDate);
   const [institution, setInstitution] = useState("");
   const [kind, setKind] = useState<Kind>("planificat");
   // Tipul ales de om nu se mai rescrie singur la schimbarea zilei.
@@ -86,15 +92,17 @@ export function TransferDialog({
       setSositi(String(transfer.sositi));
       setNote(transfer.note ?? "");
     } else {
-      setDate(today);
+      setDate(proposedDate);
       setInstitution("");
-      setKind(kindForDate(today));
+      // Tipul urmează ziua propusă, nu ziua curentă: pe o zi programată
+      // propunerea corectă e „planificat".
+      setKind(kindForDate(proposedDate));
       setKindChosen(false);
       setPlecati("0");
       setSositi("0");
       setNote("");
     }
-  }, [open, transfer, today]);
+  }, [open, transfer, today, proposedDate]);
 
   const onDateChange = (value: string) => {
     setDate(value);

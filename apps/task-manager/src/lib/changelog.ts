@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-31",
+    text: "La transferuri, „Adaugă transfer” se deschide pe ziua programată rămasă necompletată, nu pe ziua curentă.",
+  },
+  {
+    date: "2026-07-31",
     text: "Modul nou, încă în testare: transferuri — deținuții transferați între penitenciare, în zilele programate din lună.",
   },
   {

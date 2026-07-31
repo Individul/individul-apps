@@ -13,6 +13,7 @@ import {
   toISODate,
   type Period,
 } from "@/lib/periods";
+import { defaultTransferDate, missingScheduled } from "@/lib/transfers";
 import { cn } from "@/lib/utils";
 import type { Transfer } from "@/lib/types";
 
@@ -37,6 +38,9 @@ export function TransfersWorkspace({ transfers, today, isAdmin }: TransfersWorks
   const from = toISODate(range.from);
   const to = toISODate(range.to);
   const rows = transfers.filter((t) => t.transfer_date >= from && t.transfer_date <= to);
+  // Propunerea de zi vine din aceleași goluri pe care le arată avertizarea de
+  // sub perioade, deci ziua deschisă e mereu una despre care tocmai ai citit.
+  const proposedDate = defaultTransferDate(missingScheduled(range, rows, reference), reference);
 
   return (
     <div className="space-y-4">
@@ -86,6 +90,7 @@ export function TransfersWorkspace({ transfers, today, isAdmin }: TransfersWorks
         onOpenChange={setOpen}
         transfer={editing}
         today={today}
+        proposedDate={proposedDate}
         isAdmin={isAdmin}
       />
     </div>
