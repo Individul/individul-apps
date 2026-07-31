@@ -21,6 +21,7 @@ const ENTITY_PRESENT: Record<AuditEntry["entity"], true> = {
   hearings: true,
   profiles: true,
   transfers: true,
+  transfer_plans: true,
 };
 const ALL_ENTITIES = Object.keys(ENTITY_PRESENT) as AuditEntry["entity"][];
 
@@ -47,7 +48,7 @@ describe("AUDIT_MODULES", () => {
   });
 
   it("„Transferuri” cere doar entitatea transfers", () => {
-    expect(entitiesFor("transferuri")).toEqual(["transfers"]);
+    expect(entitiesFor("transferuri")).toEqual(["transfers", "transfer_plans"]);
   });
 });
 
