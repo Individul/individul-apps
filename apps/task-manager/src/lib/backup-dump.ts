@@ -26,7 +26,12 @@ export interface BackupTable {
 }
 
 /**
- * Cele 15 tabele și coloanele după care se ordonează.
+ * Tabelele din copie și coloanele după care se ordonează.
+ *
+ * Lista trebuie să le cuprindă pe **toate** cele create în `supabase/migrations`,
+ * afară de `backup_runs` (evidența copierii, nu date ale instituției). Nu e o
+ * rugăminte: testul citește migrările și compară, deci un tabel nou uitat aici
+ * pică la `npm test`, nu peste un an, când s-ar căuta în copie.
  *
  * **Ordinea tabelelor** urmează cheile străine: părintele înaintea copilului
  * (`profiles` înaintea lui `tasks`, `petitions` înaintea atașamentelor). Dumpul

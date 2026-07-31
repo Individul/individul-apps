@@ -1,5 +1,52 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 import { BACKUP_TABLES, DUMP_VERSION } from "./backup-dump";
+
+const MIGRATIONS = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "supabase",
+  "migrations",
+);
+
+/**
+ * `create table [if not exists] [schema.]nume`.
+ *
+ * Schema se prinde într-un grup separat ca să poată fi sărită: un tabel scris
+ * vreodată în alt schema (Storage și auth le au pe ale lor) nu e dată a
+ * aplicației și n-are ce căuta în copie.
+ */
+const CREATE_TABLE =
+  /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:([a-z_][a-z0-9_]*)\.)?([a-z_][a-z0-9_]*)/gi;
+
+/**
+ * Singurul tabel din migrări care **nu** intră în dump: `backup_runs` e
+ * evidența copierii, nu date ale instituției — la o restaurare, istoricul
+ * rulărilor n-are ce să-ți spună.
+ *
+ * Scris aici anume, nu lăsat să lipsească pe tăcute: o excepție nescrisă nu se
+ * deosebește de un tabel uitat, adică exact bugul pe care testul îl păzește.
+ */
+const IN_AFARA_COPIEI = ["backup_runs"];
+
+/** Tabelele declarate în migrări, sursa adevărului despre ce există în bază. */
+function tabeleDinMigrari(): string[] {
+  const nume = new Set<string>();
+
+  for (const fisier of readdirSync(MIGRATIONS).filter((f) => f.endsWith(".sql"))) {
+    const sql = readFileSync(join(MIGRATIONS, fisier), "utf8");
+    for (const [, schema, tabel] of sql.matchAll(CREATE_TABLE)) {
+      if (schema && schema.toLowerCase() !== "public") continue;
+      nume.add(tabel.toLowerCase());
+    }
+  }
+
+  return [...nume];
+}
 
 /**
  * Lista tabelelor e singurul loc din care se citește ce intră în copie. Bugul
@@ -10,9 +57,37 @@ import { BACKUP_TABLES, DUMP_VERSION } from "./backup-dump";
 describe("lista tabelelor din copie", () => {
   const names = BACKUP_TABLES.map((t) => t.name);
 
-  it("le are pe toate cincisprezece, fără repetiții", () => {
-    expect(names).toHaveLength(15);
-    expect(new Set(names).size).toBe(15);
+  it("nu repetă niciun tabel", () => {
+    expect(new Set(names).size).toBe(names.length);
+  });
+
+  it("le are pe toate cele din migrări, fără nicio excepție netrecută în scris", () => {
+    // Lista așteptată se citește din migrări, nu se scrie aici. Un număr scris
+    // de mână — „să fie cincisprezece" — nu păzește nimic: cine adaugă al
+    // șaisprezecelea tabel și uită `BACKUP_TABLES` uită și numărul, testele
+    // rămân verzi, iar dumpul raportează liniștit „ok" peste un modul întreg
+    // lipsă. Migrările sunt singurul loc care nu poate rămâne în urmă față de
+    // baza de date: dacă tabelul există, el a trecut pe acolo.
+    const dinMigrari = tabeleDinMigrari();
+
+    // Parserul se verifică pe ceva ce știm sigur că e acolo. Fără asta, o cale
+    // greșită sau un regex stricat ar face testul să compare două liste goale
+    // și să treacă — adică tocmai garda care lipsea.
+    expect(dinMigrari, "migrările nu s-au citit: parserul sau calea sunt stricate").toContain(
+      "backup_runs",
+    );
+
+    const asteptate = dinMigrari.filter((t) => !IN_AFARA_COPIEI.includes(t));
+    const lipsa = asteptate.filter((t) => !names.includes(t));
+    const inPlus = names.filter((t) => !asteptate.includes(t));
+
+    expect(lipsa, `tabele care există în bază dar nu intră în copie: ${lipsa.join(", ")}`).toEqual(
+      [],
+    );
+    expect(
+      inPlus,
+      `tabele din BACKUP_TABLES care nu există în nicio migrare: ${inPlus.join(", ")}`,
+    ).toEqual([]);
   });
 
   it("scrie formatul complet, nu pe cel vechi", () => {
