@@ -45,24 +45,36 @@ describe("ce lipsește față de manifest", () => {
   });
 });
 
+// Marcajele de timp sunt la prânz, nu la 02:00: un instant UTC aproape de
+// miezul nopții cade pe altă zi calendaristică locală în funcție de fusul
+// mașinii, iar testul ar trece aici și ar pica la altcineva. La prânz rămâne
+// aceeași zi pe tot intervalul în care rulează aplicația (UTC pe Vercel).
 describe("vechimea copiei", () => {
   const azi = new Date(2026, 6, 31);
 
   it("o reușită de ieri e în regulă", () => {
-    expect(isStale("2026-07-30T02:00:00Z", azi)).toBe(false);
+    expect(isStale("2026-07-30T12:00:00Z", azi)).toBe(false);
   });
 
   it("trei zile încă trec", () => {
-    expect(isStale("2026-07-28T02:00:00Z", azi)).toBe(false);
+    expect(isStale("2026-07-28T12:00:00Z", azi)).toBe(false);
   });
 
   it("a patra zi e prea mult", () => {
-    expect(isStale("2026-07-27T02:00:00Z", azi)).toBe(true);
+    expect(isStale("2026-07-27T12:00:00Z", azi)).toBe(true);
   });
 
   it("nicio reușită vreodată înseamnă învechit", () => {
     // Nu „în regulă până la proba contrarie": un backup care n-a rulat
     // niciodată e exact cazul în care trebuie să afli.
     expect(isStale(null, azi)).toBe(true);
+  });
+
+  it("un timestamp ilizibil e tot învechit", () => {
+    // „Nu se poate citi" și „n-a rulat niciodată" primesc același răspuns,
+    // fiindcă sunt aceeași situație: lipsește dovada că o copie a reușit.
+    // Fără gardă, data invalidă dă NaN, iar `NaN > maxDays` e false — deci o
+    // valoare stricată ar raporta „în regulă", exact minciuna de evitat.
+    expect(isStale("nu-i o dată", azi)).toBe(true);
   });
 });

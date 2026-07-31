@@ -36,8 +36,15 @@ export function missingFiles(inBucket: StoredFile[], saved: StoredFile[]): Store
  *
  * `null` — nicio reușită vreodată — înseamnă învechit, nu „în regulă până la
  * proba contrarie": exact atunci trebuie să afli.
+ *
+ * Un timestamp ilizibil primește același răspuns ca `null`, din același motiv:
+ * în ambele cazuri lipsește dovada că o copie a reușit. Fără garda de mai jos
+ * data invalidă ar da NaN, iar `NaN > maxDays` e false — adică tocmai
+ * liniștirea falsă pe care evidența rulărilor există s-o prevină.
  */
 export function isStale(lastSuccessISO: string | null, today: Date, maxDays = 3): boolean {
   if (!lastSuccessISO) return true;
-  return differenceInCalendarDays(today, new Date(lastSuccessISO)) > maxDays;
+  const t = new Date(lastSuccessISO);
+  if (Number.isNaN(t.getTime())) return true;
+  return differenceInCalendarDays(today, t) > maxDays;
 }
