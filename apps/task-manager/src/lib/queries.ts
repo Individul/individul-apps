@@ -14,6 +14,7 @@ import type {
 } from "./types";
 import type { Hearing } from "./hearings";
 import type { TransferPlan } from "./transfer-plans";
+import type { BackupRun } from "./backup";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -260,6 +261,53 @@ export async function getTransfers(): Promise<Transfer[]> {
     .order("transfer_date", { ascending: false })
     .order("institution", { ascending: true });
   return (data ?? []) as unknown as Transfer[];
+}
+
+/**
+ * Ultima rulare a copiei automate și ultima care a reușit.
+ *
+ * Două rânduri, nu unul, fiindcă sunt două întrebări diferite: când a reușit
+ * ultima copie și dacă ultima încercare a căzut. Se pot suprapune — când
+ * ultima rulare a și reușit, e același rând — dar de obicei nu, iar tocmai
+ * nepotrivirea lor spune ce se întâmplă.
+ *
+ * Nu se citesc ultimele N rânduri ca să se caute reușita între ele: dacă
+ * backupul e stricat de o lună, reușita e la treizeci de rânduri în urmă și
+ * n-ar fi în felie. Interogarea filtrată o găsește oricât de departe ar fi,
+ * pe indexul de `started_at`.
+ *
+ * Eroarea nu se aruncă: dacă migrarea 0022 nu e încă aplicată, tabela lipsește
+ * și pagina de administrare trebuie să se deschidă oricum. Rezultatul — două
+ * `null` — se citește ca „n-a rulat niciodată", ceea ce e și adevărat: fără
+ * tabelă, ruta n-are unde scrie o rulare.
+ */
+export async function getLastBackupRun(): Promise<{
+  last: BackupRun | null;
+  lastSuccess: BackupRun | null;
+}> {
+  const supabase = createClient();
+  const columns = "started_at, finished_at, ok, files_uploaded, files_pending, error";
+
+  const [last, lastSuccess] = await Promise.all([
+    supabase
+      .from("backup_runs")
+      .select(columns)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("backup_runs")
+      .select(columns)
+      .eq("ok", true)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    last: (last.data ?? null) as BackupRun | null,
+    lastSuccess: (lastSuccess.data ?? null) as BackupRun | null,
+  };
 }
 
 export async function getTransferPlans(): Promise<TransferPlan[]> {

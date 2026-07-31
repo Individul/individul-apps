@@ -8,8 +8,10 @@ import {
   getAuditLog,
   getNotifications,
   getUnreadCount,
+  getLastBackupRun,
 } from "@/lib/queries";
 import { AppHeader } from "@/components/layout/app-header";
+import { BackupStatus } from "@/components/admin/backup-status";
 import { UserRoleTable } from "@/components/admin/user-role-table";
 import { RestoreBackup } from "@/components/admin/restore-backup";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
@@ -28,12 +30,16 @@ export default async function AdminPage({
   const me = await getCurrentProfile();
   if (me?.role !== "admin") redirect("/");
   const auditModule = readAuditModule(searchParams.modul);
-  const [profiles, audit, notifications, unread] = await Promise.all([
+  const [profiles, audit, notifications, unread, backup] = await Promise.all([
     getProfiles(),
     getAuditLog(100, entitiesFor(auditModule)),
     getNotifications(),
     getUnreadCount(),
+    getLastBackupRun(),
   ]);
+  // Ceasul vine de la server, ca peste tot în aplicație: ora de pe calculatorul
+  // celui care citește n-are ce căuta într-o judecată despre vechimea copiei.
+  const now = new Date();
   return (
     <>
       <AppHeader profile={me} notifications={notifications} unread={unread} />
@@ -43,7 +49,16 @@ export default async function AdminPage({
           <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la sarcini
         </Button>
       </Link>
-      <h1 className="mb-6 text-2xl font-semibold">Administrare</h1>
+      <h1 className="mb-3 text-2xl font-semibold">Administrare</h1>
+
+      {/* Sub titlu, nu în secțiunea de backup de mai jos: dacă copia de noapte
+          s-a oprit, asta trebuie citit fără să fie căutat. */}
+      <BackupStatus
+        last={backup.last}
+        lastSuccess={backup.lastSuccess}
+        now={now}
+        className="mb-6"
+      />
 
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
         <div className="min-w-0 flex-1 space-y-10">
