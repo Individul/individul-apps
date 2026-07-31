@@ -332,8 +332,10 @@ GitHub**:
 - **baza de date**, toate cele 15 tabele, într-un fișier pe zi (`db/2026-07-31.json`).
   Fiindcă e versionat de git, se poate reveni la starea de acum trei luni, nu doar
   la ultimele șapte zile;
-- **fișierele din Storage** (bucketele `petitions` și `statistics`), sub
-  `files/<bucket>/…`, plus `manifest.json` — evidența celor deja salvate.
+- **fișierele din Storage**, sub `files/<bucket>/…`, plus `manifest.json` —
+  evidența celor deja salvate. Bucketele nu sunt scrise nicăieri în cod: ruta le
+  cere de la Storage, deci unul adăugat mai târziu intră în copie de la sine
+  (azi sunt `petitions` și `statistics`).
 
 **Fișierele se copiază o singură dată.** Un scan se încarcă și nu se mai schimbă
 niciodată, deci fiecare noapte urcă doar ce e nou față de manifest. Baza de date,

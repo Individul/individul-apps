@@ -33,8 +33,6 @@ export const maxDuration = 60;
 
 type Client = ReturnType<typeof createAdminClient>;
 
-const BUCKETS = ["petitions", "statistics"] as const;
-
 /** Câte fișiere noi se urcă într-o rulare. Restul așteaptă ziua următoare. */
 const FILES_PER_RUN = 15;
 
@@ -149,6 +147,34 @@ function checkSecret(request: Request): NextResponse | null {
 /* -------------------------------------------------------------------------- */
 /* Fișierele                                                                  */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Ce buckete există, întrebând Storage — nu o listă scrisă aici.
+ *
+ * O listă fixă în fișierul ăsta ar fi exact bugul pentru care există copia:
+ * butonul vechi salva cinci tabele din cincisprezece fiindcă lista lui n-a mai
+ * fost atinsă când au apărut module noi. Un bucket adăugat peste un an n-ar fi
+ * listat, `missingFiles` n-ar găsi nimic lipsă în el, iar rularea ar răspunde
+ * `ok: true, files_pending: 0` — o minciună liniștitoare, tocmai despre
+ * fișierele care n-au altă copie nicăieri.
+ *
+ * O listare căzută **oprește rularea**. Tentația e s-o tratezi ca pe „niciun
+ * bucket" și să mergi mai departe, dar „n-am putut întreba" citit ca „nu există
+ * nimic" e aceeași reușită tăcută peste zero fișiere.
+ *
+ * Ordonate: „primele `FILES_PER_RUN`" trebuie să însemne același lucru de la o
+ * zi la alta, iar ordinea în care API-ul întoarce bucketele nu e promisă (vezi
+ * și sortarea din `listBucket`, pentru același motiv).
+ */
+async function bucketNames(supabase: Client): Promise<string[]> {
+  const { data, error } = await supabase.storage.listBuckets();
+  if (error) {
+    throw new Error(`Listarea bucketelor din Storage a eșuat: ${error.message}`);
+  }
+  // `id`, nu `name`: identificatorul e ce primește `storage.from(...)`. La
+  // bucketele create din migrări sunt egale, dar egalitatea nu e garantată.
+  return (data ?? []).map((bucket) => bucket.id).sort();
+}
 
 /**
  * Tot ce e într-un bucket, coborând prin foldere.
@@ -336,7 +362,7 @@ async function runBackup(
   const saved = await readManifest();
 
   const inBuckets: StoredFile[] = [];
-  for (const bucket of BUCKETS) {
+  for (const bucket of await bucketNames(supabase)) {
     inBuckets.push(...(await listBucket(supabase, bucket)));
   }
 
@@ -380,8 +406,25 @@ async function runBackup(
   if (error) throw new Error(error);
 }
 
-async function closeRun(supabase: Client, runId: string, progress: Progress): Promise<void> {
-  await supabase
+/**
+ * Închide rândul rulării. Întoarce motivul dacă nici închiderea n-a mers.
+ *
+ * E ultima verigă și singura care nu se poate repara de aici: dacă scrierea
+ * asta cade, rândul rămâne deschis pe `ok = false`, iar panoul de pe `/admin`
+ * va arăta un eșec **fără motiv** pentru o copie care poate a reușit. Ratarea e
+ * în direcția bună — nu spune „acoperit" când nu ești — dar o alarmă fără
+ * pricină trimite omul să caute într-o rulare care n-are nimic, în loc să-i
+ * spună că evidența n-a putut fi scrisă.
+ *
+ * De aceea motivul se întoarce, nu se înghite: singurul loc rămas e răspunsul,
+ * pe care Vercel îl păstrează în jurnalul cronului.
+ */
+async function closeRun(
+  supabase: Client,
+  runId: string,
+  progress: Progress,
+): Promise<string | null> {
+  const { error } = await supabase
     .from("backup_runs")
     .update({
       finished_at: new Date().toISOString(),
@@ -393,6 +436,12 @@ async function closeRun(supabase: Client, runId: string, progress: Progress): Pr
       error: progress.error,
     })
     .eq("id", runId);
+
+  if (!error) return null;
+  return (
+    `Rândul rulării n-a putut fi închis: ${error.message}. Rămâne deschis în ` +
+    `„backup_runs", deci pagina de administrare îl va arăta ca eșec.`
+  );
 }
 
 export async function GET(request: Request) {
@@ -428,7 +477,17 @@ export async function GET(request: Request) {
     progress.error = clamp(reason(err));
   }
 
-  await closeRun(supabase, runId, progress);
+  const notClosed = await closeRun(supabase, runId, progress);
+  if (notClosed) {
+    // Rândul a rămas deschis, deci evidența spune „eșec". Răspunsul spune la
+    // fel — altfel jurnalul cronului ar arăta o reușită, pagina un eșec, și
+    // n-ar exista nicăieri motivul care le desparte.
+    //
+    // Fără `clamp`: pragul apără rândul din bază și pagina de administrare, iar
+    // aici tocmai scrierea în bază a căzut. Ce rămâne e jurnalul, unde tăierea
+    // ar șterge exact motivul adăugat acum.
+    progress.error = progress.error ? `${progress.error} ${notClosed}` : notClosed;
+  }
 
   // O restanță de fișiere e reușită, nu eșec: `files_pending` spune cât a mai
   // rămas, iar backfill-ul se întinde peste câteva zile prin construcție.
