@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   getCurrentProfile,
   getNotifications,
@@ -27,7 +29,14 @@ export default async function TransferuriPage() {
         <div>
           <h1 className="text-2xl font-semibold">Transferuri</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Transferurile deținuților între penitenciare: cifre pe zi și penitenciar, nu persoane.
+            Transferurile deținuților între penitenciare: cifre pe zi și penitenciar, nu persoane.{" "}
+            <Link
+              href="/transferuri/planificare"
+              className="text-foreground underline underline-offset-2"
+            >
+              Planificarea nominală
+            </Link>{" "}
+            se ține separat.
           </p>
         </div>
 

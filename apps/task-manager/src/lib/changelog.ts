@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-07-31",
+    text: "Planificarea transferurilor: persoanele cu ședințe se grupează singure pe ziua de transfer, iar la amânare însemnarea se mută automat.",
+  },
+  {
+    date: "2026-07-31",
     text: "La transferuri, „Adaugă transfer” se deschide pe ziua programată rămasă necompletată, nu pe ziua curentă.",
   },
   {

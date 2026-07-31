@@ -13,6 +13,7 @@ import type {
   Transfer,
 } from "./types";
 import type { Hearing } from "./hearings";
+import type { TransferPlan } from "./transfer-plans";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -259,4 +260,15 @@ export async function getTransfers(): Promise<Transfer[]> {
     .order("transfer_date", { ascending: false })
     .order("institution", { ascending: true });
   return (data ?? []) as unknown as Transfer[];
+}
+
+export async function getTransferPlans(): Promise<TransferPlan[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("transfer_plans")
+    .select("*")
+    .order("hearing_date", { ascending: true });
+  // Grațios dacă migrarea 0021 nu e încă aplicată.
+  if (error) return [];
+  return (data ?? []) as unknown as TransferPlan[];
 }

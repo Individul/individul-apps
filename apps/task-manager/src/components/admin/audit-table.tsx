@@ -2,6 +2,7 @@ import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 import {
   ArrowLeftRight,
+  UserRound,
   Gavel,
   ListChecks,
   Mail,
@@ -33,6 +34,7 @@ const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
   petition_attachments: Paperclip,
   hearings: Gavel,
   transfers: ArrowLeftRight,
+  transfer_plans: UserRound,
   profiles: Users,
 };
 
@@ -47,6 +49,7 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   petition_attachments: "un fișier al unei petiții",
   hearings: "evidența ședințelor",
   transfers: "evidența transferurilor",
+  transfer_plans: "planificarea transferului",
 };
 
 const PETITION_STATUS: Record<string, string> = {
@@ -110,6 +113,19 @@ function phrase(e: AuditEntry): string {
     if (e.action === "INSERT") return `a atașat ${nume}${la}`;
     if (e.action === "DELETE") return `a șters fișierul ${nume}${la}`;
     return `a modificat fișierul ${nume}${la}`;
+  }
+  if (e.entity === "transfer_plans") {
+    const d = e.details ?? {};
+    const cine = d.name ? String(d.name) : "o persoană";
+    if (e.action === "INSERT") return `a pus ${cine} pe lista de transfer`;
+    if (e.action === "DELETE") return `a scos ${cine} de pe lista de transfer`;
+    // Amânarea e motivul principal al modulului: mutarea datei trebuie scrisă.
+    if (d.hearing_from && d.hearing_to) {
+      return `a mutat ședința lui ${cine}: ${String(d.hearing_from)} → ${String(d.hearing_to)}`;
+    }
+    if (d.done_to === true) return `a încheiat transferul lui ${cine}`;
+    if (d.done_to === false) return `a redeschis transferul lui ${cine}`;
+    return `a modificat însemnarea lui ${cine}`;
   }
   if (e.entity === "hearings") {
     const d = e.details ?? {};

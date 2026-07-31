@@ -28,7 +28,7 @@ export const AUDIT_MODULES: {
   },
   { value: "petitii", label: "Petiții", entities: ["petitions", "petition_attachments"] },
   { value: "sedinte", label: "Ședințe", entities: ["hearings"] },
-  { value: "transferuri", label: "Transferuri", entities: ["transfers"] },
+  { value: "transferuri", label: "Transferuri", entities: ["transfers", "transfer_plans"] },
   { value: "utilizatori", label: "Utilizatori", entities: ["profiles"] },
 ];
 
