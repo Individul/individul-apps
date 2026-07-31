@@ -64,6 +64,17 @@ export function PlanList({
         </Button>
       </div>
 
+      {/* Antetul apare o singură dată, deasupra grupurilor: fără el, data din
+          rând se putea confunda cu ziua transferului scrisă în capul grupului. */}
+      {groups.length > 0 && (
+        <div className="flex items-center gap-3 px-3.5 text-[11px] font-medium text-muted-foreground">
+          <span className="min-w-0 flex-1">Persoana și instanța</span>
+          <span className="w-40 shrink-0">Penitenciarul</span>
+          <span className="w-28 shrink-0">Data ședinței</span>
+          <span className="w-24 shrink-0" aria-hidden />
+        </div>
+      )}
+
       {groups.map((group) => {
         const imposibil = group.day === null;
         return (
@@ -120,15 +131,17 @@ export function PlanList({
                   <span className="w-28 shrink-0 tabular-nums">
                     {format(parseISODate(p.hearing_date), "d MMM yyyy", { locale: ro })}
                   </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 shrink-0 px-2 text-xs"
-                    onClick={() => markDone(p)}
-                  >
-                    <Check className="mr-1 h-3.5 w-3.5" /> Încheiat
-                  </Button>
+                  <span className="flex w-24 shrink-0 justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => markDone(p)}
+                    >
+                      <Check className="mr-1 h-3.5 w-3.5" /> Încheiat
+                    </Button>
+                  </span>
                 </div>
               ))}
             </div>
