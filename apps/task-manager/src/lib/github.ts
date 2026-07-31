@@ -138,7 +138,10 @@ async function readJson(res: Response): Promise<unknown> {
   }
 }
 
-function textField(body: unknown, key: "sha" | "message"): string | null {
+function textField(
+  body: unknown,
+  key: "sha" | "message" | "content" | "encoding",
+): string | null {
   if (typeof body !== "object" || body === null) return null;
   const value = (body as Record<string, unknown>)[key];
   return typeof value === "string" ? value : null;
@@ -238,6 +241,63 @@ export async function getFileSha(path: string): Promise<string | null> {
   const config = loadConfig();
   if (typeof config === "string") throw new Error(config);
   return shaOf(config, path);
+}
+
+async function contentOf(config: Config, path: string): Promise<Buffer | null> {
+  const res = await fetch(contentsUrl(config, path), {
+    headers: apiHeaders(config.token),
+    // Ca la `shaOf`: un manifest luat din cache ar fi cel de ieri, iar rularea
+    // ar reurca fișierele de care ieri s-a ocupat deja.
+    cache: "no-store",
+  });
+
+  // Cazul obișnuit la prima rulare: manifestul încă nu există.
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(redact(await describe(res, "citirea", path), config.token));
+  }
+
+  const body = await readJson(res);
+  const content = textField(body, "content");
+  const encoding = textField(body, "encoding");
+
+  if (encoding !== "base64" || content === null) {
+    // Două cauze duc aici și amândouă trebuie spuse, fiindcă răspunsul arată la
+    // fel: calea e un director (API-ul întoarce o listă, fără câmpul `content`),
+    // sau fișierul trece de 1 MB — peste prag Contents API răspunde cu
+    // `encoding: "none"` și conținut gol. Ce nu se poate face aici e să
+    // presupunem „gol înseamnă gol": un manifest citit ca listă vidă ar porni
+    // backfill-ul de la zero și ar suprascrie evidența a tot ce e deja salvat.
+    throw new Error(
+      redact(
+        `Răspunsul GitHub pentru „${path}" n-are conținut inline. Ori calea arată ` +
+          `spre un director, ori fișierul trece de 1 MB, pragul peste care ` +
+          `Contents API nu mai trimite conținutul.`,
+        config.token,
+      ),
+    );
+  }
+
+  // GitHub rupe base64-ul în linii; `Buffer.from` ignoră spațiile albe.
+  return Buffer.from(content, "base64");
+}
+
+/**
+ * Conținutul unui fișier din repo, sau `null` dacă nu există.
+ *
+ * **Aruncă** la o defecțiune reală, din exact motivul de la `getFileSha`: un
+ * 401 sau o limită de cereri travestite în `null` ar spune „manifestul nu
+ * există", neadevărat. Rularea ar reurca atunci tot ce e deja salvat și ar
+ * scrie peste manifest evidența plecată de la zero — adică ar strica singura
+ * urmă a ce s-a copiat până acum, ca răspuns la o eroare trecătoare.
+ *
+ * Apelantul (ruta de cron) prinde aruncarea și o scrie în evidența rulărilor.
+ */
+export async function getFile(path: string): Promise<Buffer | null> {
+  const config = loadConfig();
+  if (typeof config === "string") throw new Error(config);
+  return contentOf(config, path);
 }
 
 /**
