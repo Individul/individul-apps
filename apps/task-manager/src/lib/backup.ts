@@ -182,9 +182,13 @@ const HINTS: Record<BackupStateKind, string> = {
   "in-curs":
     "O rulare e în curs chiar acum — reîncarcă pagina peste un minut ca să vezi cum " +
     "s-a încheiat.",
+  // Jurnalul unei rulări de cron se deschide din pagina cronului, nu căutându-l
+  // prin deploy-uri: butonul „View Logs" de lângă el duce direct la jurnalul
+  // filtrat pe rută. Un drum mai lung ar cere să ghicești întâi care deploy a
+  // rulat copia de azi-noapte.
   "nicio-reusita":
-    "Cronul pornește, dar rularea nu ajunge la capăt. Deschide jurnalul rulării în " +
-    "Vercel → Deployments → Functions → /api/backup.",
+    "Cronul pornește, dar rularea nu ajunge la capăt. Deschide jurnalul rulării din " +
+    "Vercel → Settings → Cron Jobs → View Logs (filtrat pe /api/backup).",
   // Fraza nu se sprijină pe data de dinaintea ei („de atunci n-a mai…"): când
   // rândul reușitei are un timestamp ilizibil, data lipsește din pagină și
   // referința ar rămâne în aer.
@@ -192,8 +196,8 @@ const HINTS: Record<BackupStateKind, string> = {
     "Nu mai pornește nicio rulare: nu rularea cade, ci programarea nu se declanșează. " +
     "Verifică Vercel → Settings → Cron Jobs.",
   esuat:
-    "Cronul pornește, dar rulările de după au eșuat. Deschide jurnalul rulării în " +
-    "Vercel → Deployments → Functions → /api/backup.",
+    "Cronul pornește, dar rulările de după au eșuat. Deschide jurnalul rulării din " +
+    "Vercel → Settings → Cron Jobs → View Logs (filtrat pe /api/backup).",
   "esuare-recenta":
     "Copia e încă recentă, deci nu e urgent — dar dacă eșecul se repetă câteva nopți " +
     "la rând nu mai ești acoperit. Verifică jurnalul rulării în Vercel.",

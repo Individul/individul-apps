@@ -304,6 +304,258 @@ endpointul ales nu interoghează nimic — se vede pe paginile reale.
 Dacă vreodată se mută proiectul Supabase în altă regiune, **mută și asta odată
 cu el**. Codul și baza de date trebuie să stea în același oraș.
 
+## Copie de siguranță
+
+O copie care se oprește în tăcere e mai rea decât lipsa uneia: te crezi acoperit
+tocmai când nu ești. De aceea fiecare rulare lasă urmă, iar starea copiei se vede
+pe `/admin`, sub titlu — fără s-o caute cineva.
+
+### Ce acoperă Supabase Pro și ce nu
+
+Planul Pro face o copie zilnică a **bazei de date**, păstrată **7 zile**. Atât.
+
+- **Fișierele nu sunt acoperite deloc.** Documentația Supabase o spune pe față:
+  copiile bazei „do not include objects you store via the Storage API" — baza știe
+  că există un scan și cum îl cheamă, dar conținutul lui nu e salvat nicăieri.
+  Scanurile petițiilor și fișierele `.xlsx` importate la statistici n-au avut,
+  până la copia asta, nicio copie.
+- **Fereastra e de 7 zile.** O ștergere observată a opta zi nu se mai poate repara:
+  copia cu datele bune a expirat. Recuperarea la un moment anume (PITR) e supliment
+  separat, de la ~100 $/lună — nu intră în Pro.
+
+### Ce face copia noastră
+
+În fiecare noapte, Vercel Cron cheamă `/api/backup`. Ruta citește cu cheia de
+serviciu — deci vede tot, indiferent de RLS — și scrie într-un **repo privat pe
+GitHub**:
+
+- **baza de date**, toate cele 15 tabele, într-un fișier pe zi (`db/2026-07-31.json`).
+  Fiindcă e versionat de git, se poate reveni la starea de acum trei luni, nu doar
+  la ultimele șapte zile;
+- **fișierele din Storage** (bucketele `petitions` și `statistics`), sub
+  `files/<bucket>/…`, plus `manifest.json` — evidența celor deja salvate.
+
+**Fișierele se copiază o singură dată.** Un scan se încarcă și nu se mai schimbă
+niciodată, deci fiecare noapte urcă doar ce e nou față de manifest. Baza de date,
+în schimb, se rescrie întreagă zilnic: rândurile se modifică, iar textul e ieftin.
+
+Într-o rulare se urcă cel mult **15 fișiere**, și după **40 de secunde** de la
+pornire nu se mai începe niciunul nou — o funcție Vercel are un minut cu totul, iar
+ultimele douăzeci de secunde sunt pentru manifest și închiderea rulării. De aceea
+**prima rulare nu aduce tot**: fișierele deja existente se recuperează pe parcursul
+câtorva nopți, iar „încă N fișiere de copiat", pe `/admin`, e normal atâta timp cât
+cifra scade de la o zi la alta. Restanța care **nu** scade e singurul semnal rău.
+
+**Ora e aproximativă.** Programarea e `0 2 * * *` — 2 noaptea, când nu lucrează
+nimeni. Pe planul Hobby, Vercel împrăștie cronurile în interiorul orei cerute, deci
+rularea poate porni oricând între 02:00 și 02:59 (pe Pro, în minutul cerut). O copie
+făcută la 02:47 nu e o defecțiune. Pragul de vechime e la 3 zile, cu mult peste
+abaterea asta, deci nu produce alarme false.
+
+**Ce nu se copiază, dinadins:** conturile de autentificare (email, parolă). Stau în
+`auth.users`, iar parolele n-au ce căuta copiate în altă parte. Sunt patru-cinci
+oameni; la o restaurare se creează din nou, de mână (vezi procedura de mai jos).
+
+**Copia de noapte e copia de bază**, nu fișierul luat cu „Descarcă backup (JSON)"
+de pe `/admin`. Amândouă trec prin același cod și ies în același format, dar butonul
+citește cu sesiunea adminului, deci prin RLS: politica de la `notifications` dă
+fiecăruia doar rândurile lui (`user_id = auth.uid()`), așa că fișierul descărcat
+manual conține notificările celui care l-a descărcat, nu ale echipei. Copia de
+noapte, făcută cu cheia de serviciu, le are pe toate.
+
+### Configurarea, pas cu pas
+
+1. **Un repo privat nou pe GitHub.** Vizibilitate **Private** și bifează „Add a
+   README", ca repo-ul să aibă o ramură implicită de la bun început. Numele lui,
+   sub forma `proprietar/nume`, intră la pasul 3.
+2. **Un token fine-grained**, cu drepturi doar pe acel repo: GitHub → Settings →
+   Developer settings → Personal access tokens → Fine-grained tokens → Generate new
+   token. Acolo:
+   - **Repository access:** „Only select repositories" → repo-ul de la pasul 1;
+   - **Permissions → Repository permissions → Contents: „Read and write"**. Nimic
+     altceva — un token care poate scrie într-un singur repo privat e tot ce-i
+     trebuie copiei.
+
+   Tokenul se vede **o singură dată**, la creare, și se lipește **doar** în ecranul
+   de variabile din Vercel (pasul 3) — nicăieri altundeva. Are și termen de
+   expirare: notează-ți-l, fiindcă în ziua în care expiră copia începe să cadă cu
+   401, iar banda de pe `/admin` se face galbenă abia după trei zile.
+3. **Variabilele în Vercel** → proiectul → Settings → Environment Variables:
+
+   | Variabilă | Valoare |
+   | --------- | ------- |
+   | `GITHUB_BACKUP_REPO` | `proprietar/nume` — atât, nu linkul din bara de adrese |
+   | `GITHUB_BACKUP_TOKEN` | tokenul de la pasul 2 |
+   | `CRON_SECRET` | un șir aleatoriu, minimum 16 caractere |
+
+   `CRON_SECRET` nu se configurează nicăieri altundeva: Vercel îl trimite singur ca
+   antet `Authorization: Bearer …` la fiecare declanșare, iar ruta compară. Fără el
+   ruta răspunde 500 și nu copiază nimic — una care citește toată baza cu cheia de
+   serviciu n-are voie să meargă neprotejată.
+
+   Copia are nevoie și de `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings →
+   API → `service_role`), deja necesară pentru „Adaugă utilizator" din `/admin`.
+   Dacă lipsește, adaug-o tot aici.
+4. **Redeploy.** Cronul se citește din `vercel.json` la deploy, nu din tabloul de
+   bord: până la primul deploy de după modificare, pur și simplu nu există.
+5. **Verifică** că a apărut, în Vercel → Settings → Cron Jobs. Prima rulare se poate
+   forța, fără să aștepți noaptea:
+
+   ```bash
+   curl -i -H "Authorization: Bearer $CRON_SECRET" https://<domeniul-aplicației>/api/backup
+   ```
+
+   Răspunsul spune câte tabele, câte rânduri, câte fișiere s-au urcat și câte au mai
+   rămas. Aceleași cifre ajung în `backup_runs` și de acolo pe `/admin`.
+
+### Când ceva nu merge
+
+Banda de pe `/admin` nu spune doar că e rău, ci **unde să te uiți** — fiindcă
+„programarea nu pornește" și „rularea cade" se caută în locuri diferite:
+
+| Ce scrie pe `/admin` | Unde te uiți |
+| -------------------- | ------------ |
+| „Programarea zilnică nu s-a declanșat încă niciodată" / „Nu mai pornește nicio rulare" | Vercel → Settings → Cron Jobs: cronul e listat? nu cumva e dezactivat? |
+| „Cronul pornește, dar rularea nu ajunge la capăt" / „rulările de după au eșuat" | Vercel → Settings → Cron Jobs → **View Logs**, adică jurnalul filtrat pe `/api/backup` |
+| „Încă N fișiere de copiat" | nimic, dacă N scade de la o zi la alta — așa se recuperează fișierele vechi |
+
+Motivul ultimei încercări apare sub bandă, tăiat la cât se citește dintr-o privire;
+întreg e în jurnalul din Vercel. Cele mai frecvente: **401** — tokenul a expirat sau
+e greșit, înlocuiește `GITHUB_BACKUP_TOKEN`; **404** — `GITHUB_BACKUP_REPO` e greșit
+**sau** tokenul n-are acces la exact acel repo, fiindcă GitHub răspunde tot 404 când
+accesul lipsește.
+
+### Procedura de restaurare
+
+Nu există buton pentru toate tabelele, dinadins: ordinea inserărilor contează, iar
+cine restaurează e de obicei un om speriat care tocmai a pierdut ceva. Un buton
+apăsat în panică peste date bune e mai periculos decât lipsa lui. („Restaurează din
+backup", de pe `/admin`, acoperă doar formatul vechi, cu patru tabele, și refuză
+explicit un fișier de azi.)
+
+**Fișierul** e `db/<zi>.json` din repo. Are `counts` — câte rânduri avea fiecare
+tabel — bun de comparat la final, și `data`, cu rândurile propriu-zise.
+
+**Ordinea o dă fișierul.** Cheile din `data` sunt scrise în ordinea cheilor străine,
+părintele înaintea copilului, iar blocul de la pasul 4 le parcurge exact în ordinea
+în care le găsește. Nu există listă de ținut minte și nici de actualizat când apare
+un tabel nou.
+
+**1. Dacă baza există și s-au pierdut doar date**, sari direct la pasul 4.
+
+**2. Proiect nou.** În SQL Editor, rulează migrările din `supabase/migrations/` **în
+ordinea numerelor**, de la `0001_init.sql` la `0022_backup_runs.sql`. Tot ele creează
+bucketele `petitions` și `statistics`.
+
+**3. Conturile**, care nu sunt în copie — dar **cu id-urile din copie**. `profiles.id`
+e chiar id-ul contului de autentificare, iar toate celelalte tabele arată spre el;
+conturi create din tabloul de bord ar primi id-uri noi și n-ar mai corespunde nimic
+(inserarea profilurilor ar cădea pe cheia străină). De aceea se creează prin Admin
+API, câte unul, cu id-ul luat din `data.profiles`:
+
+```bash
+curl -X POST "https://<proiect>.supabase.co/auth/v1/admin/users" \
+  -H "apikey: $SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"<id-ul din data.profiles>","email":"ion@exemplu.md","password":"<parolă temporară>","email_confirm":true}'
+```
+
+Emailurile nu sunt în copie — se iau din proiectul vechi, dacă mai există, altfel de
+la oameni. Numele, username-ul și rolul vin din copie, la pasul următor. Parola
+temporară se schimbă din aplicație („Schimbă parola").
+
+Triggerul `handle_new_user` a creat între timp câte un profil gol pentru fiecare cont
+nou. Șterge-le, ca rândurile adevărate din copie să intre în locul lor — pe o bază
+proaspătă n-are ce altceva să șteargă:
+
+```sql
+delete from profiles;
+```
+
+**4. Rândurile.** Un singur bloc, rulat o dată în SQL Editor. Deschizi fișierul
+copiei, îi selectezi tot conținutul și-l lipești unde scrie:
+
+```sql
+do $restaurare$
+declare
+  copie json := $dump$
+„aici se lipește tot conținutul fișierului db/<zi>.json — linia asta se înlocuiește"
+$dump$::json;
+  tabel   text;
+  randuri json;
+  coloane text;
+begin
+  -- `json`, nu `jsonb`: numai `json` păstrează ordinea cheilor din fișier, adică
+  -- ordinea cheilor străine — părintele înaintea copilului.
+  for tabel, randuri in select key, value from json_each(copie -> 'data') loop
+    -- Coloanele generate (`petitions.response_deadline`, totalurile de la ședințe
+    -- și transferuri) se sar: Postgres refuză o inserare care le dă valoare.
+    select string_agg(quote_ident(column_name), ', ' order by ordinal_position)
+      into coloane
+      from information_schema.columns
+     where table_schema = 'public' and table_name = tabel and is_generated = 'NEVER';
+
+    execute format(
+      'insert into public.%I (%s) select %s from json_populate_recordset(null::public.%I, $1) on conflict do nothing',
+      tabel, coloane, coloane, tabel
+    ) using randuri;
+  end loop;
+end
+$restaurare$;
+```
+
+Ce face și ce nu face:
+
+- **adaugă doar ce lipsește** (`on conflict do nothing`): nu suprascrie și nu șterge
+  nimic. Un rând care există, dar a fost *modificat* greșit, rămâne cum e — pe acela
+  îl repari de mână, comparând cu fișierul;
+- **e o singură tranzacție**: dacă se oprește la al treisprezecelea tabel, nu rămâne
+  nimic pe jumătate;
+- se poate rula de două ori fără pagubă.
+
+Dacă fișierul e prea mare pentru editor, lipește un `data` cu doar câteva tabele
+odată — **păstrând ordinea din fișier** — și rulează blocul de mai multe ori.
+
+Trigger-ele de audit se declanșează și la restaurare, deci în `audit_log` apar, pe
+lângă rândurile vechi din copie, și intrări de azi fără autor (în SQL Editor nu
+există `auth.uid()`). Nu strică nimic și se recunosc după autorul lipsă.
+
+**5. Verifică** numărând, și comparând cu `counts` din fișier:
+
+```sql
+select count(*) from petitions;
+```
+
+**6. Fișierele.** Clonează repo-ul de backup și urcă înapoi conținutul lui
+`files/<bucket>/` în bucketul cu același nume, **pe aceleași căi**:
+`files/petitions/<id-petiție>/scan.pdf` se duce la `petitions/<id-petiție>/scan.pdf`.
+Rândurile din `petition_attachments` și `stat_reports` țin calea, deci un fișier
+urcat altundeva nu se mai deschide din aplicație.
+
+**7. Dacă proiectul Supabase e nou**, variabilele din Vercel
+(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`) trebuie să arate spre el, iar domeniul aplicației
+readăugat la Redirect URLs în Supabase. Banda de pe `/admin` va spune, până la prima
+noapte, că nu există nicio copie reușită: `backup_runs` e evidența copierii, nu date
+ale instituției, deci nu intră în dump și nu se restaurează.
+
+### Peretele de peste ani
+
+`manifest.json` crește cu ~120 de baiți la fiecare fișier salvat, iar Contents API
+trimite conținutul inline doar sub **1 MB**. Undeva la **8–10 mii de fișiere**
+manifestul trece pragul, iar copia se oprește cu o eroare limpede („…n-are conținut
+inline. Ori calea arată spre un director, ori fișierul trece de 1 MB"). La ritmul de
+acum sunt ani până acolo, dar peretele e real și e scris aici ca cel care-l atinge
+să nu caute o defecțiune inexistentă: atunci manifestul trebuie spart în bucăți
+(unul pe bucket, sau pe an), nu reparat.
+
+> Migrarea [`supabase/migrations/0022_backup_runs.sql`](supabase/migrations/0022_backup_runs.sql)
+> trebuie aplicată (după `0021`) — până atunci ruta de copiere se oprește la prima
+> propoziție, fiindcă n-are unde deschide rularea. Creează tabelul `backup_runs`,
+> citibil doar de admini; scrie în el exclusiv cheia de serviciu, deci nimeni din
+> aplicație nu poate falsifica o rulare reușită.
+
 ## Structură
 
 ```
