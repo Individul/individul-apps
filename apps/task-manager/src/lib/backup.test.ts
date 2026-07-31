@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { dumpPath, filePath, missingFiles, isStale, type StoredFile } from "./backup";
+import {
+  dumpPath,
+  filePath,
+  missingFiles,
+  isStale,
+  restoreRefusal,
+  type StoredFile,
+} from "./backup";
 
 describe("căile din repo", () => {
   it("baza de date primește un fișier pe zi", () => {
@@ -42,6 +49,39 @@ describe("ce lipsește față de manifest", () => {
     // pierdere de date: manifestul ar spune „salvat" pentru altceva.
     const saved = [{ bucket: "petitions", name: "a.pdf", size: 999 }];
     expect(missingFiles(inBucket, saved).map((f) => f.name)).toContain("a.pdf");
+  });
+});
+
+describe("ce refuză restaurarea automată", () => {
+  it("refuză formatul complet și trimite la README", () => {
+    // Butonul știe patru tabele din cincisprezece. Un import pe jumătate,
+    // raportat ca reușită, e mai rău decât un refuz limpede.
+    const refuz = restoreRefusal({ app: "task-manager", version: 2, data: {} });
+    expect(refuz).toContain("README");
+    expect(refuz).toContain("2");
+  });
+
+  it("acceptă formatul vechi", () => {
+    expect(restoreRefusal({ app: "task-manager", version: 1, data: { tasks: [] } })).toBeNull();
+  });
+
+  it("un fișier fără versiune merge mai departe, la validarea de conținut", () => {
+    // Nu e treaba refuzului să spună dacă fișierul e bun — doar dacă e prea
+    // nou. Restul verificărilor sunt în acțiune, ca înainte.
+    expect(restoreRefusal({ data: { tasks: [] } })).toBeNull();
+    expect(restoreRefusal(null)).toBeNull();
+    expect(restoreRefusal("nu-i un obiect")).toBeNull();
+  });
+
+  it("prinde versiunea scrisă ca text", () => {
+    // JSON-ul vine dintr-un fișier ales de om; „2" în loc de 2 nu trebuie să
+    // deschidă ușa pe care cifra o închide.
+    expect(restoreRefusal({ version: "2" })).toContain("README");
+  });
+
+  it("refuză și un format viitor, nu doar 2", () => {
+    // Regula e „mai nou decât știu să import", nu o listă de versiuni.
+    expect(restoreRefusal({ version: 3 })).toContain("3");
   });
 });
 

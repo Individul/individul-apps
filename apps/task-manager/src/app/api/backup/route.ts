@@ -24,6 +24,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFile, putFile } from "@/lib/github";
 import { dumpPath, filePath, missingFiles, type StoredFile } from "@/lib/backup";
+import { buildDump } from "@/lib/backup-dump";
 
 export const dynamic = "force-dynamic";
 // Un minut: descărcarea și urcarea fișierelor sunt lente. Limita de fișiere pe
@@ -31,46 +32,6 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 type Client = ReturnType<typeof createAdminClient>;
-type Row = Record<string, unknown>;
-
-/**
- * Cele 15 tabele și coloanele după care se ordonează.
- *
- * Ordinea trebuie să fie **totală**, nu doar „stabilă la prima vedere", din
- * două motive care se sprijină unul pe altul:
- *
- * - citirea se face paginat (vezi `readTable`), iar paginarea peste o ordine cu
- *   egalități poate sări rânduri sau le poate lua de două ori — adică exact
- *   pierderea tăcută pe care copia există s-o prevină;
- * - fără egalități, dumpul de mâine iese la fel cu cel de azi acolo unde datele
- *   n-au fost atinse, deci git comprimă bine fișierele zilnice între ele.
- *   Mărimea repo-ului e un risc asumat în design.
- *
- * De aceea fiecare listă se termină cu o coloană unică. `created_at` singur nu
- * ajunge: două rânduri scrise în aceeași tranzacție au aceeași valoare, iar la
- * egalitate Postgres nu garantează nicio ordine.
- *
- * Se începe cu coloana „naturală" (data, poziția) tocmai ca rândurile noi să
- * cadă la coadă, nu împrăștiate prin fișier.
- */
-const TABLES: ReadonlyArray<{ name: string; order: readonly [string, ...string[]] }> = [
-  { name: "profiles", order: ["created_at", "id"] },
-  { name: "tasks", order: ["created_at", "id"] },
-  { name: "subtasks", order: ["task_id", "position", "id"] },
-  { name: "comments", order: ["created_at", "id"] },
-  { name: "tags", order: ["name", "id"] },
-  // Singurul tabel fără `id`: cheia primară e perechea (task_id, tag_id).
-  { name: "task_tags", order: ["task_id", "tag_id"] },
-  { name: "petitions", order: ["created_at", "id"] },
-  { name: "petition_attachments", order: ["created_at", "id"] },
-  { name: "hearings", order: ["session_date", "id"] },
-  { name: "transfers", order: ["transfer_date", "id"] },
-  { name: "transfer_plans", order: ["hearing_date", "id"] },
-  { name: "stat_reports", order: ["created_at", "id"] },
-  { name: "stat_values", order: ["report_id", "position", "id"] },
-  { name: "notifications", order: ["created_at", "id"] },
-  { name: "audit_log", order: ["created_at", "id"] },
-];
 
 const BUCKETS = ["petitions", "statistics"] as const;
 
@@ -78,9 +39,6 @@ const BUCKETS = ["petitions", "statistics"] as const;
 const FILES_PER_RUN = 15;
 
 const MANIFEST = "manifest.json";
-
-/** Rânduri pe pagină la citirea unui tabel. */
-const ROWS_PER_PAGE = 1000;
 
 /** Intrări pe pagină la listarea unui bucket (`list` dă 100 implicit). */
 const LIST_PER_PAGE = 100;
@@ -178,79 +136,6 @@ function checkSecret(request: Request): NextResponse | null {
   }
 
   return null;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Baza de date                                                               */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Un tabel întreg, citit paginat.
- *
- * Paginarea nu e prudență de prisos: PostgREST are un plafon de rânduri pe
- * cerere (`max_rows`), iar un `select("*")` simplu s-ar opri tăcut la el. Un
- * backup tăiat la o mie de rânduri, care se dă drept complet, e chiar cazul de
- * evitat.
- *
- * Bucla se oprește la o pagină goală, nu la una „mai scurtă decât am cerut":
- * dacă plafonul serverului e sub `ROWS_PER_PAGE`, fiecare pagină vine scurtă,
- * iar oprirea la prima ar tăia tabelul exact ca varianta neparginată.
- */
-async function readTable(
-  supabase: Client,
-  table: string,
-  order: readonly [string, ...string[]],
-): Promise<Row[]> {
-  const [first, ...rest] = order;
-  const rows: Row[] = [];
-
-  for (let from = 0; ; ) {
-    let query = supabase.from(table).select("*").order(first, { ascending: true });
-    for (const column of rest) query = query.order(column, { ascending: true });
-
-    const { data, error } = await query.range(from, from + ROWS_PER_PAGE - 1);
-    if (error) {
-      throw new Error(`Citirea tabelului „${table}" a eșuat: ${error.message}`);
-    }
-
-    const batch: Row[] = data ?? [];
-    if (batch.length === 0) return rows;
-
-    rows.push(...batch);
-    from += batch.length;
-  }
-}
-
-/** Dumpul zilei: toate tabelele, cu numărătoarea lor. */
-async function buildDump(supabase: Client, progress: Progress, now: Date): Promise<string> {
-  const data: Record<string, Row[]> = {};
-  const counts: Record<string, number> = {};
-  let rows = 0;
-
-  // Secvențial, nu în paralel: cincisprezece bucle de paginare pornite deodată
-  // ar ține în memorie cincisprezece tabele pe jumătate citite, iar dumpul e
-  // oricum ieftin — câțiva megabiți de text.
-  for (const table of TABLES) {
-    const read = await readTable(supabase, table.name, table.order);
-    data[table.name] = read;
-    counts[table.name] = read.length;
-    rows += read.length;
-
-    progress.tables += 1;
-    progress.rows = rows;
-  }
-
-  const dump = {
-    app: "task-manager",
-    version: 2,
-    exported_at: now.toISOString(),
-    counts,
-    data,
-  };
-
-  // Cu indentare: git comprimă mai bine text aerisit decât o linie uriașă, iar
-  // la o restaurare fișierul trebuie să poată fi citit de om.
-  return `${JSON.stringify(dump, null, 2)}\n`;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -428,7 +313,10 @@ async function runBackup(
   // Un singur moment pentru toată rularea: altfel o copie pornită la 23:59:59
   // ar putea scrie `exported_at` dintr-o zi și numele fișierului din alta.
   const now = new Date();
-  const json = await buildDump(supabase, progress, now);
+  const json = await buildDump(supabase, now, (tables, rows) => {
+    progress.tables = tables;
+    progress.rows = rows;
+  });
 
   const dump = await putFile(
     dumpPath(now),

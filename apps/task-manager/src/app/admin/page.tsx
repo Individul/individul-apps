@@ -58,9 +58,11 @@ export default async function AdminPage({
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">Backup &amp; restaurare</h2>
             <p className="text-sm text-muted-foreground">
-              Descarcă un snapshot complet (sarcini, comentarii, etichete, responsabili) ca
-              fișier JSON. Restaurarea adaugă doar înregistrările lipsă — nu șterge și nu
-              suprascrie nimic.
+              Descarcă baza de date întreagă (sarcini, petiții, ședințe, transferuri,
+              statistici, audit) ca fișier JSON. Fără conturi și fără fișierele atașate —
+              pe acelea le duce copia automată de noapte, împreună cu notificările
+              tuturor. Restaurarea automată acoperă doar formatul vechi; pentru un fișier
+              de azi, vezi procedura din README.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <a href="/admin/backup">

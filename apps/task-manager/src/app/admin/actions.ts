@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { restoreRefusal } from "@/lib/backup";
 
 export async function setUserRole(
   userId: string,
@@ -37,6 +38,10 @@ type RestoreResult = {
 
 // Restaurare non-distructivă: adaugă doar înregistrările lipsă (ON CONFLICT DO
 // NOTHING), fără a șterge sau suprascrie ceva existent. Doar admin.
+//
+// Acoperă cele patru tabele ale formatului vechi (`version: 1`). Fișierele de
+// azi au cincisprezece tabele și sunt refuzate aici — vezi `restoreRefusal`
+// pentru motiv.
 export async function restoreBackup(payload: unknown): Promise<RestoreResult> {
   const supabase = createClient();
 
@@ -49,6 +54,13 @@ export async function restoreBackup(payload: unknown): Promise<RestoreResult> {
     .eq("id", userId)
     .maybeSingle();
   if (profile?.role !== "admin") return { error: "Doar adminul poate restaura." };
+
+  // Aceeași verificare e și în componentă, ca omul s-o afle înainte de
+  // confirmare. Aici e ușa propriu-zisă, iar ușa nu se lasă în seama butonului:
+  // acțiunea scrie în baza de date, deci ea trebuie să refuze formatul pe care
+  // nu-l poate importa întreg.
+  const refusal = restoreRefusal(payload);
+  if (refusal) return { error: refusal };
 
   const root = (payload as { data?: Record<string, unknown> } | null) ?? null;
   const d = root?.data ?? {};

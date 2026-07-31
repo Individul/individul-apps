@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { restoreBackup } from "@/app/admin/actions";
+import { restoreRefusal } from "@/lib/backup";
 
 export function RestoreBackup() {
   const router = useRouter();
@@ -19,6 +20,13 @@ export function RestoreBackup() {
       payload = JSON.parse(await file.text());
     } catch {
       toast.error("Fișier invalid (nu e JSON).");
+      return;
+    }
+    // Verificarea vine **înaintea** confirmării, nu după: altfel omul ar fi
+    // întrebat „restaurezi?" pentru un fișier care oricum nu se poate importa.
+    const refusal = restoreRefusal(payload);
+    if (refusal) {
+      toast.error(refusal);
       return;
     }
     if (

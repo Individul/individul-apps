@@ -1,11 +1,37 @@
+/**
+ * Butonul „Descarcă backup" din pagina de administrare.
+ *
+ * Scrie exact același fișier ca și copia zilnică (`/api/backup`) — aceleași
+ * tabele, aceeași ordine, același `version: 2` — fiindcă amândouă trec prin
+ * `buildDump`. Cine restaurează cândva are de învățat un singur format,
+ * indiferent dacă fișierul vine din repo sau de pe calculatorul adminului.
+ *
+ * Două lucruri pe care fișierul **nu** le conține, ca să nu se creadă altceva:
+ *
+ * - **conturile auth** (emailuri, parole) — deliberat, sunt în alt sistem;
+ * - **fișierele din Storage** (atașamentele petițiilor, tabelele de
+ *   statistică) — pe acelea le duce copia zilnică în repo; aici e doar baza.
+ *
+ * Citirea se face cu sesiunea adminului, deci RLS se aplică. Pentru
+ * paisprezece tabele din cincisprezece adminul vede tot; excepția e
+ * `notifications`, unde politica din migrarea 0008 dă fiecăruia doar rândurile
+ * lui (`user_id = auth.uid()`), deci fișierul descărcat manual conține
+ * notificările adminului, nu ale întregii echipe. Copia zilnică, făcută cu
+ * cheia de serviciu, le are pe toate — de aceea ea rămâne copia de bază, iar
+ * asta e scrisă și lângă buton.
+ */
+
 import { NextResponse } from "next/server";
+
 import { createClient } from "@/lib/supabase/server";
+import { buildDump } from "@/lib/backup-dump";
 
 export const dynamic = "force-dynamic";
+// Cincisprezece tabele citite paginat, una după alta: pragul implicit de zece
+// secunde e strâmt pe măsură ce datele cresc, iar o cerere omorâtă la mijloc
+// n-ar da niciun fișier.
+export const maxDuration = 60;
 
-// Backup complet al datelor aplicației (doar admin). Descarcă un .json cu
-// sarcini, comentarii, etichete, legături task-etichetă și profiluri (pentru
-// referință la restaurare). Nu include conturile auth (emailuri/parole).
 export async function GET() {
   const supabase = createClient();
 
@@ -25,42 +51,22 @@ export async function GET() {
     return NextResponse.json({ error: "Doar adminul poate face backup." }, { status: 403 });
   }
 
-  const [tasks, comments, tags, taskTags, profiles] = await Promise.all([
-    supabase.from("tasks").select("*").order("created_at", { ascending: true }),
-    supabase.from("comments").select("*").order("created_at", { ascending: true }),
-    supabase.from("tags").select("*").order("name", { ascending: true }),
-    supabase.from("task_tags").select("*"),
-    supabase.from("profiles").select("*").order("full_name", { ascending: true }),
-  ]);
-
-  const firstError =
-    tasks.error || comments.error || tags.error || taskTags.error || profiles.error;
-  if (firstError) {
-    return NextResponse.json({ error: firstError.message }, { status: 500 });
+  const now = new Date();
+  let json: string;
+  try {
+    json = await buildDump(supabase, now);
+  } catch (err) {
+    // Un tabel căzut oprește descărcarea întreagă, nu dă un fișier fără el:
+    // un backup cu o lipsă tăcută e mai rău decât un buton care spune „n-a
+    // mers", fiindcă înlocuiește grija cu liniște falsă.
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
   }
 
-  const backup = {
-    app: "task-manager",
-    version: 1,
-    exported_at: new Date().toISOString(),
-    counts: {
-      tasks: tasks.data?.length ?? 0,
-      comments: comments.data?.length ?? 0,
-      tags: tags.data?.length ?? 0,
-      task_tags: taskTags.data?.length ?? 0,
-      profiles: profiles.data?.length ?? 0,
-    },
-    data: {
-      tasks: tasks.data ?? [],
-      comments: comments.data ?? [],
-      tags: tags.data ?? [],
-      task_tags: taskTags.data ?? [],
-      profiles: profiles.data ?? [],
-    },
-  };
-
-  const date = new Date().toISOString().slice(0, 10);
-  return new NextResponse(JSON.stringify(backup, null, 2), {
+  const date = now.toISOString().slice(0, 10);
+  return new NextResponse(json, {
     status: 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
