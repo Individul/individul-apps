@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   INSTITUTIONS,
   byInstitution,
+  defaultTransferDate,
   institutionLabel,
   scheduledDays,
   isScheduled,
@@ -157,5 +158,28 @@ describe("defalcarea pe penitenciar", () => {
 
   it("fără rânduri dă listă goală", () => {
     expect(byInstitution([])).toEqual([]);
+  });
+});
+
+describe("defaultTransferDate", () => {
+  // 31 iulie 2026, vineri. Zile programate în iulie: 6 și 20; în august: 3 și 17.
+  const azi = new Date(2026, 6, 31);
+
+  it("propune cel mai vechi gol, nu ziua curentă", () => {
+    expect(defaultTransferDate(["2026-07-06", "2026-07-20"], azi)).toBe("2026-07-06");
+  });
+
+  it("fără goluri, propune următoarea zi programată", () => {
+    expect(defaultTransferDate([], azi)).toBe("2026-08-03");
+  });
+
+  it("nu propune niciodată o zi care nu e de transfer", () => {
+    // Ziua curentă (31 iul) nu e nici prima, nici a treia luni din lună.
+    expect(defaultTransferDate([], azi)).not.toBe("2026-07-31");
+  });
+
+  it("pe o zi programată neintrodusă încă, o propune pe ea", () => {
+    const luni = new Date(2026, 7, 3); // 3 august, prima luni
+    expect(defaultTransferDate([], luni)).toBe("2026-08-03");
   });
 });

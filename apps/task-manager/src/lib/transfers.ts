@@ -121,3 +121,18 @@ export function byInstitution(rows: InstitutionCounts[]): InstitutionCounts[] {
       (a, b) => b.plecati + b.sositi - (a.plecati + a.sositi) || a.institution - b.institution,
     );
 }
+
+/**
+ * Ziua propusă la adăugarea unui transfer.
+ *
+ * Ziua curentă e aproape sigur greșită: din ~30 de zile ale lunii doar două
+ * sunt de transfer, deci ar trebui schimbată aproape de fiecare dată. Se
+ * propune cel mai vechi gol rămas — ziua programată necompletată — iar dacă nu
+ * lipsește niciuna, următoarea zi de transfer.
+ *
+ * `missing` vine din `missingScheduled` pe perioada afișată, deci propunerea
+ * corespunde întotdeauna zilelor scrise în avertizarea de deasupra.
+ */
+export function defaultTransferDate(missing: string[], today: Date = new Date()): string {
+  return missing[0] ?? toISODate(nextScheduled(today));
+}
