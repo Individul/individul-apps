@@ -122,7 +122,13 @@ export interface BackupState {
   lastSuccessAt: string | null;
   /** Zile calendaristice de atunci; `null` când nu există o dată bună. */
   daysSince: number | null;
-  /** Fișiere rămase de recuperat. Vezi `filesPending` mai jos de ce doar de la o reușită. */
+  /**
+   * Fișiere rămase de recuperat **la ultima rulare reușită** — care poate fi de
+   * acum câteva zile. Vezi capcana 1 din `backupStatus` de ce numai de acolo.
+   *
+   * Când copia nu e la zi, cifra e o amintire, nu o măsurătoare: de atunci pot
+   * fi mai multe. Pagina o spune la trecut, legată de rularea aceea.
+   */
   filesPending: number;
   /** Motivul ultimei încercări încheiate cu eșec, pe un rând și tăiat. */
   error: string | null;
@@ -242,7 +248,8 @@ export function backupStatus(
   const daysSince = lastSuccessAt
     ? differenceInCalendarDays(now, new Date(lastSuccessAt))
     : null;
-  // Capcana 1: numai de la o rulare reușită.
+  // Capcana 1: numai de la o rulare reușită — deci o cifră de atunci, nu de
+  // acum. Cine o afișează trebuie s-o spună ca atare când reușita e veche.
   const filesPending = lastSuccess?.files_pending ?? 0;
 
   const running = last !== null && isRunning(last, now);

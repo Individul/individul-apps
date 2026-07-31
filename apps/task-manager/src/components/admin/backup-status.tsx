@@ -78,10 +78,16 @@ export function BackupStatus({ last, lastSuccess, now, className }: BackupStatus
             </>
           ) : (
             // Când copia s-a rupt, „se iau câteva pe noapte" ar fi o minciună
-            // liniștitoare: nu se mai ia nimic. Aceleași fișiere, spuse cum
-            // sunt — fără copie nicăieri — întăresc avertismentul în loc să-l
-            // dilueze.
-            <>Încă {countRo(status.filesPending, "fișier", "fișiere")} fără copie.</>
+            // liniștitoare: nu se mai ia nimic. Dar nici „încă N fără copie" nu
+            // se poate spune la prezent — cifra vine de la ultima rulare
+            // reușită, care poate fi de acum câteva zile, iar de atunci pot fi
+            // mai multe. Trecutul e singurul timp pe care numărul ăsta îl
+            // acoperă, iar legat de rularea de atunci nu e mai puțin
+            // îngrijorător: fișierele acelea tot n-au copie.
+            <>
+              La ultima copie reușită mai erau{" "}
+              {countRo(status.filesPending, "fișier", "fișiere")} fără copie.
+            </>
           )}
         </>
       )}
