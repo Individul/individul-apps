@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-07-31",
+    text: "Modul nou, încă în testare: transferuri — deținuții transferați între penitenciare, în zilele programate din lună.",
+  },
+  {
     date: "2026-07-30",
     text: "Auditul se poate filtra pe module — sarcini, petiții, ședințe, utilizatori — iar fiecare modul are iconița lui.",
   },
