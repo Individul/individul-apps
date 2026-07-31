@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import { getCurrentProfile, getNotifications, getUnreadCount } from "@/lib/queries";
 import { getHearing, getHearings } from "@/lib/queries";
@@ -61,7 +62,15 @@ export default async function SedintePage({
         </section>
 
         <section className="space-y-4 border-t pt-6">
-          <h2 className="text-sm font-medium">Raport</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-medium">Raport</h2>
+            <Link
+              href={`/sedinte/raport?perioada=${period}`}
+              className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Versiune de tipărit →
+            </Link>
+          </div>
           <Suspense fallback={null}>
             <PeriodReport period={period} range={range} hearings={hearings} />
           </Suspense>
