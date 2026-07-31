@@ -125,11 +125,24 @@
 }
 
 /* Print styles */
+@page {
+  margin: 18mm 16mm;
+}
+
 @media print {
   body {
     background: white;
+    /* Documentul tipărit se citește pe hârtie: gri deschis dispare la imprimare. */
+    color: #000;
   }
   .no-print {
     display: none !important;
+  }
+  /* Un rând de tabel tăiat între pagini e greu de citit într-un act oficial. */
+  tr {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
   }
 }
