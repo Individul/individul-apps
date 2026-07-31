@@ -95,8 +95,9 @@ describe("corpul cererii de scriere", () => {
 
 describe("ascunderea tokenului din texte", () => {
   // Garanția pe care se sprijină tot modulul: mesajele lui ajung în
-  // `backup_runs.error`, iar tabelul acela intră el însuși în copia următoare.
-  // Un token scăpat s-ar scrie chiar în repo-ul pe care îl deschide.
+  // `backup_runs.error`, de unde panoul de pe `/admin` le pune pe ecran, iar
+  // răspunsul rutei de cron le duce în jurnalul din Vercel. Un token scăpat
+  // într-un mesaj ar ajunge deodată afișat în pagină și scris în jurnale.
   it("scoate tokenul din mesaj", () => {
     expect(redact("a picat cu ghp_secret123", "ghp_secret123")).toBe(
       "a picat cu [token ascuns]",

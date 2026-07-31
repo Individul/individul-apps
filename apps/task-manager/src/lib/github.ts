@@ -3,14 +3,18 @@
  *
  * Regula care ține modulul ăsta: **tokenul nu iese de aici.**
  *
- * Motivul e mai tare decât igiena obișnuită: mesajele de eroare ajung în
- * `backup_runs.error`, iar tabelul acela intră el însuși în copia de a doua zi
- * — o scăpare s-ar scrie tocmai în repo-ul pe care tokenul îl deschide.
+ * Motivul e mai tare decât igiena obișnuită: mesajele de eroare de aici ajung în
+ * `backup_runs.error`, de unde panoul de pe `/admin` le pune pe ecran, iar
+ * răspunsul rutei de cron le duce în jurnalul din Vercel. Un token scăpat
+ * într-un mesaj ar ajunge deodată afișat în pagină și scris în jurnale.
  *
  * Cum se ține regula, ca să poată fi verificată prin citire, nu prin încredere:
  * - tokenul e citit într-un singur loc (`loadConfig`) și folosit într-unul
  *   singur (antetul `Authorization` din `apiHeaders`); nu intră în URL;
  * - orice text compus din răspunsul GitHub trece prin `redact`;
+ * - și cererile care nici nu ajung la GitHub (rețea căzută, timeout) trec pe
+ *   acolo: `askGitHub` prinde respingerea lui `fetch`. O regulă cu o singură
+ *   excepție nu mai e regulă, iar excepția n-are cum să fie ținută minte;
  * - singurele mesaje care nu trec sunt cele din `loadConfig`/`parseRepo`, fiindcă
  *   sunt constante care **nu interpolează nimic** — anume nu dau înapoi valoarea
  *   citită din mediu, ca o variabilă completată greșit (tokenul pus din greșeală
@@ -191,20 +195,53 @@ function reason(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+/**
+ * O citire din Contents API, cu tot ce trebuie să fie la fel la amândouă.
+ *
+ * `cache: "no-store"` fiindcă Next.js pune un cache peste `fetch`, iar aici
+ * amândoi apelanții au nevoie de starea de acum: un sha vechi ar duce la o
+ * suprascriere respinsă, iar un manifest de ieri ar face rularea să reurce
+ * fișierele de care ieri s-a ocupat deja.
+ *
+ * Respingerea lui `fetch` — rețea căzută, DNS, timeout — se prinde aici, nu în
+ * apelant: mesajele ei n-au azi antete în ele, dar regula modulului e „tot ce
+ * pleacă trece prin `redact`", iar o regulă cu o excepție nu mai e regulă.
+ */
+async function askGitHub(config: Config, path: string, action: string): Promise<Response> {
+  try {
+    return await fetch(contentsUrl(config, path), {
+      headers: apiHeaders(config.token),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new Error(
+      redact(`${action} „${path}" n-a ajuns la GitHub: ${reason(err)}`, config.token),
+    );
+  }
+}
+
+/**
+ * Sha-ul versiunii curente a fișierului, sau `null` dacă nu există încă.
+ *
+ * Spre deosebire de `putFile`, **aruncă** la o defecțiune reală (autentificare,
+ * rețea, limită de cereri). Nu din neatenție: `null` înseamnă „fișierul nu e
+ * acolo", iar un 401 travestit în `null` ar spune exact asta, neadevărat.
+ * Suprascrierea manifestului ar pleca atunci fără sha, iar GitHub ar răspunde cu
+ * o plângere despre sha lipsă — cauza reală (tokenul) ascunsă sub una derutantă.
+ *
+ * `putFile` prinde aruncarea și o întoarce ca valoare, deci ea nu iese din modul
+ * pe drumul obișnuit.
+ */
 async function shaOf(config: Config, path: string): Promise<string | null> {
-  const res = await fetch(contentsUrl(config, path), {
-    headers: apiHeaders(config.token),
-    // Next.js pune un cache peste `fetch`. Un sha vechi, luat din cache, ar duce
-    // la o suprascriere respinsă: căutarea trebuie să vadă starea de acum.
-    cache: "no-store",
-  });
+  const action = "căutarea versiunii pentru";
+  const res = await askGitHub(config, path, action);
 
   // Cazul obișnuit, nu o defecțiune: dumpul zilei și scanurile noi sunt fișiere
   // care încă nu există în repo.
   if (res.status === 404) return null;
 
   if (!res.ok) {
-    throw new Error(redact(await describe(res, "căutarea versiunii pentru", path), config.token));
+    throw new Error(redact(await describe(res, action, path), config.token));
   }
 
   const sha = textField(await readJson(res), "sha");
@@ -224,38 +261,15 @@ async function shaOf(config: Config, path: string): Promise<string | null> {
   return sha;
 }
 
-/**
- * Sha-ul versiunii curente a fișierului, sau `null` dacă nu există încă.
- *
- * Spre deosebire de restul modulului, **aruncă** la o defecțiune reală
- * (autentificare, rețea, limită de cereri, configurare lipsă). Nu din
- * neatenție: `null` înseamnă „fișierul nu e acolo", iar un 401 travestit în
- * `null` ar spune exact asta, neadevărat. Suprascrierea manifestului ar pleca
- * atunci fără sha, iar GitHub ar răspunde cu o plângere despre sha lipsă —
- * cauza reală (tokenul) ascunsă sub una derutantă.
- *
- * `putFile` prinde aruncarea și o întoarce ca valoare, deci ea nu iese din
- * modul pe drumul obișnuit.
- */
-export async function getFileSha(path: string): Promise<string | null> {
-  const config = loadConfig();
-  if (typeof config === "string") throw new Error(config);
-  return shaOf(config, path);
-}
-
 async function contentOf(config: Config, path: string): Promise<Buffer | null> {
-  const res = await fetch(contentsUrl(config, path), {
-    headers: apiHeaders(config.token),
-    // Ca la `shaOf`: un manifest luat din cache ar fi cel de ieri, iar rularea
-    // ar reurca fișierele de care ieri s-a ocupat deja.
-    cache: "no-store",
-  });
+  const action = "citirea";
+  const res = await askGitHub(config, path, action);
 
   // Cazul obișnuit la prima rulare: manifestul încă nu există.
   if (res.status === 404) return null;
 
   if (!res.ok) {
-    throw new Error(redact(await describe(res, "citirea", path), config.token));
+    throw new Error(redact(await describe(res, action, path), config.token));
   }
 
   const body = await readJson(res);
@@ -286,7 +300,7 @@ async function contentOf(config: Config, path: string): Promise<Buffer | null> {
 /**
  * Conținutul unui fișier din repo, sau `null` dacă nu există.
  *
- * **Aruncă** la o defecțiune reală, din exact motivul de la `getFileSha`: un
+ * **Aruncă** la o defecțiune reală, din exact motivul de la `shaOf`: un
  * 401 sau o limită de cereri travestite în `null` ar spune „manifestul nu
  * există", neadevărat. Rularea ar reurca atunci tot ce e deja salvat și ar
  * scrie peste manifest evidența plecată de la zero — adică ar strica singura
