@@ -17,6 +17,12 @@ const TEMPLATES: Record<string, string[]> = {
   neclaritati: DEMERS,
   "erori materiale": DEMERS,
   "solicitare hotariri": ["Solicitare întocmită", "Solicitare expediată", "Hotărâre primită"],
+  // Același drum ca la solicitarea de hotărâri; se schimbă doar actul așteptat.
+  "dispozitie de executare": [
+    "Solicitare întocmită",
+    "Solicitare expediată",
+    "Dispoziție de executare primită",
+  ],
 };
 
 // Un pas de „expediere" (demers/solicitare expediat/ă) — de la bifarea lui
