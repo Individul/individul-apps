@@ -42,6 +42,7 @@ Thumbs.db
 
 # Claude
 .claude/
+.worktrees/
 
 # Local migration backups / scratch
 apps/unified/frontend/app_legacy_unified/
