@@ -6,6 +6,7 @@ import {
   getNotifications,
   getUnreadCount,
   getTransfers,
+  getObligations,
 } from "@/lib/queries";
 import {
   taskStats,
@@ -20,6 +21,8 @@ import { AppHeader } from "@/components/layout/app-header";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { TransferBand } from "@/components/hub/transfer-band";
 import { ChangelogSection } from "@/components/hub/changelog-section";
+import { ObligationBand } from "@/components/obligations/obligation-band";
+import { pendingFor } from "@/lib/obligations";
 import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +85,7 @@ function toBreakdown<T extends { assignee_id: string | null }, S>(
 }
 
 export default async function HubPage() {
-  const [tasks, petitions, profiles, profile, notifications, unread, transfers] =
+  const [tasks, petitions, profiles, profile, notifications, unread, transfers, obligations] =
     await Promise.all([
       getTasks(),
       getPetitions(),
@@ -91,6 +94,7 @@ export default async function HubPage() {
       getNotifications(),
       getUnreadCount(),
       getTransfers(),
+      getObligations(),
     ]);
 
   const isAdmin = profile?.role === "admin";
@@ -140,6 +144,13 @@ export default async function HubPage() {
         <h1 className="mb-6 text-2xl font-semibold">
           {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
         </h1>
+        {/* Deasupra cardurilor, fiindcă un termen depășit către ANP nu se
+            citește după cifre. Nu apare când n-are ce spune. */}
+        <ObligationBand
+          items={obligations.obligations.map((o) =>
+            pendingFor(o, obligations.completed.get(o.id) ?? new Set(), new Date()),
+          )}
+        />
         {/* Două carduri sus, egale. Al treilea modul ia rândul întreg dedesubt:
             trei nu se împart la două coloane, iar transferurile n-au defalcare
             pe persoane, deci într-o jumătate ar rămâne pe jumătate goale. */}

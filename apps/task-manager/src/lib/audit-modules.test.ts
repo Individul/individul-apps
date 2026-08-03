@@ -22,6 +22,8 @@ const ENTITY_PRESENT: Record<AuditEntry["entity"], true> = {
   profiles: true,
   transfers: true,
   transfer_plans: true,
+  obligations: true,
+  obligation_completions: true,
 };
 const ALL_ENTITIES = Object.keys(ENTITY_PRESENT) as AuditEntry["entity"][];
 

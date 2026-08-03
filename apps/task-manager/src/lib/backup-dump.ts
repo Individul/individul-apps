@@ -68,6 +68,8 @@ export const BACKUP_TABLES: readonly BackupTable[] = [
   { name: "hearings", order: ["session_date", "id"] },
   { name: "transfers", order: ["transfer_date", "id"] },
   { name: "transfer_plans", order: ["hearing_date", "id"] },
+  { name: "obligations", order: ["position", "id"] },
+  { name: "obligation_completions", order: ["due_date", "id"] },
   { name: "stat_reports", order: ["created_at", "id"] },
   { name: "stat_values", order: ["report_id", "position", "id"] },
   { name: "notifications", order: ["created_at", "id"] },

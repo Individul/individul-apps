@@ -15,6 +15,7 @@ import type {
 import type { Hearing } from "./hearings";
 import type { TransferPlan } from "./transfer-plans";
 import type { BackupRun } from "./backup";
+import type { Obligation } from "./obligations";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -319,4 +320,33 @@ export async function getTransferPlans(): Promise<TransferPlan[]> {
   // Grațios dacă migrarea 0021 nu e încă aplicată.
   if (error) return [];
   return (data ?? []) as unknown as TransferPlan[];
+}
+
+/** Obligațiile active, cu termenele deja bifate — starea se calculează în cod. */
+export async function getObligations(): Promise<{
+  obligations: Obligation[];
+  completed: Map<string, Set<string>>;
+}> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("obligations")
+    .select("*")
+    .eq("active", true)
+    .order("position");
+  // Grațios dacă migrarea 0023 nu e încă aplicată.
+  if (error) return { obligations: [], completed: new Map() };
+
+  const { data: done } = await supabase
+    .from("obligation_completions")
+    .select("obligation_id, due_date");
+
+  const completed = new Map<string, Set<string>>();
+  for (const row of done ?? []) {
+    const key = row.obligation_id as string;
+    const set = completed.get(key) ?? new Set<string>();
+    set.add(row.due_date as string);
+    completed.set(key, set);
+  }
+
+  return { obligations: (data ?? []) as unknown as Obligation[], completed };
 }
