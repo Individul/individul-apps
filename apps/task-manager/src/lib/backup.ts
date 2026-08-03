@@ -11,6 +11,28 @@ export function dumpPath(d: Date): string {
   return `db/${format(d, "yyyy-MM-dd")}.json`;
 }
 
+/**
+ * A reușit deja o copie pentru ziua pe care ar scrie-o rularea de acum?
+ *
+ * A doua rulare a nopții e doar plasă de siguranță, pentru cazul în care prima
+ * e omorâtă la mijloc. Dacă prima a mers, a doua n-are ce adăuga: ar rescrie
+ * exact același fișier.
+ *
+ * Comparația se face pe numele fișierului, nu pe ore: aceea e chiar unitatea în
+ * care se măsoară o copie, deci „acoperit" nu poate ajunge să însemne altceva
+ * decât „fișierul zilei există".
+ *
+ * La dată lipsă sau ilizibilă răspunsul e „nu": spre deosebire de `isStale`,
+ * unde necunoscutul trebuie să dea alarmă, aici necunoscutul trebuie să lase
+ * copia să ruleze. Ambele greșesc în direcția în care datele rămân salvate.
+ */
+export function alreadyCovered(lastSuccessISO: string | null, now: Date): boolean {
+  if (!lastSuccessISO) return false;
+  const t = new Date(lastSuccessISO);
+  if (Number.isNaN(t.getTime())) return false;
+  return dumpPath(t) === dumpPath(now);
+}
+
 /** Bucketul intră în cale: două buckete pot avea fișiere cu același nume. */
 export function filePath(bucket: string, name: string): string {
   return `files/${bucket}/${name}`;

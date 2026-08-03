@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-08-03",
+    text: "Copia de siguranță se face automat în fiecare noapte, cu o a doua rulare de rezervă dacă prima nu reușește.",
+  },
+  {
     date: "2026-07-31",
     text: "Raportul de ședințe are versiune de tipărit: se alege perioada și se tipărește sau se salvează ca PDF.",
   },
