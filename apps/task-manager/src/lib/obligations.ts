@@ -11,7 +11,7 @@ import {
   subWeeks,
 } from "date-fns";
 
-import { toISODate } from "./periods";
+import { parseISODate, toISODate } from "./periods";
 
 export type ObligationKind = "lunar_zi" | "lunar_ultima_zi" | "saptamanal";
 
@@ -24,6 +24,8 @@ export interface Obligation {
   day_of_month: number | null;
   /** Pentru `saptamanal`: 0 = duminică … 5 = vineri … 6 = sâmbătă. */
   weekday: number | null;
+  /** De când ține evidența; termenele dinaintea ei nu există pentru ea. */
+  starts_on: string;
   assignee_id: string | null;
   active: boolean;
   position: number;
@@ -51,6 +53,14 @@ function weeklyDue(o: Obligation, ref: Date): Date {
   const wanted = o.weekday ?? 5;
   const d = startOfDay(ref);
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + ((wanted - getDay(d) + 7) % 7));
+}
+
+/** Primul termen din sau de după `from`. */
+function dueOnOrAfter(o: Obligation, from: Date): Date {
+  const f = startOfDay(from);
+  if (o.kind === "saptamanal") return weeklyDue(o, f);
+  const thisMonth = monthlyDue(o, startOfMonth(f));
+  return thisMonth >= f ? thisMonth : monthlyDue(o, addMonths(startOfMonth(f), 1));
 }
 
 /** Cel mai recent termen care a venit deja (azi inclusiv). */
@@ -101,8 +111,12 @@ export function pendingFor(
   completed: Set<string>,
   today: Date = new Date(),
 ): Pending {
+  const start = parseISODate(o.starts_on);
   const last = lastDue(o, today);
-  const due = completed.has(toISODate(last)) ? nextDue(o, today) : last;
+  // Un termen dinaintea începutului evidenței n-a fost niciodată al ei: nu e o
+  // restanță, ci o lună despre care obligația n-avea ce spune.
+  const relevant = last < start ? dueOnOrAfter(o, start) : last;
+  const due = completed.has(toISODate(relevant)) ? nextDue(o, today) : relevant;
   const days = differenceInCalendarDays(due, startOfDay(today));
   return { obligation: o, due: toISODate(due), days, overdue: days < 0 };
 }
