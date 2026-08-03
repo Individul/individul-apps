@@ -11,7 +11,7 @@ import { toISODate } from "./periods";
 
 const o = (over: Partial<Obligation>): Obligation => ({
   id: "1", title: "x", recipient: "ANP", kind: "lunar_zi", day_of_month: 20,
-  weekday: null, assignee_id: null, active: true, position: 0,
+  weekday: null, starts_on: "2020-01-01", assignee_id: null, active: true, position: 0,
   created_at: "", updated_at: "", ...over,
 });
 
@@ -129,5 +129,47 @@ describe("sortPending", () => {
       pendingFor(ZI_20, new Set(), azi), // 20 august, restant
     ];
     expect(sortPending(items).map((p) => p.obligation.id)).toEqual(["zpm", "demersuri"]);
+  });
+});
+
+
+describe("data de început", () => {
+  // Cele patru obligații reale pornesc din august 2026; până atunci evidența
+  // nu exista, deci iulie n-are cum să fie restant.
+  const DIN_AUGUST = o({ day_of_month: 30, starts_on: "2026-08-01" });
+  const LUNI_3_AUG = new Date(2026, 7, 3);
+
+  it("termenul dinaintea începutului nu e restanță", () => {
+    // Fără regula asta, pe 3 august ar apărea „restant din 30 iulie".
+    const p = pendingFor(DIN_AUGUST, new Set(), LUNI_3_AUG);
+    expect(p.due).toBe("2026-08-30");
+    expect(p.overdue).toBe(false);
+  });
+
+  it("prima apariție de după început e cea căutată", () => {
+    const vineri = o({ kind: "saptamanal", day_of_month: null, weekday: 5, starts_on: "2026-08-01" });
+    expect(pendingFor(vineri, new Set(), LUNI_3_AUG).due).toBe("2026-08-07");
+  });
+
+  it("ultima zi a lunii, cu început la 1 august", () => {
+    const ultima = o({ kind: "lunar_ultima_zi", day_of_month: null, starts_on: "2026-08-01" });
+    expect(pendingFor(ultima, new Set(), LUNI_3_AUG).due).toBe("2026-08-31");
+  });
+
+  it("după ce evidența a pornit, restanțele se văd normal", () => {
+    // Regula taie doar înaintea începutului, nu ascunde restanțe reale.
+    const p = pendingFor(DIN_AUGUST, new Set(), new Date(2026, 8, 5));
+    expect(p.due).toBe("2026-08-30");
+    expect(p.overdue).toBe(true);
+  });
+
+  it("o obligație înscrisă azi prinde termenul care încă n-a venit", () => {
+    const noua = o({ day_of_month: 20, starts_on: "2026-10-15" });
+    expect(pendingFor(noua, new Set(), new Date(2026, 9, 15)).due).toBe("2026-10-20");
+  });
+
+  it("înscrisă după termenul lunii, sare la luna următoare", () => {
+    const tarziu = o({ day_of_month: 20, starts_on: "2026-10-25" });
+    expect(pendingFor(tarziu, new Set(), new Date(2026, 9, 25)).due).toBe("2026-11-20");
   });
 });
