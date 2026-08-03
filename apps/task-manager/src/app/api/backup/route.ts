@@ -23,7 +23,13 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFile, putFile } from "@/lib/github";
-import { dumpPath, filePath, missingFiles, type StoredFile } from "@/lib/backup";
+import {
+  alreadyCovered,
+  dumpPath,
+  filePath,
+  missingFiles,
+  type StoredFile,
+} from "@/lib/backup";
 import { buildDump } from "@/lib/backup-dump";
 
 export const dynamic = "force-dynamic";
@@ -450,6 +456,29 @@ export async function GET(request: Request) {
 
   const deadline = Date.now() + FILE_BUDGET_MS;
   const supabase = createAdminClient();
+
+  // Noaptea se rulează de două ori, fiindcă o funcție omorâtă la mijloc nu
+  // apucă să lase niciun motiv în urmă — pe planul actual jurnalul se șterge
+  // după o jumătate de oră, deci cauza unei nopți pierdute e de negăsit. A doua
+  // rulare face întreruperea întâmplătoare să nu mai însemne o zi neacoperită.
+  //
+  // Dacă prima a reușit, aici nu e nimic de făcut: s-ar rescrie același fișier.
+  // Ieșirea e înainte de deschiderea rândului, ca panoul de administrare să nu
+  // se umple cu rulări care n-au avut ce lucra.
+  const lastOk = await supabase
+    .from("backup_runs")
+    .select("started_at")
+    .eq("ok", true)
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!lastOk.error && alreadyCovered(lastOk.data?.started_at ?? null, new Date())) {
+    return NextResponse.json({
+      skipped: true,
+      reason: "Copia zilei a reușit deja la rularea anterioară.",
+    });
+  }
 
   // Rândul se deschide pe `ok = false` și rămâne așa dacă funcția e omorâtă la
   // mijloc. Nu e o scăpare, e felul în care se află: o rulare care n-a apucat

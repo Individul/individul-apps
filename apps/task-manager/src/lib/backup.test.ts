@@ -4,6 +4,7 @@ import {
   dumpPath,
   filePath,
   missingFiles,
+  alreadyCovered,
   isStale,
   restoreRefusal,
   type BackupRun,
@@ -334,5 +335,34 @@ describe("starea copiei, pentru pagina de administrare", () => {
     expect(s.lastSuccessAt).toBeNull();
     expect(s.daysSince).toBeNull();
     expect(s.level).toBe("warn");
+  });
+});
+
+describe("alreadyCovered", () => {
+  const noaptea = new Date("2026-08-03T02:00:00Z");
+
+  it("copia primei rulări din aceeași zi acoperă și a doua", () => {
+    expect(alreadyCovered("2026-08-03T02:00:12Z", noaptea)).toBe(true);
+  });
+
+  it("o reușită de ieri nu acoperă noaptea asta", () => {
+    expect(alreadyCovered("2026-08-02T02:00:12Z", noaptea)).toBe(false);
+  });
+
+  it("fără nicio reușită, a doua rulare lucrează", () => {
+    expect(alreadyCovered(null, noaptea)).toBe(false);
+  });
+
+  it("dată ilizibilă → se face copia, nu se sare peste ea", () => {
+    // Invers față de `isStale`: acolo necunoscutul dă alarmă, aici lasă copia
+    // să ruleze. Ambele greșesc în direcția în care datele rămân salvate.
+    expect(alreadyCovered("nu-i o dată", noaptea)).toBe(false);
+  });
+
+  it("ora nu contează, doar ziua", () => {
+    // Ore din mijlocul zilei, nu de la miezul nopții: „ziua" e cea a serverului
+    // (UTC în producție), iar un test legat de fusul mașinii care-l rulează ar
+    // trece aici și ar cădea aiurea în altă parte.
+    expect(alreadyCovered("2026-08-03T09:00:00Z", new Date("2026-08-03T15:00:00Z"))).toBe(true);
   });
 });
