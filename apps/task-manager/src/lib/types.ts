@@ -65,6 +65,7 @@ export interface AuditEntry {
     | "transfer_plans"
     | "obligations"
     | "obligation_completions"
+    | "defendants"
     | "transfers";
   entity_id: string | null;
   details: Record<string, unknown>;

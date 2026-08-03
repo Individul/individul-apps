@@ -16,6 +16,7 @@ import type { Hearing } from "./hearings";
 import type { TransferPlan } from "./transfer-plans";
 import type { BackupRun } from "./backup";
 import type { Obligation } from "./obligations";
+import type { Defendant } from "./defendants";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -349,4 +350,15 @@ export async function getObligations(): Promise<{
   }
 
   return { obligations: (data ?? []) as unknown as Obligation[], completed };
+}
+
+export async function getDefendants(): Promise<Defendant[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("defendants")
+    .select("*")
+    .order("last_name");
+  // Grațios dacă migrarea 0025 nu e încă aplicată.
+  if (error) return [];
+  return (data ?? []) as unknown as Defendant[];
 }

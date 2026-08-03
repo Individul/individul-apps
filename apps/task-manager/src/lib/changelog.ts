@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-03",
+    text: "Registru nou: inculpații cu tip de penitenciar stabilit. Cine devine condamnat iese din listă, dar rămâne în evidență.",
+  },
+  {
+    date: "2026-08-03",
     text: "Informările periodice către ANP au evidență proprie: termenul se recalculează singur, iar cele apropiate sau restante apar pe pagina principală.",
   },
   {
