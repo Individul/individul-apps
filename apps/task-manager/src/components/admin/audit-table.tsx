@@ -2,6 +2,7 @@ import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 import {
   ArrowLeftRight,
+  Scale,
   CalendarClock,
   UserRound,
   Gavel,
@@ -37,6 +38,7 @@ const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
   transfers: ArrowLeftRight,
   transfer_plans: UserRound,
   obligations: CalendarClock,
+  defendants: Scale,
   obligation_completions: CalendarClock,
   profiles: Users,
 };
@@ -54,6 +56,7 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   transfers: "evidența transferurilor",
   transfer_plans: "planificarea transferului",
   obligations: "informarea periodică",
+  defendants: "inculpatul",
   obligation_completions: "un termen de informare",
 };
 
@@ -139,6 +142,19 @@ function phrase(e: AuditEntry): string {
     if (e.action === "INSERT") return `a bifat ${ce}${cand} ca expediată`;
     if (e.action === "DELETE") return `a scos bifa de la ${ce}${cand}`;
     return `a modificat bifa la ${ce}${cand}`;
+  }
+  if (e.entity === "defendants") {
+    const d = e.details ?? {};
+    const cine = d.name ? String(d.name) : "un inculpat";
+    if (e.action === "INSERT") return `a înscris ${cine} în registrul inculpaților`;
+    if (e.action === "DELETE") return `a șters ${cine} din registrul inculpaților`;
+    if (d.status_to === "condamnat") return `a trecut ${cine} la condamnat`;
+    if (d.status_to === "inculpat") return `a readus ${cine} în lista de inculpați`;
+    // Tipul nu se schimbă prin regulă, deci o schimbare e fie corectare, fie greșeală.
+    if (d.regime_from && d.regime_to) {
+      return `a schimbat tipul de penitenciar la ${cine}: ${String(d.regime_from)} → ${String(d.regime_to)}`;
+    }
+    return `a modificat însemnarea lui ${cine}`;
   }
   if (e.entity === "hearings") {
     const d = e.details ?? {};

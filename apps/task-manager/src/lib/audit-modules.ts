@@ -7,6 +7,7 @@ export type AuditModule =
   | "sedinte"
   | "transferuri"
   | "informari"
+  | "inculpati"
   | "utilizatori";
 
 /**
@@ -35,6 +36,7 @@ export const AUDIT_MODULES: {
     label: "Informări",
     entities: ["obligations", "obligation_completions"],
   },
+  { value: "inculpati", label: "Inculpați", entities: ["defendants"] },
   { value: "utilizatori", label: "Utilizatori", entities: ["profiles"] },
 ];
 

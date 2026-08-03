@@ -9,6 +9,7 @@ const MODULES = [
   { href: "/petitii", label: "Petiții", matchPrefixes: ["/petitii"] },
   { href: "/sedinte", label: "Ședințe", matchPrefixes: ["/sedinte"] },
   { href: "/transferuri", label: "Transferuri", matchPrefixes: ["/transferuri"] },
+  { href: "/inculpati", label: "Inculpați", matchPrefixes: ["/inculpati"] },
   { href: "/obligatii", label: "Informări", matchPrefixes: ["/obligatii"] },
   { href: "/statistici", label: "Statistici", matchPrefixes: ["/statistici"] },
 ] as const;
