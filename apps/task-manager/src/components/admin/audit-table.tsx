@@ -2,6 +2,7 @@ import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 import {
   ArrowLeftRight,
+  CalendarClock,
   UserRound,
   Gavel,
   ListChecks,
@@ -35,6 +36,8 @@ const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
   hearings: Gavel,
   transfers: ArrowLeftRight,
   transfer_plans: UserRound,
+  obligations: CalendarClock,
+  obligation_completions: CalendarClock,
   profiles: Users,
 };
 
@@ -50,6 +53,8 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   hearings: "evidența ședințelor",
   transfers: "evidența transferurilor",
   transfer_plans: "planificarea transferului",
+  obligations: "informarea periodică",
+  obligation_completions: "un termen de informare",
 };
 
 const PETITION_STATUS: Record<string, string> = {
@@ -126,6 +131,14 @@ function phrase(e: AuditEntry): string {
     if (d.done_to === true) return `a încheiat transferul lui ${cine}`;
     if (d.done_to === false) return `a redeschis transferul lui ${cine}`;
     return `a modificat însemnarea lui ${cine}`;
+  }
+  if (e.entity === "obligation_completions") {
+    const d = e.details ?? {};
+    const ce = d.title ? `„${String(d.title)}”` : "o informare";
+    const cand = d.due_date ? ` (termen ${String(d.due_date)})` : "";
+    if (e.action === "INSERT") return `a bifat ${ce}${cand} ca expediată`;
+    if (e.action === "DELETE") return `a scos bifa de la ${ce}${cand}`;
+    return `a modificat bifa la ${ce}${cand}`;
   }
   if (e.entity === "hearings") {
     const d = e.details ?? {};

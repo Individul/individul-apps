@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-03",
+    text: "Informările periodice către ANP au evidență proprie: termenul se recalculează singur, iar cele apropiate sau restante apar pe pagina principală.",
+  },
+  {
+    date: "2026-08-03",
     text: "Copia de siguranță se face automat în fiecare noapte, cu o a doua rulare de rezervă dacă prima nu reușește.",
   },
   {
