@@ -59,7 +59,8 @@ export function PetitionsWorkspace({
           petitions={summaryPetitions}
           label={isAdmin ? "Rezumat" : "Rezumatul meu"}
         />
-        {isAdmin && <PetitionAssigneeBreakdown petitions={petitions} profiles={profiles} />}
+        {/* Ca la sarcini: rezumatul e al fiecăruia, defalcarea e a secției. */}
+        <PetitionAssigneeBreakdown petitions={petitions} profiles={profiles} />
       </aside>
     </div>
   );

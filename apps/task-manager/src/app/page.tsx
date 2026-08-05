@@ -127,14 +127,19 @@ export default async function HubPage() {
   // dimensiune firească a cifrelor. Fără ea banda ar arăta doar trei numere.
   const transferInstitutions = byInstitution(thisMonth);
 
-  // Defalcarea (doar admin) primește toate elementele, nu doar cele active:
-  // altfel coloanele „Total” și „Finalizate” n-ar avea ce număra.
-  const taskBreakdown = isAdmin
-    ? toBreakdown(tasks, profiles, TASK_COLUMNS, taskStats)
-    : undefined;
-  const petitionBreakdown = isAdmin
-    ? toBreakdown(petitions, profiles, PETITION_COLUMNS, petitionStats)
-    : undefined;
+  // Defalcarea o vede toată secția, nu doar adminul: cifra „din N” de sub
+  // numerele proprii ridică întrebarea unde sunt celelalte, iar tabelul e chiar
+  // răspunsul ei. Ascunsă, întrebarea rămânea pusă și fără răspuns.
+  //
+  // Primește toate elementele, nu doar cele active: altfel coloanele „Total” și
+  // „Finalizate” n-ar avea ce număra.
+  const taskBreakdown = toBreakdown(tasks, profiles, TASK_COLUMNS, taskStats);
+  const petitionBreakdown = toBreakdown(
+    petitions,
+    profiles,
+    PETITION_COLUMNS,
+    petitionStats,
+  );
 
   return (
     <>
