@@ -28,6 +28,42 @@ export async function getTasks(): Promise<Task[]> {
   return (data ?? []) as unknown as Task[];
 }
 
+/**
+ * Coloanele din care pagina de start scoate cifrele sarcinilor: statisticile
+ * cardului (`taskStats`) plus defalcarea pe responsabil (`groupByAssignee`).
+ *
+ * Tipul și șirul din `select` se țin de mână: casta e o afirmație, nu o
+ * verificare, deci dacă se despart nimeni nu strigă. Se citesc împreună, iar
+ * ce e cerut de aici trebuie să fie și acolo. Cealaltă direcție e păzită:
+ * o statistică ce citește o coloană neadusă nu compilează.
+ */
+export type TaskCountRow = Pick<Task, "status" | "due_date" | "assignee_id">;
+
+/**
+ * Sarcinile reduse la ce se numără pe pagina de start.
+ *
+ * Nu înlocuiește `getTasks`: /sarcini afișează rândurile întregi, cu responsabil
+ * și etichete. Aici nu se afișează niciun rând, doar se numără, iar responsabilul
+ * încorporat și etichetele erau cea mai mare parte din răspuns. Drumul dus-întors
+ * e oricum scurt (Supabase și funcția stau amândouă la Frankfurt) — se câștigă la
+ * serializare și la `JSON.parse`, și mai ales la cum arată asta peste încă un an
+ * de registru.
+ *
+ * Aceeași ordonare ca `getTasks`, deși nicio cifră n-o citește: gruparea pe
+ * responsabil păstrează ordinea de intrare când două persoane au același număr
+ * și același nume, deci ordinea identică scutește demonstrația că tabelul iese
+ * la fel.
+ */
+export async function getTaskCounts(): Promise<TaskCountRow[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("status, due_date, assignee_id")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as TaskCountRow[];
+}
+
 export async function getTask(id: string): Promise<(Task & { comments: Comment[] }) | null> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -155,6 +191,31 @@ export async function getPetitions(): Promise<Petition[]> {
   }));
 }
 
+/** Ce citesc `petitionStats` și defalcarea pe responsabil — nimic altceva. */
+export type PetitionCountRow = Pick<Petition, "status" | "response_deadline" | "assignee_id">;
+
+/**
+ * Petițiile reduse la ce se numără pe pagina de start.
+ *
+ * Fără fișierele atașate și fără responsabilul încorporat: pagina de start nu
+ * deschide nicio scanare și nu scrie niciun nume din rândul petiției. Registrul
+ * are deja peste trei sute de petiții și crește cu fiecare lună, deci tocmai
+ * aici se strânge costul.
+ *
+ * Eroarea nu se aruncă, la fel ca în `getPetitions`: dacă migrarea 0012 nu e
+ * aplicată, tabela lipsește, iar pagina de start trebuie să se deschidă oricum —
+ * cu zerouri, nu cu o eroare.
+ */
+export async function getPetitionCounts(): Promise<PetitionCountRow[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("petitions")
+    .select("status, response_deadline, assignee_id")
+    .order("response_deadline", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as unknown as PetitionCountRow[];
+}
+
 /** Rândul brut cu relația încorporată; `stat_values` nu e o coloană. */
 type StatReportRow = StatReport & { stat_values?: { id: string }[] };
 
@@ -263,6 +324,31 @@ export async function getTransfers(): Promise<Transfer[]> {
     .order("transfer_date", { ascending: false })
     .order("institution", { ascending: true });
   return (data ?? []) as unknown as Transfer[];
+}
+
+/** Ce citesc banda de transferuri și filtrul de lună — `aggregate` și `byInstitution`. */
+export type TransferCountRow = Pick<
+  Transfer,
+  "transfer_date" | "institution" | "plecati" | "sositi"
+>;
+
+/**
+ * Transferurile reduse la ce se numără pe pagina de start.
+ *
+ * `total` lipsește deși e coloană în baza de date: `aggregate` îl recalculează
+ * din plecați și sosiți, deci ar fi al treilea număr adus ca să fie ignorat.
+ *
+ * Eroarea nu se citește, la fel ca în `getTransfers`: fără migrarea 0020 banda
+ * rămâne goală în loc să rupă pagina.
+ */
+export async function getTransferCounts(): Promise<TransferCountRow[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("transfers")
+    .select("transfer_date, institution, plecati, sositi")
+    .order("transfer_date", { ascending: false })
+    .order("institution", { ascending: true });
+  return (data ?? []) as unknown as TransferCountRow[];
 }
 
 /**

@@ -1,11 +1,11 @@
 import {
-  getTasks,
-  getPetitions,
+  getTaskCounts,
+  getPetitionCounts,
   getProfiles,
   getCurrentProfile,
   getNotifications,
   getUnreadCount,
-  getTransfers,
+  getTransferCounts,
   getObligations,
 } from "@/lib/queries";
 import {
@@ -85,15 +85,20 @@ function toBreakdown<T extends { assignee_id: string | null }, S>(
 }
 
 export default async function HubPage() {
+  // Pagina de start nu arată niciun rând, ci unsprezece cifre și două tabele de
+  // defalcare. Deci cere din baza de date doar coloanele din care ies cifrele:
+  // titlurile, descrierile, responsabilii încorporați și fișierele atașate ale
+  // celor trei registre ar traversa rețeaua ca să fie aruncate. Modulele lor
+  // (/sarcini, /petitii, /transferuri) au mai departe rândurile întregi.
   const [tasks, petitions, profiles, profile, notifications, unread, transfers, obligations] =
     await Promise.all([
-      getTasks(),
-      getPetitions(),
+      getTaskCounts(),
+      getPetitionCounts(),
       getProfiles(),
       getCurrentProfile(),
       getNotifications(),
       getUnreadCount(),
-      getTransfers(),
+      getTransferCounts(),
       getObligations(),
     ]);
 

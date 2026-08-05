@@ -17,6 +17,22 @@ export interface PetitionStats extends ModuleStats {
   solved: number;
 }
 
+/**
+ * Câmpurile din care ies cifrele — atât, nu tot rândul.
+ *
+ * Pagina de start cere din baza de date exact aceste coloane (`getTaskCounts`,
+ * `getPetitionCounts` din lib/queries), fiindcă restul nu se afișează acolo.
+ * Tipul îngust e paznicul acelei interogări: dacă mâine cineva adaugă în
+ * `taskStats` o citire de `priority`, compilarea cade. Cu `Task` întreg în
+ * semnătură n-ar cădea — s-ar număra tăcut, la nesfârșit, pe un câmp care
+ * sosește mereu `undefined`.
+ *
+ * Semnăturile rămân totuși deschise: TypeScript compară structura, nu numele,
+ * deci un `Task` întreg intră neschimbat pe unde intra și înainte.
+ */
+export type TaskCounts = Pick<Task, "status" | "due_date">;
+export type PetitionCounts = Pick<Petition, "status" | "response_deadline">;
+
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
@@ -32,7 +48,7 @@ function classify(deadline: string | null, today: Date): "overdue" | "soon" | "n
   return "none";
 }
 
-export function taskStats(tasks: Task[], today: Date = new Date()): TaskStats {
+export function taskStats(tasks: TaskCounts[], today: Date = new Date()): TaskStats {
   let active = 0;
   let done = 0;
   let waiting = 0;
@@ -69,13 +85,13 @@ const UNASSIGNED = "Neatribuit";
  * O sarcină e restantă dacă are termen trecut și nu e finalizată — dar nu și
  * cât timp așteaptă răspuns extern: acolo întârzierea nu e a responsabilului.
  */
-export function isTaskOverdue(task: Task, today: Date = new Date()): boolean {
+export function isTaskOverdue(task: TaskCounts, today: Date = new Date()): boolean {
   if (task.status === "done" || task.status === "waiting") return false;
   return classify(task.due_date, today) === "overdue";
 }
 
 /** O petiție e restantă dacă are termen de răspuns trecut și e încă în examinare. */
-export function isPetitionOverdue(petition: Petition, today: Date = new Date()): boolean {
+export function isPetitionOverdue(petition: PetitionCounts, today: Date = new Date()): boolean {
   return (
     petition.status === "in_examinare" &&
     classify(petition.response_deadline, today) === "overdue"
@@ -161,7 +177,7 @@ export function countsByAssignee<T extends { assignee_id: string | null }>(
   });
 }
 
-export function petitionStats(petitions: Petition[], today: Date = new Date()): PetitionStats {
+export function petitionStats(petitions: PetitionCounts[], today: Date = new Date()): PetitionStats {
   let open = 0;
   let solved = 0;
   let dueSoon = 0;
