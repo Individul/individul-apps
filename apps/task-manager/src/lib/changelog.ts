@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-03",
+    text: "Defalcarea pe responsabili se vede de către toți, nu doar de administrator — la sarcini și la petiții.",
+  },
+  {
+    date: "2026-08-03",
     text: "Registru nou: inculpații cu tip de penitenciar stabilit. Cine devine condamnat iese din listă, dar rămâne în evidență.",
   },
   {

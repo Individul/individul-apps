@@ -58,7 +58,9 @@ export function TasksWorkspace({
 
       <aside className="space-y-4 lg:w-80 lg:shrink-0">
         <TaskSummary tasks={summaryTasks} label={isAdmin ? "Rezumat" : "Rezumatul meu"} />
-        {isAdmin && <AssigneeBreakdown tasks={tasks} profiles={profiles} />}
+        {/* Defalcarea o vede toată secția. Rezumatul de deasupra rămâne al
+            fiecăruia; asta arată cum stau colegii. */}
+        <AssigneeBreakdown tasks={tasks} profiles={profiles} />
         <TagsPanel
           allTags={allTags}
           tasks={tasks}
