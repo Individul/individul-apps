@@ -32,12 +32,15 @@ export async function getTasks(): Promise<Task[]> {
  * Coloanele din care pagina de start scoate cifrele sarcinilor: statisticile
  * cardului (`taskStats`) plus defalcarea pe responsabil (`groupByAssignee`).
  *
- * Tipul și șirul din `select` se țin de mână: casta e o afirmație, nu o
- * verificare, deci dacă se despart nimeni nu strigă. Se citesc împreună, iar
- * ce e cerut de aici trebuie să fie și acolo. Cealaltă direcție e păzită:
- * o statistică ce citește o coloană neadusă nu compilează.
+ * O singură listă, din care ies și tipul, și șirul cerut bazei de date. Scrise
+ * separat, cele două ar fi putut ajunge să spună lucruri diferite — adică exact
+ * defectul pe care îl repară toată schimbarea asta: un câmp pe care codul îl
+ * citește, interogarea nu-l aduce, iar el sosește `undefined` la fiecare rulare,
+ * tăcut. Derivate dintr-o listă, nu se mai pot contrazice, iar un nume de
+ * coloană scris greșit nu trece de `Pick`: cade la compilare, nu în producție.
  */
-export type TaskCountRow = Pick<Task, "status" | "due_date" | "assignee_id">;
+const TASK_COUNT_COLUMNS = ["status", "due_date", "assignee_id"] as const;
+export type TaskCountRow = Pick<Task, (typeof TASK_COUNT_COLUMNS)[number]>;
 
 /**
  * Sarcinile reduse la ce se numără pe pagina de start.
@@ -58,7 +61,7 @@ export async function getTaskCounts(): Promise<TaskCountRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("tasks")
-    .select("status, due_date, assignee_id")
+    .select(TASK_COUNT_COLUMNS.join(", "))
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as TaskCountRow[];
@@ -191,8 +194,12 @@ export async function getPetitions(): Promise<Petition[]> {
   }));
 }
 
-/** Ce citesc `petitionStats` și defalcarea pe responsabil — nimic altceva. */
-export type PetitionCountRow = Pick<Petition, "status" | "response_deadline" | "assignee_id">;
+/**
+ * Ce citesc `petitionStats` și defalcarea pe responsabil — nimic altceva.
+ * O listă, două întrebuințări; vezi `TASK_COUNT_COLUMNS` pentru de ce.
+ */
+const PETITION_COUNT_COLUMNS = ["status", "response_deadline", "assignee_id"] as const;
+export type PetitionCountRow = Pick<Petition, (typeof PETITION_COUNT_COLUMNS)[number]>;
 
 /**
  * Petițiile reduse la ce se numără pe pagina de start.
@@ -210,7 +217,7 @@ export async function getPetitionCounts(): Promise<PetitionCountRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("petitions")
-    .select("status, response_deadline, assignee_id")
+    .select(PETITION_COUNT_COLUMNS.join(", "))
     .order("response_deadline", { ascending: true });
   if (error) return [];
   return (data ?? []) as unknown as PetitionCountRow[];
@@ -326,11 +333,12 @@ export async function getTransfers(): Promise<Transfer[]> {
   return (data ?? []) as unknown as Transfer[];
 }
 
-/** Ce citesc banda de transferuri și filtrul de lună — `aggregate` și `byInstitution`. */
-export type TransferCountRow = Pick<
-  Transfer,
-  "transfer_date" | "institution" | "plecati" | "sositi"
->;
+/**
+ * Ce citesc banda de transferuri și filtrul de lună — `aggregate` și
+ * `byInstitution`. O listă, două întrebuințări; vezi `TASK_COUNT_COLUMNS`.
+ */
+const TRANSFER_COUNT_COLUMNS = ["transfer_date", "institution", "plecati", "sositi"] as const;
+export type TransferCountRow = Pick<Transfer, (typeof TRANSFER_COUNT_COLUMNS)[number]>;
 
 /**
  * Transferurile reduse la ce se numără pe pagina de start.
@@ -345,7 +353,7 @@ export async function getTransferCounts(): Promise<TransferCountRow[]> {
   const supabase = createClient();
   const { data } = await supabase
     .from("transfers")
-    .select("transfer_date, institution, plecati, sositi")
+    .select(TRANSFER_COUNT_COLUMNS.join(", "))
     .order("transfer_date", { ascending: false })
     .order("institution", { ascending: true });
   return (data ?? []) as unknown as TransferCountRow[];
