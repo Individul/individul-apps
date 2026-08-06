@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-06",
+    text: "Pagina de statistici poartă în diagonală însemnul „în testare”, ca cifrele de acolo să nu fie preluate ca oficiale până la verificare.",
+  },
+  {
+    date: "2026-08-06",
     text: "Sarcinile și petițiile se citesc acum și pe monitoare mici: coloanele nu se mai suprapun, iar rezumatul din dreapta coboară sub tabel când ecranul e prea îngust pentru amândouă.",
   },
   {
