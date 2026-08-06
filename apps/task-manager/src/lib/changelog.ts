@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-08-06",
+    text: "Sarcinile și petițiile se citesc acum și pe monitoare mici: coloanele nu se mai suprapun, iar rezumatul din dreapta coboară sub tabel când ecranul e prea îngust pentru amândouă.",
+  },
+  {
     date: "2026-08-03",
     text: "Defalcarea pe responsabili se vede de către toți, nu doar de administrator — la sarcini și la petiții.",
   },
