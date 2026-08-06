@@ -5,6 +5,7 @@ import {
   getUnreadCount,
 } from "@/lib/queries";
 import { AppHeader } from "@/components/layout/app-header";
+import { TestingWatermark } from "@/components/layout/testing-watermark";
 import { ImportDialog } from "@/components/stats/import-dialog";
 import { ReportSection } from "@/components/stats/report-section";
 import { ReportsTable } from "@/components/stats/reports-table";
@@ -36,7 +37,14 @@ export default async function StatisticiPage() {
   return (
     <>
       <AppHeader profile={currentProfile} notifications={notifications} unread={unread} />
-      <main className="mx-auto max-w-[1800px] p-4 xl:px-10">
+      {/*
+       * `relative` întinde filigranul exact peste pagină; `isolate` îi ține
+       * `z-10` închis aici, ca dialogul de import — randat în portal la nivelul
+       * lui `body` — să rămână deasupra lui.
+       */}
+      <main className="relative isolate mx-auto max-w-[1800px] p-4 xl:px-10">
+        <TestingWatermark />
+
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">Statistici</h1>
           {isAdmin && <ImportDialog />}
