@@ -326,9 +326,17 @@ export function PetitionsList({
         }}
       />
 
-      <div className="overflow-hidden rounded-xl border bg-card">
+      {/*
+        Plasa de siguranță: coloanele fixe fac 760px, iar „Obiect” are nevoie de
+        vreo 140 ca să spună ceva — deci 900. Sub atât registrul se derulează
+        lateral. E supărător, dar cinstit: fără asta conținutul dădea peste
+        vecini, iar suprapunerea nu se vede ca o fereastră prea îngustă, se vede
+        ca o aplicație stricată. Antetul are aceeași lățime minimă, deci
+        derulează odată cu rândurile.
+      */}
+      <div className="overflow-x-auto rounded-xl border bg-card">
         {/* Antet */}
-        <div className="flex items-stretch border-b bg-muted/30">
+        <div className="flex min-w-[900px] items-stretch border-b bg-muted/30">
           <span className="w-1 shrink-0" aria-hidden />
           <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2 text-[11px] font-medium text-muted-foreground">
             <HeaderSortButton
@@ -337,27 +345,27 @@ export function PetitionsList({
               active={sort?.key === "number" ? sort.dir : null}
               className="w-28 shrink-0"
             />
-            <span className="w-48 shrink-0">Petiționar</span>
+            <span className="w-40 shrink-0">Petiționar</span>
             <span className="min-w-0 flex-1">Obiect</span>
-            <span className="w-40 shrink-0">Responsabil</span>
+            <span className="w-36 shrink-0">Responsabil</span>
             <HeaderSortButton
               label="Termen"
               onClick={() => toggleSort("deadline")}
               active={sort?.key === "deadline" ? sort.dir : null}
-              className="w-28 shrink-0"
+              className="w-24 shrink-0"
             />
             <HeaderSortButton
               label="Stare"
               onClick={() => toggleSort("status")}
               active={sort?.key === "status" ? sort.dir : null}
-              className="w-32 shrink-0"
+              className="w-28 shrink-0"
             />
             <span className="w-8 shrink-0" aria-hidden />
           </div>
         </div>
 
         {rows.length ? (
-          <div className="divide-y">
+          <div className="min-w-[900px] divide-y">
             {rows.map((p) => {
               const urgency = urgencyOf(p);
               const overdue = urgency.key === "overdue";
@@ -381,7 +389,7 @@ export function PetitionsList({
                     </div>
 
                     {/* Petiționar */}
-                    <div className="w-48 min-w-0 shrink-0">
+                    <div className="w-40 min-w-0 shrink-0">
                       <div className="truncate text-[13px]">{p.petitioner}</div>
                       <div className="truncate text-[11px] text-muted-foreground">
                         {PETITIONER_LABEL[p.petitioner_type]}
@@ -394,7 +402,7 @@ export function PetitionsList({
                     </div>
 
                     {/* Responsabil */}
-                    <div className="flex w-40 min-w-0 shrink-0 items-center gap-2">
+                    <div className="flex w-36 min-w-0 shrink-0 items-center gap-2">
                       {p.assignee ? (
                         <>
                           <Avatar className="h-6 w-6">
@@ -414,7 +422,7 @@ export function PetitionsList({
                     </div>
 
                     {/* Termen */}
-                    <div className="w-28 shrink-0 text-[13px]">
+                    <div className="w-24 shrink-0 text-[13px]">
                       {p.response_deadline ? (
                         <span
                           className={cn(
@@ -430,7 +438,7 @@ export function PetitionsList({
                     </div>
 
                     {/* Stare */}
-                    <div className="flex w-32 shrink-0 items-center gap-2">
+                    <div className="flex w-28 shrink-0 items-center gap-2">
                       <span
                         className={cn("h-2 w-2 rounded-full", STATUS_DOT[p.status])}
                         aria-hidden

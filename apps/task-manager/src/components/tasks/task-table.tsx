@@ -176,9 +176,11 @@ export function TaskTable({
         }}
       />
 
-      <div className="overflow-hidden rounded-xl border bg-card">
+      {/* Aceeași plasă ca la petiții: coloanele fixe fac 480px, iar titlul cu
+          etichetele lui are nevoie de vreo 240 — deci 720. */}
+      <div className="overflow-x-auto rounded-xl border bg-card">
         {/* Antet */}
-        <div className="flex items-stretch border-b bg-muted/30">
+        <div className="flex min-w-[720px] items-stretch border-b bg-muted/30">
           <span className="w-1 shrink-0" aria-hidden />
           <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2 text-[11px] font-medium text-muted-foreground">
             <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -209,7 +211,7 @@ export function TaskTable({
 
         {/* Rânduri */}
         {rows.length ? (
-          <div className="divide-y">
+          <div className="min-w-[720px] divide-y">
             {rows.map((row) => {
               const t = row.original;
               return (
