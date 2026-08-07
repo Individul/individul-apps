@@ -435,14 +435,22 @@ export async function toggleSubtask(
 
   // Pașii mută singuri sarcina prin fluxul demersului: expediat → așteaptă
   // instanța (termenul nu mai curge), răspuns primit → gata.
+  //
+  // Erorile acestor mutări NU se înghit: pasul ar rămâne bifat, dar sarcina
+  // nu s-ar mișca, iar cel care a bifat n-ar afla niciodată. Zero rânduri, în
+  // schimb, e aici un deznodământ legitim — condițiile de stare (`neq`,
+  // verificarea de dinainte) există tocmai ca mutarea să nu se aplice mereu.
   if (done && updated) {
     const title = updated.title as string;
     if (isResponseStep(title)) {
-      await supabase
+      const { error: moveError } = await supabase
         .from("tasks")
         .update({ status: "done", waiting_since: null })
         .eq("id", taskId)
         .neq("status", "done");
+      if (moveError) {
+        return { error: `Pasul e bifat, dar sarcina n-a putut fi finalizată: ${moveError.message}` };
+      }
     } else if (isDispatchStep(title)) {
       // Doar dintr-o stare activă: o sarcină deja finalizată nu se redeschide.
       const { data: task } = await supabase
@@ -451,10 +459,15 @@ export async function toggleSubtask(
         .eq("id", taskId)
         .maybeSingle();
       if (task?.status === "todo" || task?.status === "in_progress") {
-        await supabase
+        const { error: moveError } = await supabase
           .from("tasks")
           .update({ status: "waiting", waiting_since: new Date().toISOString() })
           .eq("id", taskId);
+        if (moveError) {
+          return {
+            error: `Pasul e bifat, dar sarcina n-a trecut în așteptare: ${moveError.message}`,
+          };
+        }
       }
     }
   }
@@ -467,8 +480,14 @@ export async function toggleSubtask(
 
 export async function deleteSubtask(id: string, taskId: string): Promise<{ error?: string }> {
   const supabase = createClient();
-  const { error } = await supabase.from("subtasks").delete().eq("id", id);
+  // Singura ștergere din fișier pe care RLS o poate filtra CHIAR AZI: scrierea
+  // pe subsarcini cere drept de editare pe sarcină. Fără `.select()`, un membru
+  // fără drept primea „succes" iar pasul rămânea la locul lui.
+  const { data, error } = await supabase.from("subtasks").delete().eq("id", id).select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return { error: "Pasul nu mai există sau nu ai dreptul să-l ștergi." };
+  }
   revalidatePath(`/tasks/${taskId}`);
   return {};
 }

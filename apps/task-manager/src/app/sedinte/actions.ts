@@ -65,11 +65,18 @@ export async function saveHearing(input: HearingInput): Promise<Result> {
     .maybeSingle();
 
   if (existing) {
-    const { error } = await supabase
+    // `.select()` nu e decor: un rând filtrat sau dispărut nu produce eroare,
+    // deci fără el am raporta succes pentru o corectare care nu s-a întâmplat
+    // — de pildă când adminul tocmai a șters ziua deschisă în alt tab.
+    const { data, error } = await supabase
       .from("hearings")
       .update(values)
-      .eq("session_date", input.session_date);
+      .eq("session_date", input.session_date)
+      .select();
     if (error) return { error: error.message };
+    if (!data || data.length === 0) {
+      return { error: "Ziua nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+    }
   } else {
     const { error } = await supabase
       .from("hearings")

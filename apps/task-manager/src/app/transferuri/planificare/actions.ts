@@ -46,10 +46,16 @@ export async function savePlan(id: string | null, input: PlanInput): Promise<Res
     updated_by: userId,
   };
 
-  const { error } = id
-    ? await supabase.from("transfer_plans").update(values).eq("id", id)
-    : await supabase.from("transfer_plans").insert({ ...values, created_by: userId });
+  // `.select()` pe update, ca peste tot: un rând dispărut (șters de altcineva
+  // cât era dialogul deschis) nu produce eroare, doar zero rânduri — iar fără
+  // verificare am spune „Însemnare salvată." despre nimic.
+  const { data, error } = id
+    ? await supabase.from("transfer_plans").update(values).eq("id", id).select()
+    : await supabase.from("transfer_plans").insert({ ...values, created_by: userId }).select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return { error: "Însemnarea nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+  }
 
   revalidatePath("/transferuri/planificare");
   return { success: true };
@@ -62,11 +68,15 @@ export async function setPlanDone(id: string, done: boolean): Promise<Result> {
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("transfer_plans")
     .update({ done, updated_by: userId })
-    .eq("id", id);
+    .eq("id", id)
+    .select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return { error: "Însemnarea nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+  }
 
   revalidatePath("/transferuri/planificare");
   return { success: true };

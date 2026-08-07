@@ -52,10 +52,16 @@ export async function saveDefendant(
     updated_by: userId,
   };
 
-  const { error } = id
-    ? await supabase.from("defendants").update(values).eq("id", id)
-    : await supabase.from("defendants").insert({ ...values, created_by: userId });
+  // `.select()` pe ambele ramuri: un rând dispărut (șters de altcineva cât era
+  // dialogul deschis) nu produce eroare, doar zero rânduri — iar fără
+  // verificare am spune „Însemnare salvată." despre nimic.
+  const { data, error } = id
+    ? await supabase.from("defendants").update(values).eq("id", id).select()
+    : await supabase.from("defendants").insert({ ...values, created_by: userId }).select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return { error: "Însemnarea nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+  }
 
   revalidatePath("/inculpati");
   return { success: true };
@@ -79,11 +85,15 @@ export async function markConvicted(id: string, convictedOn: string): Promise<Re
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("defendants")
     .update({ status: "condamnat", convicted_on: convictedOn, updated_by: userId })
-    .eq("id", id);
+    .eq("id", id)
+    .select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return { error: "Însemnarea nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+  }
 
   revalidatePath("/inculpati");
   return { success: true };
@@ -96,11 +106,15 @@ export async function undoConvicted(id: string): Promise<Result> {
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("defendants")
     .update({ status: "inculpat", convicted_on: null, updated_by: userId })
-    .eq("id", id);
+    .eq("id", id)
+    .select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return { error: "Însemnarea nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+  }
 
   revalidatePath("/inculpati");
   return { success: true };
