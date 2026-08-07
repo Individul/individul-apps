@@ -1,3 +1,4 @@
+import { optionsFrom } from "@/lib/options";
 import type { TaskStatus } from "@/lib/types";
 
 /**
@@ -20,6 +21,4 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
 };
 
 /** Aceleași stări, în forma cerută de listele derulante — derivată, nu scrisă. */
-export const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = (
-  Object.entries(STATUS_LABEL) as [TaskStatus, string][]
-).map(([value, label]) => ({ value, label }));
+export const STATUS_OPTIONS = optionsFrom(STATUS_LABEL);

@@ -1,4 +1,5 @@
 import { addDays, parseISO } from "date-fns";
+import { optionsFrom } from "@/lib/options";
 import type { PetitionStatus, PetitionerType } from "@/lib/types";
 
 export const STATUS_LABEL: Record<PetitionStatus, string> = {
@@ -11,10 +12,8 @@ export const STATUS_DOT: Record<PetitionStatus, string> = {
   solutionat: "bg-green-600",
 };
 
-export const STATUS_OPTIONS: { value: PetitionStatus; label: string }[] = [
-  { value: "in_examinare", label: "În examinare" },
-  { value: "solutionat", label: "Soluționat" },
-];
+/** Derivate din hărți, nu scrise a doua oară — vezi `optionsFrom`. */
+export const STATUS_OPTIONS = optionsFrom(STATUS_LABEL);
 
 export const PETITIONER_LABEL: Record<PetitionerType, string> = {
   detinut: "Deținut",
@@ -22,11 +21,7 @@ export const PETITIONER_LABEL: Record<PetitionerType, string> = {
   civil: "Persoană civilă",
 };
 
-export const PETITIONER_OPTIONS: { value: PetitionerType; label: string }[] = [
-  { value: "detinut", label: "Deținut" },
-  { value: "avocat", label: "Avocat" },
-  { value: "civil", label: "Persoană civilă" },
-];
+export const PETITIONER_OPTIONS = optionsFrom(PETITIONER_LABEL);
 
 // Termen = data înregistrării + 27 de zile (a 27-a zi calendaristică = ultima).
 export function deadlineFrom(received: string): Date | null {
