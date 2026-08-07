@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { STATUS_LABEL as PETITION_STATUS_LABEL } from "@/components/petitions/meta";
 import { cn } from "@/lib/utils";
 import type { AuditEntry } from "@/lib/types";
 
@@ -60,10 +61,21 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   obligation_completions: "un termen de informare",
 };
 
-const PETITION_STATUS: Record<string, string> = {
-  in_examinare: "În examinare",
-  solutionat: "Soluționat",
-};
+/**
+ * Eticheta unei stări de petiție venite din jurnal.
+ *
+ * Harta e cea din modulul de petiții, nu o copie locală: copia de aici nu
+ * cunoștea decât stările de la data scrierii ei, iar `Record<string, string>`
+ * lăsa compilatorul mut la orice stare nouă. Valoarea vine din JSON, deci
+ * poate fi și o stare care nu mai există — aceea se arată cum e scrisă în
+ * jurnal, nu se ascunde: istoria nu se rescrie.
+ */
+function petitionStatusLabel(v: unknown): string {
+  const key = String(v);
+  return key in PETITION_STATUS_LABEL
+    ? PETITION_STATUS_LABEL[key as keyof typeof PETITION_STATUS_LABEL]
+    : key;
+}
 
 function detailText(e: AuditEntry): string {
   const d = e.details ?? {};
@@ -104,8 +116,7 @@ function phrase(e: AuditEntry): string {
       return `a mutat data înregistrării la ${nr}: ${String(d.received_from)} → ${String(d.received_to)}`;
     }
     if (d.status_to) {
-      const to = PETITION_STATUS[String(d.status_to)] ?? String(d.status_to);
-      return `a trecut ${nr} în „${to}”`;
+      return `a trecut ${nr} în „${petitionStatusLabel(d.status_to)}”`;
     }
     if (d.assignee_to) return `a atribuit ${nr} lui ${String(d.assignee_to)}`;
     if (d.assignee_from) return `a scos responsabilul de la ${nr}`;

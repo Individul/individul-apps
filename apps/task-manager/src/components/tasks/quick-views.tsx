@@ -1,5 +1,6 @@
 "use client";
 
+import { STATUS_DOT, STATUS_OPTIONS } from "@/components/tasks/meta";
 import { cn } from "@/lib/utils";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
 import type { Task } from "@/lib/types";
@@ -44,10 +45,15 @@ export function QuickViews({ tasks, currentUserId, filter, onFilterChange }: Qui
       : []),
     { key: "overdue", label: "Restante", filter: { due: "overdue" }, dot: "bg-red-400", danger: true },
     { key: "soon", label: "Scadente 7 zile", filter: { due: "soon" }, dot: "bg-amber-400" },
-    { key: "todo", label: "De făcut", filter: { status: "todo" }, dot: "bg-slate-400" },
-    { key: "in_progress", label: "În lucru", filter: { status: "in_progress" }, dot: "bg-sky-500" },
-    { key: "waiting", label: "În așteptare", filter: { status: "waiting" }, dot: "bg-violet-500" },
-    { key: "done", label: "Finalizat", filter: { status: "done" }, dot: "bg-emerald-500" },
+    // Rândurile de stare ies din hărți, nu se scriu aici: lista scrisă de mână
+    // a ratat deja o stare o dată („în așteptare" se putea seta, dar nu filtra),
+    // iar punctele își aleseseră singure alte nuanțe decât restul paginii.
+    ...STATUS_OPTIONS.map((o) => ({
+      key: o.value,
+      label: o.label,
+      filter: { status: o.value } as TaskFilter,
+      dot: STATUS_DOT[o.value],
+    })),
   ];
 
   return (

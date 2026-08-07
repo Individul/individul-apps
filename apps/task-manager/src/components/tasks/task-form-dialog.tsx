@@ -27,16 +27,10 @@ import { createTask, updateTask } from "@/app/tasks/actions";
 import { canReassignTask } from "@/lib/permissions";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
-import { STATUS_OPTIONS } from "@/components/tasks/meta";
+import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "@/components/tasks/meta";
 import type { Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const UNASSIGNED = "unassigned";
-
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
-  { value: "low", label: "Scăzută" },
-  { value: "medium", label: "Medie" },
-  { value: "high", label: "Ridicată" },
-];
 
 const DUE_SHORTCUTS = [
   { label: "1 zi", days: 1 },

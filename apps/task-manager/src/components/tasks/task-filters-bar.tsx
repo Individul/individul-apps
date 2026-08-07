@@ -11,17 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { STATUS_OPTIONS } from "@/components/tasks/meta";
+import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "@/components/tasks/meta";
 import type { TaskFilter } from "@/lib/task-filters";
 import type { Profile, TaskPriority, TaskStatus } from "@/lib/types";
 
 const ALL = "all";
-
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
-  { value: "low", label: "Scăzută" },
-  { value: "medium", label: "Medie" },
-  { value: "high", label: "Ridicată" },
-];
 
 interface TaskFiltersBarProps {
   profiles: Profile[];

@@ -1,5 +1,5 @@
 import { optionsFrom } from "@/lib/options";
-import type { TaskStatus } from "@/lib/types";
+import type { TaskPriority, TaskStatus } from "@/lib/types";
 
 /**
  * Eticheta fiecărei stări, într-un singur loc.
@@ -22,3 +22,25 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
 
 /** Aceleași stări, în forma cerută de listele derulante — derivată, nu scrisă. */
 export const STATUS_OPTIONS = optionsFrom(STATUS_LABEL);
+
+/**
+ * Culoarea punctului fiecărei stări — tot într-un singur loc.
+ *
+ * Înainte fiecare componentă își alegea nuanța ei și deja se despărțiseră:
+ * vederile rapide foloseau sky/emerald, rezumatul și tabelul blue/green.
+ * Aceeași stare, două culori pe același ecran.
+ */
+export const STATUS_DOT: Record<TaskStatus, string> = {
+  todo: "bg-slate-400",
+  in_progress: "bg-blue-500",
+  waiting: "bg-violet-500",
+  done: "bg-green-500",
+};
+
+export const PRIORITY_LABEL: Record<TaskPriority, string> = {
+  low: "Scăzută",
+  medium: "Medie",
+  high: "Ridicată",
+};
+
+export const PRIORITY_OPTIONS = optionsFrom(PRIORITY_LABEL);

@@ -1,3 +1,5 @@
+import { optionsFrom } from "./options";
+
 export type Regime = "inchis" | "semiinchis";
 export type DefendantStatus = "inculpat" | "condamnat";
 
@@ -24,10 +26,8 @@ export const REGIME_LABEL: Record<Regime, string> = {
   semiinchis: "Semiînchis",
 };
 
-export const REGIME_OPTIONS: { value: Regime; label: string }[] = [
-  { value: "inchis", label: "Închis" },
-  { value: "semiinchis", label: "Semiînchis" },
-];
+/** Derivate din hartă, nu scrise a doua oară — vezi `optionsFrom`. */
+export const REGIME_OPTIONS = optionsFrom(REGIME_LABEL);
 
 export interface DefendantCounts {
   /** Inculpați acum, pe tip. */

@@ -2,18 +2,12 @@ import { format, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 import { CheckCircle2, Circle, Clock, Pencil, Plus, X } from "lucide-react";
 
-// `STATUS_LABEL` e tipizat pe `TaskStatus`, nu pe `string`. Aici era o copie
-// locală care nu cunoștea „în așteptare", iar `Record<string, string>` a lăsat
-// compilatorul mut: schimbarea către starea aceea se afișa fără etichetă.
-import { STATUS_LABEL } from "@/components/tasks/meta";
+// Hărțile vin din `meta`, tipizate pe uniuni, nu copii locale pe `string`.
+// Copia de stări de aici nu cunoștea „în așteptare" și compilatorul a tăcut;
+// prioritățile aveau exact aceeași structură și așteptau același accident.
+import { PRIORITY_LABEL, STATUS_LABEL } from "@/components/tasks/meta";
 import { cn } from "@/lib/utils";
-import type { AuditEntry, TaskStatus } from "@/lib/types";
-
-const PRIORITY_LABEL: Record<string, string> = {
-  low: "Scăzută",
-  medium: "Medie",
-  high: "Ridicată",
-};
+import type { AuditEntry, TaskPriority, TaskStatus } from "@/lib/types";
 
 const TONE: Record<string, string> = {
   green: "bg-emerald-50 text-emerald-600",
@@ -45,6 +39,12 @@ function statusLabel(v: unknown): string {
   return key in STATUS_LABEL ? STATUS_LABEL[key as TaskStatus] : key;
 }
 
+/** Aceeași regulă ca la stări: necunoscutul se arată cum e scris în jurnal. */
+function priorityLabel(v: unknown): string {
+  const key = String(v);
+  return key in PRIORITY_LABEL ? PRIORITY_LABEL[key as TaskPriority] : key;
+}
+
 function changeLines(e: AuditEntry): string[] {
   const d = e.details ?? {};
   const has = (k: string) => Object.prototype.hasOwnProperty.call(d, k);
@@ -56,7 +56,7 @@ function changeLines(e: AuditEntry): string[] {
   }
   if (has("priority_to")) {
     out.push(
-      `Prioritate: ${PRIORITY_LABEL[String(d.priority_from)] ?? "—"} → ${PRIORITY_LABEL[String(d.priority_to)] ?? "—"}`,
+      `Prioritate: ${priorityLabel(d.priority_from)} → ${priorityLabel(d.priority_to)}`,
     );
   }
   if (has("assignee_to")) {

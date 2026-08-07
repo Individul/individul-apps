@@ -1,3 +1,4 @@
+import { STATUS_DOT, STATUS_OPTIONS } from "@/components/tasks/meta";
 import { isTaskOverdue } from "@/lib/hub-stats";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/types";
@@ -16,10 +17,16 @@ function Stat({ label, value, dot }: { label: string; value: number; dot?: strin
 
 export function TaskSummary({ tasks, label = "Rezumat" }: { tasks: Task[]; label?: string }) {
   const total = tasks.length;
-  const todo = tasks.filter((t) => t.status === "todo").length;
-  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
-  const waiting = tasks.filter((t) => t.status === "waiting").length;
-  const done = tasks.filter((t) => t.status === "done").length;
+  // Rândurile ies din hartă, nu se enumeră: versiunea enumerată a uitat „în
+  // așteptare" la adăugarea stării, iar 17 + 1 + 9 nu mai dădeau 41 — fără ca
+  // cineva să poată spune unde s-au dus restul. Derivat, totalul se închide
+  // prin construcție, inclusiv pentru orice stare viitoare.
+  const byStatus = STATUS_OPTIONS.map((o) => ({
+    ...o,
+    dot: STATUS_DOT[o.value],
+    count: tasks.filter((t) => t.status === o.value).length,
+  }));
+  const done = byStatus.find((s) => s.value === "done")?.count ?? 0;
 
   // `isTaskOverdue`, nu un calcul propriu: acesta scutește sarcinile în
   // așteptare, fiindcă un dosar plecat la instanță nu e restanța ta. Calculul
@@ -35,14 +42,10 @@ export function TaskSummary({ tasks, label = "Rezumat" }: { tasks: Task[]; label
       <h2 className="text-sm font-medium">{label}</h2>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* În ordinea fluxului, iar totalul se închide: până acum lipsea „în
-            așteptare", deci 17 + 1 + 9 nu dădeau 41 și nimeni nu putea spune
-            unde s-au dus restul. */}
         <Stat label="Total" value={total} />
-        <Stat label="De făcut" value={todo} dot="bg-slate-400" />
-        <Stat label="În lucru" value={inProgress} dot="bg-blue-500" />
-        <Stat label="În așteptare" value={waiting} dot="bg-violet-500" />
-        <Stat label="Finalizate" value={done} dot="bg-green-500" />
+        {byStatus.map((s) => (
+          <Stat key={s.value} label={s.label} value={s.count} dot={s.dot} />
+        ))}
       </div>
 
       <div className="flex items-center justify-between text-sm">
