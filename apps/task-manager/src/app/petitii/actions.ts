@@ -23,7 +23,11 @@ export interface PetitionInput {
   response_date: string;
 }
 
-// Data curentă în fusul local (nu UTC) — altfel seara/noaptea ar cădea pe altă zi.
+// Data curentă pe ceasul serverului — pe Vercel acela e UTC, deci între miezul
+// nopții și ora 3 la Chișinău ziua e cea precedentă. Comentariul de dinainte
+// pretindea „fusul local", ceea ce pe server nu e adevărat; problema e notată
+// la fișa despre fusul orar și se rezolvă o dată pentru toate modulele, nu
+// aici. Până atunci, măcar TOATE datele din fișier ies din aceeași funcție.
 function todayLocal(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -39,7 +43,9 @@ function normalize(input: PetitionInput) {
     petitioner: input.petitioner.trim(),
     petitioner_type: input.petitioner_type,
     subject: input.subject.trim() ? input.subject.trim() : null,
-    received_date: input.received_date || new Date().toISOString().slice(0, 10),
+    // `todayLocal()`, nu `toISOString()`: al doilea e mereu UTC, deci același
+    // fișier ar fi avut două „azi"-uri diferite seara.
+    received_date: input.received_date || todayLocal(),
     status: input.status,
     response: input.response.trim() ? input.response.trim() : null,
     response_date: input.response_date ? input.response_date : null,
@@ -120,6 +126,18 @@ export async function updatePetition(
   if (error) {
     if ((error as { code?: string }).code === "23505") {
       return { error: "Există deja o petiție cu acest număr." };
+    }
+    // Refuzul RLS ajungea la utilizator ca eroare Postgres în engleză. Cazul
+    // realist: schimbarea responsabilului de către cineva care nu e creator —
+    // WITH CHECK evaluează rândul nou, în care el n-ar mai fi nici creator,
+    // nici responsabil. Selectorul e acum blocat pentru cazul ăsta, dar poarta
+    // adevărată e baza, iar mesajul ei trebuie să fie pe limba utilizatorului.
+    if ((error as { code?: string }).code === "42501") {
+      return {
+        error:
+          "Baza de date a refuzat modificarea: doar creatorul petiției sau un " +
+          "administrator poate schimba responsabilul.",
+      };
     }
     return { error: error.message };
   }

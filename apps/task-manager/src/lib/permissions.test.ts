@@ -7,6 +7,7 @@ import {
   canFinalizeTask,
   canReassignTask,
   canEditPetition,
+  canReassignPetition,
   canDeletePetition,
 } from "./permissions";
 
@@ -82,5 +83,21 @@ describe("canEditPetition / canDeletePetition", () => {
   it("un străin nu poate nimic", () => {
     expect(canEditPetition("x", false, pet)).toBe(false);
     expect(canDeletePetition("x", false, pet)).toBe(false);
+  });
+});
+
+describe("canReassignPetition", () => {
+  const pet = { created_by: "owner" };
+
+  it("adminul și creatorul pot schimba responsabilul", () => {
+    expect(canReassignPetition("x", true, pet)).toBe(true);
+    expect(canReassignPetition("owner", false, pet)).toBe(true);
+  });
+
+  it("responsabilul care nu e creator NU poate — baza l-ar refuza oricum", () => {
+    // WITH CHECK din 0012 evaluează rândul nou: mutând petiția pe altcineva,
+    // el n-ar mai fi nici creator, nici responsabil. Poarta din interfață
+    // trebuie să cadă exact unde cade și cea din bază.
+    expect(canReassignPetition("responsabil", false, pet)).toBe(false);
   });
 });

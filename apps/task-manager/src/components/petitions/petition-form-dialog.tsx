@@ -31,7 +31,7 @@ import {
 } from "@/app/petitii/actions";
 import { PetitionAttachments } from "./petition-attachments";
 import { PETITIONER_OPTIONS, STATUS_OPTIONS, deadlineFrom } from "./meta";
-import { canEditPetition, canDeletePetition } from "@/lib/permissions";
+import { canEditPetition, canDeletePetition, canReassignPetition } from "@/lib/permissions";
 import {
   SUBJECT_PRESETS,
   hasSubjectPreset,
@@ -125,6 +125,8 @@ export function PetitionFormDialog({
   const canDelete = petition ? canDeletePetition(uid, isAdmin, petition) : Boolean(created);
   // La creare oricine poate scrie; la editare doar cine are dreptul — altfel doar vizualizare.
   const readOnly = !!petition && !canEditPetition(uid, isAdmin, petition);
+  // La creare responsabilul se alege liber: creatorul e utilizatorul curent.
+  const canReassign = !petition || canReassignPetition(uid, isAdmin, petition);
   const deadline = deadlineFrom(receivedDate);
   const yy = (receivedDate || today()).slice(2, 4);
 
@@ -333,7 +335,11 @@ export function PetitionFormDialog({
           <div className="grid grid-cols-2 gap-5">
             <div className="space-y-2">
               <Label>Responsabil</Label>
-              <Select disabled={readOnly}
+              {/* Poarta urmează exact WITH CHECK-ul din bază: responsabilul
+                  care nu e creator ar fi refuzat de RLS cu o eroare Postgres
+                  în engleză. Mai bine un selector blocat decât o promisiune
+                  pe care baza o retează la salvare. */}
+              <Select disabled={readOnly || !canReassign}
                 value={assigneeId ? assigneeId : UNASSIGNED}
                 onValueChange={(v) => setAssigneeId(v === UNASSIGNED ? "" : v)}
               >
