@@ -10,8 +10,12 @@
  *
  * Deasupra conținutului, nu în spatele lui, deși „fundal” asta ar sugera:
  * cardurile au fundal opac, așa că un filigran dedesubt s-ar fi văzut doar prin
- * spațiile dintre ele — peticit, ca o eroare de afișare. La 5,5% nu stânjenește
- * citirea; a fost verificat peste cifrele și graficele paginii de statistici.
+ * spațiile dintre ele — peticit, ca o eroare de afișare.
+ *
+ * Opacitatea a fost aleasă privind pagina, nu ghicind: 5,5% s-a dovedit prea
+ * palid ca să fie observat, iar 11% se citește dintr-o privire fără să atingă
+ * cifrele mari sau liniile graficelor. Dacă vreodată urcă mai sus, merită
+ * verificat din nou peste un grafic, nu doar peste text.
  *
  * Făcut cu `<pattern>` SVG, nu cu rânduri de text: modelul se repetă singur pe
  * toată înălțimea paginii, oricât ar fi ea, fără să ghicim câte rânduri trebuie.
@@ -33,7 +37,7 @@ export function TestingWatermark({ text = "ÎN TESTARE" }: { text?: string }) {
       // fiecare click de pe pagină. Părintele trebuie să fie `relative isolate`
       // — `isolate` ține `z-10` închis în pagină, ca dialogurile randate în
       // portal la nivelul lui `body` să rămână deasupra filigranului.
-      className="pointer-events-none absolute inset-0 z-10 h-full w-full select-none text-foreground/[0.055]"
+      className="pointer-events-none absolute inset-0 z-10 h-full w-full select-none text-foreground/[0.11]"
     >
       <defs>
         <pattern
