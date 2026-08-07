@@ -1,7 +1,7 @@
 import { startOfDay, startOfMonth, subMonths } from "date-fns";
 
 import { scheduledDays } from "./transfers";
-import { toISODate } from "./periods";
+import { parseISODate, toISODate } from "./periods";
 import type { Court } from "./courts";
 
 export interface TransferPlan {
@@ -64,7 +64,7 @@ export function groupByTransferDay(
 
   for (const p of plans) {
     if (p.done) continue;
-    const day = transferDayFor(new Date(`${p.hearing_date}T12:00:00`), today);
+    const day = transferDayFor(parseISODate(p.hearing_date), today);
     const list = byDay.get(day);
     if (list) list.push(p);
     else byDay.set(day, [p]);

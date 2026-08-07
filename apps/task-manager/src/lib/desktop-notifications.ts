@@ -69,11 +69,21 @@ export function show(n: AppNotification, onOpen?: (href: string) => void): void 
 
   // `tag` cu id-ul notificării: dacă evenimentul sosește de două ori, sistemul
   // înlocuiește anunțul în loc să stivuiască două identice.
-  const anunt = new Notification(TITLE, {
-    body: n.message,
-    icon: "/apple-icon.png",
-    tag: n.id,
-  });
+  //
+  // În try/catch fiindcă pe Chrome de Android constructorul aruncă TypeError —
+  // acolo anunțurile cer un service worker — deși verificarea de suport trece.
+  // Fără gardă, excepția cădea în mijlocul canalului de timp real, la fiecare
+  // eveniment; anunțul pe ecran e un bonus, nu ceva pentru care se moare.
+  let anunt: Notification;
+  try {
+    anunt = new Notification(TITLE, {
+      body: n.message,
+      icon: "/apple-icon.png",
+      tag: n.id,
+    });
+  } catch {
+    return;
+  }
 
   const href = notificationHref(n);
   anunt.onclick = () => {

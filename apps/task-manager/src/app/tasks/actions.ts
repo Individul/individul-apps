@@ -248,7 +248,14 @@ export async function createTag(name: string, color: string): Promise<{ error?: 
     .insert({ name: trimmed, color })
     .select()
     .single();
-  if (error) return { error: error.message };
+  if (error) {
+    // Numele etichetelor sunt unice; ciocnirea e un caz așteptat, nu o eroare
+    // de sistem — `updateTag` de mai jos o tratează deja la fel.
+    if ((error as { code?: string }).code === "23505") {
+      return { error: "Există deja o etichetă cu numele acesta." };
+    }
+    return { error: error.message };
+  }
   return { tag: data as { id: string; name: string; color: string } };
 }
 
@@ -313,7 +320,9 @@ export async function deleteTag(id: string): Promise<{ error?: string; success?:
 export async function attachTag(taskId: string, tagId: string): Promise<{ error?: string; success?: boolean }> {
   const supabase = createClient();
   const { error } = await supabase.from("task_tags").insert({ task_id: taskId, tag_id: tagId });
-  if (error) return { error: error.message };
+  // Dublu-click pe aceeași etichetă = ciocnire pe cheia primară. Starea dorită
+  // — eticheta atașată — există deja, deci e o reușită, nu o eroare de arătat.
+  if (error && (error as { code?: string }).code !== "23505") return { error: error.message };
   revalidatePath(`/tasks/${taskId}`);
   revalidatePath("/sarcini");
   revalidatePath("/");

@@ -171,7 +171,16 @@ export default async function RaportSedintePage({
 
         <footer className="flex justify-between border-t pt-3 text-xs text-muted-foreground print:text-black">
           <span>Întocmit: {profile?.full_name ?? "—"}</span>
-          <span>{format(new Date(), "d MMMM yyyy, HH:mm", { locale: ro })}</span>
+          {/* Ora Chișinăului, spusă explicit: serverul merge pe UTC, iar un
+              document oficial cu ceasul dat cu 2-3 ore înapoi la fiecare
+              tipărire ridică exact întrebările pe care nu le vrei la dosar. */}
+          <span>
+            {new Intl.DateTimeFormat("ro-RO", {
+              dateStyle: "long",
+              timeStyle: "short",
+              timeZone: "Europe/Chisinau",
+            }).format(new Date())}
+          </span>
         </footer>
       </article>
     </main>
