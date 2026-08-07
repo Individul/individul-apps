@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { AlertTriangle, Check, Plus } from "lucide-react";
+import { AlertTriangle, Check, Plus, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,16 +28,24 @@ export function PlanList({
   const [, startTransition] = useTransition();
 
   const groups = groupByTransferDay(plans);
-  const incheiate = plans.filter((p) => p.done).length;
+  // Cele mai noi primele: cine caută un „Încheiat" apăsat din greșeală îl
+  // caută pe cel de adineauri, nu pe cel de acum trei luni.
+  const incheiate = plans
+    .filter((p) => p.done)
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 
-  const markDone = (plan: TransferPlan) => {
+  const setDone = (plan: TransferPlan, done: boolean) => {
     startTransition(async () => {
-      const res = await setPlanDone(plan.id, true);
+      const res = await setPlanDone(plan.id, done);
       if (res.error) {
         toast.error(res.error);
         return;
       }
-      toast.success(`${plan.last_name} ${plan.first_name} — încheiat.`);
+      toast.success(
+        done
+          ? `${plan.last_name} ${plan.first_name} — încheiat.`
+          : `${plan.last_name} ${plan.first_name} — readus în listă.`,
+      );
       router.refresh();
     });
   };
@@ -49,7 +57,6 @@ export function PlanList({
           {groups.length === 0
             ? "Nicio persoană în așteptare."
             : `${groups.reduce((n, g) => n + g.plans.length, 0)} persoane de transferat`}
-          {incheiate > 0 && ` · ${incheiate} încheiate`}
         </p>
         <Button
           type="button"
@@ -137,7 +144,7 @@ export function PlanList({
                       variant="ghost"
                       size="sm"
                       className="h-7 px-2 text-xs"
-                      onClick={() => markDone(p)}
+                      onClick={() => setDone(p, true)}
                     >
                       <Check className="mr-1 h-3.5 w-3.5" /> Încheiat
                     </Button>
@@ -148,6 +155,48 @@ export function PlanList({
           </section>
         );
       })}
+
+      {/*
+        Încheiatele rămân la vedere, pliate, cu drum înapoi. „Încheiat" e un
+        singur click pe fiecare rând; înainte, persoana dispărea din registru
+        fără nicio cale de întoarcere în afară de SQL — într-un registru care
+        există tocmai ca nimeni să nu fie scăpat din vedere. Jurnalul de audit
+        știa deja să povestească redeschiderea; acum are și cine s-o facă.
+      */}
+      {incheiate.length > 0 && (
+        <details className="rounded-xl border bg-card">
+          <summary className="cursor-pointer select-none px-3.5 py-2 text-[13px] text-muted-foreground">
+            Încheiate ({incheiate.length})
+          </summary>
+          <div className="divide-y border-t">
+            {incheiate.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-3 px-3.5 py-2 text-[13px] text-muted-foreground"
+              >
+                <span className="min-w-0 flex-1 truncate">
+                  {p.last_name} {p.first_name}
+                  <span className="ml-2">{p.court}</span>
+                </span>
+                <span className="w-28 shrink-0 tabular-nums">
+                  {format(parseISODate(p.hearing_date), "d MMM yyyy", { locale: ro })}
+                </span>
+                <span className="flex w-28 shrink-0 justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setDone(p, false)}
+                  >
+                    <Undo2 className="mr-1 h-3.5 w-3.5" /> Redeschide
+                  </Button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
 
       <PlanDialog open={open} onOpenChange={setOpen} plan={editing} isAdmin={isAdmin} />
     </div>
