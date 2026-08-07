@@ -15,6 +15,7 @@ import { Comments } from "./comments";
 import { SubtaskList } from "@/components/tasks/subtask-list";
 import { TaskHistory } from "@/components/tasks/task-history";
 import { finalizeTask } from "@/app/tasks/actions";
+import { isTaskOverdue } from "@/lib/hub-stats";
 import { canEditTask, canFinalizeTask } from "@/lib/permissions";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
@@ -97,10 +98,11 @@ export function TaskDetail({
   const canFinalize =
     canFinalizeTask(currentUserId ?? "", isAdmin, task) && task.status !== "done";
 
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const overdue =
-    !!task.due_date && task.status !== "done" && parseISO(task.due_date) < startOfToday;
+  // Același predicat ca în listă, filtru și card — nu o socoteală proprie.
+  // Varianta locală uita scutirea pentru „în așteptare": lista arăta data
+  // neagră și zero restanțe, iar pagina asta o arăta roșie, la doi centimetri
+  // sub insigna violetă „În așteptare".
+  const overdue = isTaskOverdue(task);
 
   const handleFinalize = () => {
     startTransition(async () => {

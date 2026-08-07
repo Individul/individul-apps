@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { isTaskOverdue } from "@/lib/hub-stats";
 import { PRIORITY_ORDER } from "@/lib/task-filters";
 import { canEditTask, canDeleteTask, canFinalizeTask } from "@/lib/permissions";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
@@ -67,16 +68,12 @@ export function initials(name: string | null | undefined): string {
     .join("");
 }
 
-// „Restant" = termen trecut (înainte de începutul zilei curente) și sarcina
-// nu e finalizată. Cât așteaptă răspuns extern nu e restantă: întârzierea nu e
-// a responsabilului. Partajat între lista compactă și celula de coloană.
+// Delegat, nu recalculat: cifra „restant" trebuie să fie una singură oriunde
+// apare — card, filtru, celulă, detaliu. Pagina de detaliu a avut propria
+// socoteală și a uitat scutirea pentru „în așteptare"; două numere care se
+// contrazic pe același ecran sunt exact ce interzice delegarea asta.
 export function isOverdue(task: Task): boolean {
-  if (!task.due_date) return false;
-  if (task.status === "done" || task.status === "waiting") return false;
-  const due = parseISO(task.due_date);
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return due < startOfToday;
+  return isTaskOverdue(task);
 }
 
 /** De câte zile așteaptă sarcina răspuns extern; null dacă nu așteaptă. */

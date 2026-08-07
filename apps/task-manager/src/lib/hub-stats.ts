@@ -90,6 +90,18 @@ export function isTaskOverdue(task: TaskCounts, today: Date = new Date()): boole
   return classify(task.due_date, today) === "overdue";
 }
 
+/**
+ * Scadentă în următoarele 7 zile — perechea lui `isTaskOverdue`.
+ *
+ * Un singur predicat per cifră: cardul de pe pagina de start, filtrul listei
+ * și vederea rapidă trebuie să numere identic. Bugul „8 restanțe aici, 1
+ * dincolo" a venit exact din recalculări private ale aceleiași întrebări.
+ */
+export function isTaskDueSoon(task: TaskCounts, today: Date = new Date()): boolean {
+  if (task.status === "done" || task.status === "waiting") return false;
+  return classify(task.due_date, today) === "soon";
+}
+
 /** O petiție e restantă dacă are termen de răspuns trecut și e încă în examinare. */
 export function isPetitionOverdue(petition: PetitionCounts, today: Date = new Date()): boolean {
   return (

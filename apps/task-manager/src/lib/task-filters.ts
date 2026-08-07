@@ -1,5 +1,5 @@
-import { parseISO } from "date-fns";
 import type { Task, TaskStatus, TaskPriority } from "./types";
+import { isTaskDueSoon, isTaskOverdue } from "./hub-stats";
 import { fold } from "./text";
 
 export const PRIORITY_ORDER: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
@@ -17,9 +17,6 @@ export interface TaskFilter {
 
 export function filterTasks(tasks: Task[], f: TaskFilter): Task[] {
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const soonLimit = new Date(startOfToday);
-  soonLimit.setDate(soonLimit.getDate() + 7);
 
   return tasks.filter((t) => {
     if (f.status && t.status !== f.status) return false;
@@ -32,14 +29,11 @@ export function filterTasks(tasks: Task[], f: TaskFilter): Task[] {
         return false;
       }
     }
-    if (f.due) {
-      // „Restante"/„Scadente" ignoră sarcinile finalizate, pe cele fără termen
-      // și pe cele în așteptare — la acestea din urmă termenul nu curge.
-      if (!t.due_date || t.status === "done" || t.status === "waiting") return false;
-      const due = parseISO(t.due_date);
-      if (f.due === "overdue" && !(due < startOfToday)) return false;
-      if (f.due === "soon" && !(due >= startOfToday && due <= soonLimit)) return false;
-    }
+    // Aceleași predicate ca pe cardul de start și în celula de termen: cifra
+    // „Restante" trebuie să fie una singură, oriunde apare. Recalculările
+    // private ale aceleiași întrebări au produs deja contradicții pe ecran.
+    if (f.due === "overdue" && !isTaskOverdue(t, now)) return false;
+    if (f.due === "soon" && !isTaskDueSoon(t, now)) return false;
     return true;
   });
 }
