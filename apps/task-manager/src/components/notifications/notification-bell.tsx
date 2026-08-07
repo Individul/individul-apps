@@ -133,13 +133,49 @@ export function NotificationBell({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-h-96 w-80 overflow-y-auto">
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <span className="text-sm font-semibold">Notificări</span>
+        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-semibold">Notificări</span>
+            {/* Doar iconiță: alături de „Marchează toate citite” nu încap două
+                etichete în 320px. Înțelesul stă în `title` și în `aria-label`,
+                iar starea în culoare — aprins când sunt pornite. */}
+            {anunturi.supported && (
+              <button
+                type="button"
+                onClick={() => void toggleAnunturi()}
+                aria-pressed={anunturi.enabled}
+                title={
+                  anunturi.permission === "denied"
+                    ? "Anunțurile pe ecran sunt blocate din setările browserului"
+                    : anunturi.enabled
+                      ? "Anunțuri pe ecran: pornite. Click pentru a le opri."
+                      : "Anunțuri pe ecran: oprite. Click pentru a le porni."
+                }
+                aria-label={
+                  anunturi.enabled
+                    ? "Oprește anunțurile pe ecran"
+                    : "Pornește anunțurile pe ecran"
+                }
+                className={cn(
+                  "rounded p-1 transition-colors hover:bg-accent",
+                  anunturi.enabled
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {anunturi.enabled ? (
+                  <BellRing className="h-3.5 w-3.5" aria-hidden />
+                ) : (
+                  <BellOff className="h-3.5 w-3.5" aria-hidden />
+                )}
+              </button>
+            )}
+          </div>
           {unread > 0 && (
             <button
               type="button"
               onClick={() => void handleMarkAll()}
-              className="text-xs font-normal text-muted-foreground transition-colors hover:text-foreground"
+              className="shrink-0 text-xs font-normal text-muted-foreground transition-colors hover:text-foreground"
             >
               Marchează toate citite
             </button>
@@ -194,42 +230,6 @@ export function NotificationBell({
               );
             })}
           </div>
-        )}
-
-        {/* Comutatorul stă jos, nu sus: se atinge o dată, la început, iar apoi
-            n-are ce căuta înaintea notificărilor de fiecare zi. Nu apare deloc
-            în browserele fără anunțuri de sistem. */}
-        {anunturi.supported && (
-          <>
-            <DropdownMenuSeparator />
-            {anunturi.permission === "denied" ? (
-              <p className="flex items-start gap-2 px-2 py-2 text-xs text-muted-foreground">
-                <BellOff className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                Anunțurile pe ecran sunt blocate din setările browserului.
-              </p>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void toggleAnunturi()}
-                className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-xs transition-colors hover:bg-accent"
-              >
-                <span className="flex items-center gap-2">
-                  <BellRing className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  Anunțuri pe ecran
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
-                    anunturi.enabled
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {anunturi.enabled ? "pornite" : "oprite"}
-                </span>
-              </button>
-            )}
-          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
