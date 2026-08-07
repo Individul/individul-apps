@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!--
+    Favicon-ul aplicației. Convenție Next.js App Router: fiind `src/app/icon.svg`,
+    e legat automat în <head>, fără nimic în layout.tsx.
+
+    Perechea cu `favicon.ico` de alături nu e redundanță. Next alege un singur
+    fișier per nume de convenție: cu `icon.svg` și `icon.png` puse împreună,
+    verificarea în HTML-ul randat a arătat că îl leagă doar pe al doilea, iar
+    SVG-ul rămâne greutate moartă. `favicon.ico` e altă convenție, deci se
+    adaugă în loc să concureze — .ico pentru browserele fără suport SVG, SVG-ul
+    pentru restul, clar la orice mărime și zoom.
+
+    Bifă albă pe pătrat bleumarin (--primary: 215 25% 17%). Bifa, și nu o
+    clipboardă sau inițialele secției, fiindcă la 16×16 — mărimea reală dintr-un
+    tab — orice desen cu mai mult de două trăsături devine o pată cenușie.
+  -->
+  <rect width="64" height="64" rx="14" fill="#212a36"/>
+  <path d="M18 32 L28 42 L46 21"
+        fill="none" stroke="#ffffff" stroke-width="7"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

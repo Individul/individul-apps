@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-08-07",
+    text: "Aplicația are pictogramă proprie: fila din browser se recunoaște acum dintr-o privire printre celelalte.",
+  },
+  {
     date: "2026-08-06",
     text: "Pagina de statistici poartă în diagonală însemnul „în testare”, ca cifrele de acolo să nu fie preluate ca oficiale până la verificare.",
   },
