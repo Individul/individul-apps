@@ -137,6 +137,24 @@ export function needsAttention(p: Pending): boolean {
   return p.overdue || p.days <= leadDays(p.obligation.kind);
 }
 
+/**
+ * Cât de urgentă e cea mai urgentă obligație din listă.
+ *
+ * Trei trepte, nu două, fiindcă ziua termenului nu e nici „mai e timp”, nici
+ * „ai întârziat” — e singura zi în care lucrul chiar trebuie făcut, iar dacă
+ * arată la fel ca „peste cinci zile”, exact ea trece neobservată.
+ *
+ * Banda ia treapta celui mai urgent rând: dacă e ceva restant, aia e știrea,
+ * chiar dacă mai e și ceva scadent azi.
+ */
+export type ObligationUrgency = "restant" | "astazi" | "apropiat";
+
+export function bandUrgency(items: Pending[]): ObligationUrgency {
+  if (items.some((p) => p.overdue)) return "restant";
+  if (items.some((p) => p.days === 0)) return "astazi";
+  return "apropiat";
+}
+
 /** Restanțele primele, apoi după termen; la egalitate, ordinea din listă. */
 export function sortPending(items: Pending[]): Pending[] {
   return [...items].sort(

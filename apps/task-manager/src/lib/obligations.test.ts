@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  bandUrgency,
   lastDue,
   needsAttention,
   nextDue,
   pendingFor,
   sortPending,
   type Obligation,
+  type Pending,
 } from "./obligations";
 import { toISODate } from "./periods";
 
@@ -171,5 +173,37 @@ describe("data de început", () => {
   it("înscrisă după termenul lunii, sare la luna următoare", () => {
     const tarziu = o({ day_of_month: 20, starts_on: "2026-10-25" });
     expect(pendingFor(tarziu, new Set(), new Date(2026, 9, 25)).due).toBe("2026-11-20");
+  });
+});
+
+describe("bandUrgency", () => {
+  // Treapta benzii se decide doar din `days` și `overdue`; restul câmpurilor
+  // sunt umplute ca să avem un `Pending` întreg, nu fiindcă ar conta aici.
+  const p = (days: number): Pending => ({
+    obligation: ZI_20,
+    due: "2026-08-30",
+    days,
+    overdue: days < 0,
+  });
+
+  it("fără nimic scadent azi sau trecut, banda e doar apropiată", () => {
+    expect(bandUrgency([p(3), p(5)])).toBe("apropiat");
+  });
+
+  it("ziua termenului își are treapta ei, nu se pierde în „apropiate”", () => {
+    expect(bandUrgency([p(0)])).toBe("astazi");
+  });
+
+  it("un termen de azi ridică banda chiar dacă restul sunt departe", () => {
+    expect(bandUrgency([p(4), p(0), p(2)])).toBe("astazi");
+  });
+
+  it("restanța bate ziua termenului: aia e știrea", () => {
+    expect(bandUrgency([p(0), p(-1)])).toBe("restant");
+  });
+
+  it("o zi rămasă nu e încă „astăzi”", () => {
+    // Granița contează: la 1 zi mai e timp de lucru, la 0 nu mai e.
+    expect(bandUrgency([p(1)])).toBe("apropiat");
   });
 });
