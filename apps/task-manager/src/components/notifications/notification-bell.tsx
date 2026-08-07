@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, BellRing, BellOff } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
+import * as desktop from "@/lib/desktop-notifications";
 import {
   markAllNotificationsRead,
   markNotificationRead,
@@ -37,8 +39,24 @@ export function NotificationBell({
   initialUnread,
   userId,
 }: NotificationBellProps) {
+  const router = useRouter();
   const [items, setItems] = useState<Notification[]>(initialItems);
   const [unread, setUnread] = useState<number>(initialUnread);
+  // Starea anunțurilor de sistem se citește abia după montare: pe server nu
+  // există `Notification`, iar o valoare ghicită ar strica hidratarea.
+  const [anunturi, setAnunturi] = useState<{
+    supported: boolean;
+    permission: NotificationPermission | null;
+    enabled: boolean;
+  }>({ supported: false, permission: null, enabled: false });
+
+  useEffect(() => {
+    setAnunturi({
+      supported: desktop.isSupported(),
+      permission: desktop.permission(),
+      enabled: desktop.isEnabled(),
+    });
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -53,15 +71,32 @@ export function NotificationBell({
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          setItems((prev) => [payload.new as Notification, ...prev].slice(0, 20));
+          const n = payload.new as Notification;
+          setItems((prev) => [n, ...prev].slice(0, 20));
           setUnread((u) => u + 1);
+          // Anunțul de sistem se decide singur dacă apare: tace când
+          // utilizatorul e chiar pe aplicație sau n-a cerut anunțuri.
+          desktop.show(n, (href) => router.push(href));
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, router]);
+
+  const toggleAnunturi = async () => {
+    if (anunturi.enabled) {
+      desktop.setEnabled(false);
+      setAnunturi((s) => ({ ...s, enabled: false }));
+      return;
+    }
+    const p = await desktop.enable();
+    setAnunturi((s) => ({ ...s, permission: p, enabled: p === "granted" }));
+    if (p === "denied") {
+      toast.error("Browserul a blocat anunțurile. Se reactivează din setările lui.");
+    }
+  };
 
   const handleItemClick = (n: Notification) => {
     if (n.read) return;
@@ -140,12 +175,9 @@ export function NotificationBell({
                 "block rounded-md px-2 py-2 text-left",
                 !n.read && "bg-accent/60",
               );
-              // Petițiile n-au pagină proprie — se deschid din registru.
-              const href = n.task_id
-                ? `/tasks/${n.task_id}`
-                : n.petition_id
-                  ? "/petitii"
-                  : null;
+              // Aceeași țintă ca a anunțului de sistem: dacă regula se schimbă,
+              // se schimbă în amândouă odată.
+              const href = desktop.notificationHref(n);
               return href ? (
                 <Link
                   key={n.id}
@@ -162,6 +194,42 @@ export function NotificationBell({
               );
             })}
           </div>
+        )}
+
+        {/* Comutatorul stă jos, nu sus: se atinge o dată, la început, iar apoi
+            n-are ce căuta înaintea notificărilor de fiecare zi. Nu apare deloc
+            în browserele fără anunțuri de sistem. */}
+        {anunturi.supported && (
+          <>
+            <DropdownMenuSeparator />
+            {anunturi.permission === "denied" ? (
+              <p className="flex items-start gap-2 px-2 py-2 text-xs text-muted-foreground">
+                <BellOff className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                Anunțurile pe ecran sunt blocate din setările browserului.
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void toggleAnunturi()}
+                className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-xs transition-colors hover:bg-accent"
+              >
+                <span className="flex items-center gap-2">
+                  <BellRing className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  Anunțuri pe ecran
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
+                    anunturi.enabled
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {anunturi.enabled ? "pornite" : "oprite"}
+                </span>
+              </button>
+            )}
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
