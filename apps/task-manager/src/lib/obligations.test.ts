@@ -96,6 +96,46 @@ describe("pendingFor", () => {
     const p = pendingFor(ZI_20, new Set(), new Date(2026, 7, 10));
     expect(p.due).toBe("2026-07-20");
   });
+
+  it("bifa pusă din timp se vede: rândul trece la termenul următor", () => {
+    // Fluxul normal: raportul cu termen pe 20 se trimite pe 17-19. Bifa cade pe
+    // termenul viitor (20 august), iar rândul trebuie să avanseze — altfel bifa
+    // e invizibilă, iar un click greșit marchează tăcut un raport netrimis ca
+    // trimis, fără nicio schimbare pe ecran.
+    const p = pendingFor(ZI_20, new Set(["2026-07-20", "2026-08-20"]), new Date(2026, 7, 18));
+    expect(p.due).toBe("2026-09-20");
+    expect(p.overdue).toBe(false);
+    expect(needsAttention(p)).toBe(false);
+  });
+
+  it("merge înainte peste oricâte termene deja bifate", () => {
+    const p = pendingFor(
+      ZI_20,
+      new Set(["2026-07-20", "2026-08-20", "2026-09-20"]),
+      new Date(2026, 7, 18),
+    );
+    expect(p.due).toBe("2026-10-20");
+  });
+
+  it("săptămânal: bifa din timp avansează la vinerea următoare", () => {
+    // 5 aug 2026 e miercuri; vinerea curentă e 7 aug. Bifată din timp,
+    // urmează 14 aug.
+    const p = pendingFor(VINERI, new Set(["2026-07-31", "2026-08-07"]), new Date(2026, 7, 5));
+    expect(p.due).toBe("2026-08-14");
+  });
+
+  it("cu început în viitor, termenul de start bifat avansează, nu se întoarce", () => {
+    // Obligația începe în viitor; primul ei termen e 20 august. Bifat din timp,
+    // rândul trebuie să arate 20 septembrie — nu tot 20 august înapoi.
+    const startViitor = o({ starts_on: "2026-08-01" });
+    const p = pendingFor(startViitor, new Set(["2026-08-20"]), new Date(2026, 6, 25));
+    expect(p.due).toBe("2026-09-20");
+  });
+
+  it("ultima zi a lunii: bifa din timp trece la ultima zi a lunii următoare", () => {
+    const p = pendingFor(ULTIMA, new Set(["2026-07-31", "2026-08-31"]), new Date(2026, 7, 28));
+    expect(p.due).toBe("2026-09-30");
+  });
 });
 
 describe("ce se arată la vedere", () => {

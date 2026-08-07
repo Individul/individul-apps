@@ -1,4 +1,5 @@
 import {
+  addDays,
   addMonths,
   addWeeks,
   differenceInCalendarDays,
@@ -96,13 +97,20 @@ export interface Pending {
 }
 
 /**
- * Termenul care contează acum pentru o obligație.
+ * Termenul care contează acum pentru o obligație: primul termen nebifat.
  *
  * Dacă cel mai recent termen trecut n-a fost bifat, el rămâne cel care contează
- * — restanța nu dispare pentru că a venit luna următoare. Altfel se trece la
- * următorul.
+ * — restanța nu dispare pentru că a venit luna următoare.
  *
- * Se privește în urmă o singură apariție. O dare de seamă nebifată acum șase
+ * De la el se merge înainte peste TOATE termenele deja bifate, nu doar unul.
+ * Bifarea din timp e fluxul normal — raportul cu termen pe 20 se trimite pe
+ * 17-19, deci bifa cade pe un termen viitor. Fără mersul înainte, bifa aceea
+ * era invizibilă: rândul rămânea neschimbat, banda continua să bată la cap,
+ * iar un click greșit marca tăcut un raport netrimis ca trimis, fără nicio
+ * urmă pe ecran. Acum orice bifă mută rândul — se vede și bifa bună, și
+ * greșeala.
+ *
+ * În urmă se privește o singură apariție. O dare de seamă nebifată acum șase
  * luni nu mai e o acțiune de făcut, ci un gol în evidență; ținută la vedere, ar
  * împinge afară exact termenul de săptămâna asta.
  */
@@ -115,8 +123,12 @@ export function pendingFor(
   const last = lastDue(o, today);
   // Un termen dinaintea începutului evidenței n-a fost niciodată al ei: nu e o
   // restanță, ci o lună despre care obligația n-avea ce spune.
-  const relevant = last < start ? dueOnOrAfter(o, start) : last;
-  const due = completed.has(toISODate(relevant)) ? nextDue(o, today) : relevant;
+  let due = last < start ? dueOnOrAfter(o, start) : last;
+  // Bifele sunt finite, iar fiecare pas merge strict înainte, deci bucla se
+  // oprește cel târziu la primul termen fără bifă.
+  while (completed.has(toISODate(due))) {
+    due = dueOnOrAfter(o, addDays(due, 1));
+  }
   const days = differenceInCalendarDays(due, startOfDay(today));
   return { obligation: o, due: toISODate(due), days, overdue: days < 0 };
 }

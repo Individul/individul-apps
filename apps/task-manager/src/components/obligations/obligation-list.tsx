@@ -9,8 +9,8 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { markObligationDone, undoObligationDone } from "@/app/obligatii/actions";
-import { lastDue, sortPending, type Pending } from "@/lib/obligations";
-import { parseISODate, toISODate } from "@/lib/periods";
+import { sortPending, type Pending } from "@/lib/obligations";
+import { parseISODate } from "@/lib/periods";
 import { cn } from "@/lib/utils";
 
 function ritm(p: Pending): string {
@@ -47,17 +47,22 @@ export function ObligationList({ items }: { items: Pending[] }) {
     });
   };
 
-  // Se scoate bifa de pe termenul cel mai recent trecut — cel care tocmai a
-  // fost pus, dacă apăsarea a fost o greșeală.
+  // Care bifă se scoate decide serverul — ultima din evidență — nu un calcul
+  // pe ceasul clientului: după o bifă pusă din timp, cele două nu coincid, iar
+  // varianta pe client ștergea înregistrarea reală a lunii trecute. Mesajul
+  // spune data scoasă, ca anularea să fie verificabilă dintr-o privire.
   const scoate = (p: Pending) => {
-    const due = toISODate(lastDue(p.obligation));
     startTransition(async () => {
-      const res = await undoObligationDone(p.obligation.id, due);
+      const res = await undoObligationDone(p.obligation.id);
       if (res.error) {
         toast.error(res.error);
         return;
       }
-      toast.success("Bifa a fost scoasă.");
+      toast.success(
+        res.removed
+          ? `Bifa de pe ${format(parseISODate(res.removed), "d MMMM", { locale: ro })} a fost scoasă.`
+          : "Bifa a fost scoasă.",
+      );
       router.refresh();
     });
   };
