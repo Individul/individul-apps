@@ -2,14 +2,13 @@ import { format, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 import { CheckCircle2, Circle, Clock, Pencil, Plus, X } from "lucide-react";
 
+// `STATUS_LABEL` e tipizat pe `TaskStatus`, nu pe `string`. Aici era o copie
+// locală care nu cunoștea „în așteptare", iar `Record<string, string>` a lăsat
+// compilatorul mut: schimbarea către starea aceea se afișa fără etichetă.
+import { STATUS_LABEL } from "@/components/tasks/meta";
 import { cn } from "@/lib/utils";
-import type { AuditEntry } from "@/lib/types";
+import type { AuditEntry, TaskStatus } from "@/lib/types";
 
-const STATUS_LABEL: Record<string, string> = {
-  todo: "De făcut",
-  in_progress: "În lucru",
-  done: "Finalizat",
-};
 const PRIORITY_LABEL: Record<string, string> = {
   low: "Scăzută",
   medium: "Medie",
@@ -32,13 +31,27 @@ function fmtDue(v: unknown): string {
   }
 }
 
+/**
+ * Eticheta unei stări venite din jurnal.
+ *
+ * Valoarea vine din JSON-ul auditului, deci e `string`, nu `TaskStatus` — și
+ * chiar poate fi o stare care nu mai există în cod, fiindcă jurnalul păstrează
+ * și trecutul. De aceea căutarea e totală: necunoscutul se arată așa cum e
+ * scris în jurnal, nu ca „—". O liniuță ar șterge din istorie exact informația
+ * pentru care există istoria.
+ */
+function statusLabel(v: unknown): string {
+  const key = String(v);
+  return key in STATUS_LABEL ? STATUS_LABEL[key as TaskStatus] : key;
+}
+
 function changeLines(e: AuditEntry): string[] {
   const d = e.details ?? {};
   const has = (k: string) => Object.prototype.hasOwnProperty.call(d, k);
   const out: string[] = [];
   if (has("status_to")) {
     out.push(
-      `Stare: ${STATUS_LABEL[String(d.status_from)] ?? "—"} → ${STATUS_LABEL[String(d.status_to)] ?? "—"}`,
+      `Stare: ${statusLabel(d.status_from)} → ${statusLabel(d.status_to)}`,
     );
   }
   if (has("priority_to")) {

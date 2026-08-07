@@ -1,4 +1,4 @@
-import { parseISO } from "date-fns";
+import { isTaskOverdue } from "@/lib/hub-stats";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/types";
 
@@ -18,13 +18,15 @@ export function TaskSummary({ tasks, label = "Rezumat" }: { tasks: Task[]; label
   const total = tasks.length;
   const todo = tasks.filter((t) => t.status === "todo").length;
   const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+  const waiting = tasks.filter((t) => t.status === "waiting").length;
   const done = tasks.filter((t) => t.status === "done").length;
 
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const overdue = tasks.filter(
-    (t) => t.due_date && t.status !== "done" && parseISO(t.due_date) < startOfToday,
-  ).length;
+  // `isTaskOverdue`, nu un calcul propriu: acesta scutește sarcinile în
+  // așteptare, fiindcă un dosar plecat la instanță nu e restanța ta. Calculul
+  // local de dinainte nu le scutea, așa că rezumatul arăta 8 restanțe acolo
+  // unde bara laterală — care folosește filtrul comun — arăta 1. Două cifre
+  // care se contrazic pe același ecran sunt mai rele decât o cifră lipsă.
+  const overdue = tasks.filter((t) => isTaskOverdue(t)).length;
 
   const progress = total ? Math.round((done / total) * 100) : 0;
 
@@ -33,9 +35,13 @@ export function TaskSummary({ tasks, label = "Rezumat" }: { tasks: Task[]; label
       <h2 className="text-sm font-medium">{label}</h2>
 
       <div className="grid grid-cols-2 gap-4">
+        {/* În ordinea fluxului, iar totalul se închide: până acum lipsea „în
+            așteptare", deci 17 + 1 + 9 nu dădeau 41 și nimeni nu putea spune
+            unde s-au dus restul. */}
         <Stat label="Total" value={total} />
         <Stat label="De făcut" value={todo} dot="bg-slate-400" />
         <Stat label="În lucru" value={inProgress} dot="bg-blue-500" />
+        <Stat label="În așteptare" value={waiting} dot="bg-violet-500" />
         <Stat label="Finalizate" value={done} dot="bg-green-500" />
       </div>
 

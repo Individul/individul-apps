@@ -11,16 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { STATUS_OPTIONS } from "@/components/tasks/meta";
 import type { TaskFilter } from "@/lib/task-filters";
 import type { Profile, TaskPriority, TaskStatus } from "@/lib/types";
 
 const ALL = "all";
-
-const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-  { value: "todo", label: "De făcut" },
-  { value: "in_progress", label: "În lucru" },
-  { value: "done", label: "Finalizat" },
-];
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
   { value: "low", label: "Scăzută" },

@@ -27,16 +27,10 @@ import { createTask, updateTask } from "@/app/tasks/actions";
 import { canReassignTask } from "@/lib/permissions";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { STATUS_OPTIONS } from "@/components/tasks/meta";
 import type { Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
 
 const UNASSIGNED = "unassigned";
-
-const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-  { value: "todo", label: "De făcut" },
-  { value: "in_progress", label: "În lucru" },
-  { value: "waiting", label: "În așteptare" },
-  { value: "done", label: "Finalizat" },
-];
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
   { value: "low", label: "Scăzută" },
