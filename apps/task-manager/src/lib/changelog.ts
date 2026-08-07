@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-07",
+    text: "Banda de termene are o treaptă nouă: în chiar ziua termenului devine portocalie, între galbenul „se apropie” și roșul „ai depășit”.",
+  },
+  {
+    date: "2026-08-07",
     text: "Aplicația are pictogramă proprie: fila din browser se recunoaște acum dintr-o privire printre celelalte.",
   },
   {
