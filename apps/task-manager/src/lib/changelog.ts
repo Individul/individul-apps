@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-07",
+    text: "Notificările pot apărea și ca anunț în colțul ecranului, ca la poșta electronică. Se pornesc din clopoțel, „Anunțuri pe ecran”, și funcționează cât timp aplicația e deschisă într-o filă.",
+  },
+  {
+    date: "2026-08-07",
     text: "Banda de termene are o treaptă nouă: în chiar ziua termenului devine portocalie, între galbenul „se apropie” și roșul „ai depășit”.",
   },
   {
