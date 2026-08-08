@@ -1,5 +1,6 @@
 import { addDays, startOfDay } from "date-fns";
-import type { DateRange } from "./periods";
+import { toISODate, type DateRange } from "./periods";
+import { aggregate, type TransferCounts } from "./transfers";
 
 /**
  * Săptămâna pe care o acoperă raportul: marțea trecută → luni, inclusiv.
@@ -24,4 +25,65 @@ export function reportWeek(today: Date = new Date()): DateRange {
 /** Săptămâna vecină, pentru navigarea înapoi/înainte. */
 export function shiftWeek(week: DateRange, weeks: number): DateRange {
   return { from: addDays(week.from, weeks * 7), to: addDays(week.to, weeks * 7) };
+}
+
+/**
+ * Rândurile din care ies cifrele, așa cum vin din bază.
+ *
+ * Tipuri structurale, nu `Transfer`/`Hearing`/`Release`: aici se citesc doar
+ * coloanele scrise mai jos, iar un test n-ar trebui să construiască un rând
+ * întreg, cu `id` și `created_at`, ca să verifice o adunare.
+ */
+export interface WeeklyRows {
+  transfers: (TransferCounts & { transfer_date: string })[];
+  /** `tc_total` e coloană generată în Postgres — se citește, nu se recompune. */
+  hearings: { session_date: string; tc_total: number; tc_amanate: number }[];
+  releases: { release_date: string; count: number }[];
+}
+
+/** Cele patru cifre cerute de conducere, plus amânatele de sub teleconferințe. */
+export interface WeeklyFigures {
+  plecati: number;
+  sositi: number;
+  teleconferinte: number;
+  /** Din teleconferințele de mai sus, câte s-au amânat. */
+  amanate: number;
+  eliberati: number;
+}
+
+/**
+ * Cifrele săptămânii, dintr-un singur loc.
+ *
+ * Pagina și PDF-ul aduc rândurile fiecare pe cont propriu, dar le adună aici,
+ * amândouă. A doua socoteală, oriunde ar fi scrisă, se desincronizează de prima
+ * la prima modificare — s-a întâmplat deja în proiectul ăsta, cu restanțele:
+ * „8" într-un loc, „1" în altul, aceeași zi. O hârtie tipărită care nu se
+ * potrivește cu ecranul e mai rea decât lipsa raportului.
+ *
+ * Filtrarea pe interval se face aici, nu la apelant: `getTransfers()` aduce
+ * registrul întreg, iar o zi scăpată din afara săptămânii nu se vede în total.
+ * Interogările pe ședințe și eliberări filtrează deja în bază — repetarea nu
+ * costă nimic și face funcția adevărată pentru orice listă i-ai da.
+ *
+ * Comparația se face pe text AAAA-LL-ZZ, exact ca `gte`/`lte` în Postgres:
+ * formatul se sortează alfabetic la fel ca cronologic, deci nu mai e nevoie ca
+ * fiecare rând să treacă printr-un `Date`.
+ */
+export function weeklyFigures(week: DateRange, rows: WeeklyRows): WeeklyFigures {
+  const from = toISODate(week.from);
+  const to = toISODate(week.to);
+  const inWeek = (zi: string) => zi >= from && zi <= to;
+
+  const transferuri = aggregate(rows.transfers.filter((t) => inWeek(t.transfer_date)));
+  const sedinte = rows.hearings.filter((h) => inWeek(h.session_date));
+
+  return {
+    plecati: transferuri.plecati,
+    sositi: transferuri.sositi,
+    teleconferinte: sedinte.reduce((a, h) => a + (h.tc_total || 0), 0),
+    amanate: sedinte.reduce((a, h) => a + (h.tc_amanate || 0), 0),
+    eliberati: rows.releases
+      .filter((r) => inWeek(r.release_date))
+      .reduce((a, r) => a + (r.count || 0), 0),
+  };
 }

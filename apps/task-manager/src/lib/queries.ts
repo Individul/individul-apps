@@ -11,6 +11,7 @@ import type {
   StatReport,
   StatValue,
   Transfer,
+  Release,
 } from "./types";
 import type { Hearing } from "./hearings";
 import type { TransferPlan } from "./transfer-plans";
@@ -314,6 +315,26 @@ export async function getHearing(date: string): Promise<Hearing | null> {
     .maybeSingle();
   if (error) return null;
   return (data ?? null) as Hearing | null;
+}
+
+/**
+ * Eliberările din interval, zilele noi întâi — ca la ședințe.
+ *
+ * Eroarea nu se aruncă: dacă migrarea 0026 nu e încă aplicată, tabela lipsește,
+ * iar raportul săptămânal trebuie să se deschidă oricum, cu zero la eliberați și
+ * cu celelalte trei cifre întregi. O pagină căzută n-ar spune nimănui care e
+ * problema; un zero, cel puțin, se poate completa.
+ */
+export async function getReleases(from: string, to: string): Promise<Release[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("releases")
+    .select("*")
+    .gte("release_date", from)
+    .lte("release_date", to)
+    .order("release_date", { ascending: false });
+  if (error) return [];
+  return (data ?? []) as unknown as Release[];
 }
 
 /**

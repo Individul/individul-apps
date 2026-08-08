@@ -146,6 +146,22 @@ export interface StatValue {
   position: number;
 }
 /**
+ * Eliberările unei zile: ziua și câți. Atât.
+ *
+ * `release_date` e unic în bază — un singur rând pe zi — deci a doua
+ * introducere pentru aceeași zi o corectează pe prima. Cifre, nu persoane.
+ */
+export interface Release {
+  id: string;
+  release_date: string;
+  count: number;
+  note: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+/**
  * Un transfer de deținuți: o zi + un penitenciar partener + planificat/urgent,
  * cu plecările și sosirile în același rând. Cifre, nu persoane.
  */
