@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   Scale,
   CalendarClock,
+  DoorOpen,
   UserRound,
   Gavel,
   ListChecks,
@@ -40,6 +41,7 @@ const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
   transfer_plans: UserRound,
   obligations: CalendarClock,
   defendants: Scale,
+  releases: DoorOpen,
   obligation_completions: CalendarClock,
   profiles: Users,
 };
@@ -58,6 +60,7 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   transfer_plans: "planificarea transferului",
   obligations: "informarea periodică",
   defendants: "inculpatul",
+  releases: "evidența eliberărilor",
   obligation_completions: "un termen de informare",
 };
 
@@ -179,6 +182,20 @@ function phrase(e: AuditEntry): string {
       return `a corectat ședințele din ${zi}: total ${String(d.total_from)} → ${String(d.total_to)}`;
     }
     return `a modificat ședințele din ${zi}`;
+  }
+  if (e.entity === "releases") {
+    const d = e.details ?? {};
+    const zi = d.release_date
+      ? format(parseISO(String(d.release_date)), "d MMM yyyy", { locale: ro })
+      : "o zi";
+    if (e.action === "INSERT") return `a introdus eliberările din ${zi}`;
+    if (e.action === "DELETE") return `a șters eliberările din ${zi}`;
+    // Cifra e tot ce are rândul: după ce numărul vechi a fost suprascris, doar
+    // „3 → 5" mai spune dacă a fost o corectură sau o greșeală.
+    if (d.count_from !== undefined && d.count_to !== undefined) {
+      return `a corectat eliberările din ${zi}: ${String(d.count_from)} → ${String(d.count_to)}`;
+    }
+    return `a modificat eliberările din ${zi}`;
   }
   const label = ENTITY_LABEL[e.entity] ?? e.entity;
   const detail = detailText(e);
