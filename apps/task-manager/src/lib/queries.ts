@@ -318,14 +318,26 @@ export async function getHearing(date: string): Promise<Hearing | null> {
 }
 
 /**
- * Eliberările din interval, zilele noi întâi — ca la ședințe.
+ * Registrul eliberărilor, cu tot cu răspunsul la întrebarea „a putut fi citit?".
  *
- * Eroarea nu se aruncă: dacă migrarea 0026 nu e încă aplicată, tabela lipsește,
- * iar raportul săptămânal trebuie să se deschidă oricum, cu zero la eliberați și
- * cu celelalte trei cifre întregi. O pagină căzută n-ar spune nimănui care e
- * problema; un zero, cel puțin, se poate completa.
+ * Nu doar rândurile, fiindcă lista goală ar fi ambiguă. Fără migrarea 0026
+ * tabela nu există, interogarea cade, iar zero rânduri s-ar aduna în
+ * `eliberati: 0` — o cifră care arată exact ca o săptămână în care n-a ieșit
+ * nimeni. Celelalte trei cifre ale raportului ar fi corecte, deci nimănui nu
+ * i-ar trece prin cap să se îndoiască tocmai de a patra: un zero convingător e
+ * mai rău decât o pagină căzută, fiindcă ajunge tipărit.
+ *
+ * Eroarea tot nu se aruncă — cele trei cifre bune trebuie văzute — dar
+ * `available: false` obligă pagina să scrie „—" în loc de „0" și să spună de ce.
  */
-export async function getReleases(from: string, to: string): Promise<Release[]> {
+export interface ReleaseRegistry {
+  rows: Release[];
+  /** Fals doar dacă interogarea a eșuat; o săptămână fără eliberări e `[]` cu `true`. */
+  available: boolean;
+}
+
+/** Eliberările din interval, zilele noi întâi — ca la ședințe. */
+export async function getReleases(from: string, to: string): Promise<ReleaseRegistry> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("releases")
@@ -333,8 +345,8 @@ export async function getReleases(from: string, to: string): Promise<Release[]> 
     .gte("release_date", from)
     .lte("release_date", to)
     .order("release_date", { ascending: false });
-  if (error) return [];
-  return (data ?? []) as unknown as Release[];
+  if (error) return { rows: [], available: false };
+  return { rows: (data ?? []) as unknown as Release[], available: true };
 }
 
 /**
