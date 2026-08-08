@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { reportWeek, shiftWeek, weeklyFigures, type WeeklyRows } from "./weekly-report";
-import { toISODate } from "./periods";
+import { startOfDay } from "date-fns";
+import { readWeek, reportWeek, shiftWeek, weeklyFigures, type WeeklyRows } from "./weekly-report";
+import { toISODate, todayInChisinau } from "./periods";
 
 const iso = (r: { from: Date; to: Date }) => [toISODate(r.from), toISODate(r.to)];
 
@@ -53,6 +54,140 @@ describe("săptămâna raportului", () => {
   it("trece peste marginea de an fără să se rupă", () => {
     const w = reportWeek(new Date(2027, 0, 5)); // 5 ian 2027, marți
     expect(iso(w)).toEqual(["2026-12-29", "2027-01-04"]);
+  });
+});
+
+describe("săptămâna se schimbă pe calendarul Chișinăului", () => {
+  const TRECUTA = ["2026-07-28", "2026-08-03"];
+  const NOUA = ["2026-08-04", "2026-08-10"];
+  // 21:30 UTC pe 10 august = marți 11 august, 00:30 la Chișinău. Ziua
+  // prezentării a început la noi; pe ceasul serverului e încă luni seara.
+  const NOAPTEA = new Date(Date.UTC(2026, 7, 10, 21, 30));
+
+  it("luni, la 23:59 ora Chișinăului, arată încă săptămâna dinainte", () => {
+    const inainte = new Date(Date.UTC(2026, 7, 10, 20, 59, 59));
+    expect(iso(reportWeek(todayInChisinau(inainte)))).toEqual(TRECUTA);
+  });
+
+  it("marți, la 00:30 ora Chișinăului, arată deja săptămâna nouă", () => {
+    expect(iso(reportWeek(todayInChisinau(NOAPTEA)))).toEqual(NOUA);
+  });
+
+  it("pe ceasul serverului aceeași clipă ar da săptămâna greșită", () => {
+    /*
+     * Greșeala reparată, scrisă ca să nu se mai întoarcă: `startOfDay` pe
+     * instantul brut citește ziua de pe ceasul mașinii, iar pe Vercel mașina
+     * merge pe UTC. Cine deschidea raportul marți înainte de ora 3 primea
+     * cifrele săptămânii trecute, sub un subsol datat cu ziua de azi.
+     */
+    expect(iso(reportWeek(startOfDay(NOAPTEA)))).toEqual(TRECUTA);
+  });
+});
+
+describe("săptămâna cerută prin adresă", () => {
+  // Marți, 11 august 2026: săptămâna curentă a raportului e 4 → 10 august.
+  const current = reportWeek(new Date(2026, 7, 11));
+
+  it("duce înapoi exact la săptămâna din care s-a făcut legătura", () => {
+    // Legăturile din pagină se scriu `?saptamana=<prima zi>`; dus-întorsul
+    // trebuie să cadă pe aceleași șapte zile, altfel săgeata înapoi ar sări.
+    let w = current;
+    for (let i = 0; i < 6; i++) {
+      w = shiftWeek(w, -1);
+      expect(iso(readWeek(toISODate(w.from), current))).toEqual(iso(w));
+    }
+  });
+
+  it("orice zi din săptămână duce la aceeași marți → luni", () => {
+    // Un link scris de mână cu o zi de joi n-are de ce să dea eroare.
+    const zile = [
+      "2026-07-28",
+      "2026-07-29",
+      "2026-07-30",
+      "2026-07-31",
+      "2026-08-01",
+      "2026-08-02",
+      "2026-08-03",
+    ];
+    for (const zi of zile) {
+      expect(iso(readWeek(zi, current))).toEqual(["2026-07-28", "2026-08-03"]);
+    }
+  });
+
+  it("săptămâna curentă se poate cere explicit", () => {
+    expect(iso(readWeek("2026-08-04", current))).toEqual(iso(current));
+  });
+
+  it("nu trece de săptămâna curentă", () => {
+    // Marțea de azi și zilele de după ea ar deschide șapte zile care încă nu
+    // s-au întâmplat — patru zerouri pe care `missingWorkdays` nu le semnalează.
+    for (const zi of ["2026-08-11", "2026-08-14", "2026-08-17", "2027-03-01"]) {
+      expect(iso(readWeek(zi, current))).toEqual(iso(current));
+    }
+  });
+
+  it("lipsa parametrului lasă săptămâna curentă", () => {
+    expect(iso(readWeek(undefined, current))).toEqual(iso(current));
+    expect(iso(readWeek(null, current))).toEqual(iso(current));
+    expect(iso(readWeek("", current))).toEqual(iso(current));
+    expect(iso(readWeek([], current))).toEqual(iso(current));
+  });
+
+  it("o adresă stricată nu dă eroare, ci săptămâna curentă", () => {
+    const gunoi = [
+      "azi",
+      "2026-8-4",
+      "26-08-04",
+      "2026/08/04",
+      "2026-08-04T00:00:00",
+      " 2026-08-04",
+      "2026-08-04 ",
+      "AAAA-LL-ZZ",
+    ];
+    for (const val of gunoi) {
+      expect(iso(readWeek(val, current))).toEqual(iso(current));
+    }
+  });
+
+  it("o zi care nu există se respinge, nu se rostogolește în luna următoare", () => {
+    /*
+     * Șablonul AAAA-LL-ZZ numără cifrele, nu verifică zilele: „2026-02-30"
+     * trece prin el, iar V8 îl rostogolește la 2 martie. Un raport pe altă
+     * săptămână decât cea scrisă în adresă, cu cifre perfect reale, n-ar avea
+     * cum să fie observat — de aceea ziua se scrie la loc și se compară.
+     */
+    expect(iso(readWeek("2026-02-30", current))).toEqual(iso(current));
+    expect(iso(readWeek("2026-04-31", current))).toEqual(iso(current));
+    expect(iso(readWeek("2026-13-01", current))).toEqual(iso(current));
+    expect(iso(readWeek("2026-00-10", current))).toEqual(iso(current));
+    expect(iso(readWeek("2026-02-00", current))).toEqual(iso(current));
+    // 2028 e bisect, 2026 nu: 29 februarie e valabil doar în primul.
+    expect(iso(readWeek("2026-02-29", current))).toEqual(iso(current));
+    const bisect = reportWeek(new Date(2028, 2, 10));
+    expect(iso(readWeek("2028-02-29", bisect))).toEqual(["2028-02-29", "2028-03-06"]);
+  });
+
+  it("parametrul repetat dă aceeași săptămână pe ecran și în PDF", () => {
+    /*
+     * `?saptamana=X&saptamana=X` ajunge în pagină ca `string[]` (Next) și în
+     * rută ca prima valoare (`URLSearchParams.get`). Netezirea e în `readWeek`
+     * tocmai ca cele două să nu poată răspunde altceva la aceeași adresă:
+     * butonul „Descarcă PDF" ar da hârtia unei alte săptămâni decât ecranul.
+     */
+    const adresa = new URLSearchParams("saptamana=2026-07-28&saptamana=2026-07-28");
+    const pagina = readWeek(["2026-07-28", "2026-07-28"], current);
+    const ruta = readWeek(adresa.get("saptamana"), current);
+    expect(iso(pagina)).toEqual(["2026-07-28", "2026-08-03"]);
+    expect(iso(ruta)).toEqual(iso(pagina));
+  });
+
+  it("întoarce întotdeauna șapte zile, marți → luni", () => {
+    for (const val of ["2026-07-30", "azi", "", "2026-02-30", "2026-08-20"]) {
+      const w = readWeek(val, current);
+      expect(w.from.getDay()).toBe(2); // marți
+      expect(w.to.getDay()).toBe(1); // luni
+      expect(Math.round((w.to.getTime() - w.from.getTime()) / 86_400_000) + 1).toBe(7);
+    }
   });
 });
 

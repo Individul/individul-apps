@@ -3,7 +3,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
-import { parseISODate, rangeLabelRo, type DateRange } from "@/lib/periods";
+import { FUS, parseISODate, rangeLabelRo, type DateRange } from "@/lib/periods";
 import type { WeeklyFigures } from "@/lib/weekly-report";
 
 interface ReportViewProps {
@@ -20,6 +20,15 @@ interface ReportViewProps {
   releasesAvailable: boolean;
   /** Cine prezintă raportul, pentru subsol. */
   author: string | null;
+  /**
+   * Instantul la care s-a compus pagina, pentru ora din subsol.
+   *
+   * Vine de sus, nu dintr-un `new Date()` de aici: pagina citește ceasul o
+   * singură dată și din aceeași citire iese și săptămâna raportului. Două
+   * citiri s-ar putea nimeri de-o parte și de alta a miezului nopții, iar
+   * atunci subsolul ar data o zi în care cifrele nu sunt cele arătate.
+   */
+  generatedAt: Date;
 }
 
 /**
@@ -62,6 +71,7 @@ export function ReportView({
   missing,
   releasesAvailable,
   author,
+  generatedAt,
 }: ReportViewProps) {
   return (
     <article className="space-y-4">
@@ -125,8 +135,8 @@ export function ReportView({
           {new Intl.DateTimeFormat("ro-RO", {
             dateStyle: "long",
             timeStyle: "short",
-            timeZone: "Europe/Chisinau",
-          }).format(new Date())}
+            timeZone: FUS,
+          }).format(generatedAt)}
         </span>
       </footer>
     </article>

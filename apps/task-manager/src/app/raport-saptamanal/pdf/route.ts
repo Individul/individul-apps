@@ -33,7 +33,7 @@ import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
 import { missingWorkdays } from "@/lib/hearings";
-import { parseISODate, rangeLabelRo, toISODate } from "@/lib/periods";
+import { FUS, parseISODate, rangeLabelRo, toISODate, todayInChisinau } from "@/lib/periods";
 import { getCurrentProfile, getHearings, getReleases, getTransfers } from "@/lib/queries";
 import { readWeek, reportWeek, weeklyFigures } from "@/lib/weekly-report";
 
@@ -147,13 +147,14 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // O singură citire a ceasului, ca în pagină: la 23:59:59 săptămâna și zilele
   // lipsă s-ar putea calcula de-o parte și de alta a miezului nopții.
-  const today = new Date();
+  const now = new Date();
+  // Ziua se ia pe calendarul Chișinăului, ca în pagină: ceasul serverului e UTC
+  // și până la ora 3 dimineața la noi ar da încă ziua de ieri, adică hârtia
+  // săptămânii trecute sub un subsol datat cu ziua de azi.
+  const today = todayInChisinau(now);
   // Aceeași funcție ca pagina, nu o copie a ei: altfel butonul „Descarcă PDF"
   // ar putea întoarce cu totul altă săptămână decât cea de pe ecran.
-  const week = readWeek(
-    request.nextUrl.searchParams.get("saptamana") ?? undefined,
-    reportWeek(today),
-  );
+  const week = readWeek(request.nextUrl.searchParams.get("saptamana"), reportWeek(today));
   const from = toISODate(week.from);
   const to = toISODate(week.to);
 
@@ -328,8 +329,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     new Intl.DateTimeFormat("ro-RO", {
       dateStyle: "long",
       timeStyle: "short",
-      timeZone: "Europe/Chisinau",
-    }).format(today),
+      timeZone: FUS,
+    }).format(now),
     PAGE_W - MARGIN,
     62,
     { font: regular, size: 9, color: GRI },

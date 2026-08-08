@@ -1,5 +1,5 @@
 import { addDays, startOfDay } from "date-fns";
-import { parseISODate, toISODate, type DateRange } from "./periods";
+import { parseISODate, toISODate, todayInChisinau, type DateRange } from "./periods";
 import { aggregate, type TransferCounts } from "./transfers";
 
 /**
@@ -11,8 +11,14 @@ import { aggregate, type TransferCounts } from "./transfers";
  * depinde de date care abia se întâmplă.
  *
  * Deschis luni, arată tot săptămâna de dinainte: ziua curentă nu s-a încheiat.
+ *
+ * `today` e o zi calendaristică, nu un instant: din el se citește numai ziua
+ * săptămânii. De aceea implicitul e `todayInChisinau()`, nu `new Date()` —
+ * ceasul serverului e UTC, iar între miezul nopții de la noi și cel de la
+ * Greenwich ziua de aici e încă cea de ieri, adică raportul săptămânii
+ * trecute fix în dimineața prezentării.
  */
-export function reportWeek(today: Date = new Date()): DateRange {
+export function reportWeek(today: Date = todayInChisinau()): DateRange {
   const t = startOfDay(today);
   // Câte zile de la ultima marți (0 dacă azi e marți). getDay(): 0=duminică.
   const deLaMarti = (t.getDay() - 2 + 7) % 7;
@@ -46,11 +52,28 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/;
  * despărțirea n-ar arăta ca o eroare: butonul „Descarcă PDF" ar întoarce
  * liniștit un raport pe altă săptămână decât cea de pe ecran, cu cifre
  * perfect corecte pentru intervalul greșit.
+ *
+ * Primește și `string[]`: dacă parametrul apare de două ori în adresă, Next îl
+ * dă paginii ca listă, în timp ce `URLSearchParams.get()` dă doar prima
+ * valoare. Netezirea se face aici, nu la fiecare apelant — altfel exact
+ * despărțirea de mai sus s-ar întâmpla din nou, de data asta printr-un tip.
  */
-export function readWeek(value: string | undefined, current: DateRange): DateRange {
-  if (!value || !ISO.test(value)) return current;
-  const zi = parseISODate(value);
-  if (Number.isNaN(zi.getTime())) return current;
+export function readWeek(
+  value: string | string[] | null | undefined,
+  current: DateRange,
+): DateRange {
+  const cerut = Array.isArray(value) ? value[0] : value;
+  if (!cerut || !ISO.test(cerut)) return current;
+  const zi = parseISODate(cerut);
+  /*
+   * Șablonul de mai sus numără cifrele, nu verifică zilele: „2026-02-30" trece
+   * prin el, iar V8 rostogolește data peste capătul lunii și dă 2 martie. Ar
+   * ieși un raport plin de cifre reale pentru o săptămână pe care n-a cerut-o
+   * nimeni — și, spre deosebire de o adresă respinsă, nimic nu s-ar vedea.
+   * Ziua se scrie la loc și se compară cu ce s-a cerut: dacă nu iese identic,
+   * adresa e greșită, iar săptămâna curentă e singurul răspuns onest.
+   */
+  if (Number.isNaN(zi.getTime()) || toISODate(zi) !== cerut) return current;
   const ceruta = shiftWeek(reportWeek(zi), 1);
   return ceruta.from > current.from ? current : ceruta;
 }

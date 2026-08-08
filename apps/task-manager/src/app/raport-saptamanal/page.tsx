@@ -8,7 +8,7 @@ import { ExportButtons } from "@/components/weekly/export-buttons";
 import { ReleaseEntry } from "@/components/weekly/release-entry";
 import { ReportView } from "@/components/weekly/report-view";
 import { missingWorkdays } from "@/lib/hearings";
-import { rangeLabelRo, toISODate, type DateRange } from "@/lib/periods";
+import { rangeLabelRo, toISODate, todayInChisinau, type DateRange } from "@/lib/periods";
 import {
   getCurrentProfile,
   getHearings,
@@ -26,11 +26,18 @@ const weekHref = (week: DateRange) => `/raport-saptamanal?saptamana=${toISODate(
 export default async function RaportSaptamanalPage({
   searchParams,
 }: {
-  searchParams: { saptamana?: string };
+  // `string[]`, nu `string`, când parametrul apare de mai multe ori în adresă:
+  // așa îl dă Next, iar `readWeek` ia prima valoare — exact ca
+  // `URLSearchParams.get()` în ruta PDF, ca cele două să nu poată diverge.
+  searchParams: { saptamana?: string | string[] };
 }) {
   // O singură citire a ceasului pentru toată pagina: la 23:59:59 săptămâna și
   // zilele lipsă s-ar putea calcula de-o parte și de alta a miezului nopții.
-  const today = new Date();
+  const now = new Date();
+  // Ziua se ia pe calendarul Chișinăului, nu pe ceasul serverului: pe Vercel
+  // el merge pe UTC, iar până la ora 3 dimineața la noi acolo e încă ieri —
+  // adică raportul săptămânii trecute chiar în dimineața prezentării.
+  const today = todayInChisinau(now);
   const current = reportWeek(today);
   const week = readWeek(searchParams.saptamana, current);
   const from = toISODate(week.from);
@@ -110,6 +117,7 @@ export default async function RaportSaptamanalPage({
           missing={missing}
           releasesAvailable={releases.available}
           author={profile?.full_name ?? null}
+          generatedAt={now}
         />
 
         {/* `key` pe săptămână: ziua aleasă e stare locală, iar la navigarea spre

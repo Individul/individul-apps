@@ -8,9 +8,23 @@ type Result = { error?: string; success?: boolean };
 const LIPSA =
   "Ziua nu s-a putut salva — probabil nu mai ai dreptul s-o scrii. Reîncarcă pagina.";
 
-/** Cifra vine din formular ca text; negativul și non-numericul cad aici. */
+/** Cifra vine din formular ca text; golul, negativul și non-numericul cad aici. */
 function toCount(value: unknown): number | string {
-  const n = Number(value);
+  /*
+   * Câmpul golit se respinge, nu se citește ca zero.
+   *
+   * `Number("")` e 0, iar `Number.isInteger(0)` e adevărat, deci fără rândul
+   * ăsta ștergerea cifrei din câmp ar salva liniștit „0 eliberați". Or „—" și
+   * „0" spun lucruri diferite, și dinadins: „—" e ziua necompletată, „0" e
+   * ziua verificată în care n-a ieșit nimeni (vezi `release-entry.tsx` și
+   * README). Un câmp gol e cel mult prima variantă, dar s-ar scrie ca a doua —
+   * afirmația mai tare din cele două, făcută fără ca nimeni s-o fi făcut.
+   */
+  const text = typeof value === "string" ? value.trim() : value;
+  if (text === "" || text === null || text === undefined) {
+    return "Eliberați: scrie un număr. Dacă în ziua aceea n-a ieșit nimeni, scrie 0.";
+  }
+  const n = Number(text);
   if (!Number.isFinite(n) || !Number.isInteger(n)) return "Eliberați: introdu un număr întreg.";
   // Aceeași limită ca `check (count >= 0)` din migrarea 0026.
   if (n < 0) return "Eliberați: numărul nu poate fi negativ.";

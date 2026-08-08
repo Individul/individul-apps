@@ -279,7 +279,23 @@ de stricat la o rescriere —, și e citit deopotrivă de pagină și de ruta de
 Două normalizări scrise separat s-ar despărți la prima corectură, iar
 despărțirea n-ar arăta a defect: butonul de descărcare ar întoarce liniștit un
 raport pe altă săptămână decât cea de pe ecran, cu cifre perfect corecte pentru
-intervalul greșit.
+intervalul greșit. Tot prin funcția aceea (`readWeek`) trece și adresa
+`?saptamana=`: dacă parametrul apare de mai multe ori se ia prima valoare, la
+fel în ambele locuri, iar o zi care nu există — „2026-02-30", pe care șablonul
+AAAA-LL-ZZ nu are cum s-o prindă — se respinge, în loc să fie rostogolită tăcut
+de motorul JavaScript în luna următoare.
+
+**„Azi" înseamnă ziua de la Chișinău, nu ziua de pe ceasul serverului.** Funcția
+de pe Vercel merge pe UTC, iar noi suntem înaintea lui cu două ore iarna și cu
+trei vara: între miezul nopții de aici și cel de la Greenwich serverul e încă în
+ziua de ieri. Deschis marți la ora 2 dimineața, raportul arăta săptămâna
+dinainte — patru cifre perfect corecte pentru intervalul greșit, sub un subsol
+datat cu ziua de azi. Ziua calendaristică se ia acum cu `todayInChisinau()` din
+[`src/lib/periods.ts`](src/lib/periods.ts), prin `Intl` și nu adunând un decalaj
+fix, fiindcă Moldova ține ora de vară. Testele rulează pe UTC
+([`vitest.config.ts`](vitest.config.ts)) tocmai ca greșeala asta să poată cădea:
+mașinile de dezvoltare stau pe Europe/Bucharest, care are exact același decalaj
+ca Chișinăul tot anul, deci local ziua citită greșit coincide cu cea corectă.
 
 ### De unde vin cele patru cifre
 
@@ -305,7 +321,10 @@ nicăieri, n-ar putea fi verificată retroactiv, iar dacă cine completează nu 
 numărul exact la ora aceea, întârzie tot raportul. Nu primește tab propriu; două
 câmpuri o dată pe săptămână nu fac un modul. Ziua necompletată se vede „—", iar
 ziua verificată în care n-a ieșit nimeni se vede „0" — sunt lucruri diferite și
-se scriu diferit. Drepturile sunt ca la ședințe și transferuri: oricine
+se scriu diferit. Din același motiv **câmpul golit se respinge, nu se salvează
+ca 0**: `Number("")` e chiar 0, deci fără verificarea aceea ștergerea cifrei ar
+face în tăcere cea mai tare dintre cele două afirmații. Drepturile sunt ca la
+ședințe și transferuri: oricine
 autentificat citește și completează, ștergerea e a adminului (prin RLS, nu doar
 în interfață), iar corecturile rămân în jurnalul de la `/admin`, sub modulul
 **Eliberări** — un „3 → 5" scris explicit, fiindcă altfel numărul vechi ar
