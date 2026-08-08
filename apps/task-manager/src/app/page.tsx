@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { FileText } from "lucide-react";
+
 import {
   getTaskCounts,
   getPetitionCounts,
@@ -18,6 +21,7 @@ import {
 import { aggregate, byInstitution, nextScheduled } from "@/lib/transfers";
 import { formatDateRo, rangeForPeriod, toISODate } from "@/lib/periods";
 import { AppHeader } from "@/components/layout/app-header";
+import { Button } from "@/components/ui/button";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { TransferBand } from "@/components/hub/transfer-band";
 import { ChangelogSection } from "@/components/hub/changelog-section";
@@ -151,9 +155,22 @@ export default async function HubPage() {
       <AppHeader profile={profile} notifications={notifications} unread={unread} />
       {/* Mai lat decât înainte: cardurile duc acum și defalcarea pe coloane. */}
       <main className="mx-auto max-w-6xl p-4 xl:px-10">
-        <h1 className="mb-6 text-2xl font-semibold">
-          {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
-        </h1>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold">
+            {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
+          </h1>
+          {/* Raportul săptămânal se deschide de aici, nu dintr-un tab în antet:
+              nu e un registru în care se lucrează, ci hârtia unei singure
+              dimineți, iar un tab în plus lângă celelalte l-ar da drept încă un
+              modul. Discret, deci — dar lângă salut, fiindcă mai jos de titlu
+              nu l-ar găsi nimeni fără să i se spună. */}
+          <Button asChild variant="outline" size="sm">
+            <Link href="/raport-saptamanal">
+              <FileText className="mr-2 h-4 w-4" />
+              Raportul de marți
+            </Link>
+          </Button>
+        </div>
         {/* Deasupra cardurilor, fiindcă un termen depășit către ANP nu se
             citește după cifre. Nu apare când n-are ce spune. */}
         <ObligationBand

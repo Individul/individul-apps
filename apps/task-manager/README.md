@@ -241,6 +241,139 @@ Vizualizarea e pentru toți utilizatorii; importul și ștergerea, doar pentru a
 > trebuie aplicată (după `0015`); ea creează bucket-ul privat `statistics` și
 > tabelele `stat_reports` / `stat_values`.
 
+## Raportul săptămânal
+
+În fiecare marți dimineața se informează conducerea despre săptămâna încheiată.
+Patru cifre, atât: **plecați, sosiți, teleconferințe, eliberați**. Se adunau de
+mână din trei locuri, iar a patra nu exista nicăieri în aplicație. Pagina
+[`/raport-saptamanal`](src/app/raport-saptamanal/page.tsx) le adună singură, le
+arată în forma în care se predau și le scoate din aplicație în două feluri:
+**„Descarcă PDF"** (fișier `raport-AAAA-LL-ZZ.pdf`, desenat pe server) sau
+**„Tipărește"** (dialogul browserului, cu antetul aplicației și zonele de
+completare scoase din pagină).
+
+Se intră din butonul **„Raportul de marți"**, de lângă salutul de pe pagina de
+start. Nu are tab în antet, dinadins: nu e un registru în care se lucrează, ci
+hârtia unei singure dimineți. Nu se trimite pe email și nu se generează
+programat — raportul se prezintă, nu se expediază, iar o rulare automată ar
+produce fișiere pe care nu le citește nimeni.
+
+### Săptămâna e marți → luni, nu luni → duminică
+
+**Marțea în care se prezintă raportul aparține săptămânii următoare**, nu celei
+raportate. Regula pare arbitrară până se scrie alternativa: cu marțea inclusă,
+aceeași zi ar intra în două rapoarte consecutive, iar un transfer de marți s-ar
+număra de două ori. În plus, dimineața raportului ar depinde de date care abia
+se întâmplă — ședințele zilei nu sunt introduse la ora 9.
+
+Deschisă în orice zi, pagina arată aceeași ultimă săptămână încheiată; nici luni
+nu trece la săptămâna în curs, fiindcă ziua curentă nu s-a terminat. Înapoi se
+poate naviga oricât; înainte de săptămâna curentă, nu — acolo n-ar fi un raport,
+ci șapte zile care încă nu s-au întâmplat, adică patru zerouri pe care nici
+avertizarea de zile lipsă nu le-ar semnala, fiindcă o zi viitoare nu poate
+„lipsi".
+
+Calculul stă în [`src/lib/weekly-report.ts`](src/lib/weekly-report.ts), verificat
+pe fiecare zi a unei luni întregi — regula „ziua curentă nu s-a încheiat" e ușor
+de stricat la o rescriere —, și e citit deopotrivă de pagină și de ruta de PDF.
+Două normalizări scrise separat s-ar despărți la prima corectură, iar
+despărțirea n-ar arăta a defect: butonul de descărcare ar întoarce liniștit un
+raport pe altă săptămână decât cea de pe ecran, cu cifre perfect corecte pentru
+intervalul greșit.
+
+### De unde vin cele patru cifre
+
+| Cifra | Sursa |
+| --- | --- |
+| Plecați / Sosiți | registrul de transferuri, zilele din interval |
+| Teleconferințe | `hearings.tc_total`, cu amânatele scrise mic dedesubt |
+| Eliberați | registrul de eliberări, completat chiar pe pagină |
+
+**Teleconferințele sunt petrecute + amânate.** Cifra cerută de conducere e
+totalul, iar el există deja: `tc_total` e **coloană generată** în Postgres
+(`tc_petrecute + tc_amanate`, din `0018_hearings.sql`), deci se citește, nu se
+recompune — nu poate ajunge să nu corespundă cu cele două cifre din care iese,
+indiferent cine scrie în tabelă. Amânatele apar totuși separat, cu corp mic, sub
+total: un total care nu spune din ce se compune ridică întrebarea chiar în
+dimineața în care nu vrei s-o auzi.
+
+**Eliberările sunt un registru nou**, fiindcă cifra asta nu se ținea minte
+nicăieri: un rând pe zi — ziua, câți și o observație opțională —, completat
+într-o zonă a paginii care nu se tipărește. Alternativa, un câmp lăsat gol pe
+hârtie și scris de mână marți dimineața, a fost respinsă: cifra n-ar rămâne
+nicăieri, n-ar putea fi verificată retroactiv, iar dacă cine completează nu știe
+numărul exact la ora aceea, întârzie tot raportul. Nu primește tab propriu; două
+câmpuri o dată pe săptămână nu fac un modul. Ziua necompletată se vede „—", iar
+ziua verificată în care n-a ieșit nimeni se vede „0" — sunt lucruri diferite și
+se scriu diferit. Drepturile sunt ca la ședințe și transferuri: oricine
+autentificat citește și completează, ștergerea e a adminului (prin RLS, nu doar
+în interfață), iar corecturile rămân în jurnalul de la `/admin`, sub modulul
+**Eliberări** — un „3 → 5" scris explicit, fiindcă altfel numărul vechi ar
+dispărea odată cu suprascrierea.
+
+Toate patru ies din aceeași funcție (`weeklyFigures`), folosită și de ecran și
+de PDF. A doua socoteală, oriunde ar fi scrisă, se desincronizează de prima la
+prima modificare — s-a mai întâmplat în proiectul ăsta, cu restanțele: „8"
+într-un loc, „1" în altul, aceeași zi. O hârtie tipărită care nu se potrivește
+cu ecranul e mai rea decât lipsa raportului.
+
+Raportul spune și ce nu știe, **inclusiv pe hârtie**:
+
+- **zilele lucrătoare fără ședințe introduse** se enumeră deasupra butoanelor de
+  export, cu link spre completare: teleconferințele numără doar zilele
+  introduse, iar o cifră incompletă, o dată tipărită, nu se mai retrage;
+- **„—", nu 0**, când registrul eliberărilor nu poate fi citit. Un zero arată
+  exact ca o săptămână în care n-a ieșit nimeni, iar celelalte trei cifre fiind
+  corecte, nimeni n-ar avea motiv să se îndoiască tocmai de a patra.
+
+> Migrarea [`supabase/migrations/0026_releases.sql`](supabase/migrations/0026_releases.sql)
+> trebuie aplicată (după `0025`); creează tabelul `releases` cu RLS și trigger-ul
+> lui de audit. Până atunci pagina se deschide și primele trei cifre sunt
+> întregi, dar „Eliberați" rămâne „—" și atât ecranul, cât și PDF-ul scriu de ce.
+
+### Fontul din `src/fonts` — nu-l șterge, nu-l subseta
+
+Două fișiere binare de ~430 KB fiecare, într-un repo de cod, plus un fișier de
+licență. Arată exact ca ceva rămas uitat acolo. Nu sunt, iar motivul e scris
+aici tocmai fiindcă altfel dispar la prima curățenie:
+
+**Cele paisprezece fonturi standard din PDF nu conțin ș, ț și ă.** Codificarea
+lor se oprește la Latin-1, iar literele astea sunt în Latin Extended. Fără un
+font încorporat în document, „Ședințe" iese „Sedinte" sau cu pătrate — și nu un
+cuvânt, ci aproape fiecare cuvânt al raportului: Plecați, Sosiți, Eliberați,
+Date statistice. De aceea Noto Sans e adus în proiect, o dată, cu licența (SIL
+Open Font License 1.1) alături, în [`src/fonts/OFL.txt`](src/fonts/OFL.txt) —
+licența cere ca ea să însoțească fontul.
+
+**Fontul se încorporează întreg. Nu adăuga `{ subset: true }`.** Un PDF de o
+pagină iese pe la 500 KB, aproape numai font, deci subsetarea e primul lucru pe
+care cineva va vrea să-l optimizeze. Subsetarea din `@pdf-lib/fontkit` strică
+exact literele pentru care a fost adus fontul: glifele compuse — literă + semn,
+adică ă, ș, ț, î — rămân fără componentele lor, iar cititorul de PDF le sare.
+Încercat, nu presupus: cu subsetare pornită, titlul „Date statistice" se tipărea
+**„Da s a s"**.
+
+Ce face capcana serioasă e că **greșeala nu se vede din afara fișierului**:
+textul extras din PDF rămâne corect, deci orice verificare automată pe conținut
+trece verde. Doar desenul e găurit. Singurul test care o prinde e deschiderea
+fișierului cu ochii — și el nu poate rula în CI, deci după orice atingere a
+generării PDF-ului descarcă un raport și uită-te la diacritice. Detaliile stau
+lângă `embedFont`, în
+[`src/app/raport-saptamanal/pdf/route.ts`](src/app/raport-saptamanal/pdf/route.ts).
+
+Fonturile se citesc de pe disc cu `fs`, la fiecare cerere. În funcția de pe
+Vercel ajung însă doar fișierele pe care Next le *urmărește*, iar un fișier citit
+la rulare nu se vede în niciun import — de aceea
+`outputFileTracingIncludes` din [`next.config.mjs`](next.config.mjs) le cară
+explicit. Azi analizorul lui Next le prinde și fără intrarea aceea, deci ea nu
+repară nimic: e o ancoră. Norocul ține de o euristică pe cod, iar o refactorizare
+care compune numele fișierului dintr-o variabilă ar orbi-o, fără nicio eroare la
+build — doar „Descarcă PDF" ar începe să dea 500 în producție, unde local merge
+oricum, fiindcă acolo repo-ul întreg e pe disc. Verificabil înainte de deploy:
+după `npm run build`, ambele `.ttf` trebuie să apară în
+`.next/server/app/raport-saptamanal/pdf/route.js.nft.json`, lista după care
+Vercel împachetează funcția.
+
 ## Dezvoltare locală
 
 1. Instalează dependențele:
