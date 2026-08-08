@@ -8,7 +8,7 @@ import { ExportButtons } from "@/components/weekly/export-buttons";
 import { ReleaseEntry } from "@/components/weekly/release-entry";
 import { ReportView } from "@/components/weekly/report-view";
 import { missingWorkdays } from "@/lib/hearings";
-import { parseISODate, rangeLabelRo, toISODate, type DateRange } from "@/lib/periods";
+import { rangeLabelRo, toISODate, type DateRange } from "@/lib/periods";
 import {
   getCurrentProfile,
   getHearings,
@@ -17,33 +17,11 @@ import {
   getTransfers,
   getUnreadCount,
 } from "@/lib/queries";
-import { reportWeek, shiftWeek, weeklyFigures } from "@/lib/weekly-report";
+import { readWeek, reportWeek, shiftWeek, weeklyFigures } from "@/lib/weekly-report";
 
 export const dynamic = "force-dynamic";
 
-const ISO = /^\d{4}-\d{2}-\d{2}$/;
-
 const weekHref = (week: DateRange) => `/raport-saptamanal?saptamana=${toISODate(week.from)}`;
-
-/**
- * Săptămâna cerută prin adresă, adusă la marți→luni.
- *
- * `reportWeek(zi)` dă săptămâna încheiată ÎNAINTEA acelei zile, deci un pas
- * înainte scoate chiar săptămâna în care cade ziua din adresă. Așa un link
- * scris de mână cu o zi de joi nimerește intervalul corect, în loc să dea o
- * eroare pentru care n-are nimeni ce face.
- *
- * Mai departe de săptămâna curentă nu se merge: acolo n-ar fi un raport, ci
- * șapte zile care încă nu s-au întâmplat — patru zerouri pe care nici măcar
- * `missingWorkdays` nu le-ar semnala, fiindcă o zi viitoare nu poate lipsi.
- */
-function readWeek(value: string | undefined, current: DateRange): DateRange {
-  if (!value || !ISO.test(value)) return current;
-  const zi = parseISODate(value);
-  if (Number.isNaN(zi.getTime())) return current;
-  const ceruta = shiftWeek(reportWeek(zi), 1);
-  return ceruta.from > current.from ? current : ceruta;
-}
 
 export default async function RaportSaptamanalPage({
   searchParams,

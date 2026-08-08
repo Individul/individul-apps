@@ -1,5 +1,5 @@
 import { addDays, startOfDay } from "date-fns";
-import { toISODate, type DateRange } from "./periods";
+import { parseISODate, toISODate, type DateRange } from "./periods";
 import { aggregate, type TransferCounts } from "./transfers";
 
 /**
@@ -25,6 +25,34 @@ export function reportWeek(today: Date = new Date()): DateRange {
 /** Săptămâna vecină, pentru navigarea înapoi/înainte. */
 export function shiftWeek(week: DateRange, weeks: number): DateRange {
   return { from: addDays(week.from, weeks * 7), to: addDays(week.to, weeks * 7) };
+}
+
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Săptămâna cerută prin adresă, adusă la marți→luni.
+ *
+ * `reportWeek(zi)` dă săptămâna încheiată ÎNAINTEA acelei zile, deci un pas
+ * înainte scoate chiar săptămâna în care cade ziua din adresă. Așa un link
+ * scris de mână cu o zi de joi nimerește intervalul corect, în loc să dea o
+ * eroare pentru care n-are nimeni ce face.
+ *
+ * Mai departe de săptămâna curentă nu se merge: acolo n-ar fi un raport, ci
+ * șapte zile care încă nu s-au întâmplat — patru zerouri pe care nici măcar
+ * `missingWorkdays` nu le-ar semnala, fiindcă o zi viitoare nu poate lipsi.
+ *
+ * Stă aici, nu în pagină, fiindcă o citește și ruta care scoate PDF-ul. Cele
+ * două normalizări scrise separat s-ar despărți la prima corectură, iar
+ * despărțirea n-ar arăta ca o eroare: butonul „Descarcă PDF" ar întoarce
+ * liniștit un raport pe altă săptămână decât cea de pe ecran, cu cifre
+ * perfect corecte pentru intervalul greșit.
+ */
+export function readWeek(value: string | undefined, current: DateRange): DateRange {
+  if (!value || !ISO.test(value)) return current;
+  const zi = parseISODate(value);
+  if (Number.isNaN(zi.getTime())) return current;
+  const ceruta = shiftWeek(reportWeek(zi), 1);
+  return ceruta.from > current.from ? current : ceruta;
 }
 
 /**
