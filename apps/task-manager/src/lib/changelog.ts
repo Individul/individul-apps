@@ -14,7 +14,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-08",
-    text: "Termenele urmează acum calendarul Chișinăului, nu ceasul serverului. Cine deschidea aplicația noaptea, înainte de ora 3, le vedea până acum cu o zi în urmă.",
+    text: "Aplicația folosește acum ora Republicii Moldova. Până acum mergea pe ora serverului, cu trei ore în urmă, așa că noaptea până la ora 3 credea că e încă ziua de ieri — și arăta termenele mai puțin urgente decât erau.",
   },
   {
     date: "2026-08-07",
