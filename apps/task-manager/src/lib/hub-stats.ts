@@ -1,5 +1,20 @@
 import { parseISO } from "date-fns";
+import { todayInChisinau } from "./periods";
 import type { Task, Petition, Profile } from "./types";
+
+/*
+ * Ziua implicită e cea a Chișinăului, nu a ceasului mașinii.
+ *
+ * Pe Vercel serverul merge pe UTC, iar Chișinăul e înaintea lui cu două ore
+ * iarna și cu trei vara. Între miezul nopții de aici și cel de la Greenwich,
+ * `new Date()` întoarce încă ziua de ieri — deci fiecare socoteală de termen ar
+ * fi greșită cu o zi în fereastra aceea: banda ar rămâne galbenă în dimineața
+ * termenului și portocalie în dimineața de după.
+ *
+ * Stă în valorile implicite, nu la apeluri: așa e corect și pentru apelurile
+ * care se vor scrie de-acum înainte. Cine dă explicit o dată — testele, în
+ * primul rând — n-o simte deloc.
+ */
 
 export interface ModuleStats {
   total: number;
@@ -48,7 +63,7 @@ function classify(deadline: string | null, today: Date): "overdue" | "soon" | "n
   return "none";
 }
 
-export function taskStats(tasks: TaskCounts[], today: Date = new Date()): TaskStats {
+export function taskStats(tasks: TaskCounts[], today: Date = todayInChisinau()): TaskStats {
   let active = 0;
   let done = 0;
   let waiting = 0;
@@ -85,7 +100,7 @@ const UNASSIGNED = "Neatribuit";
  * O sarcină e restantă dacă are termen trecut și nu e finalizată — dar nu și
  * cât timp așteaptă răspuns extern: acolo întârzierea nu e a responsabilului.
  */
-export function isTaskOverdue(task: TaskCounts, today: Date = new Date()): boolean {
+export function isTaskOverdue(task: TaskCounts, today: Date = todayInChisinau()): boolean {
   if (task.status === "done" || task.status === "waiting") return false;
   return classify(task.due_date, today) === "overdue";
 }
@@ -97,13 +112,13 @@ export function isTaskOverdue(task: TaskCounts, today: Date = new Date()): boole
  * și vederea rapidă trebuie să numere identic. Bugul „8 restanțe aici, 1
  * dincolo" a venit exact din recalculări private ale aceleiași întrebări.
  */
-export function isTaskDueSoon(task: TaskCounts, today: Date = new Date()): boolean {
+export function isTaskDueSoon(task: TaskCounts, today: Date = todayInChisinau()): boolean {
   if (task.status === "done" || task.status === "waiting") return false;
   return classify(task.due_date, today) === "soon";
 }
 
 /** O petiție e restantă dacă are termen de răspuns trecut și e încă în examinare. */
-export function isPetitionOverdue(petition: PetitionCounts, today: Date = new Date()): boolean {
+export function isPetitionOverdue(petition: PetitionCounts, today: Date = todayInChisinau()): boolean {
   return (
     petition.status === "in_examinare" &&
     classify(petition.response_deadline, today) === "overdue"
@@ -189,7 +204,7 @@ export function countsByAssignee<T extends { assignee_id: string | null }>(
   });
 }
 
-export function petitionStats(petitions: PetitionCounts[], today: Date = new Date()): PetitionStats {
+export function petitionStats(petitions: PetitionCounts[], today: Date = todayInChisinau()): PetitionStats {
   let open = 0;
   let solved = 0;
   let dueSoon = 0;

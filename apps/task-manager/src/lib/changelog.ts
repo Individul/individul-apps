@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-08-08",
+    text: "Termenele se socotesc după calendarul Chișinăului, nu după ceasul serverului. Cine deschidea aplicația noaptea, înainte de ora 3, vedea până acum termenele cu o zi în urmă.",
+  },
+  {
     date: "2026-08-07",
     text: "Notificările pot apărea și ca anunț în colțul ecranului, ca la poșta electronică. Se pornesc din clopoțelul mic de lângă titlul „Notificări” și funcționează cât timp aplicația e deschisă într-o filă.",
   },
