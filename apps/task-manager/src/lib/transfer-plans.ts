@@ -1,7 +1,21 @@
 import { startOfDay, startOfMonth, subMonths } from "date-fns";
 
 import { scheduledDays } from "./transfers";
-import { parseISODate, toISODate } from "./periods";
+import { parseISODate, todayInChisinau, toISODate } from "./periods";
+
+/*
+ * Ziua implicită e cea a Chișinăului, nu a ceasului mașinii.
+ *
+ * Pe Vercel serverul merge pe UTC, iar Chișinăul e înaintea lui cu două ore
+ * iarna și cu trei vara. Între miezul nopții de aici și cel de la Greenwich,
+ * `new Date()` întoarce încă ziua de ieri — deci fiecare socoteală de termen ar
+ * fi greșită cu o zi în fereastra aceea: banda ar rămâne galbenă în dimineața
+ * termenului și portocalie în dimineața de după.
+ *
+ * Stă în valorile implicite, nu la apeluri: așa e corect și pentru apelurile
+ * care se vor scrie de-acum înainte. Cine dă explicit o dată — testele, în
+ * primul rând — n-o simte deloc.
+ */
 import type { Court } from "./courts";
 
 export interface TransferPlan {
@@ -31,7 +45,7 @@ export interface TransferPlan {
  * `null` înseamnă că nu mai există zi de transfer înainte de ședință — cazul în
  * care instanța trebuie înștiințată că nu poate fi pusă în executare.
  */
-export function transferDayFor(hearing: Date, today: Date = new Date()): string | null {
+export function transferDayFor(hearing: Date, today: Date = todayInChisinau()): string | null {
   const h = startOfDay(hearing);
   const from = startOfDay(today);
 
@@ -58,7 +72,7 @@ export interface PlanGroup {
  */
 export function groupByTransferDay(
   plans: TransferPlan[],
-  today: Date = new Date(),
+  today: Date = todayInChisinau(),
 ): PlanGroup[] {
   const byDay = new Map<string | null, TransferPlan[]>();
 

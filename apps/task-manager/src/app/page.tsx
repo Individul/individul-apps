@@ -19,7 +19,7 @@ import {
   type PetitionStats,
 } from "@/lib/hub-stats";
 import { aggregate, byInstitution, nextScheduled } from "@/lib/transfers";
-import { formatDateRo, rangeForPeriod, toISODate } from "@/lib/periods";
+import { formatDateRo, rangeForPeriod, todayInChisinau, toISODate } from "@/lib/periods";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
@@ -175,7 +175,9 @@ export default async function HubPage() {
             citește după cifre. Nu apare când n-are ce spune. */}
         <ObligationBand
           items={obligations.obligations.map((o) =>
-            pendingFor(o, obligations.completed.get(o.id) ?? new Set(), new Date()),
+            // Fără al treilea argument: implicit e ziua Chișinăului, nu ceasul
+            // serverului. Un `new Date()` scris aici ar ocoli-o tăcut.
+            pendingFor(o, obligations.completed.get(o.id) ?? new Set()),
           )}
         />
         {/* Două carduri sus, egale. Al treilea modul ia rândul întreg dedesubt:
@@ -208,7 +210,7 @@ export default async function HubPage() {
         <TransferBand
           totals={trs}
           institutions={transferInstitutions}
-          nextTransfer={formatDateRo(nextScheduled(new Date()))}
+          nextTransfer={formatDateRo(nextScheduled(todayInChisinau()))}
         />
         <ChangelogSection />
       </main>

@@ -1,5 +1,19 @@
 import { addDays, addMonths, isSameDay, startOfDay, startOfMonth, subDays } from "date-fns";
-import { toISODate, type DateRange } from "./periods";
+import { todayInChisinau, toISODate, type DateRange } from "./periods";
+
+/*
+ * Ziua implicită e cea a Chișinăului, nu a ceasului mașinii.
+ *
+ * Pe Vercel serverul merge pe UTC, iar Chișinăul e înaintea lui cu două ore
+ * iarna și cu trei vara. Între miezul nopții de aici și cel de la Greenwich,
+ * `new Date()` întoarce încă ziua de ieri — deci fiecare socoteală de termen ar
+ * fi greșită cu o zi în fereastra aceea: banda ar rămâne galbenă în dimineața
+ * termenului și portocalie în dimineața de după.
+ *
+ * Stă în valorile implicite, nu la apeluri: așa e corect și pentru apelurile
+ * care se vor scrie de-acum înainte. Cine dă explicit o dată — testele, în
+ * primul rând — n-o simte deloc.
+ */
 
 /**
  * Penitenciarele partenere. Lipsesc două numere, din motive diferite: nr. 6
@@ -54,7 +68,7 @@ export function nextScheduled(from: Date): Date {
 export function missingScheduled(
   range: DateRange,
   entered: { transfer_date: string }[],
-  today: Date = new Date(),
+  today: Date = todayInChisinau(),
 ): string[] {
   const have = new Set(entered.map((t) => t.transfer_date));
   const yesterday = subDays(startOfDay(today), 1);
@@ -133,6 +147,6 @@ export function byInstitution(rows: InstitutionCounts[]): InstitutionCounts[] {
  * `missing` vine din `missingScheduled` pe perioada afișată, deci propunerea
  * corespunde întotdeauna zilelor scrise în avertizarea de deasupra.
  */
-export function defaultTransferDate(missing: string[], today: Date = new Date()): string {
+export function defaultTransferDate(missing: string[], today: Date = todayInChisinau()): string {
   return missing[0] ?? toISODate(nextScheduled(today));
 }

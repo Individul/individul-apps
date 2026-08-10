@@ -12,7 +12,21 @@ import {
   subWeeks,
 } from "date-fns";
 
-import { parseISODate, toISODate } from "./periods";
+import { parseISODate, todayInChisinau, toISODate } from "./periods";
+
+/*
+ * Ziua implicită e cea a Chișinăului, nu a ceasului mașinii.
+ *
+ * Pe Vercel serverul merge pe UTC, iar Chișinăul e înaintea lui cu două ore
+ * iarna și cu trei vara. Între miezul nopții de aici și cel de la Greenwich,
+ * `new Date()` întoarce încă ziua de ieri — deci fiecare socoteală de termen ar
+ * fi greșită cu o zi în fereastra aceea: banda ar rămâne galbenă în dimineața
+ * termenului și portocalie în dimineața de după.
+ *
+ * Stă în valorile implicite, nu la apeluri: așa e corect și pentru apelurile
+ * care se vor scrie de-acum înainte. Cine dă explicit o dată — testele, în
+ * primul rând — n-o simte deloc.
+ */
 
 export type ObligationKind = "lunar_zi" | "lunar_ultima_zi" | "saptamanal";
 
@@ -65,7 +79,7 @@ function dueOnOrAfter(o: Obligation, from: Date): Date {
 }
 
 /** Cel mai recent termen care a venit deja (azi inclusiv). */
-export function lastDue(o: Obligation, today: Date = new Date()): Date {
+export function lastDue(o: Obligation, today: Date = todayInChisinau()): Date {
   const t = startOfDay(today);
   if (o.kind === "saptamanal") {
     const thisWeek = weeklyDue(o, subWeeks(t, 1));
@@ -77,7 +91,7 @@ export function lastDue(o: Obligation, today: Date = new Date()): Date {
 }
 
 /** Primul termen care n-a venit încă. */
-export function nextDue(o: Obligation, today: Date = new Date()): Date {
+export function nextDue(o: Obligation, today: Date = todayInChisinau()): Date {
   const t = startOfDay(today);
   if (o.kind === "saptamanal") {
     const d = weeklyDue(o, t);
@@ -117,7 +131,7 @@ export interface Pending {
 export function pendingFor(
   o: Obligation,
   completed: Set<string>,
-  today: Date = new Date(),
+  today: Date = todayInChisinau(),
 ): Pending {
   const start = parseISODate(o.starts_on);
   const last = lastDue(o, today);
