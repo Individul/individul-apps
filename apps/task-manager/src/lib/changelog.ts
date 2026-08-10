@@ -14,7 +14,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-08",
-    text: "Termenele se socotesc după calendarul Chișinăului, nu după ceasul serverului. Cine deschidea aplicația noaptea, înainte de ora 3, vedea până acum termenele cu o zi în urmă.",
+    text: "Termenele urmează acum calendarul Chișinăului, nu ceasul serverului. Cine deschidea aplicația noaptea, înainte de ora 3, le vedea până acum cu o zi în urmă.",
   },
   {
     date: "2026-08-07",
