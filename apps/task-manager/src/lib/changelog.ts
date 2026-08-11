@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-08",
+    text: "La înregistrarea unei petiții noi, responsabilul se completează singur după litera cu care începe numele petiționarului. Se vede în formular înainte de salvare și se poate schimba oricând.",
+  },
+  {
+    date: "2026-08-08",
     text: "Notificarea despre o petiție o deschide direct pe aceea. Până acum te lăsa în registru, să o cauți singur printre toate.",
   },
   {
