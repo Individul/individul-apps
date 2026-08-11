@@ -15,10 +15,18 @@ import type { Notification as AppNotification } from "./types";
 const KEY = "anunturi-pe-ecran";
 const TITLE = "Secția evidența deținuți";
 
-/** Unde duce o notificare. Petițiile n-au pagină proprie, se deschid din registru. */
+/**
+ * Unde duce o notificare.
+ *
+ * Petițiile n-au pagină proprie — se deschid într-o fereastră peste registru.
+ * De aceea adresa duce la registru, dar cu numărul petiției în coadă: pagina îl
+ * citește și deschide fereastra direct. Fără el, o notificare care spune
+ * „Starea petiției R-567/26 s-a schimbat” te lăsa într-o listă de trei sute,
+ * să cauți singur despre care e vorba.
+ */
 export function notificationHref(n: AppNotification): string | null {
   if (n.task_id) return `/tasks/${n.task_id}`;
-  if (n.petition_id) return "/petitii";
+  if (n.petition_id) return `/petitii?petitie=${n.petition_id}`;
   return null;
 }
 

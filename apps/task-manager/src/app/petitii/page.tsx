@@ -10,7 +10,13 @@ import { AppHeader } from "@/components/layout/app-header";
 
 export const dynamic = "force-dynamic";
 
-export default async function PetitiiPage() {
+export default async function PetitiiPage({
+  searchParams,
+}: {
+  // `string[]`, nu `string`, când parametrul apare de mai multe ori în adresă —
+  // așa îl dă Next. Se ia prima valoare, ca la raportul săptămânal.
+  searchParams: { petitie?: string | string[] };
+}) {
   const [petitions, profiles, currentProfile, notifications, unread] =
     await Promise.all([
       getPetitions(),
@@ -36,6 +42,11 @@ export default async function PetitiiPage() {
           profiles={profiles}
           currentUserId={currentUserId}
           isAdmin={isAdmin}
+          openPetitionId={
+            Array.isArray(searchParams.petitie)
+              ? searchParams.petitie[0]
+              : searchParams.petitie
+          }
         />
       </main>
     </>
