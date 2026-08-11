@@ -31,6 +31,7 @@ import {
 } from "@/app/petitii/actions";
 import { PetitionAttachments } from "./petition-attachments";
 import { PETITIONER_OPTIONS, STATUS_OPTIONS, deadlineFrom } from "./meta";
+import { autoAssignee } from "@/lib/auto-assignee";
 import { canEditPetition, canDeletePetition, canReassignPetition } from "@/lib/permissions";
 import {
   SUBJECT_PRESETS,
@@ -73,6 +74,10 @@ export function PetitionFormDialog({
   const [subject, setSubject] = useState("");
   const [receivedDate, setReceivedDate] = useState(today());
   const [assigneeId, setAssigneeId] = useState("");
+  // Odată ce responsabilul a fost ales cu mâna, regula literelor tace. Altfel o
+  // corectare a numelui de după — o literă în plus la tastat — ar muta petiția
+  // înapoi, peste hotărârea omului.
+  const [assigneeAles, setAssigneeAles] = useState(false);
   const [status, setStatus] = useState<PetitionStatus>("in_examinare");
   const [response, setResponse] = useState("");
   const [responseDate, setResponseDate] = useState("");
@@ -107,7 +112,32 @@ export function PetitionFormDialog({
       setResponse("");
       setResponseDate("");
     }
+    // La fiecare deschidere se pornește de la zero: o alegere manuală dintr-o
+    // petiție de acum zece minute n-are ce căuta în următoarea.
+    setAssigneeAles(Boolean(petition));
   }, [open, petition]);
+
+  /*
+   * Responsabilul se completează singur, după litera numelui petiționarului.
+   *
+   * Doar la petiții noi și doar când le înregistrează administratorul — așa a
+   * fost cerută. Nu e o îngrădire tehnică: politica de inserare din bază
+   * verifică cine creează, nu cui i se atribuie, deci ea ar primi și o petiție
+   * pe care o colegă o trece pe numele celeilalte. E doar hotărârea de a lăsa
+   * deocamdată regula acolo unde se face cea mai mare parte a înregistrărilor.
+   *
+   * Se face aici, în formular, și nu la salvare: omul vede cui îi revine
+   * înainte să apese, iar dacă nu-i convine schimbă pe loc. O atribuire făcută
+   * tăcut pe server s-ar descoperi abia din lista de petiții.
+   *
+   * `null` (literă neacoperită, nume încă gol) golește câmpul în loc să-l lase
+   * pe cel dinainte — altfel, ștergând numele, ar rămâne agățat responsabilul
+   * calculat pentru un nume care nu mai există.
+   */
+  useEffect(() => {
+    if (petition || !isAdmin || assigneeAles) return;
+    setAssigneeId(autoAssignee(petitioner, profiles) ?? "");
+  }, [petitioner, petition, isAdmin, assigneeAles, profiles]);
 
   // După înregistrare, aducem secțiunea de fișiere în dreptul ochilor.
   useEffect(() => {
@@ -341,7 +371,10 @@ export function PetitionFormDialog({
                   pe care baza o retează la salvare. */}
               <Select disabled={readOnly || !canReassign}
                 value={assigneeId ? assigneeId : UNASSIGNED}
-                onValueChange={(v) => setAssigneeId(v === UNASSIGNED ? "" : v)}
+                onValueChange={(v) => {
+                  setAssigneeId(v === UNASSIGNED ? "" : v);
+                  setAssigneeAles(true);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
