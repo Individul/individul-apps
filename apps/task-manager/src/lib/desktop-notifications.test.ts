@@ -25,8 +25,11 @@ describe("notificationHref", () => {
     expect(notificationHref(n({ task_id: "abc" }))).toBe("/tasks/abc");
   });
 
-  it("petiția se deschide din registru, n-are pagină proprie", () => {
-    expect(notificationHref(n({ petition_id: "xyz" }))).toBe("/petitii");
+  it("petiția duce la registru, dar cu numărul ei în adresă", () => {
+    // N-are pagină proprie, se deschide într-o fereastră peste registru. Fără
+    // parametru, notificarea care numește o petiție anume te lăsa să cauți
+    // printre trei sute.
+    expect(notificationHref(n({ petition_id: "xyz" }))).toBe("/petitii?petitie=xyz");
   });
 
   it("fără nimic legat, nu duce nicăieri", () => {

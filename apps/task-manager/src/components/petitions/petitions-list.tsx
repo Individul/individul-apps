@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
 import {
   ArrowDown,
@@ -241,6 +241,8 @@ interface PetitionsListProps {
   isAdmin: boolean;
   filter: PetitionFilter;
   onFilterChange: (f: PetitionFilter) => void;
+  /** Petiția de deschis la sosire, din adresă — vine dintr-o notificare. */
+  openPetitionId?: string;
 }
 
 export function PetitionsList({
@@ -250,10 +252,39 @@ export function PetitionsList({
   isAdmin,
   filter,
   onFilterChange,
+  openPetitionId,
 }: PetitionsListProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Petition | undefined>(undefined);
   const [sort, setSort] = useState<SortState>(null);
+
+  /*
+   * Petiția din adresă se deschide o singură dată, la sosire.
+   *
+   * Se caută în `petitions`, lista întreagă, nu în rândurile filtrate: membrul
+   * are registrul deschis implicit pe petițiile lui, iar adminul primește
+   * notificări și despre ale altora. Căutată printre rândurile vizibile, exact
+   * petiția pentru care a venit omul n-ar fi fost găsită.
+   *
+   * Parametrul se șterge din adresă imediat, prin `replaceState`: fără asta, o
+   * reîncărcare a paginii ar redeschide fereastra peste registru, la nesfârșit.
+   * `replaceState` și nu `router.replace` fiindcă nu vrem o nouă randare — doar
+   * curățăm bara de adrese.
+   */
+  useEffect(() => {
+    if (!openPetitionId) return;
+    const p = petitions.find((x) => x.id === openPetitionId);
+    if (p) {
+      setEditing(p);
+      setFormOpen(true);
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("petitie");
+    window.history.replaceState(null, "", url.toString());
+    // Doar la sosire: dependența pe `petitions` ar redeschide fereastra la
+    // fiecare reîmprospătare a listei după o salvare.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openPetitionId]);
   const [, startTransition] = useTransition();
 
   const rows = useMemo(() => {

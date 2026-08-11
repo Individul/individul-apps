@@ -14,6 +14,8 @@ interface PetitionsWorkspaceProps {
   profiles: Profile[];
   currentUserId: string | null;
   isAdmin: boolean;
+  /** Petiția de deschis la sosire, din adresă — vine dintr-o notificare. */
+  openPetitionId?: string;
 }
 
 export function PetitionsWorkspace({
@@ -21,6 +23,7 @@ export function PetitionsWorkspace({
   profiles,
   currentUserId,
   isAdmin,
+  openPetitionId,
 }: PetitionsWorkspaceProps) {
   // Membrul deschide registrul pe petițiile lui — altfel caută printre toate.
   // Adminul îl deschide complet: rolul lui e să vadă ce face echipa.
@@ -66,6 +69,7 @@ export function PetitionsWorkspace({
             isAdmin={isAdmin}
             filter={filter}
             onFilterChange={setFilter}
+            openPetitionId={openPetitionId}
           />
         </div>
 

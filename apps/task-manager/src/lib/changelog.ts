@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-08-08",
+    text: "Notificarea despre o petiție o deschide direct pe aceea. Până acum te lăsa în registru, să o cauți singur printre toate.",
+  },
+  {
+    date: "2026-08-08",
     text: "Aplicația folosește acum ora Republicii Moldova. Până acum mergea pe ora serverului, cu trei ore în urmă, așa că noaptea până la ora 3 credea că e încă ziua de ieri — și arăta termenele mai puțin urgente decât erau.",
   },
   {
