@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { ArrowRight, CheckCheck } from "lucide-react";
+import { ArrowRight, CheckCheck, TriangleAlert } from "lucide-react";
 
 import { parseISODate } from "@/lib/periods";
 import {
@@ -45,12 +45,15 @@ export function ReleaseBand({
   summary,
   month,
   responsible,
+  available,
 }: {
   summary: MonthSummary;
   /** `AAAA-LL` — pentru titlu și pentru adresa paginii. */
   month: string;
   /** Numele celor bifați, sau `null` dacă nu e bifat nimeni. */
   responsible: string | null;
+  /** Fals dacă registrul n-a putut fi citit — nu e totuna cu o lună goală. */
+  available: boolean;
 }) {
   const luna = monthLabelRo(month);
 
@@ -72,13 +75,28 @@ export function ReleaseBand({
           lista de dedesubt s-a golit: ce se schimbă între stări e lista, nu
           antetul, iar un rând care apare și dispare ar face capul chenarului să
           sară sub ochi de la o zi la alta. */}
-      {summary.total > 0 && (
+      {available && summary.total > 0 && (
         <p className="mt-1 text-sm tabular-nums text-muted-foreground">
           {summary.total} în total · {summary.done} efectuate · {summary.remaining.length} rămase
         </p>
       )}
 
-      {summary.remaining.length > 0 ? (
+      {!available ? (
+        /*
+         * Citirea a căzut. Cel mai rău lucru pe care l-ar putea face chenarul
+         * aici e să tacă frumos: „Nicio eliberare înregistrată" e chiar
+         * răspunsul pe care omul îl aștepta într-o lună liniștită, deci nu l-ar
+         * pune la îndoială — și n-ar pregăti pe nimeni pentru joi.
+         *
+         * Restul paginii de start rămâne în picioare: celelalte module n-au
+         * nicio vină, iar o pagină căzută în întregime ar ascunde și ce merge.
+         */
+        <p className="mt-4 flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-500">
+          <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Registrul eliberărilor n-a putut fi citit. Deschide pagina și reîncarcă — până atunci,
+          lipsa listei de aici nu înseamnă că nu e nimeni de pregătit.
+        </p>
+      ) : summary.remaining.length > 0 ? (
         // Coloane, nu o listă lungă: într-o lună obișnuită sunt până la
         // cincisprezece nume, iar pe verticală chenarul ar împinge cardurile
         // afară din primul ecran — adică ar strica pagina ca să câștige un

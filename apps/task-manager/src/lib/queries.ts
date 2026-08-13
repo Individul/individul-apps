@@ -405,8 +405,20 @@ export async function getReleases(from: string, to: string): Promise<ReleaseRegi
  * Postgres ar trebui să convertească „2026-02-31" la `date` și cade cu eroare,
  * nu cu zero rânduri. Nici „-30" n-ar merge, dintr-un motiv mai blând, dar la
  * fel de rău: ar tăia liniștit ziua de 31.
+ *
+ * Întoarce și `available`, din același motiv ca `getReleases` de mai sus, dar
+ * cu miza mai mare: acolo o citire căzută strica o cifră dintr-un raport, aici
+ * ar scrie „Nicio eliberare înregistrată" pe pagina de start a omului care
+ * răspunde de eliberări. Lista goală e chiar răspunsul pe care-l aștepta —
+ * deci n-ar avea de ce s-o pună la îndoială, și n-ar pregăti pe nimeni.
  */
-export async function getReleasePlans(month: string): Promise<ReleasePlan[]> {
+export interface ReleasePlanRegistry {
+  rows: ReleasePlan[];
+  /** Fals doar dacă interogarea a eșuat; o lună fără eliberări e `[]` cu `true`. */
+  available: boolean;
+}
+
+export async function getReleasePlans(month: string): Promise<ReleasePlanRegistry> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("release_plans")
@@ -414,9 +426,11 @@ export async function getReleasePlans(month: string): Promise<ReleasePlan[]> {
     .gte("release_date", `${month}-01`)
     .lt("release_date", `${shiftMonth(month, 1)}-01`)
     .order("release_date", { ascending: true });
-  // Grațios dacă migrarea 0027 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as ReleasePlan[];
+  // Nu se aruncă: fără migrarea 0027 restul paginii de start trebuie să se
+  // vadă. Dar nici nu se tace — `available: false` obligă chenarul să spună că
+  // n-a putut citi, în loc să arate o lună liniștită.
+  if (error) return { rows: [], available: false };
+  return { rows: (data ?? []) as unknown as ReleasePlan[], available: true };
 }
 
 /**

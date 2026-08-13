@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -37,12 +37,30 @@ const MIGRATIONS = join(
  * chiar dacă stau în același fișier.
  */
 function checkValues(sql: string, column: string): string[] {
-  const m = new RegExp(`check\\s*\\(\\s*${column}\\s+in\\s*\\(([^)]*)\\)`, "i").exec(sql);
-  if (!m) return [];
-  return [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]);
+  const toate = [
+    ...sql.matchAll(new RegExp(`check\\s*\\(\\s*${column}\\s+in\\s*\\(([^)]*)\\)`, "gi")),
+  ];
+  // Ultima definiție câștigă, ca în baza de date: o constrângere rescrisă mai
+  // târziu în același fișier o înlocuiește pe cea dinainte, nu se adaugă la ea.
+  const ultima = toate.at(-1);
+  if (!ultima) return [];
+  return [...ultima[1].matchAll(/'([^']+)'/g)].map((x) => x[1]);
 }
 
-const SQL = readFileSync(join(MIGRATIONS, "0027_release_plans.sql"), "utf8");
+/**
+ * Toate migrările, în ordine, lipite una de alta.
+ *
+ * Nu doar 0027. O migrare viitoare care rescrie lista de temeiuri sau pe cea de
+ * tipuri ar lăsa un test fixat pe 0027 verde peste o bază care s-a mișcat — și
+ * atunci garda nu doar că n-ar mai păzi nimic, ci ar și liniști pe cine o
+ * caută. Fișierele se citesc sortate, iar `checkValues` ia ultima potrivire,
+ * deci rezultatul e ce spune baza după ultima migrare aplicată.
+ */
+const SQL = readdirSync(MIGRATIONS)
+  .filter((f) => f.endsWith(".sql"))
+  .sort()
+  .map((f) => readFileSync(join(MIGRATIONS, f), "utf8"))
+  .join("\n");
 
 describe("temeiurile din TypeScript și cele din bază", () => {
   const dinSql = checkValues(SQL, "ground");
@@ -53,7 +71,7 @@ describe("temeiurile din TypeScript și cele din bază", () => {
     // nouăsprezece temeiuri lipsesc din bază, adică o minciună care trimite
     // omul în migrare, unde totul e în regulă. Aici se vede dintr-o privire că
     // s-a stricat cititul fișierului, nu lista.
-    expect(dinSql.length, "nu s-a citit nimic din 0027").toBeGreaterThan(0);
+    expect(dinSql.length, "nu s-a citit nicio migrare").toBeGreaterThan(0);
   });
 
   it("sunt aceleași, în ambele sensuri", () => {

@@ -45,7 +45,7 @@ export default async function EliberariPage({
     getReleases(primaZi, ultimaZi),
   ]);
 
-  const summary = monthSummary(plans, luna, today);
+  const summary = monthSummary(plans.rows, luna, today);
   const responsible = responsibleLabel(profiles);
 
   // Registrul de cifre ține un rând pe zi, cu numărul zilei în el: comparația
@@ -61,17 +61,23 @@ export default async function EliberariPage({
    * văzută: un nume în plus înseamnă ori o zi necompletată în registrul de
    * cifre, ori o eliberare care n-a mai avut loc, și numai omul știe care.
    *
-   * Linia tace în patru cazuri, nu în unul. Când cifrele se potrivesc n-are ce
-   * spune. Când registrul de cifre n-a răspuns (`available` fals) n-are cu ce
-   * compara. Și în ambele goluri de început: „12 față de 0" ar fi o alarmă
-   * falsă în fiecare 1 ale lunii, iar „0 față de 14" ar apărea pe fiecare lună
-   * dinaintea registrului nominal — acolo lista goală nu înseamnă că s-au
-   * pierdut paisprezece nume, ci că pe atunci nu se ținea lista. Amândouă sunt
-   * alarme pe care omul învață să le treacă cu vederea, până în ziua în care
-   * una e adevărată.
+   * Se compară `done`, nu `total`. Cele două evidențe măsoară același lucru —
+   * oameni care au ieșit pe poartă — abia dacă lista nominală e citită tot
+   * așa. `total` numără și pe cei programați pentru săptămâna viitoare, în timp
+   * ce cifra se completează în urmă, zi cu zi. Pe 13 august, cu douăsprezece
+   * nume din care cinci ieșite, „12 față de 5" ar fi scris cu roșu că nu se
+   * potrivește nimic — deși totul e în regulă, și așa ar fi în aproape fiecare
+   * zi a fiecărei luni în curs. Pe lunile încheiate `done` e egal cu `total`,
+   * deci nu se pierde nimic din ce chiar merită comparat.
+   *
+   * Linia tace și în trei goluri. Când registrul de cifre n-a răspuns
+   * (`available` fals) n-are cu ce compara. Când n-are niciun rând pentru lună,
+   * „5 față de 0" ar fi o alarmă falsă în fiecare 1 ale lunii — se cere niciun
+   * rând, nu sumă zero: un „0" scris de om înseamnă zi verificată, iar asta e o
+   * comparație validă. Și când n-a ieșit încă nimeni, n-avem ce compara.
    */
   const nepotrivire =
-    cifre.available && inCifre > 0 && summary.total > 0 && inCifre !== summary.total;
+    cifre.available && cifre.rows.length > 0 && summary.done > 0 && inCifre !== summary.done;
 
   return (
     <>
@@ -95,8 +101,17 @@ export default async function EliberariPage({
           </p>
         </div>
 
+        {/* Citirea căzută nu se confundă cu luna goală: „nicio eliberare" e
+            tocmai răspunsul pe care omul l-ar crede fără să-l verifice. */}
+        {!plans.available && (
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-[13px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+            Registrul n-a putut fi citit — lista de mai jos e goală din cauza asta, nu fiindcă n-ar
+            fi nimeni. Reîncarcă pagina.
+          </p>
+        )}
+
         <ReleaseList
-          plans={plans}
+          plans={plans.rows}
           luna={luna}
           today={toISODate(today)}
           isAdmin={profile?.role === "admin"}

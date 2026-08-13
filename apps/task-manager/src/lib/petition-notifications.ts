@@ -23,8 +23,9 @@ export function petitionMessageFor(
     case "comment": return `Comentariu nou la petiția ${petitionNumber}`;
     // Nici eliberările nu sunt petiții, iar mesajul lor se scrie în bază. Tot
     // pentru exhaustivitate: un `default` ar înghiți la fel de tăcut și tipul
-    // care se adaugă mâine.
-    case "eliberare": return petitionNumber;
+    // care se adaugă mâine. Aruncă, din același motiv ca în `notifications.ts`.
+    case "eliberare":
+      throw new Error("Anunțul de eliberare nu trece prin petitionMessageFor.");
   }
 }
 

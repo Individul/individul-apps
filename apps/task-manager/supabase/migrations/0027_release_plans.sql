@@ -204,25 +204,40 @@ begin
   end if;
   if coalesce(array_length(v_recipients, 1), 0) = 0 then return 0; end if;
 
+  -- `for update skip locked`: dacă două rulări se suprapun — pg_cron nu
+  -- împiedică o sarcină să se calce pe picioare —, a doua sare peste rândurile
+  -- pe care le ține prima, în loc să le citească încă nemarcate și să trimită
+  -- al doilea anunț.
   for r in
     select id, last_name, first_name from release_plans
     where release_date = (now() at time zone 'Europe/Chisinau')::date
       and not done
       and notified_at is null
+    for update skip locked
   loop
     insert into notifications (user_id, type, message)
     select u, 'eliberare', 'Azi se eliberează ' || r.last_name || ' ' || r.first_name
     from unnest(v_recipients) as u;
 
     -- Ștampila cade în aceeași tranzacție cu inserarea, deci al doilea anunț nu
-    -- mai pleacă niciodată — nici dacă sarcina programată rulează de două ori.
+    -- mai pleacă niciodată la o a doua rulare de mai târziu.
     update release_plans set notified_at = now() where id = r.id;
     v_count := v_count + 1;
   end loop;
 
+  -- Numără eliberările anunțate, nu anunțurile scrise: cu doi responsabili
+  -- bifați și o eliberare azi, întoarce 1 și inserează două rânduri.
   return v_count;
 end;
 $$;
+
+-- Doar sarcina programată o cheamă. Fără asta, orice utilizator autentificat o
+-- poate apela prin PostgREST: n-ar putea scoate nimic din ea — mesajul e fix,
+-- destinatarii ies din bază, iar a doua chemare nu mai face nimic — dar o
+-- funcție `security definer` deschisă tuturor e o ușă care n-are de ce să
+-- existe. `0008` pune o gardă anti-spam în `create_notifications` din același
+-- motiv.
+revoke execute on function notify_todays_releases() from public;
 
 -- Programarea, dacă extensia e activată. Blocul e păzit ca migrarea să treacă
 -- și pe o bază fără pg_cron: funcția rămâne apelabilă manual, iar activarea se

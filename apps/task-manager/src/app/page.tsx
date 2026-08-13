@@ -93,7 +93,13 @@ export default async function HubPage() {
   // Luna eliberărilor se citește pe ceasul Chișinăului, nu pe al serverului: pe
   // Vercel mașina merge pe UTC, iar în noaptea dintre 31 și 1 chenarul ar cere
   // baza de date pentru luna care tocmai s-a încheiat.
-  const luna = toISODate(todayInChisinau()).slice(0, 7);
+  //
+  // Ziua se ține într-o variabilă și se dă mai departe, nu se citește de două
+  // ori: între alegerea lunii și socoteala stărilor se poate schimba data, iar
+  // atunci un rând de azi ar apărea drept restanță. Fereastra e de o clipă, dar
+  // e chiar clipa în care cineva lucrează la miezul nopții.
+  const azi = todayInChisinau();
+  const luna = toISODate(azi).slice(0, 7);
 
   // Pagina de start nu arată niciun rând, ci unsprezece cifre și două tabele de
   // defalcare. Deci cere din baza de date doar coloanele din care ies cifrele:
@@ -141,9 +147,8 @@ export default async function HubPage() {
   // dimensiune firească a cifrelor. Fără ea banda ar arăta doar trei numere.
   const transferInstitutions = byInstitution(thisMonth);
 
-  // Fără al treilea argument: ziua implicită e cea a Chișinăului, deci „azi" și
-  // „restant" nu alunecă cu o zi în fereastra dintre miezurile de noapte.
-  const releases = monthSummary(releasePlans, luna);
+  // Aceeași zi cu cea din care a ieșit luna de mai sus, nu una citită din nou.
+  const releases = monthSummary(releasePlans.rows, luna, azi);
 
   // Defalcarea o vede toată secția, nu doar adminul: cifra „din N” de sub
   // numerele proprii ridică întrebarea unde sunt celelalte, iar tabelul e chiar
@@ -210,7 +215,12 @@ export default async function HubPage() {
             despre ele nu mai e nimic de făcut, iar întinse pe chenar ar împinge
             cardurile afară din primul ecran tocmai către sfârșitul lunii, când
             sunt cele mai multe. Lista întreagă e la /eliberari. */}
-        <ReleaseBand summary={releases} month={luna} responsible={responsibleLabel(profiles)} />
+        <ReleaseBand
+          summary={releases}
+          month={luna}
+          responsible={responsibleLabel(profiles)}
+          available={releasePlans.available}
+        />
         {/* Două carduri sus, egale. Al treilea modul ia rândul întreg dedesubt:
             trei nu se împart la două coloane, iar transferurile n-au defalcare
             pe persoane, deci într-o jumătate ar rămâne pe jumătate goale. */}

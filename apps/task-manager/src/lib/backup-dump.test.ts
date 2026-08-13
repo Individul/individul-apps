@@ -130,6 +130,7 @@ describe("lista tabelelor din copie", () => {
       ["hearings", "profiles"],
       ["transfers", "profiles"],
       ["transfer_plans", "profiles"],
+      ["release_plans", "profiles"],
       ["stat_reports", "profiles"],
       ["stat_values", "stat_reports"],
       ["notifications", "profiles"],

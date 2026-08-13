@@ -33,10 +33,14 @@ export function messageFor(type: NotificationType, title: string, statusLabel?: 
     case "edited": return `Sarcina „${title}" a fost modificată`;
     case "deleted": return `Sarcina „${title}" a fost ștearsă`;
     // Anunțul de eliberare vine gata scris din `notify_todays_releases()`, deci
-    // aici n-are ce se compune — se dă mai departe cum a venit. Ramura există ca
-    // switch-ul să rămână exhaustiv: cu un `default` în loc, următorul tip
-    // adăugat la `NotificationType` ar primi tăcut mesajul altcuiva.
-    case "eliberare": return title;
+    // pe aici nu trece niciodată. Ramura există ca switch-ul să rămână
+    // exhaustiv: cu un `default` în loc, următorul tip adăugat la
+    // `NotificationType` ar primi tăcut mesajul altcuiva.
+    //
+    // Aruncă, nu întoarce titlul: un text plauzibil ar face ca greșeala de a
+    // trece pe aici să treacă neobservată tocmai în notificarea trimisă omului.
+    case "eliberare":
+      throw new Error("Anunțul de eliberare se scrie în bază, nu prin messageFor.");
   }
 }
 
