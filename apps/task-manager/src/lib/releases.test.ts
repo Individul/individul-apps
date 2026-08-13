@@ -179,6 +179,13 @@ describe("navigarea între luni", () => {
     expect(readMonth("august", AZI)).toBe("2026-08");
   });
 
+  it("readMonth netezește parametrul repetat, cum face readWeek", () => {
+    // `?luna=2026-03&luna=2026-05` ajunge la pagină ca listă, nu ca text.
+    expect(readMonth(["2026-03", "2026-05"], AZI)).toBe("2026-03");
+    expect(readMonth([], AZI)).toBe("2026-08");
+    expect(readMonth(null, AZI)).toBe("2026-08");
+  });
+
   it("monthLabelRo scrie luna pe românește", () => {
     expect(monthLabelRo("2026-08")).toBe("august 2026");
   });

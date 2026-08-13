@@ -280,10 +280,18 @@ const LUNA = /^\d{4}-(0[1-9]|1[0-2])$/;
  * săptămâni a mai fost nevoie de o verificare după parsare, fiindcă
  * „2026-02-30" trece de orice șablon de cifre și V8 îl rostogolește liniștit în
  * martie. Lunile imposibile sunt doar 00 și 13-99 — toate încap în șablon.
+ *
+ * Primește și `string[]`, ca `readWeek`: un parametru scris de două ori în
+ * adresă ajunge la pagină ca listă. Netezirea stă aici, nu la apelanți — mutată
+ * acolo, ar fi rescrisă la fiecare pagină nouă și ar ajunge să difere.
  */
-export function readMonth(value: string | undefined, today: Date = todayInChisinau()): string {
-  if (!value || !LUNA.test(value)) return format(today, "yyyy-MM");
-  return value;
+export function readMonth(
+  value: string | string[] | null | undefined,
+  today: Date = todayInChisinau(),
+): string {
+  const cerut = Array.isArray(value) ? value[0] : value;
+  if (!cerut || !LUNA.test(cerut)) return format(today, "yyyy-MM");
+  return cerut;
 }
 
 /**
