@@ -38,7 +38,12 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
             înăuntrul tab-urilor golul e de 1, deci ochiul vede singur că
             „Unelte" nu e al optulea registru. */}
         <ToolsMenu />
-        <div className="ml-auto flex items-center gap-2">
+        {/* Se pliază și el, din același motiv ca filele de module.
+            Butoanele fac laolaltă mai mult decât filele — deci plierea filelor
+            singură lăsa antetul tot mai lat decât un telefon. „Unelte", venit
+            între timp, mai adaugă din lățime pe același rând.
+            `ml-auto` rămâne: pe un rând propriu, blocul se lipește la dreapta. */}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           {profile && (
             <NotificationBell
               initialItems={notifications}
