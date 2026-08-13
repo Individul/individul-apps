@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { setUserRole } from "@/app/admin/actions";
+import { setHandlesReleases, setUserRole } from "@/app/admin/actions";
 import type { Profile } from "@/lib/types";
 
 type Role = "admin" | "member";
@@ -60,12 +60,26 @@ export function UserRoleTable({ profiles, currentUserId }: UserRoleTableProps) {
     });
   };
 
+  const handleReleases = (userId: string, handles: boolean) => {
+    startTransition(async () => {
+      const res = await setHandlesReleases(userId, handles);
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Utilizator</TableHead>
           <TableHead className="w-[200px]">Rol</TableHead>
+          <TableHead className="w-[110px]" title="Primește anunțul în ziua eliberării">
+            Eliberări
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -106,6 +120,16 @@ export function UserRoleTable({ profiles, currentUserId }: UserRoleTableProps) {
                     ))}
                   </SelectContent>
                 </Select>
+              </TableCell>
+              <TableCell>
+                <input
+                  type="checkbox"
+                  checked={profile.handles_releases}
+                  disabled={isPending}
+                  onChange={(e) => handleReleases(profile.id, e.target.checked)}
+                  className="h-4 w-4 shrink-0 cursor-pointer accent-emerald-600"
+                  aria-label={`Responsabil de eliberări: ${profile.full_name ?? "—"}`}
+                />
               </TableCell>
             </TableRow>
           );

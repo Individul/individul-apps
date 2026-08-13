@@ -133,6 +133,38 @@ create trigger audit_release_plans
 -- lucruri: cui pleacă anunțul și eticheta „Responsabil: …" de pe chenar.
 alter table profiles add column if not exists handles_releases boolean not null default false;
 
+-- Bifa e a adminului, nu a fiecăruia pentru sine.
+--
+-- Politica „profiles update" (0002:63) lasă pe oricine să-și scrie propriul
+-- rând — potrivit pentru nume și poză, nu și pentru asta: numele bifatului
+-- ajunge pe pagina de start a întregii secții, ca „Responsabil: …". Fără gardă,
+-- oricine s-ar putea trece acolo, iar ceilalți ar citi o informație falsă
+-- despre cine răspunde de eliberări.
+--
+-- Trigger separat, nu o ramură în `prevent_role_change_by_non_admin` (0005):
+-- garda rolului merge de patru ani și n-are de ce să fie rescrisă pentru o
+-- coloană care n-are legătură cu ea.
+--
+-- Contextul de serviciu (auth.uid() null — SQL Editor, service role) e lăsat să
+-- treacă, exact ca la garda rolului: e de încredere, iar prima bifare se poate
+-- face din SQL.
+create or replace function prevent_releases_flag_change_by_non_admin() returns trigger
+  language plpgsql security definer
+  set search_path = public
+as $$
+begin
+  if new.handles_releases is distinct from old.handles_releases
+     and auth.uid() is not null and not is_admin() then
+    raise exception 'Doar adminul poate schimba responsabilul de eliberări.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_releases_flag_guard on profiles;
+create trigger profiles_releases_flag_guard before update on profiles
+  for each row execute function prevent_releases_flag_change_by_non_admin();
+
 
 -- ---------------------------------------------------------------------------
 -- Anunțul din ziua eliberării

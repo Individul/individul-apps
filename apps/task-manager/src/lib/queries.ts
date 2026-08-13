@@ -16,6 +16,7 @@ import type {
   Release,
 } from "./types";
 import type { Hearing } from "./hearings";
+import { shiftMonth, type ReleasePlan } from "./releases";
 import type { TransferPlan } from "./transfer-plans";
 import type { BackupRun } from "./backup";
 import type { Obligation } from "./obligations";
@@ -392,6 +393,30 @@ export async function getReleases(from: string, to: string): Promise<ReleaseRegi
     .order("release_date", { ascending: false });
   if (error) return { rows: [], available: false };
   return { rows: (data ?? []) as unknown as Release[], available: true };
+}
+
+/**
+ * Eliberările planificate dintr-o lună.
+ *
+ * O lună, nu registrul întreg: și chenarul de pe pagina de start, și pagina
+ * arată o singură lună, iar peste ani lista adusă ar crește degeaba.
+ *
+ * Marginea de sus e întâi ale lunii următoare, cu `lt`, nu `${month}-31`:
+ * Postgres ar trebui să convertească „2026-02-31" la `date` și cade cu eroare,
+ * nu cu zero rânduri. Nici „-30" n-ar merge, dintr-un motiv mai blând, dar la
+ * fel de rău: ar tăia liniștit ziua de 31.
+ */
+export async function getReleasePlans(month: string): Promise<ReleasePlan[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("release_plans")
+    .select("*")
+    .gte("release_date", `${month}-01`)
+    .lt("release_date", `${shiftMonth(month, 1)}-01`)
+    .order("release_date", { ascending: true });
+  // Grațios dacă migrarea 0027 nu e încă aplicată.
+  if (error) return [];
+  return (data ?? []) as unknown as ReleasePlan[];
 }
 
 /**

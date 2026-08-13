@@ -31,6 +31,35 @@ export async function setUserRole(
   return { success: true };
 }
 
+/**
+ * Cine primește anunțul din ziua eliberării.
+ *
+ * O bifă pe profil, nu un id scris în cod. Id-ul ar merge azi și ar amuți în
+ * ziua în care omul pleacă din funcție — fără eroare, fără urmă, doar un anunț
+ * care nu mai ajunge nicăieri. Iar bifa se poate pune pe mai mulți deodată,
+ * deci un înlocuitor pe durata concediului nu cere nicio schimbare de cod.
+ *
+ * Fără paza „nu te poți retrograda singur" din `setUserRole`: bifa asta nu
+ * închide nimănui accesul la nimic, iar dacă rămâne nebifat toată lumea anunțul
+ * merge la administratori.
+ */
+export async function setHandlesReleases(
+  userId: string,
+  handles: boolean,
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ handles_releases: handles })
+    .eq("id", userId)
+    .select();
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Fără permisiune sau utilizator inexistent." };
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { success: true };
+}
+
 type RestoreResult = {
   error?: string;
   inserted?: { tasks: number; tags: number; task_tags: number; comments: number };
