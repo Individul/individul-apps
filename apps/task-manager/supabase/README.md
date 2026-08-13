@@ -142,6 +142,82 @@ rulează [`migrations/0016_statistics.sql`](./migrations/0016_statistics.sql)
 > Bucket-ul trebuie să rămână **privat**. Fișierele se deschid prin URL-uri
 > semnate, generate la cerere.
 
+## 2k. Eliberări
+
+Registrul nominal al eliberărilor. Rulează
+[`migrations/0027_release_plans.sql`](./migrations/0027_release_plans.sql) **DUPĂ**
+`0026_releases.sql`. Migrarea:
+
+1. creează tabela `release_plans` (un rând per om: nume, data eliberării, temeiul,
+   bifa „s-a eliberat"), cu RLS — citesc și completează toți utilizatorii
+   autentificați, șterge doar adminul — și trigger-ul ei de audit;
+2. adaugă coloana `profiles.handles_releases`, adică bifa **„Eliberări"** din
+   `/admin`, cu un trigger care lasă doar adminii s-o schimbe: numele bifatului
+   ajunge pe pagina de start a întregii secții, ca „Responsabil: …", deci nu poate
+   fi al oricui vrea;
+3. adaugă tipul `eliberare` la notificări și creează funcția
+   `notify_todays_releases()` — un anunț per eliberare programată azi, nebifată ca
+   efectuată și neanunțată încă.
+
+### Anunțul de dimineață — pașii de mână
+
+`notify_todays_releases()` nu se cheamă singură. Migrarea încearcă s-o programeze,
+dar reușește doar dacă `pg_cron` e deja activată; altfel trece mai departe cu un
+`notice`. **Dacă sari peste pasul 2, migrarea reușește oricum și funcția rămâne
+apelabilă manual — doar că dimineața nu primește nimeni nimic**, iar registrul merge
+în rest întreg.
+
+1. Rulează `migrations/0027_release_plans.sql` în **SQL Editor**.
+2. **Database → Extensions** → caută `pg_cron` și activeaz-o.
+3. Programează sarcina, o singură dată:
+
+   ```sql
+   select cron.schedule('eliberari-azi', '0 4 * * *', 'select notify_todays_releases()');
+   ```
+
+   Dacă extensia era pornită *înainte* de pasul 1, migrarea a programat-o deja.
+   Rulează comanda oricum: `cron.schedule` cu același nume rescrie sarcina, nu
+   adaugă a doua.
+4. Verifică că s-a înregistrat:
+
+   ```sql
+   select * from cron.job;
+   ```
+
+   Trebuie să apară un rând `eliberari-azi`, cu `active = true`.
+5. Testeaz-o pe loc, fără să aștepți dimineața:
+
+   ```sql
+   select notify_todays_releases();
+   ```
+
+   Întoarce câte eliberări a anunțat — fiecare pleacă la toți destinatarii deodată:
+   cei bifați „Eliberări", iar dacă nu e nimeni bifat, administratorii. Pe o bază în
+   care azi nu se eliberează nimeni întoarce `0`; adaugă o eliberare pe ziua de azi
+   din `/eliberari` și cheam-o din nou. **Al doilea apel în aceeași zi întoarce tot
+   `0`**: ștampila `notified_at` cade în aceeași tranzacție cu anunțul, tocmai ca
+   nimeni să nu fie anunțat de două ori. Nu e o defecțiune.
+6. Ca s-o oprești:
+
+   ```sql
+   select cron.unschedule('eliberari-azi');
+   ```
+
+**Ora e în UTC.** `0 4 * * *` înseamnă 07:00 la Chișinău vara și 06:00 iarna. Ora
+exactă nu contează; contează să fie înainte de programul de lucru.
+
+### De ce pg_cron și nu un cron Vercel
+
+Fiindcă nu mai încape unul: planul Hobby dă **două** sarcini programate, iar
+amândouă sunt luate de copia de siguranță (`vercel.json` — `0 2 * * *` și
+`30 2 * * *`, a doua fiind rularea de rezervă, dacă prima nu reușește). A treia
+n-ar fi acceptată.
+
+Nici n-ar aduce ceva în plus. Un cron Vercel ar însemna o rută nouă, un `CRON_SECRET`
+de verificat și un client Supabase cu cheia de serviciu — tot lanțul acela ca să
+ajungă până la urmă la o singură interogare SQL. Aici munca se face întreagă în
+bază, deci o programează tot baza.
+
 ## 3. Make the workspace invite-only (email + password)
 
 1. Go to **Authentication → Providers → Email**.

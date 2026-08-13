@@ -32,6 +32,10 @@ describe("notificationHref", () => {
     expect(notificationHref(n({ petition_id: "xyz" }))).toBe("/petitii?petitie=xyz");
   });
 
+  it("anunțul de eliberare duce la registrul eliberărilor", () => {
+    expect(notificationHref(n({ type: "eliberare" }))).toBe("/eliberari");
+  });
+
   it("fără nimic legat, nu duce nicăieri", () => {
     // Anunțul tot apare, dar clickul pe el doar aduce fereastra în față.
     expect(notificationHref(n({}))).toBeNull();

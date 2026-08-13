@@ -23,8 +23,16 @@ const TITLE = "Secția evidența deținuți";
  * citește și deschide fereastra direct. Fără el, o notificare care spune
  * „Starea petiției R-567/26 s-a schimbat” te lăsa într-o listă de trei sute,
  * să cauți singur despre care e vorba.
+ *
+ * Eliberarea e singura care se recunoaște după tip, nu după o coloană cu id.
+ * Anunțul ei nu e despre un rând, ci despre munca unei zile: dimineața pot pleca
+ * trei oameni, deci trei anunțuri care duc toate în același loc — registrul, pe
+ * luna curentă. O coloană `release_plan_id` în `notifications`, pentru un link
+ * care oricum n-ar folosi-o, ar fi o cheie străină de întreținut în schimbul a
+ * nimic.
  */
 export function notificationHref(n: AppNotification): string | null {
+  if (n.type === "eliberare") return "/eliberari";
   if (n.task_id) return `/tasks/${n.task_id}`;
   if (n.petition_id) return `/petitii?petitie=${n.petition_id}`;
   return null;

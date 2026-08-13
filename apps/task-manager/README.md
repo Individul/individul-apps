@@ -393,6 +393,68 @@ după `npm run build`, ambele `.ttf` trebuie să apară în
 `.next/server/app/raport-saptamanal/pdf/route.js.nft.json`, lista după care
 Vercel împachetează funcția.
 
+## Eliberări
+
+Cine se eliberează și când — **lista nominală**. Un rând e un om: numele, data,
+temeiul (toate cele nouăsprezece din darea de seamă a ANP, nu o selecție — un temei
+lipsă împinge omul spre „alte motive" și informația se pierde tăcut), bifa „s-a
+eliberat" și, opțional, o observație.
+
+### Numele și cifra sunt două evidențe, nu una
+
+Registrul nominal (`release_plans`) **nu e** cifra pentru raportul de marți
+(`releases`, un rând pe zi cu *câți* au ieșit), și **niciuna nu se completează din
+cealaltă**. Alegerea e deliberată, fiindcă alternativa e ispititoare: o cifră
+calculată automat din numărul de nume s-ar potrivi mereu — adică ar ascunde exact
+diferența care merită văzută. Un nume în plus înseamnă ori o zi necompletată în
+registrul de cifre, ori o eliberare care n-a mai avut loc, și numai omul știe care.
+
+De aceea `/eliberari` compară suma lunii cu numărul de nume și, când nu coincid,
+**atât face — o spune**: „12 nume în listă, 9 în registrul de cifre pentru august
+2026". Nu corectează nimic și nu cere nimic. Linia tace și când registrul de cifre
+n-a răspuns, și când una dintre evidențe e goală: „0 față de 14" ar apărea pe fiecare
+lună dinaintea registrului nominal, iar o alarmă care se aprinde degeaba e o alarmă
+pe care omul învață s-o treacă cu vederea.
+
+### Unde se intră
+
+- **Chenarul de pe pagina de start** ține luna curentă: total / efectuate / rămase,
+  plus numele care mai așteaptă, cu pastila „azi" sau „restant" unde e cazul (cuvânt,
+  nu doar culoare — se citește și pe o fotocopie alb-negru).
+- **Pagina [`/eliberari`](src/app/eliberari/page.tsx)** are luna întreagă, navigarea
+  între luni și adăugarea/editarea. Se ajunge la ea din chenar și din paragraful de
+  sus al transferurilor, unde cineva caută deja evidențele nominale.
+- **N-are tab în antet**, ca raportul de marți. Antetul ține registrele în care se
+  lucrează toată ziua; aici se intră dimineața, se bifează un nume și se pleacă.
+
+### Responsabilul și anunțul de dimineață
+
+În dimineața zilei în care cineva se eliberează pleacă o notificare: „Azi se
+eliberează Popescu Ion". Un anunț per om, o singură dată — ora plecării rămâne scrisă
+pe rând (`notified_at`), în aceeași tranzacție cu anunțul, deci nici o sarcină
+programată care rulează de două ori nu-l trimite iar. Clic pe el duce la
+`/eliberari`.
+
+**Cine îl primește e o bifă pe profil**, coloana „Eliberări" din
+[`/admin`](src/app/admin/page.tsx) — nu un id scris în cod, care ar merge azi și ar
+amuți în ziua în care omul pleacă din funcție, fără eroare și fără urmă. Din aceeași
+bifă iese și eticheta „Responsabil: …" de pe chenar. **Dacă nu e bifat nimeni,
+anunțul merge la administratori:** o funcție care tace dintr-o bifă uitată e mai rea
+decât una care anunță pe cine nu trebuie. Bifa o pune doar adminul, impus printr-un
+trigger în bază, nu doar în interfață — numele bifatului se citește pe pagina de
+start a întregii secții, deci nu poate fi al oricui vrea.
+
+Drepturile pe registru sunt ca la ședințe și transferuri: oricine autentificat citește
+și completează, ștergerea e a adminului (prin RLS), iar cine a scris rămâne în
+jurnalul de la `/admin`, sub modulul **Eliberări** — același filtru pentru amândouă
+evidențele.
+
+> Migrarea [`supabase/migrations/0027_release_plans.sql`](supabase/migrations/0027_release_plans.sql)
+> trebuie aplicată (după `0026`). **Anunțul zilnic mai cere doi pași făcuți de mână**
+> — activarea extensiei `pg_cron` și un `cron.schedule` —, altfel registrul merge
+> întreg, dar dimineața nu pleacă nimic. Pașii, cu tot cu felul în care se verifică și
+> se oprește, sunt în [`supabase/README.md`](supabase/README.md#2k-eliberări).
+
 ## Dezvoltare locală
 
 1. Instalează dependențele:
