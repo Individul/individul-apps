@@ -11,6 +11,7 @@ import type { Task, Petition, Profile } from "./types";
 
 const prof = (id: string, name: string | null): Profile => ({
   id, full_name: name, username: null, avatar_url: null, role: "member",
+  handles_releases: false,
 });
 
 const t = (over: Partial<Task>): Task => ({

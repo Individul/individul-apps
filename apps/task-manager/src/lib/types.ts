@@ -8,6 +8,7 @@ export interface Profile {
   username: string | null;
   avatar_url: string | null;
   role: Role;
+  handles_releases: boolean;
 }
 export interface Tag {
   id: string;
@@ -67,6 +68,7 @@ export interface AuditEntry {
     | "obligation_completions"
     | "defendants"
     | "releases"
+    | "release_plans"
     | "transfers";
   entity_id: string | null;
   details: Record<string, unknown>;
@@ -78,7 +80,8 @@ export type NotificationType =
   | "status"
   | "edited"
   | "deleted"
-  | "created";
+  | "created"
+  | "eliberare";
 export interface Notification {
   id: string;
   user_id: string;

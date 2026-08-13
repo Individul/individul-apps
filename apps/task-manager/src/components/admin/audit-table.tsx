@@ -42,6 +42,7 @@ const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
   obligations: CalendarClock,
   defendants: Scale,
   releases: DoorOpen,
+  release_plans: DoorOpen,
   obligation_completions: CalendarClock,
   profiles: Users,
 };
@@ -61,6 +62,7 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   obligations: "informarea periodică",
   defendants: "inculpatul",
   releases: "evidența eliberărilor",
+  release_plans: "eliberarea",
   obligation_completions: "un termen de informare",
 };
 

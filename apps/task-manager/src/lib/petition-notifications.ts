@@ -21,6 +21,10 @@ export function petitionMessageFor(
     case "deleted": return `Petiția ${petitionNumber} a fost ștearsă`;
     // Petițiile n-au comentarii; ramura există doar pentru exhaustivitate.
     case "comment": return `Comentariu nou la petiția ${petitionNumber}`;
+    // Nici eliberările nu sunt petiții, iar mesajul lor se scrie în bază. Tot
+    // pentru exhaustivitate: un `default` ar înghiți la fel de tăcut și tipul
+    // care se adaugă mâine.
+    case "eliberare": return petitionNumber;
   }
 }
 

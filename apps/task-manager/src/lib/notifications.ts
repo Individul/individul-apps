@@ -32,6 +32,11 @@ export function messageFor(type: NotificationType, title: string, statusLabel?: 
     case "status": return `Starea sarcinii „${title}" s-a schimbat${statusLabel ? `: ${statusLabel}` : ""}`;
     case "edited": return `Sarcina „${title}" a fost modificată`;
     case "deleted": return `Sarcina „${title}" a fost ștearsă`;
+    // Anunțul de eliberare vine gata scris din `notify_todays_releases()`, deci
+    // aici n-are ce se compune — se dă mai departe cum a venit. Ramura există ca
+    // switch-ul să rămână exhaustiv: cu un `default` în loc, următorul tip
+    // adăugat la `NotificationType` ar primi tăcut mesajul altcuiva.
+    case "eliberare": return title;
   }
 }
 

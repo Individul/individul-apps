@@ -41,7 +41,7 @@ export const AUDIT_MODULES: {
   // Modul propriu, nu la „Ședințe": o eliberare nu e o ședință de judecată, iar
   // pusă acolo ar umple filtrul ședințelor cu intrări care n-au legătură cu ele.
   // Un registru de sine stătător își ține tabul lui — ca „Inculpați".
-  { value: "eliberari", label: "Eliberări", entities: ["releases"] },
+  { value: "eliberari", label: "Eliberări", entities: ["releases", "release_plans"] },
   { value: "utilizatori", label: "Utilizatori", entities: ["profiles"] },
 ];
 
