@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
 
-import { getTaskCounts, getPetitionCounts, getProfiles, getCurrentProfile, getTransferCounts, getObligations } from "@/lib/queries";
+import {
+  getTaskCounts,
+  getPetitionCounts,
+  getProfiles,
+  getCurrentProfile,
+  getTransferCounts,
+  getObligations,
+  getReleasePlans,
+} from "@/lib/queries";
 import {
   taskStats,
   petitionStats,
@@ -15,9 +23,11 @@ import { Button } from "@/components/ui/button";
 import { GlobalSearch } from "@/components/hub/global-search";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { TransferBand } from "@/components/hub/transfer-band";
+import { ReleaseBand } from "@/components/hub/release-band";
 import { ChangelogSection } from "@/components/hub/changelog-section";
 import { ObligationBand } from "@/components/obligations/obligation-band";
 import { pendingFor } from "@/lib/obligations";
+import { monthSummary, responsibleLabel } from "@/lib/releases";
 import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -80,19 +90,26 @@ function toBreakdown<T extends { assignee_id: string | null }, S>(
 }
 
 export default async function HubPage() {
+  // Luna eliberărilor se citește pe ceasul Chișinăului, nu pe al serverului: pe
+  // Vercel mașina merge pe UTC, iar în noaptea dintre 31 și 1 chenarul ar cere
+  // baza de date pentru luna care tocmai s-a încheiat.
+  const luna = toISODate(todayInChisinau()).slice(0, 7);
+
   // Pagina de start nu arată niciun rând, ci unsprezece cifre și două tabele de
   // defalcare. Deci cere din baza de date doar coloanele din care ies cifrele:
   // titlurile, descrierile, responsabilii încorporați și fișierele atașate ale
   // celor trei registre ar traversa rețeaua ca să fie aruncate. Modulele lor
   // (/sarcini, /petitii, /transferuri) au mai departe rândurile întregi.
-  const [tasks, petitions, profiles, profile, transfers, obligations] = await Promise.all([
-    getTaskCounts(),
-    getPetitionCounts(),
-    getProfiles(),
-    getCurrentProfile(),
-    getTransferCounts(),
-    getObligations(),
-  ]);
+  const [tasks, petitions, profiles, profile, transfers, obligations, releasePlans] =
+    await Promise.all([
+      getTaskCounts(),
+      getPetitionCounts(),
+      getProfiles(),
+      getCurrentProfile(),
+      getTransferCounts(),
+      getObligations(),
+      getReleasePlans(luna),
+    ]);
 
   const isAdmin = profile?.role === "admin";
   const me = profile?.id ?? null;
@@ -123,6 +140,10 @@ export default async function HubPage() {
   // Penitenciarul e pentru transferuri ce e responsabilul pentru sarcini: a doua
   // dimensiune firească a cifrelor. Fără ea banda ar arăta doar trei numere.
   const transferInstitutions = byInstitution(thisMonth);
+
+  // Fără al treilea argument: ziua implicită e cea a Chișinăului, deci „azi" și
+  // „restant" nu alunecă cu o zi în fereastra dintre miezurile de noapte.
+  const releases = monthSummary(releasePlans, luna);
 
   // Defalcarea o vede toată secția, nu doar adminul: cifra „din N” de sub
   // numerele proprii ridică întrebarea unde sunt celelalte, iar tabelul e chiar
@@ -179,6 +200,17 @@ export default async function HubPage() {
             pendingFor(o, obligations.completed.get(o.id) ?? new Set()),
           )}
         />
+        {/* Deasupra cardurilor, lângă obligații, fiindcă e același fel de lucru:
+            muncă datată, care se strică dacă trece ziua. Cererea a fost chiar
+            „la loc vizibil" — o eliberare uitată nu se repară a doua zi.
+            Spre deosebire de banda obligațiilor, chenarul rămâne pe pagină și
+            când n-are rânduri: acolo tăcerea înseamnă „nimic urgent", aici ar
+            însemna „modulul a dispărut", iar luna goală e ea însăși o veste.
+            Se listează doar ce a rămas. Rândurile bifate se numără sus și atât:
+            despre ele nu mai e nimic de făcut, iar întinse pe chenar ar împinge
+            cardurile afară din primul ecran tocmai către sfârșitul lunii, când
+            sunt cele mai multe. Lista întreagă e la /eliberari. */}
+        <ReleaseBand summary={releases} month={luna} responsible={responsibleLabel(profiles)} />
         {/* Două carduri sus, egale. Al treilea modul ia rândul întreg dedesubt:
             trei nu se împart la două coloane, iar transferurile n-au defalcare
             pe persoane, deci într-o jumătate ar rămâne pe jumătate goale. */}
