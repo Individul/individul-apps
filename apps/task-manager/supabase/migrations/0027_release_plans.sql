@@ -84,6 +84,18 @@ declare
 begin
   if (TG_OP = 'DELETE') then rec := OLD; else rec := NEW; end if;
 
+  -- Ștampila anunțului nu e o atingere umană. `notify_todays_releases()` scrie
+  -- `notified_at` în fiecare dimineață, iar fără ieșirea asta jurnalul ar primi
+  -- zilnic un teanc de „a modificat eliberarea" fără autor și fără nicio
+  -- schimbare de conținut — exact zgomotul care face ca urmele adevărate să nu
+  -- mai fie citite. `updated_at` intră în aceeași scutire: îl mișcă trigger-ul,
+  -- nu omul.
+  if TG_OP = 'UPDATE'
+     and (to_jsonb(NEW) - 'notified_at' - 'updated_at')
+       = (to_jsonb(OLD) - 'notified_at' - 'updated_at') then
+    return null;
+  end if;
+
   det := jsonb_build_object(
     'name', rec.last_name || ' ' || rec.first_name,
     'release_date', rec.release_date,
@@ -132,8 +144,10 @@ alter table notifications add constraint notifications_type_check
 
 -- Anunțurile de azi. Rulată zilnic de pg_cron, întoarce câte a trimis.
 --
--- `security definer` fiindcă scrie în `notifications` pentru alți utilizatori,
--- iar politica de acolo permite doar rândurile proprii.
+-- `security definer` fiindcă scrie în `notifications` pentru alți utilizatori.
+-- Tabelul acela n-are deloc politică de inserare (0008 definește doar
+-- select/update/delete pe rândurile proprii), deci un apel obișnuit ar fi
+-- respins din start.
 --
 -- Mesajul nu conține temeiul: eticheta lui trăiește în TypeScript, iar copiată
 -- aici ar fi a doua listă de întreținut — exact tiparul pe care modulul îl
