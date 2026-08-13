@@ -29,7 +29,22 @@ export default async function TransferuriPage() {
           >
             Planificarea nominală
           </Link>{" "}
-          se ține separat.
+          se ține separat, ca și{" "}
+          {/* Eliberările n-au tab în antet și se ajunge la ele doar din chenarul
+              paginii de start. O singură ușă e prea puțin pentru un registru
+              care se deschide zilnic, iar paragraful ăsta e locul unde cineva
+              caută deja evidențele nominale.
+
+              Același roșu ca vecina de deasupra: comentariul de acolo spune că
+              roșul e pentru legăturile către module vecine, iar asta e exact
+              una. Lăsată discretă, ar fi fost singura ușă care nu se vede. */}
+          <Link
+            href="/eliberari"
+            className="font-medium text-red-600 underline underline-offset-2 transition-colors hover:text-red-700"
+          >
+            registrul eliberărilor
+          </Link>
+          .
         </p>
       </div>
 
