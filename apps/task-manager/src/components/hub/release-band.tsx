@@ -74,8 +74,7 @@ export function ReleaseBand({
           sară sub ochi de la o zi la alta. */}
       {summary.total > 0 && (
         <p className="mt-1 text-sm tabular-nums text-muted-foreground">
-          {summary.total} în total · {summary.done} înregistrate · {summary.remaining.length}{" "}
-          rămase
+          {summary.total} în total · {summary.done} efectuate · {summary.remaining.length} rămase
         </p>
       )}
 
@@ -136,13 +135,14 @@ export function ReleaseBand({
         // eliberări și toate sunt duse la capăt — o veste bună, deci și bifa
         // verde. Un text comun cu cel de mai jos ar spune „nu mai e nimic de
         // făcut" și într-o lună în care nimeni n-a apucat să scrie nimic.
+        //
+        // Cifrele nu se repetă aici: rândul de deasupra le-a spus deja, iar
+        // „12 efectuate" urmat de „toate cele 12 sunt efectuate" e același
+        // lucru citit de două ori. Propoziția spune ce nu spun cifrele — că nu
+        // mai urmează nimic. Așa dispare și numărătoarea la singular.
         <p className="mt-4 flex items-center gap-1.5 text-sm text-muted-foreground">
           <CheckCheck className="h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />
-          {/* „Toate cele 1 eliberări" nu e română. Aceeași stare, forma
-              gramaticală potrivită numărului. */}
-          {summary.total === 1
-            ? `Singura eliberare din ${luna} e înregistrată.`
-            : `Toate cele ${summary.total} eliberări din ${luna} sunt înregistrate.`}
+          Nu mai e nimic de pregătit luna asta.
         </p>
       ) : (
         // Celălalt gol: registrul lunii e alb. Nu spune „gata", fiindcă nimeni
