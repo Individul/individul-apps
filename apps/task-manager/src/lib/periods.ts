@@ -1,4 +1,8 @@
 import {
+  addDays,
+  addMonths,
+  addWeeks,
+  addYears,
   startOfDay,
   endOfDay,
   startOfWeek,
@@ -106,4 +110,52 @@ export function formatDateRo(d: Date | string): string {
 
 export function rangeLabelRo(range: DateRange): string {
   return `${formatDateRo(range.from)} – ${formatDateRo(range.to)}`;
+}
+
+/**
+ * Mută ancora cu `pasi` perioade înainte (pozitiv) sau înapoi (negativ).
+ *
+ * Se pornește întotdeauna de la începutul perioadei, nu de la ancora primită.
+ * Altfel apare o alunecare tăcută: ancorat pe 31 martie, un pas înapoi dă 28
+ * februarie (luna e mai scurtă), iar de acolo încă unul dă 28 ianuarie — pornit
+ * din 31 martie, ajungi în ianuarie prin februarie „scurtat", și fiecare pas de
+ * după rămâne pe ziua 28. Normalizat la 1 ale lunii, pașii sunt reversibili.
+ */
+export function shiftPeriod(period: Period, ref: Date, pasi: number): Date {
+  const start = rangeForPeriod(period, ref).from;
+  switch (period) {
+    case "zi":
+      return addDays(start, pasi);
+    case "saptamana":
+      return addWeeks(start, pasi);
+    case "luna":
+      return addMonths(start, pasi);
+    case "trimestru":
+      return addMonths(start, 3 * pasi);
+    case "semestru":
+      return addMonths(start, 6 * pasi);
+    case "an":
+      return addYears(start, pasi);
+  }
+}
+
+/**
+ * Ancora cerută prin adresă, curățată.
+ *
+ * Cade înapoi pe `azi` la orice intrare în care nu se poate avea încredere:
+ * lipsă, format greșit, sau — capcana care nu se vede — o zi care nu există.
+ * „2026-02-30" trece de tiparul AAAA-LL-ZZ, dar V8 o rostogolește tăcut la 2
+ * martie, deci raportul ar arăta altă lună decât cea scrisă în adresă. Se
+ * verifică scriind data înapoi și comparând.
+ *
+ * Viitorul se retează la azi: o perioadă care încă n-a venit n-are ce raporta,
+ * iar butonul „înainte" n-are unde duce dincolo de perioada curentă.
+ */
+export function readAnchor(value: string | string[] | undefined, azi: Date): Date {
+  // `string[]` când parametrul apare de mai multe ori în adresă — așa îl dă Next.
+  const cerut = Array.isArray(value) ? value[0] : value;
+  if (!cerut || !/^\d{4}-\d{2}-\d{2}$/.test(cerut)) return azi;
+  const zi = parseISODate(cerut);
+  if (Number.isNaN(zi.getTime()) || toISODate(zi) !== cerut) return azi;
+  return zi > azi ? azi : zi;
 }
