@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
+import { PeriodNav } from "./period-nav";
 import {
   aggregate,
   computeIndicators,
@@ -24,9 +25,18 @@ interface PeriodReportProps {
   period: Period;
   range: DateRange;
   hearings: Hearing[];
+  /** Ancorele vecine, calculate pe server — vezi `PeriodNav`. */
+  inapoi: string;
+  inainte: string | null;
 }
 
-export function PeriodReport({ period, range, hearings }: PeriodReportProps) {
+export function PeriodReport({
+  period,
+  range,
+  hearings,
+  inapoi,
+  inainte,
+}: PeriodReportProps) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -64,9 +74,16 @@ export function PeriodReport({ period, range, hearings }: PeriodReportProps) {
             {p.label}
           </button>
         ))}
-        <span className="ml-auto text-[13px] text-muted-foreground">
-          {rangeLabelRo(range)}
-        </span>
+        {/* Săgețile stau lângă butoanele de perioadă, unde omul se uită deja
+            când alege ce vrea să vadă — nu ascunse în versiunea de tipărit. */}
+        <div className="ml-auto">
+          <PeriodNav
+            basePath="/sedinte"
+            eticheta={rangeLabelRo(range)}
+            inapoi={inapoi}
+            inainte={inainte}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-5 sm:grid-cols-3 lg:grid-cols-5">

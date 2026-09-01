@@ -14,7 +14,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-01",
-    text: "Raportul de ședințe se poate muta pe orice perioadă din trecut, cu săgețile de lângă interval. Până acum arăta doar perioada curentă, deci pe 1 septembrie nu aveai cum să vezi totalul lunii august.",
+    text: "Raportul de ședințe se poate muta pe orice perioadă din trecut, cu săgețile de lângă interval — direct pe pagina Ședințe, nu doar în versiunea de tipărit. Până acum arăta doar perioada curentă, deci pe 1 septembrie nu aveai cum să vezi totalul lunii august.",
   },
   {
     date: "2026-08-08",
