@@ -275,18 +275,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   /*
    * Golurile se tipăresc odată cu cifrele.
    *
-   * Aceleași două avertizări ca pe ecran, din același motiv: o hârtie care tace
-   * despre lipsurile ei lasă impresia că săptămâna e acoperită integral — și,
-   * spre deosebire de ecran, ea ajunge la dosar, unde nu mai are cine s-o
-   * întrebe ce n-a apucat să numere.
+   * Zilele lipsă se scriu și pe hârtie: una care tace despre golurile ei lasă
+   * impresia că săptămâna e acoperită integral, iar ea ajunge la dosar, unde nu
+   * mai are cine s-o întrebe ce n-a apucat să numere.
+   *
+   * Se scrie golul, nu și părerea despre el. Explicația că „cifra e mai mică
+   * decât realitatea" a rămas doar pe ecran, unde e un îndemn la completare:
+   * într-un raport care pleacă la ANP, ea nu lămurește pe nimeni — doar taie
+   * creanga cifrei de deasupra. Cine citește vede zilele lipsă și judecă singur.
    */
   const note: string[] = [];
   if (missing.length > 0) {
     const zile = missing.map((iso) => format(parseISODate(iso), "d MMM", { locale: ro })).join(", ");
     note.push(
       `${missing.length} ${missing.length === 1 ? "zi lucrătoare" : "zile lucrătoare"} fără ` +
-        `ședințe introduse: ${zile}. Teleconferințele de mai sus numără doar zilele ` +
-        `introduse, deci cifra e mai mică decât realitatea.`,
+        `ședințe introduse: ${zile}.`,
     );
   }
   if (!releases.available) {

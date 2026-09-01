@@ -109,12 +109,20 @@ export function ReportView({
             {missing.length} {missing.length === 1 ? "zi lucrătoare" : "zile lucrătoare"} fără
             ședințe introduse:
           </span>{" "}
-          {missing.map((iso) => format(parseISODate(iso), "d MMM", { locale: ro })).join(", ")}.
-          Teleconferințele de mai sus numără doar zilele introduse, deci cifra e mai mică decât
-          realitatea.{" "}
-          <Link href="/sedinte" className="no-print underline underline-offset-2">
-            Completează la Ședințe →
-          </Link>
+          {missing.map((iso) => format(parseISODate(iso), "d MMM", { locale: ro })).join(", ")}.{" "}
+          {/* Explicația rămâne doar pe ecran, unde e un îndemn la completare.
+              Pe hârtie raportul pleacă la ANP, iar o frază care spune că
+              propria cifră e mai mică decât realitatea nu lămurește pe nimeni —
+              doar taie creanga cifrei de deasupra. Zilele lipsă se tipăresc
+              oricum, deci golul se vede; nu e nevoie și de părerea noastră
+              despre el. */}
+          <span className="no-print">
+            Teleconferințele de mai sus numără doar zilele introduse, deci cifra e mai mică decât
+            realitatea.{" "}
+            <Link href="/sedinte" className="underline underline-offset-2">
+              Completează la Ședințe →
+            </Link>
+          </span>
         </Warning>
       )}
 
