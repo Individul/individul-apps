@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PERIODS, type Period } from "@/lib/periods";
 import { cn } from "@/lib/utils";
+import { PeriodNav } from "./period-nav";
 
 interface ReportToolbarProps {
   period: Period;
@@ -63,37 +64,13 @@ export function ReportToolbar({ period, eticheta, inapoi, inainte }: ReportToolb
         ))}
       </div>
 
-      {/* Intervalul stă între săgeți, nu doar în antetul documentului: cine
-          mută perioada trebuie să vadă unde a ajuns fără să citească hârtia. */}
-      <div className="flex w-full items-center gap-1 sm:ml-4 sm:w-auto">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 shrink-0"
-          title="Perioada dinainte"
-          aria-label="Perioada dinainte"
-          onClick={() => mergiLa({ la: inapoi })}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        <span className="min-w-[13rem] text-center text-xs tabular-nums text-muted-foreground">
-          {eticheta}
-        </span>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 shrink-0"
-          title={inainte ? "Perioada următoare" : "Ești în perioada curentă"}
-          aria-label="Perioada următoare"
-          disabled={!inainte}
-          onClick={() => inainte && mergiLa({ la: inainte })}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+      <div className="w-full sm:ml-4 sm:w-auto">
+        <PeriodNav
+          basePath="/sedinte/raport"
+          eticheta={eticheta}
+          inapoi={inapoi}
+          inainte={inainte}
+        />
       </div>
 
       <Button type="button" size="sm" className="ml-auto" onClick={() => window.print()}>
