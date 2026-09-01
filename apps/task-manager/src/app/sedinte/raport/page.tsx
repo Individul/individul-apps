@@ -9,6 +9,9 @@ import {
   parseISODate,
   rangeForPeriod,
   rangeLabelRo,
+  readAnchor,
+  shiftPeriod,
+  todayInChisinau,
   toISODate,
   type Period,
 } from "@/lib/periods";
@@ -22,10 +25,29 @@ function readPeriod(value: string | undefined): Period {
 export default async function RaportSedintePage({
   searchParams,
 }: {
-  searchParams: { perioada?: string };
+  searchParams: { perioada?: string; la?: string | string[] };
 }) {
   const period = readPeriod(searchParams.perioada);
-  const range = rangeForPeriod(period, new Date());
+
+  /*
+   * Perioada se alege, nu se impune.
+   *
+   * Înainte, ancora era `new Date()`: puteai alege felul perioadei, dar
+   * întotdeauna pe cea curentă. Pe 1 septembrie, „Lună" însemna septembrie —
+   * gol — iar august nu se putea vedea deloc, deși tocmai el se raportează.
+   *
+   * Ancora vine acum din adresă, deci raportul se poate lega, tipări și trimite
+   * mai departe fără să se schimbe sub mâna cui îl deschide. Ziua de azi se ia
+   * pe ora Republicii Moldova; pe Vercel serverul merge pe UTC, iar noaptea,
+   * până la ora 3, „luna curentă" ar fi fost cea trecută.
+   */
+  const azi = todayInChisinau();
+  const anchor = readAnchor(searchParams.la, azi);
+  const range = rangeForPeriod(period, anchor);
+
+  // „Înainte" se oprește la perioada în care ne aflăm: una care încă n-a venit
+  // n-are ce raporta, iar un raport gol pe octombrie doar zăpăcește.
+  const esteCurenta = range.from <= azi && azi <= range.to;
 
   const [hearings, profile] = await Promise.all([
     getHearings(toISODate(range.from), toISODate(range.to)),
@@ -42,7 +64,12 @@ export default async function RaportSedintePage({
 
   return (
     <main className="mx-auto max-w-3xl p-6 print:max-w-none print:p-0">
-      <ReportToolbar period={period} />
+      <ReportToolbar
+        period={period}
+        eticheta={rangeLabelRo(range)}
+        inapoi={toISODate(shiftPeriod(period, anchor, -1))}
+        inainte={esteCurenta ? null : toISODate(shiftPeriod(period, anchor, 1))}
+      />
 
       <article className="space-y-6 text-[13px] leading-relaxed">
         <header className="space-y-1 text-center">
