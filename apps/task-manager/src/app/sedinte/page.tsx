@@ -86,7 +86,11 @@ export default async function SedintePage({
               // Duce cu ea și perioada aleasă: altfel, uitându-te la august și
               // apăsând „tipărește", ai primi septembrie.
               href={`/sedinte/raport?perioada=${period}&la=${toISODate(anchor)}`}
-              className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+              // Roșu la cererea utilizatorului, ca legătura să sară în ochi.
+              // Notă pentru cine trece pe aici: în restul aplicației roșul
+              // înseamnă „restant" — dacă vreodată se face ordine în culori,
+              // ăsta e locul care iese din rând, dinadins.
+              className="text-[13px] font-medium text-red-600 transition-colors hover:text-red-700"
             >
               Versiune de tipărit →
             </Link>
