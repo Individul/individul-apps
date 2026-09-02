@@ -1,6 +1,6 @@
 import { startOfDay, startOfMonth, subMonths } from "date-fns";
 
-import { scheduledDays } from "./transfers";
+import { nextScheduled, scheduledDays } from "./transfers";
 import { parseISODate, todayInChisinau, toISODate } from "./periods";
 
 /*
@@ -18,14 +18,22 @@ import { parseISODate, todayInChisinau, toISODate } from "./periods";
  */
 import type { Court } from "./courts";
 
+/** Ce anume cere transferul. Vezi migrarea 0027. */
+export type TransferBasis = "sedinta" | "decizie";
+
 export interface TransferPlan {
   id: string;
   last_name: string;
   first_name: string;
-  court: Court;
-  /** Penitenciarul unde trebuie dus omul pentru ședință. */
+  basis: TransferBasis;
+  /** Lipsește când temeiul e o decizie venită din afara unei judecătorii. */
+  court: Court | null;
+  /** Penitenciarul unde trebuie dus omul. */
   institution: number;
-  hearing_date: string;
+  /** Completată doar la temei „ședință". */
+  hearing_date: string | null;
+  /** Data parvenirii deciziei; completată doar la temei „decizie". */
+  decision_date: string | null;
   done: boolean;
   note: string | null;
   created_by: string | null;
@@ -60,6 +68,49 @@ export function transferDayFor(hearing: Date, today: Date = todayInChisinau()): 
   return usable.length ? toISODate(usable[usable.length - 1]) : null;
 }
 
+/**
+ * Ziua de transfer pentru o decizie: prima zi programată de la parvenirea ei.
+ *
+ * Regula e răsturnată față de ședințe. Acolo transferul se face înaintea unui
+ * termen, deci în ultimul moment posibil, și se poate întâmpla să nu mai existe
+ * niciun moment. Aici decizia e deja luată: se execută la prima ocazie, iar
+ * ocazie există întotdeauna — de aceea nu întoarce niciodată `null`.
+ *
+ * Se pornește de la ziua mai târzie dintre parvenire și azi. O decizie sosită
+ * luna trecută și rămasă neexecutată nu trimite omul la o zi care a trecut: se
+ * mută la următoarea, ca și o ședință amânată.
+ */
+export function transferDayForDecision(
+  decision: Date,
+  today: Date = todayInChisinau(),
+): string {
+  const d = startOfDay(decision);
+  const t = startOfDay(today);
+  return toISODate(nextScheduled(d > t ? d : t));
+}
+
+/** Data de care atârnă transferul, oricare ar fi temeiul. */
+export function planDate(plan: TransferPlan): string | null {
+  return plan.basis === "decizie" ? plan.decision_date : plan.hearing_date;
+}
+
+/**
+ * Ziua de transfer a unei planificări, după temeiul ei.
+ *
+ * `null` înseamnă „de înștiințat instanța" — dar numai la ședințe; la decizii
+ * apare doar dacă data lipsește cu totul, ceea ce baza nu îngăduie.
+ */
+export function planTransferDay(
+  plan: TransferPlan,
+  today: Date = todayInChisinau(),
+): string | null {
+  const d = planDate(plan);
+  if (!d) return null;
+  return plan.basis === "decizie"
+    ? transferDayForDecision(parseISODate(d), today)
+    : transferDayFor(parseISODate(d), today);
+}
+
 export interface PlanGroup {
   /** Ziua de transfer; `null` = de înștiințat instanța. */
   day: string | null;
@@ -78,7 +129,7 @@ export function groupByTransferDay(
 
   for (const p of plans) {
     if (p.done) continue;
-    const day = transferDayFor(parseISODate(p.hearing_date), today);
+    const day = planTransferDay(p, today);
     const list = byDay.get(day);
     if (list) list.push(p);
     else byDay.set(day, [p]);
@@ -86,7 +137,7 @@ export function groupByTransferDay(
 
   const groups = [...byDay].map(([day, list]) => ({
     day,
-    plans: [...list].sort((a, b) => a.hearing_date.localeCompare(b.hearing_date)),
+    plans: [...list].sort((a, b) => (planDate(a) ?? "").localeCompare(planDate(b) ?? "")),
   }));
 
   return groups.sort((a, b) => {

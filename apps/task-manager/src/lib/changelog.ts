@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-02",
+    text: "La planificarea transferurilor se poate alege temeiul: ședință de judecată sau decizie. La ședință transferul se face în ultima zi programată dinaintea ei; la decizie, în prima zi programată de la data parvenirii.",
+  },
+  {
     date: "2026-09-01",
     text: "Raportul de ședințe se poate muta pe orice perioadă din trecut, cu săgețile de lângă interval — direct pe pagina Ședințe, nu doar în versiunea de tipărit. Până acum arăta doar perioada curentă, deci pe 1 septembrie nu aveai cum să vezi totalul lunii august.",
   },

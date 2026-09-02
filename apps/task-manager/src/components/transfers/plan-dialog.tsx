@@ -27,6 +27,8 @@ import {
 import { deletePlan, savePlan } from "@/app/transferuri/planificare/actions";
 import { COURTS } from "@/lib/courts";
 import { INSTITUTIONS, institutionLabel } from "@/lib/transfers";
+import { transferDayForDecision, type TransferBasis } from "@/lib/transfer-plans";
+import { cn } from "@/lib/utils";
 import { transferDayFor, type TransferPlan } from "@/lib/transfer-plans";
 import { parseISODate } from "@/lib/periods";
 
@@ -45,7 +47,9 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
   const [firstName, setFirstName] = useState("");
   const [court, setCourt] = useState<string>("");
   const [institution, setInstitution] = useState("");
+  const [basis, setBasis] = useState<TransferBasis>("sedinta");
   const [hearingDate, setHearingDate] = useState("");
+  const [decisionDate, setDecisionDate] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -56,13 +60,27 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
     setFirstName(plan?.first_name ?? "");
     setCourt(plan?.court ?? "");
     setInstitution(plan ? String(plan.institution) : "");
+    setBasis(plan?.basis ?? "sedinta");
     setHearingDate(plan?.hearing_date ?? "");
+    setDecisionDate(plan?.decision_date ?? "");
     setNote(plan?.note ?? "");
   }, [open, plan]);
 
   // Ziua de transfer se arată în timp ce completezi: dacă nu mai există una,
   // afli înainte de a salva, nu după.
-  const day = hearingDate ? transferDayFor(parseISODate(hearingDate)) : null;
+  /*
+   * Ziua de transfer, arătată înainte de salvare.
+   *
+   * La decizie nu poate fi `null`: prima zi programată de după parvenire există
+   * întotdeauna. Avertizarea „de înștiințat instanța" rămâne deci numai la
+   * ședințe, unde chiar se poate să nu mai fie loc înaintea termenului.
+   */
+  const dataAleasa = basis === "decizie" ? decisionDate : hearingDate;
+  const day = !dataAleasa
+    ? null
+    : basis === "decizie"
+      ? transferDayForDecision(parseISODate(dataAleasa))
+      : transferDayFor(parseISODate(dataAleasa));
 
   const submit = () => {
     setError(null);
@@ -72,7 +90,9 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
         first_name: firstName,
         court,
         institution,
+        basis,
         hearing_date: hearingDate,
+        decision_date: decisionDate,
         note,
       });
       if (res.error) {
@@ -135,8 +155,42 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
             </div>
           </div>
 
+          {/*
+            Temeiul stă înaintea datei, fiindcă el hotărăște ce înseamnă data:
+            înaintea ședinței, sau de la parvenirea deciziei. Ales invers, omul
+            ar scrie data cu un înțeles și ar salva-o cu altul.
+          */}
           <div className="space-y-2">
-            <Label>Instanța</Label>
+            <Label>Temeiul transferului</Label>
+            <div className="flex gap-2">
+              {([
+                { value: "sedinta", label: "Ședință de judecată" },
+                { value: "decizie", label: "Decizie" },
+              ] as const).map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setBasis(t.value)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs transition-colors",
+                    basis === t.value
+                      ? "border-transparent bg-primary text-primary-foreground"
+                      : "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {basis === "sedinta"
+                ? "Transferul se face în ultima zi programată dinaintea ședinței."
+                : "Transferul se face la prima zi programată de la parvenirea deciziei."}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Instanța{basis === "decizie" && " (opțional)"}</Label>
             <Select value={court} onValueChange={setCourt}>
               <SelectTrigger>
                 <SelectValue placeholder="Alege instanța" />
@@ -169,15 +223,21 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="p-hearing">Data ședinței</Label>
+              <Label htmlFor="p-data">
+                {basis === "decizie" ? "Data parvenirii deciziei" : "Data ședinței"}
+              </Label>
               <Input
-                id="p-hearing"
+                id="p-data"
                 type="date"
-                value={hearingDate}
-                onChange={(e) => setHearingDate(e.target.value)}
+                value={dataAleasa}
+                onChange={(e) =>
+                  basis === "decizie"
+                    ? setDecisionDate(e.target.value)
+                    : setHearingDate(e.target.value)
+                }
                 required
               />
-              {hearingDate && (
+              {dataAleasa && (
                 <p className="text-xs text-muted-foreground">
                   {day ? (
                     <>

@@ -10,9 +10,23 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PlanDialog } from "@/components/transfers/plan-dialog";
 import { setPlanDone } from "@/app/transferuri/planificare/actions";
-import { groupByTransferDay, type TransferPlan } from "@/lib/transfer-plans";
+import { groupByTransferDay, planDate, type TransferPlan } from "@/lib/transfer-plans";
 import { institutionLabel } from "@/lib/transfers";
 import { parseISODate } from "@/lib/periods";
+
+/**
+ * Data de care atârnă planificarea, spusă cu numele ei.
+ *
+ * „Ședința" și „decizia" cer transferul în direcții opuse — una înainte, alta
+ * după — deci un rând care arată doar o dată, fără să spună care, s-ar citi
+ * greșit exact când contează.
+ */
+function dataPlanului(p: TransferPlan): string {
+  const iso = planDate(p);
+  if (!iso) return "—";
+  const zi = format(parseISODate(iso), "d MMM yyyy", { locale: ro });
+  return p.basis === "decizie" ? `decizie, ${zi}` : `ședință, ${zi}`;
+}
 import { cn } from "@/lib/utils";
 
 export function PlanList({
@@ -130,13 +144,13 @@ export function PlanList({
                     <span className="font-medium">
                       {p.last_name} {p.first_name}
                     </span>
-                    <span className="ml-2 text-muted-foreground">{p.court}</span>
+                    <span className="ml-2 text-muted-foreground">{p.court ?? "—"}</span>
                   </button>
                   <span className="w-40 shrink-0 truncate text-muted-foreground">
                     {institutionLabel(p.institution)}
                   </span>
                   <span className="w-28 shrink-0 tabular-nums">
-                    {format(parseISODate(p.hearing_date), "d MMM yyyy", { locale: ro })}
+                    {dataPlanului(p)}
                   </span>
                   <span className="flex w-24 shrink-0 justify-end">
                     <Button
@@ -176,10 +190,10 @@ export function PlanList({
               >
                 <span className="min-w-0 flex-1 truncate">
                   {p.last_name} {p.first_name}
-                  <span className="ml-2">{p.court}</span>
+                  <span className="ml-2">{p.court ?? "—"}</span>
                 </span>
                 <span className="w-28 shrink-0 tabular-nums">
-                  {format(parseISODate(p.hearing_date), "d MMM yyyy", { locale: ro })}
+                  {dataPlanului(p)}
                 </span>
                 <span className="flex w-28 shrink-0 justify-end">
                   <Button
