@@ -4,15 +4,20 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isCourt } from "@/lib/courts";
 import { INSTITUTIONS } from "@/lib/transfers";
+import type { TransferBasis } from "@/lib/transfer-plans";
 
 type Result = { error?: string; success?: boolean };
 
 export interface PlanInput {
   last_name: string;
   first_name: string;
+  basis: TransferBasis;
   court: string;
   institution: string;
+  /** Completată la temei „ședință". */
   hearing_date: string;
+  /** Data parvenirii deciziei; completată la temei „decizie". */
+  decision_date: string;
   note: string;
 }
 
@@ -21,9 +26,26 @@ function validate(input: PlanInput): string | null {
   if (!input.first_name.trim()) return "Prenumele e obligatoriu.";
   // Lista de instanțe e fixă în interfață; verificată și aici, fiindcă acțiunea
   // poate fi apelată și altfel decât prin formular.
-  if (!isCourt(input.court)) return "Alege instanța din listă.";
+  if (input.basis !== "sedinta" && input.basis !== "decizie") return "Alege temeiul.";
   if (!INSTITUTIONS.includes(Number(input.institution))) return "Alege penitenciarul.";
-  if (!input.hearing_date) return "Data ședinței e obligatorie.";
+
+  /*
+   * Oglindește constrângerea `transfer_plans_temei` din migrarea 0027.
+   *
+   * Verificat și aici, nu doar în bază: fără asta, un câmp lăsat gol s-ar
+   * întoarce ca o eroare Postgres în engleză, despre o constrângere al cărei
+   * nume nu-i spune nimic omului din fața ecranului.
+   */
+  if (input.basis === "sedinta") {
+    // Lista de instanțe e fixă în interfață; verificată și aici, fiindcă
+    // acțiunea poate fi apelată și altfel decât prin formular.
+    if (!isCourt(input.court)) return "Alege instanța din listă.";
+    if (!input.hearing_date) return "Data ședinței e obligatorie.";
+  } else {
+    // Instanța rămâne opțională: o decizie poate veni și din altă parte.
+    if (input.court && !isCourt(input.court)) return "Alege instanța din listă.";
+    if (!input.decision_date) return "Data parvenirii deciziei e obligatorie.";
+  }
   return null;
 }
 
@@ -39,9 +61,13 @@ export async function savePlan(id: string | null, input: PlanInput): Promise<Res
   const values = {
     last_name: input.last_name.trim(),
     first_name: input.first_name.trim(),
-    court: input.court,
+    basis: input.basis,
+    court: input.court ? input.court : null,
     institution: Number(input.institution),
-    hearing_date: input.hearing_date,
+    // Exact una dintre ele e completată — cealaltă se scrie `null` explicit, ca
+    // o planificare mutată de pe un temei pe altul să nu păstreze data veche.
+    hearing_date: input.basis === "sedinta" ? input.hearing_date : null,
+    decision_date: input.basis === "decizie" ? input.decision_date : null,
     note: input.note.trim() ? input.note.trim() : null,
     updated_by: userId,
   };

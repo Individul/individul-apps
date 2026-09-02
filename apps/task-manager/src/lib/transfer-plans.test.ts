@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { groupByTransferDay, transferDayFor, type TransferPlan } from "./transfer-plans";
+import {
+  groupByTransferDay,
+  planTransferDay,
+  transferDayFor,
+  transferDayForDecision,
+  type TransferPlan,
+} from "./transfer-plans";
 import { scheduledDays } from "./transfers";
 import { toISODate } from "./periods";
 
@@ -9,8 +15,8 @@ const AUG = scheduledDays(2026, 7).map(toISODate);
 
 const plan = (over: Partial<TransferPlan>): TransferPlan => ({
   id: "1", last_name: "Popescu", first_name: "Ion",
-  court: "Judecătoria Chișinău", institution: 13,
-  hearing_date: "2026-08-05", done: false, note: null,
+  basis: "sedinta", court: "Judecătoria Chișinău", institution: 13,
+  hearing_date: "2026-08-05", decision_date: null, done: false, note: null,
   created_by: null, updated_by: null, created_at: "", updated_at: "", ...over,
 });
 
@@ -109,5 +115,53 @@ describe("groupByTransferDay", () => {
     const dupa = groupByTransferDay([plan({ hearing_date: "2026-08-20" })], azi);
     expect(inainte[0].day).toBe("2026-08-03");
     expect(dupa[0].day).toBe("2026-08-17");
+  });
+});
+
+/*
+ * Zilele programate din iulie–august 2026: 6 și 20 iulie, 3 și 17 august.
+ * Regula deciziei e răsturnată față de a ședinței — de aceea are teste proprii,
+ * nu doar o variantă a celor de sus.
+ */
+describe("transferul în baza unei decizii", () => {
+  it("merge la prima zi programată de după parvenire", () => {
+    // Decizie pe 10 iulie: prima zi de după e 20 iulie.
+    expect(transferDayForDecision(new Date(2026, 6, 10), new Date(2026, 6, 1))).toBe("2026-07-20");
+  });
+
+  it("dacă parvine chiar într-o zi de transfer, aceea e", () => {
+    expect(transferDayForDecision(new Date(2026, 6, 6), new Date(2026, 6, 1))).toBe("2026-07-06");
+  });
+
+  it("parvenită după ultima zi a lunii, trece în luna următoare", () => {
+    expect(transferDayForDecision(new Date(2026, 6, 25), new Date(2026, 6, 1))).toBe("2026-08-03");
+  });
+
+  it("o decizie veche neexecutată nu trimite omul la o zi trecută", () => {
+    // Parvenită pe 10 iulie, ziua ei (20 iulie) a trecut, azi e 25 iulie:
+    // se mută la următoarea, ca o ședință amânată.
+    expect(transferDayForDecision(new Date(2026, 6, 10), new Date(2026, 6, 25))).toBe("2026-08-03");
+  });
+
+  it("nu întoarce niciodată „de înștiințat instanța”", () => {
+    // Spre deosebire de ședință, aici există întotdeauna o zi următoare.
+    const p = plan({ basis: "decizie", court: null, hearing_date: null, decision_date: "2026-07-10" });
+    expect(planTransferDay(p, new Date(2026, 6, 1))).toBe("2026-07-20");
+  });
+});
+
+describe("ședințe și decizii în aceeași listă", () => {
+  it("se adună pe aceeași zi de transfer când coincid", () => {
+    const azi = new Date(2026, 6, 1);
+    // Ședință pe 22 iulie → ultima zi dinainte e 20 iulie.
+    const sedinta = plan({ id: "s", hearing_date: "2026-07-22" });
+    // Decizie parvenită pe 10 iulie → prima zi de după e tot 20 iulie.
+    const decizie = plan({
+      id: "d", basis: "decizie", court: null, hearing_date: null, decision_date: "2026-07-10",
+    });
+    const grupe = groupByTransferDay([sedinta, decizie], azi);
+    expect(grupe).toHaveLength(1);
+    expect(grupe[0].day).toBe("2026-07-20");
+    expect(grupe[0].plans.map((x) => x.id).sort()).toEqual(["d", "s"]);
   });
 });
