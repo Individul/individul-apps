@@ -32,7 +32,10 @@ export default async function TransferuriPage() {
             Transferurile deținuților între penitenciare: cifre pe zi și penitenciar, nu persoane.{" "}
             <Link
               href="/transferuri/planificare"
-              className="text-foreground underline underline-offset-2"
+              // Roșu la cerere, ca la „Versiune de tipărit" din Ședințe. În restul
+              // aplicației roșul înseamnă „restant"; locurile astea două ies din
+              // rând dinadins, ca legăturile către module vecine să sară în ochi.
+              className="font-medium text-red-600 underline underline-offset-2 transition-colors hover:text-red-700"
             >
               Planificarea nominală
             </Link>{" "}
