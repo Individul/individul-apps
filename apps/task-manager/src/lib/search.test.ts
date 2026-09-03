@@ -3,8 +3,11 @@ import { MIN_QUERY, countHits, search, type SearchData } from "./search";
 
 const DATE: SearchData = {
   tasks: [
-    { id: "t1", title: "Țiganciuc Dumitru Igor", description: "solicitare hotărîre", status: "todo" },
-    { id: "t2", title: "Ataman Iurie", description: null, status: "done" },
+    {
+      id: "t1", title: "Țiganciuc Dumitru Igor", description: "solicitare hotărîre", status: "todo",
+      tags: [{ id: "g1", name: "solicitare hotărîri" }] as never,
+    },
+    { id: "t2", title: "Ataman Iurie", description: null, status: "done", tags: [] as never },
   ],
   petitions: [
     { id: "p1", number: "M-535/26", petitioner: "Țiganciuc Dumitru", subject: "art. 91", status: "in_examinare" },
@@ -75,5 +78,27 @@ describe("căutarea peste module", () => {
 
   it("un nume care nu există nu întoarce grupuri goale", () => {
     expect(search("Xenofontov", DATE)).toEqual([]);
+  });
+});
+
+describe("esența sarcinii", () => {
+  it("rândul de jos arată etichetele, nu doar starea", () => {
+    // Titlul e numele deținutului, la fel la toate sarcinile aceluiași om;
+    // eticheta e ce se deosebește.
+    const g = search("Țiganciuc", DATE);
+    const sarcina = g.find((x) => x.kind === "sarcina")!;
+    expect(sarcina.hits[0].detail).toBe("solicitare hotărîri");
+  });
+
+  it("se caută și în etichete", () => {
+    // Cine scrie „audiență" vrea și sarcinile audienței, nu doar petițiile.
+    const g = search("hotariri", DATE);
+    expect(g.some((x) => x.kind === "sarcina")).toBe(true);
+  });
+
+  it("sarcina finalizată fără etichete spune măcar atât", () => {
+    const g = search("Ataman", DATE);
+    const sarcina = g.find((x) => x.kind === "sarcina")!;
+    expect(sarcina.hits[0].detail).toBe("finalizată");
   });
 });
