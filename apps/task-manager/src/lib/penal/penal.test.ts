@@ -118,14 +118,50 @@ describe("sfârșitul termenului", () => {
       .toBe("2027-03-10");
   });
 
-  it("PĂSTRAT DIN ORIGINAL: lunile scurte se rostogolesc", () => {
-    // 31 ianuarie + o lună dă 3 martie, nu 28 februarie — așa se poartă
-    // `setMonth` din JavaScript, și așa se purta și aplicația de origine.
-    // Testul îl descrie ca să nu se schimbe din greșeală: mutarea unei date de
-    // eliberare e o hotărâre juridică, nu una de programare.
-    expect(zi(adaugaTermen(new Date(2026, 0, 31), { ani: 0, luni: 1, zile: 0 })))
-      .toBe("2026-03-03");
+  it("o lună de la 31 ianuarie se încheie pe 28 februarie", () => {
+    // Cazul dat de utilizator. „31 februarie" nu există, deci termenul expiră
+    // în ultima zi a lunii — iar atunci nu se mai scade ziua, fiindcă ultima zi
+    // E chiar expirarea. Aplicația de origine dădea 2 martie, rostogolind luna.
+    expect(zi(sfarsitTermen(new Date(2026, 0, 31), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2026-02-28");
   });
+
+  it("nici de la 30 ianuarie nu se trece în martie", () => {
+    expect(zi(sfarsitTermen(new Date(2026, 0, 30), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2026-02-28");
+  });
+
+  it("când ziua există în luna țintă, se scade ziua ca de obicei", () => {
+    // Martie are 31 de zile, deci o lună de la 1 martie ține martie întreg.
+    expect(zi(sfarsitTermen(new Date(2026, 2, 1), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2026-03-31");
+    // Februarie 2026 are 28: o lună de la 1 februarie ține februarie întreg.
+    expect(zi(sfarsitTermen(new Date(2026, 1, 1), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2026-02-28");
+  });
+
+  it("un an de la 31 ianuarie nu retează: ianuarie are 31 de zile", () => {
+    expect(zi(sfarsitTermen(new Date(2026, 0, 31), { ani: 1, luni: 0, zile: 0 })))
+      .toBe("2027-01-30");
+  });
+
+  it("29 februarie într-un an bisect, plus un an", () => {
+    // 29 februarie 2029 nu există, deci se retează la 28 și nu se scade ziua.
+    expect(zi(sfarsitTermen(new Date(2028, 1, 29), { ani: 1, luni: 0, zile: 0 })))
+      .toBe("2029-02-28");
+  });
+
+  it("aprilie n-are 31 de zile", () => {
+    expect(zi(sfarsitTermen(new Date(2026, 2, 31), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2026-04-30");
+  });
+
+  it("fracțiile se retează la fel, dar nu scad ziua", () => {
+    // `adaugaTermen` fără scădere: o lună de la 31 ianuarie cade pe 28 februarie.
+    expect(zi(adaugaTermen(new Date(2026, 0, 31), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2026-02-28");
+  });
+
 });
 
 describe("fracția din termen", () => {

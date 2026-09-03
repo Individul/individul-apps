@@ -19,22 +19,54 @@ export interface Termen {
 const ZERO: Termen = { ani: 0, luni: 0, zile: 0 };
 
 /**
+ * Adaugă luni cu retezare la sfârșitul lunii, și spune dacă a retezat.
+ *
+ * `setMonth` din JavaScript rostogolește: 31 ianuarie plus o lună dă 3 martie.
+ * Calendarul juridic nu se poartă așa — o lună de la 31 ianuarie se încheie în
+ * februarie, fiindcă „31 februarie" nu există. Retezarea trebuie și raportată,
+ * nu doar făcută: de ea atârnă regula de mai jos.
+ */
+function adaugaLuni(d: Date, luni: number): { data: Date; retezat: boolean } {
+  const zi = d.getDate();
+  const tinta = new Date(d.getFullYear(), d.getMonth() + luni, 1);
+  const ultimaZi = new Date(tinta.getFullYear(), tinta.getMonth() + 1, 0).getDate();
+  return {
+    data: new Date(tinta.getFullYear(), tinta.getMonth(), Math.min(zi, ultimaZi)),
+    retezat: zi > ultimaZi,
+  };
+}
+
+/**
  * Adaugă un termen la o dată.
  *
- * `scadeOZi` aplică regula de mai sus. Se folosește la sfârșitul termenului,
- * nu la fracții: fracția e o cantitate de executat, nu un termen care expiră.
+ * `scadeOZi` aplică regula zilei precedente — dar NU când s-a retezat. Cele două
+ * reguli spun același lucru din capete diferite: termenul expiră la data
+ * corespunzătoare din ultima lună, iar dacă acea zi nu există în luna aceea,
+ * expiră în ultima ei zi. Când s-a retezat, ultima zi a lunii E expirarea, deci
+ * n-are de unde să mai dea un pas înapoi.
  *
- * ATENȚIE la lunile scurte. `setMonth` din JavaScript rostogolește: 31 ianuarie
- * plus o lună dă 3 martie, nu 28 februarie. Comportamentul e păstrat întocmai
- * din aplicația de origine, fiindcă schimbarea lui ar muta date de eliberare —
- * o hotărâre juridică, nu una de programare. Vezi testul care îl descrie.
+ * Verificat pe cazul dat de utilizator: 31.01.2026 plus o lună se încheie pe
+ * 28.02.2026 — nu pe 27 (scăzând o zi din februarie retezat) și nici pe 2 martie
+ * (cum dădea rostogolirea din aplicația de origine).
  */
 export function adaugaTermen(data: Date, t: Termen, scadeOZi = false): Date {
-  const rez = new Date(data.getFullYear(), data.getMonth(), data.getDate());
-  if (t.ani > 0) rez.setFullYear(rez.getFullYear() + t.ani);
-  if (t.luni > 0) rez.setMonth(rez.getMonth() + t.luni);
-  if (t.zile > 0) rez.setDate(rez.getDate() + t.zile);
-  if (scadeOZi) rez.setDate(rez.getDate() - 1);
+  let rez = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  let retezat = false;
+
+  if (t.ani > 0) {
+    const x = adaugaLuni(rez, t.ani * 12);
+    rez = x.data;
+    retezat = retezat || x.retezat;
+  }
+  if (t.luni > 0) {
+    const x = adaugaLuni(rez, t.luni);
+    rez = x.data;
+    retezat = retezat || x.retezat;
+  }
+  if (t.zile > 0) {
+    rez = new Date(rez.getFullYear(), rez.getMonth(), rez.getDate() + t.zile);
+  }
+  if (scadeOZi && !retezat) rez.setDate(rez.getDate() - 1);
   return rez;
 }
 
