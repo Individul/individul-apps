@@ -1,0 +1,47 @@
+# Flux de o singură folosință: scoate de pe server aplicația Clasificare.
+#
+# Aplicația a fost mutată în Task Manager, iar pașii ei de livrare au fost
+# scoși din `deploy.yml`. Asta oprește actualizările, dar nu șterge ce e deja
+# pe disc: `/var/www/html/clasificare/` continuă să răspundă cu versiunea
+# veche — cea în care o lună de la 31 ianuarie se încheie pe 2 martie, nu pe
+# 28 februarie. O dată de eliberare scoasă de acolo ar fi greșită.
+#
+# Se pornește NUMAI manual. Adăugat în `deploy.yml`, un `rm` s-ar executa la
+# fiecare push — de aceea stă separat. După ce a rulat o dată, fișierul acesta
+# se șterge: un flux care poate goli directoare de pe server n-are ce căuta
+# permanent în depozit.
+
+name: Retrage Clasificare
+
+on:
+  workflow_dispatch:
+
+jobs:
+  retrage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mută directorul deoparte
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 46.224.209.71
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            # Mută, nu șterge. Pentru cine deschide adresa efectul e același —
+            # 404 pe loc — dar fișierele rămân la îndemână dacă se dovedește că
+            # mai trebuia ceva din ele. Parola de server e pierdută deocamdată,
+            # deci a doua șansă contează.
+            if [ -d /var/www/html/clasificare ]; then
+              DEST=/root/clasificare-retras-$(date +%F)
+              mv /var/www/html/clasificare "$DEST"
+              echo "Mutat în $DEST"
+            else
+              echo "Directorul nu există — probabil a fost deja scos."
+            fi
+
+            if [ -d /var/www/html/clasificare ]; then
+              echo "ATENȚIE: directorul e încă acolo."
+              exit 1
+            fi
+            echo "Confirmat: /var/www/html/clasificare nu mai există."
