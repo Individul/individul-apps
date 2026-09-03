@@ -22,6 +22,7 @@ import { aggregate, byInstitution, nextScheduled } from "@/lib/transfers";
 import { formatDateRo, rangeForPeriod, todayInChisinau, toISODate } from "@/lib/periods";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
+import { GlobalSearch } from "@/components/hub/global-search";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { TransferBand } from "@/components/hub/transfer-band";
 import { ChangelogSection } from "@/components/hub/changelog-section";
@@ -171,6 +172,12 @@ export default async function HubPage() {
             </Link>
           </Button>
         </div>
+
+        {/* Deasupra benzii de termene: căutarea e ce faci cu intenție, banda e
+            ce ți se spune. Prima trebuie să fie sub mână de cum se deschide
+            pagina; a doua doar să fie văzută. */}
+        <GlobalSearch />
+
         {/* Deasupra cardurilor, fiindcă un termen depășit către ANP nu se
             citește după cifre. Nu apare când n-are ce spune. */}
         <ObligationBand
