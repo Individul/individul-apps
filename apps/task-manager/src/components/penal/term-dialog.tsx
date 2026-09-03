@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { scadeArest, sfarsitTermen, termenText, type Termen } from "@/lib/penal/termene";
+import { scadeArest, sfarsitTermen, termenText, zileIntre, type Termen } from "@/lib/penal/termene";
 
 /**
  * Calculatorul de sfârșit de termen.
@@ -30,7 +30,9 @@ export function TermDialog() {
   const [ani, setAni] = useState("");
   const [luni, setLuni] = useState("");
   const [zile, setZile] = useState("");
-  const [arest, setArest] = useState("");
+  const [arestActiv, setArestActiv] = useState(false);
+  const [arestDeLa, setArestDeLa] = useState("");
+  const [arestPanaLa, setArestPanaLa] = useState("");
 
   const n = (s: string) => {
     const v = Number(s);
@@ -39,10 +41,29 @@ export function TermDialog() {
 
   const termen: Termen = { ani: n(ani), luni: n(luni), zile: n(zile) };
   const areTermen = termen.ani + termen.luni + termen.zile > 0;
-  const zileArest = n(arest);
 
-  const start = inceput ? new Date(`${inceput}T12:00:00`) : null;
-  const valid = start && !Number.isNaN(start.getTime()) && areTermen;
+  const data = (s: string) => {
+    if (!s) return null;
+    const d = new Date(`${s}T12:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  /*
+   * Arestul se dă ca două date, nu ca un număr de zile.
+   *
+   * Așa e scris și în dosar, iar regula de numărare nu e cea la care se
+   * gândește omul: `[start, end)` include ziua de început și o exclude pe cea
+   * de sfârșit. Cerut ca număr, fiecare l-ar fi socotit pe hârtie altfel, iar o
+   * zi în plus la arest e o zi în minus la pedeapsă.
+   */
+  const aDeLa = data(arestDeLa);
+  const aPanaLa = data(arestPanaLa);
+  const arestGresit = Boolean(arestActiv && aDeLa && aPanaLa && aPanaLa <= aDeLa);
+  const zileArest =
+    arestActiv && aDeLa && aPanaLa && !arestGresit ? zileIntre(aDeLa, aPanaLa) : 0;
+
+  const start = data(inceput);
+  const valid = start !== null && areTermen && !arestGresit;
 
   const sfarsit = valid ? sfarsitTermen(start, termen) : null;
   const cuArest = sfarsit ? scadeArest(sfarsit, zileArest) : null;
@@ -96,17 +117,51 @@ export function TermDialog() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="t-arest">Zile de arest preventiv (opțional)</Label>
-            <Input
-              id="t-arest"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={arest}
-              onChange={(e) => setArest(e.target.value)}
-              placeholder="0"
-            />
+          <div className="space-y-2 rounded-lg border p-3">
+            <label className="flex items-center gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={arestActiv}
+                onChange={(e) => setArestActiv(e.target.checked)}
+                className="h-4 w-4 rounded border-input accent-primary"
+              />
+              <span className="font-medium">Arest preventiv</span>
+            </label>
+
+            {arestActiv && (
+              <div className="space-y-2 pt-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Input
+                      type="date"
+                      value={arestDeLa}
+                      onChange={(e) => setArestDeLa(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">De la</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Input
+                      type="date"
+                      value={arestPanaLa}
+                      onChange={(e) => setArestPanaLa(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">Până la</p>
+                  </div>
+                </div>
+                {arestGresit ? (
+                  <p className="text-xs text-destructive">
+                    Data de sfârșit trebuie să fie după cea de început.
+                  </p>
+                ) : (
+                  zileArest > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {zileArest} {zileArest === 1 ? "zi" : "zile"} — ziua de început se
+                      include, cea de sfârșit nu.
+                    </p>
+                  )
+                )}
+              </div>
+            )}
           </div>
 
           {/* Rezultatul apare abia când are din ce ieși: un „—" permanent ar

@@ -14,6 +14,7 @@ import {
   fractieDinTermen,
   scadeArest,
   sfarsitTermen,
+  zileIntre,
   termenText,
 } from "./termene";
 
@@ -155,6 +156,32 @@ describe("fracția din termen", () => {
   });
 });
 
+describe("zilele de arest preventiv", () => {
+  it("exemplul din aplicația de origine: 29.01.2015 – 29.04.2015 = 90 zile", () => {
+    // Regula [start, end): ziua de început se include, cea de sfârșit nu.
+    expect(zileIntre(new Date(2015, 0, 29), new Date(2015, 3, 29))).toBe(90);
+  });
+
+  it("o singură zi de arest", () => {
+    expect(zileIntre(new Date(2026, 5, 1), new Date(2026, 5, 2))).toBe(1);
+  });
+
+  it("aceeași zi înseamnă zero, nu una", () => {
+    // Numărate inclusiv la ambele capete ar da 1 — o zi în plus la arest e o zi
+    // în minus la pedeapsă.
+    expect(zileIntre(new Date(2026, 5, 1), new Date(2026, 5, 1))).toBe(0);
+  });
+
+  it("trecerea la ora de vară nu scurtează diferența", () => {
+    // În 2026 ora de vară începe pe 29 martie în Europa.
+    expect(zileIntre(new Date(2026, 2, 28), new Date(2026, 2, 30))).toBe(2);
+  });
+
+  it("peste un an bisect", () => {
+    expect(zileIntre(new Date(2028, 1, 1), new Date(2028, 2, 1))).toBe(29);
+  });
+});
+
 describe("arestul preventiv", () => {
   it("se scade din data calculată", () => {
     expect(zi(scadeArest(new Date(2027, 2, 9), 30))).toBe("2027-02-07");
@@ -162,6 +189,24 @@ describe("arestul preventiv", () => {
 
   it("zero zile nu mișcă nimic", () => {
     expect(zi(scadeArest(new Date(2027, 2, 9), 0))).toBe("2027-03-09");
+  });
+});
+
+describe("formula documentată", () => {
+  it("data_început + termen − arest − 1 zi", () => {
+    // Așa e scrisă regula în aplicația de origine. Ordinea scăderilor nu
+    // schimbă rezultatul, dar testul o pironește: dacă cineva mută scăderea
+    // arestului înaintea adunării termenului, regula zilei precedente s-ar
+    // aplica altui număr și data ar aluneca.
+    const start = new Date(2026, 2, 1);
+    const termen = { ani: 3, luni: 6, zile: 0 };
+    const arest = zileIntre(new Date(2026, 0, 1), new Date(2026, 2, 1)); // 59 zile
+
+    const r = calculeazaTermen(start, termen, "2/3", arest);
+
+    const asteptat = new Date(2029, 8, 1); // 1 sept 2029
+    asteptat.setDate(asteptat.getDate() - arest - 1);
+    expect(zi(r.sfarsitCuArest)).toBe(zi(asteptat));
   });
 });
 

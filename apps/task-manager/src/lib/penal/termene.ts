@@ -89,6 +89,23 @@ export function termenText(t: Termen): string {
   return `${p.slice(0, -1).join(", ")} și ${p[p.length - 1]}`;
 }
 
+/**
+ * Zilele de arest preventiv dintre două date.
+ *
+ * Regula `[start, end)`: se include ziua de început, se exclude cea de sfârșit.
+ * Documentată în aplicația de origine cu exemplul ei: 29.01.2015 – 29.04.2015
+ * fac 90 de zile. Numărate „inclusiv la ambele capete" ar da 91, iar o zi în
+ * plus la arest e o zi în minus la pedeapsă.
+ *
+ * Se socotește pe zile calendaristice, la amiază, ca trecerea la ora de vară să
+ * nu scurteze o zi din diferență.
+ */
+export function zileIntre(start: Date, sfarsit: Date): number {
+  const a = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 12);
+  const b = new Date(sfarsit.getFullYear(), sfarsit.getMonth(), sfarsit.getDate(), 12);
+  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
+}
+
 /** Scade zilele de arest preventiv dintr-o dată deja calculată. */
 export function scadeArest(data: Date, zileArest: number): Date {
   if (!zileArest) return data;
