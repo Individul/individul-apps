@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MIN_QUERY, countHits, search, type SearchData } from "./search";
+import { PETITION_STATUS_LABEL, TASK_STATUS_LABEL } from "./status-labels";
 
 const DATE: SearchData = {
   tasks: [
@@ -70,10 +71,10 @@ describe("căutarea peste module", () => {
     expect(hrefs.prevenit).toBe("/inculpati");
   });
 
-  it("categoria preventului se citește din măsură, ca în registru", () => {
+  it("categoria preventului e starea lui, citită din măsură", () => {
     const g = search("Țiganciuc", DATE);
     const prevenit = g.find((x) => x.kind === "prevenit")!;
-    expect(prevenit.hits[0].detail).toContain("prevenit");
+    expect(prevenit.hits[0].state).toBe("Prevenit");
   });
 
   it("un nume care nu există nu întoarce grupuri goale", () => {
@@ -96,9 +97,43 @@ describe("esența sarcinii", () => {
     expect(g.some((x) => x.kind === "sarcina")).toBe(true);
   });
 
-  it("sarcina finalizată fără etichete spune măcar atât", () => {
+  it("starea se arată chiar și fără etichete", () => {
     const g = search("Ataman", DATE);
     const sarcina = g.find((x) => x.kind === "sarcina")!;
-    expect(sarcina.hits[0].detail).toBe("finalizată");
+    expect(sarcina.hits[0].detail).toBeNull();
+    expect(sarcina.hits[0].state).toBe("Finalizat");
+    expect(sarcina.hits[0].finished).toBe(true);
+  });
+});
+
+describe("starea, cu numele din registru", () => {
+  it("sarcina nefinalizată își spune starea", () => {
+    const g = search("Țiganciuc", DATE);
+    const sarcina = g.find((x) => x.kind === "sarcina")!;
+    expect(sarcina.hits[0].state).toBe("De făcut");
+    expect(sarcina.hits[0].finished).toBe(false);
+  });
+
+  it("petiția în examinare și cea soluționată se deosebesc", () => {
+    const inExaminare = search("M-535", DATE)[0].hits[0];
+    expect(inExaminare.state).toBe("În examinare");
+    expect(inExaminare.finished).toBe(false);
+
+    const solutionata = search("B-616", DATE)[0].hits[0];
+    expect(solutionata.state).toBe("Soluționat");
+    expect(solutionata.finished).toBe(true);
+  });
+
+  it("obiectul petiției rămâne în rândul de jos, nu e înlocuit de stare", () => {
+    // Amândouă contează: obiectul spune despre ce e, starea unde a ajuns.
+    const h = search("M-535", DATE)[0].hits[0];
+    expect(h.detail).toBe("art. 91");
+    expect(h.state).toBe("În examinare");
+  });
+
+  it("numele stărilor sunt chiar cele din module", () => {
+    // Copiate, s-ar fi depărtat de registru la prima redenumire.
+    expect(TASK_STATUS_LABEL.waiting).toBe("În așteptare");
+    expect(PETITION_STATUS_LABEL.solutionat).toBe("Soluționat");
   });
 });

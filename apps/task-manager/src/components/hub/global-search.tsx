@@ -7,6 +7,7 @@ import { Loader2, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchAll } from "@/app/cautare/actions";
 import { MIN_QUERY, countHits, type SearchGroup } from "@/lib/search";
+import { cn } from "@/lib/utils";
 
 /**
  * Căutarea peste toate registrele, în capul paginii principale.
@@ -163,11 +164,21 @@ export function GlobalSearch() {
                       key={h.id}
                       href={h.href}
                       onClick={() => setDeschis(false)}
-                      className="block px-4 py-2 transition-colors hover:bg-accent"
+                      className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-accent"
                     >
-                      <div className="truncate text-[13px]">{h.title}</div>
-                      {h.detail && (
-                        <div className="truncate text-xs text-muted-foreground">{h.detail}</div>
+                      {/* Starea la dreapta, într-o coloană a ei: la toate
+                          rândurile în același loc, deci ochiul o poate coborî
+                          pe verticală în loc s-o caute la alt capăt de frază. */}
+                      <div className={cn("min-w-0 flex-1", h.finished && "opacity-60")}>
+                        <div className="truncate text-[13px]">{h.title}</div>
+                        {h.detail && (
+                          <div className="truncate text-xs text-muted-foreground">{h.detail}</div>
+                        )}
+                      </div>
+                      {h.state && (
+                        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                          {h.state}
+                        </span>
                       )}
                     </Link>
                   ))}

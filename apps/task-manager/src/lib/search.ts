@@ -2,6 +2,7 @@ import { fold } from "./text";
 import type { Defendant } from "./defendants";
 import type { TransferPlan } from "./transfer-plans";
 import type { Petition, Task } from "./types";
+import { PETITION_STATUS_LABEL, TASK_STATUS_LABEL } from "./status-labels";
 import { institutionLabel } from "./transfers";
 
 /**
@@ -28,8 +29,19 @@ export interface SearchHit {
   id: string;
   /** Rândul de sus: numele sub care se recunoaște. */
   title: string;
-  /** Rândul de jos: instanța, dosarul, starea — ce deosebește două rânduri asemenea. */
+  /** Rândul de jos: eticheta, obiectul, instanța — ce deosebește două rânduri asemenea. */
   detail: string | null;
+  /**
+   * Starea, cu numele pe care i-l dă chiar registrul.
+   *
+   * Ținută deoparte de `detail`, nu lipită la coada lui: e singurul lucru care
+   * se citește la fel la toate rândurile, deci merită un loc fix pe care ochiul
+   * să-l poată coborî pe verticală. Amestecată în text, ar fi trebuit căutată
+   * de fiecare dată la alt capăt de frază.
+   */
+  state: string | null;
+  /** Terminat — rândul se stinge, ca ochiul să treacă peste el. */
+  finished: boolean;
   href: string;
 }
 
@@ -116,7 +128,9 @@ function candidati(data: SearchData): Candidat[] {
           kind: "sarcina",
           id: t.id,
           title: t.title,
-          detail: detaliu([...etichete, t.status === "done" ? "finalizată" : null]),
+          detail: detaliu(etichete),
+          state: TASK_STATUS_LABEL[t.status],
+          finished: t.status === "done",
           href: `/tasks/${t.id}`,
         },
         [t.title, t.description, ...etichete],
@@ -131,7 +145,9 @@ function candidati(data: SearchData): Candidat[] {
           kind: "petitie",
           id: p.id,
           title: `${p.number} — ${p.petitioner}`,
-          detail: p.subject || (p.status === "solutionat" ? "soluționată" : null),
+          detail: p.subject || null,
+          state: PETITION_STATUS_LABEL[p.status],
+          finished: p.status === "solutionat",
           // Se deschide chiar petiția, nu registrul; vezi `notificationHref`.
           href: `/petitii?petitie=${p.id}`,
         },
@@ -149,6 +165,9 @@ function candidati(data: SearchData): Candidat[] {
           id: p.id,
           title: `${p.last_name} ${p.first_name}`,
           detail: detaliu([p.court, institutionLabel(p.institution)]),
+          // Planificările încheiate nici nu ajung aici, deci n-au ce stare arăta.
+          state: null,
+          finished: false,
           href: "/transferuri/planificare",
         },
         [p.last_name, p.first_name, p.court, p.note],
@@ -165,7 +184,10 @@ function candidati(data: SearchData): Candidat[] {
           kind: "prevenit",
           id: d.id,
           title: `${d.last_name} ${d.first_name}`,
-          detail: detaliu([categorie, d.court, d.case_number ? `dosar ${d.case_number}` : null]),
+          detail: detaliu([d.court, d.case_number ? `dosar ${d.case_number}` : null]),
+          // Categoria e starea acestui registru: prevenit, inculpat, condamnat.
+          state: categorie.charAt(0).toUpperCase() + categorie.slice(1),
+          finished: d.status === "condamnat",
           href: "/inculpati",
         },
         [d.last_name, d.first_name, d.court, d.case_number],

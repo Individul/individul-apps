@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TASK_STATUS_LABEL } from "@/lib/status-labels";
 import { format, parseISO } from "date-fns";
 import { ArrowUpDown, CheckCircle2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Column, ColumnDef } from "@tanstack/react-table";
@@ -20,15 +21,22 @@ import { PRIORITY_ORDER } from "@/lib/task-filters";
 import { canEditTask, canDeleteTask, canFinalizeTask } from "@/lib/permissions";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
 
-export const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
-  todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
-  in_progress: { label: "În lucru", className: "border-transparent bg-blue-100 text-blue-700" },
-  waiting: {
-    label: "În așteptare",
-    className: "border-transparent bg-violet-100 text-violet-700",
-  },
-  done: { label: "Finalizat", className: "border-transparent bg-green-100 text-green-700" },
+// Numele vin din `@/lib/status-labels`, culorile rămân aici: numele se arată
+// și în căutare, culorile nu.
+const STATUS_CLASS: Record<TaskStatus, string> = {
+  todo: "border-transparent bg-slate-100 text-slate-700",
+  in_progress: "border-transparent bg-blue-100 text-blue-700",
+  waiting: "border-transparent bg-violet-100 text-violet-700",
+  done: "border-transparent bg-green-100 text-green-700",
 };
+
+export const STATUS_META: Record<TaskStatus, { label: string; className: string }> =
+  Object.fromEntries(
+    (Object.keys(STATUS_CLASS) as TaskStatus[]).map((k) => [
+      k,
+      { label: TASK_STATUS_LABEL[k], className: STATUS_CLASS[k] },
+    ]),
+  ) as Record<TaskStatus, { label: string; className: string }>;
 
 export const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> = {
   low: { label: "Scăzută", className: "border-transparent bg-slate-100 text-slate-700" },
