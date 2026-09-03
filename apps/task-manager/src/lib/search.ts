@@ -76,7 +76,7 @@ function detaliu(parti: (string | null | undefined)[]): string | null {
   return p.length ? p.join(" · ") : null;
 }
 
-export type TaskRow = Pick<Task, "id" | "title" | "description" | "status">;
+export type TaskRow = Pick<Task, "id" | "title" | "description" | "status" | "tags">;
 export type PetitionRow = Pick<Petition, "id" | "number" | "petitioner" | "subject" | "status">;
 export type PlanRow = Pick<
   TransferPlan,
@@ -98,16 +98,28 @@ function candidati(data: SearchData): Candidat[] {
   const out: Candidat[] = [];
 
   for (const t of data.tasks) {
+    /*
+     * Esența sarcinii stă în etichete, nu în titlu.
+     *
+     * Titlul e numele deținutului — la fel la toate sarcinile aceluiași om, deci
+     * trei rânduri cu același nume n-ar spune cu ce se deosebesc. Eticheta
+     * („audiență", „art. 92") e chiar lucrul de făcut, adică ce caută ochiul,
+     * exact ca obiectul la petiții.
+     *
+     * Se caută și în ele: cine scrie „audiență" vrea sarcinile audienței, nu doar
+     * petițiile.
+     */
+    const etichete = (t.tags ?? []).map((g) => g.name);
     out.push(
       candidat(
         {
           kind: "sarcina",
           id: t.id,
           title: t.title,
-          detail: t.status === "done" ? "finalizată" : null,
+          detail: detaliu([...etichete, t.status === "done" ? "finalizată" : null]),
           href: `/tasks/${t.id}`,
         },
-        [t.title, t.description],
+        [t.title, t.description, ...etichete],
       ),
     );
   }

@@ -22,6 +22,7 @@ export function GlobalSearch() {
   const [cauta, setCauta] = useState(false);
   const [deschis, setDeschis] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
+  const camp = useRef<HTMLInputElement>(null);
 
   /*
    * Se așteaptă o clipă după ultima tastă.
@@ -61,6 +62,23 @@ export function GlobalSearch() {
     };
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape") setDeschis(false);
+      /*
+       * „/" duce cursorul în căutare de oriunde din pagină.
+       *
+       * Nu și când se scrie deja undeva: într-un câmp de text, „/" e o bară
+       * oblică, nu o comandă. Fără verificarea asta, orice dată scrisă
+       * „12/09" ar fi sărit din câmp la jumătate.
+       */
+      if (e.key !== "/") return;
+      const t = e.target as HTMLElement | null;
+      const scrie =
+        t instanceof HTMLInputElement ||
+        t instanceof HTMLTextAreaElement ||
+        t?.isContentEditable === true;
+      if (scrie) return;
+      e.preventDefault();
+      camp.current?.focus();
+      setDeschis(true);
     };
     document.addEventListener("mousedown", click);
     document.addEventListener("keydown", key);
@@ -75,12 +93,21 @@ export function GlobalSearch() {
   const total = countHits(groups);
 
   return (
+    /*
+     * Mai înaltă și cu umbră, nu doar un câmp printre altele.
+     *
+     * Prima formă se pierdea în pagină: chenar subțire pe fundal aproape alb,
+     * într-un ecran plin de carduri. Cine n-o căuta anume n-o vedea. Acum stă ca
+     * un obiect deosebit — iar semnul „/" din dreapta o arată drept ceea ce e,
+     * și învață scurtătura fără să scrie nimeni un ajutor.
+     */
     <div ref={wrap} className="relative mb-6">
       <Search
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
         aria-hidden
       />
       <Input
+        ref={camp}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -89,20 +116,28 @@ export function GlobalSearch() {
         onFocus={() => setDeschis(true)}
         placeholder="Caută un nume în toate registrele — sarcini, petiții, transferuri, preveniți"
         aria-label="Caută în toate registrele"
-        className="pl-9 pr-9"
+        className="h-12 rounded-xl border-input bg-card pl-12 pr-12 text-[15px] shadow-sm"
       />
-      {query && (
+      {query ? (
         <button
           type="button"
           onClick={() => {
             setQuery("");
             setDeschis(false);
+            camp.current?.focus();
           }}
           aria-label="Șterge căutarea"
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+          className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>
+      ) : (
+        <kbd
+          aria-hidden
+          className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border bg-muted px-1.5 py-0.5 font-sans text-[11px] text-muted-foreground sm:block"
+        >
+          /
+        </kbd>
       )}
 
       {arataPanou && (

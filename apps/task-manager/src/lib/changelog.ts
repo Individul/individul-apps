@@ -14,7 +14,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-02",
-    text: "Pe pagina principală e o căutare peste toate registrele deodată. Scrii un nume și vezi unde apare — sarcini, petiții, planificare transferuri, preveniți. Diacriticele nu contează: „Tiganciuc” îl găsește pe „Țiganciuc”.",
+    text: "Pe pagina principală e o căutare peste toate registrele deodată. Scrii un nume și vezi unde apare — sarcini, petiții, planificare transferuri, preveniți. La sarcini se arată eticheta, ca să se vadă despre ce e vorba. Diacriticele nu contează: „Tiganciuc” îl găsește pe „Țiganciuc”. Tasta „/” duce cursorul în căutare de oriunde.",
   },
   {
     date: "2026-09-02",
