@@ -152,7 +152,13 @@ export function TermDialog() {
           Calculator termen
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      {/*
+        Ancorat sus, nu centrat.
+        Dialogul e centrat pe verticală din construcție, deci orice schimbare de
+        înălțime mișca toată cutia — inclusiv pastilele pe care tocmai apăsaseși.
+        Aici se schimbă doar marginea de jos: titlul și pastilele stau pe loc.
+      */}
+      <DialogContent className="top-[8vh] max-h-[84vh] translate-y-0 overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Calculator termen</DialogTitle>
         </DialogHeader>
@@ -175,6 +181,14 @@ export function TermDialog() {
           ))}
         </div>
 
+        {/*
+          Înălțime minimă cât cea mai înaltă dintre stările goale — măsurată,
+          nu ghicită: 205px la prima unealtă, 162 la a doua. Cu ea, comutarea
+          înainte de a scrie ceva nu mai mișcă nimic. Mai mult n-ar avea rost:
+          o cutie dimensionată pentru rezultatul cel mai lung s-ar deschide cu
+          160px de gol dedesubt.
+        */}
+        <div className="min-h-[13rem]">
         {unealta === "din-inceput" ? (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -300,6 +314,8 @@ export function TermDialog() {
             )}
           </div>
         )}
+
+        </div>
 
         {/* Nota stă jos, sub amândouă: regula e aceeași oriunde se socotește. */}
         <p className="border-t pt-3 text-xs text-muted-foreground">
