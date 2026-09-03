@@ -65,16 +65,16 @@ Sistem complet de gestionare a petițiilor pentru instituții. (Next.js + Django
 - Autentificare: JWT (SimpleJWT)
 - Containerizare: Docker, Docker Compose
 
-### Clasificare
-Calculator fracțiuni liberare anticipată conform Art. 91 și Art. 92 CP RM. (React + Vite + Tailwind)
+### Clasificare — retrasă
 
-**Funcționalități:**
-- Clasificare infracțiuni pe categorii (U, MPG, G, DG, EG) conform Art. 16 CP RM
-- Calcul fracțiuni Art. 91 (liberare condiționată) diferențiate pe vârstă (minor, tânăr, adult, vârstnic)
-- Calcul fracțiuni Art. 92 (înlocuirea părții neexecutate)
-- Calculator termene cu dată concretă de eligibilitate
-- Deducerea perioadei de arest preventiv
-- Baza de date cu 400+ infracțiuni din Codul Penal
+Calculatorul de fracțiuni și clasificarea infracțiunilor au fost mutate în Task
+Manager, ca unelte care se deschid într-o fereastră de pe pagina principală
+(`apps/task-manager/src/lib/penal`). Aplicația de sine stătătoare a fost scoasă
+din monorepo și din livrare; depozitul de origine rămâne
+[Individul/clasificare](https://github.com/Individul/clasificare).
+
+Fișierele deja urcate pe server, la `/var/www/html/clasificare/`, nu se șterg
+singure odată cu pasul de livrare — trebuie scoase de acolo separat.
 
 ### PDF Toolbox
 Instrumente PDF pentru procesarea documentelor. (FastAPI + Docker)
@@ -116,7 +116,6 @@ individul-apps/
 │   ├── petitii/         # Registru Petiții
 │   │   ├── backend/     # Django API
 │   │   └── frontend/    # Next.js App
-│   ├── clasificare/     # Calculator fracțiuni (Vite + React)
 │   ├── pdf/             # PDF Toolbox (FastAPI)
 │   └── task-manager/    # Task Manager (Next.js + Supabase, Vercel-native)
 ├── .github/
@@ -133,7 +132,6 @@ Automat via GitHub Actions la fiecare push pe branch-ul `main`.
 | Aplicație | Frontend | API | Ruta nginx |
 |-----------|----------|-----|------------|
 | Portal | 80 (nginx static) | - | `/` |
-| Clasificare | nginx static | - | `/clasificare/` |
 | PDF Toolbox | - | 8001 | `/pdf/` |
 | Petiții | 3003 | 8002 | `/petitii/`, `/petitii-api/` |
 | Termene | 3004 | 8003 | `/termene/`, `/termene-api/` |
@@ -153,6 +151,5 @@ Automat via GitHub Actions la fiecare push pe branch-ul `main`.
 - Hub: http://46.224.209.71/hub/
 - Termene: http://46.224.209.71/termene/
 - Petiții: http://46.224.209.71/petitii/
-- Clasificare: http://46.224.209.71/clasificare/
 - PDF Toolbox: http://46.224.209.71/pdf/
 - Task Manager: găzduit pe Vercel (vezi `apps/task-manager/README.md`)

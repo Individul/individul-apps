@@ -12,7 +12,6 @@
 
 const CONFIG = {
     // URLs for applications (matches hrefs in index.html)
-    CLASSIFICARE_URL: '/clasificare/',
     PDF_URL: '/pdf/',
 
     // Brand name
@@ -49,7 +48,7 @@ function initSmoothScroll() {
         anchor.addEventListener('click', (e) => {
             const href = anchor.getAttribute('href');
             if (href === '#' || href === '#about' || href === '#status' ||
-                href === '#clasificare-details' || href === '#pdf-details') {
+                href === '#pdf-details') {
                 e.preventDefault();
                 // For now, these are placeholder links
                 console.log('Navigation to:', href);
@@ -65,12 +64,8 @@ function initSmoothScroll() {
 function initKeyboardNavigation() {
     // Add keyboard shortcuts for quick access
     document.addEventListener('keydown', (e) => {
-        // Alt+1: Go to Clasificare
+        // Alt+1: Go to PDF Toolbox
         if (e.altKey && e.key === '1') {
-            window.location.href = CONFIG.CLASSIFICARE_URL;
-        }
-        // Alt+2: Go to PDF Toolbox
-        if (e.altKey && e.key === '2') {
             window.location.href = CONFIG.PDF_URL;
         }
     });
