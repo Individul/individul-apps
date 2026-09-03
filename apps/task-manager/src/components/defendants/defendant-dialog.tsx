@@ -50,6 +50,8 @@ export function DefendantDialog({
   const [establishedOn, setEstablishedOn] = useState("");
   const [court, setCourt] = useState<string>(FARA_INSTANTA);
   const [caseNumber, setCaseNumber] = useState("");
+  const [preventiveMeasure, setPreventiveMeasure] = useState(false);
+  const [preventiveOn, setPreventiveOn] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +62,8 @@ export function DefendantDialog({
     setFirstName(defendant?.first_name ?? "");
     setRegime(defendant?.regime ?? "");
     setEstablishedOn(defendant?.established_on ?? "");
+    setPreventiveMeasure(defendant?.preventive_measure ?? false);
+    setPreventiveOn(defendant?.preventive_measure_on ?? "");
     setCourt(defendant?.court ?? FARA_INSTANTA);
     setCaseNumber(defendant?.case_number ?? "");
     setNote(defendant?.note ?? "");
@@ -73,6 +77,10 @@ export function DefendantDialog({
         first_name: firstName,
         regime,
         established_on: establishedOn,
+        preventive_measure: preventiveMeasure,
+        // Data urmează măsura: scoasă bifa, data nu mai are ce descrie, iar
+        // păstrată ar reintra în registru la următoarea bifare, tăcut și greșit.
+        preventive_measure_on: preventiveMeasure ? preventiveOn : "",
         court: court === FARA_INSTANTA ? "" : court,
         case_number: caseNumber,
         note,
@@ -135,6 +143,39 @@ export function DefendantDialog({
                 required
               />
             </div>
+          </div>
+
+          {/*
+            Măsura preventivă e ce deosebește un prevenit de un inculpat, deci
+            stă la vedere, nu ascunsă printre observații. Categoria nu se alege:
+            se citește de aici, ca să nu poată ajunge să spună altceva decât
+            măsura însăși.
+          */}
+          <div className="space-y-2 rounded-lg border p-3">
+            <label className="flex items-center gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={preventiveMeasure}
+                onChange={(e) => setPreventiveMeasure(e.target.checked)}
+                className="h-4 w-4 rounded border-input accent-primary"
+              />
+              <span className="font-medium">Are măsură preventivă</span>
+              <span className="text-xs text-muted-foreground">
+                {preventiveMeasure ? "→ prevenit" : "→ inculpat"}
+              </span>
+            </label>
+
+            {preventiveMeasure && (
+              <div className="space-y-1.5 pl-6.5">
+                <Label htmlFor="d-preventive">Data măsurii (opțional)</Label>
+                <Input
+                  id="d-preventive"
+                  type="date"
+                  value={preventiveOn}
+                  onChange={(e) => setPreventiveOn(e.target.value)}
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-5">
