@@ -23,6 +23,8 @@ import { formatDateRo, rangeForPeriod, todayInChisinau, toISODate } from "@/lib/
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { GlobalSearch } from "@/components/hub/global-search";
+import { ClassifyDialog } from "@/components/penal/classify-dialog";
+import { TermDialog } from "@/components/penal/term-dialog";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
 import { TransferBand } from "@/components/hub/transfer-band";
 import { ChangelogSection } from "@/components/hub/changelog-section";
@@ -165,12 +167,21 @@ export default async function HubPage() {
               dimineți, iar un tab în plus lângă celelalte l-ar da drept încă un
               modul. Discret, deci — dar lângă salut, fiindcă mai jos de titlu
               nu l-ar găsi nimeni fără să i se spună. */}
-          <Button asChild variant="outline" size="sm">
-            <Link href="/raport-saptamanal">
-              <FileText className="mr-2 h-4 w-4" />
-              Raportul de marți
-            </Link>
-          </Button>
+          {/* Unelte, nu module: se deschid, se folosesc, se închid. De aceea
+              butoane lângă salut și ferestre peste pagină, nu tab-uri în bară
+              și nici panouri laterale — pe ecranele secției (1366–1440) nu e
+              loc de coloane, iar un calculator gol care stă permanent pe
+              margine devine tapet. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <TermDialog />
+            <ClassifyDialog />
+            <Button asChild variant="outline" size="sm">
+              <Link href="/raport-saptamanal">
+                <FileText className="mr-2 h-4 w-4" />
+                Raportul de marți
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Deasupra benzii de termene: căutarea e ce faci cu intenție, banda e

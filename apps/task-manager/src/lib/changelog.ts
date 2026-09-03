@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-02",
+    text: "Două unelte noi pe pagina principală: „Calculator termen” — sfârșitul pedepsei din data începerii, cu arestul preventiv scăzut — și „Clasificare infracțiune” — categoria după art. 16 CP RM și fracțiile pentru art. 91 și 92. Se deschid într-o fereastră și se închid după ce ai socotit.",
+  },
+  {
+    date: "2026-09-02",
     text: "Pe pagina principală e o căutare peste toate registrele deodată. Scrii un nume și vezi unde apare — sarcini, petiții, planificare transferuri, preveniți — cu eticheta sau obiectul dedesubt și starea în dreapta: în lucru, în așteptare, finalizat, în examinare, soluționat. Diacriticele nu contează: „Tiganciuc” îl găsește pe „Țiganciuc”. Tasta „/” duce cursorul în căutare de oriunde.",
   },
   {
