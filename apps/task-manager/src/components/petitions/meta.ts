@@ -2,10 +2,9 @@ import { addDays, parseISO } from "date-fns";
 import { optionsFrom } from "@/lib/options";
 import type { PetitionStatus, PetitionerType } from "@/lib/types";
 
-export const STATUS_LABEL: Record<PetitionStatus, string> = {
-  in_examinare: "În examinare",
-  solutionat: "Soluționat",
-};
+import { PETITION_STATUS_LABEL } from "@/lib/status-labels";
+// Reluat, nu rescris: aceleași cuvinte le arată și căutarea.
+export const STATUS_LABEL = PETITION_STATUS_LABEL;
 
 export const STATUS_DOT: Record<PetitionStatus, string> = {
   in_examinare: "bg-amber-500",
