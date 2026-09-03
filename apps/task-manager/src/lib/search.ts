@@ -24,6 +24,21 @@ import { institutionLabel } from "./transfers";
 
 export type SearchKind = "sarcina" | "petitie" | "transfer" | "prevenit";
 
+/** Numele culorilor deja folosite în module; UI-ul le traduce în clase. */
+export type StateTone = "slate" | "blue" | "violet" | "amber" | "green";
+
+const TON_SARCINA: Record<Task["status"], StateTone> = {
+  todo: "slate",
+  in_progress: "blue",
+  waiting: "violet",
+  done: "green",
+};
+
+const TON_PETITIE: Record<Petition["status"], StateTone> = {
+  in_examinare: "amber",
+  solutionat: "green",
+};
+
 export interface SearchHit {
   kind: SearchKind;
   id: string;
@@ -40,6 +55,14 @@ export interface SearchHit {
    * de fiecare dată la alt capăt de frază.
    */
   state: string | null;
+  /**
+   * Culoarea însemnului de stare, luată din modulul de unde vine rândul.
+   *
+   * Nu e o paletă nouă: sarcinile își colorează deja stările cu slate/albastru/
+   * violet/verde, petițiile cu chihlimbariu/verde. Rezultatul căutării arată la
+   * fel ca registrul din care vine, deci nu cere învățat un al doilea cod.
+   */
+  tone: StateTone;
   /** Terminat — rândul se stinge, ca ochiul să treacă peste el. */
   finished: boolean;
   href: string;
@@ -130,6 +153,7 @@ function candidati(data: SearchData): Candidat[] {
           title: t.title,
           detail: detaliu(etichete),
           state: TASK_STATUS_LABEL[t.status],
+          tone: TON_SARCINA[t.status],
           finished: t.status === "done",
           href: `/tasks/${t.id}`,
         },
@@ -147,6 +171,7 @@ function candidati(data: SearchData): Candidat[] {
           title: `${p.number} — ${p.petitioner}`,
           detail: p.subject || null,
           state: PETITION_STATUS_LABEL[p.status],
+          tone: TON_PETITIE[p.status],
           finished: p.status === "solutionat",
           // Se deschide chiar petiția, nu registrul; vezi `notificationHref`.
           href: `/petitii?petitie=${p.id}`,
@@ -167,6 +192,7 @@ function candidati(data: SearchData): Candidat[] {
           detail: detaliu([p.court, institutionLabel(p.institution)]),
           // Planificările încheiate nici nu ajung aici, deci n-au ce stare arăta.
           state: null,
+          tone: "slate",
           finished: false,
           href: "/transferuri/planificare",
         },
@@ -187,6 +213,10 @@ function candidati(data: SearchData): Candidat[] {
           detail: detaliu([d.court, d.case_number ? `dosar ${d.case_number}` : null]),
           // Categoria e starea acestui registru: prevenit, inculpat, condamnat.
           state: categorie.charAt(0).toUpperCase() + categorie.slice(1),
+          // Chihlimbariu pentru cel cu măsură preventivă, ca „în examinare" la
+          // petiții: e cazul care cere atenție. Verde pentru condamnat: a ieșit
+          // din grija curentă, ca o sarcină finalizată.
+          tone: categorie === "prevenit" ? "amber" : categorie === "condamnat" ? "green" : "slate",
           finished: d.status === "condamnat",
           href: "/inculpati",
         },
