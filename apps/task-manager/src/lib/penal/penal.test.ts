@@ -103,14 +103,27 @@ describe("sfârșitul termenului", () => {
       .toBe("2027-03-09");
   });
 
-  it("lunile la fel", () => {
+  it("la termenul numai în luni NU se scade ziua", () => {
+    // Confirmat de utilizator: ziua precedentă e regulă doar pentru ani.
     expect(zi(sfarsitTermen(new Date(2026, 0, 10), { ani: 0, luni: 6, zile: 0 })))
-      .toBe("2026-07-09");
+      .toBe("2026-07-10");
   });
 
-  it("termen mixt: ani, luni și zile", () => {
-    expect(zi(sfarsitTermen(new Date(2026, 0, 1), { ani: 2, luni: 6, zile: 10 })))
-      .toBe("2028-07-10");
+  it("la termenul micst, cu zile, NU se scade ziua", () => {
+    // Cazul dat de utilizator: 10.03.2026 + 2 ani, 6 luni și 10 zile.
+    expect(zi(sfarsitTermen(new Date(2026, 2, 10), { ani: 2, luni: 6, zile: 10 })))
+      .toBe("2028-09-20");
+  });
+
+  it("la termenul numai în zile NU se scade ziua", () => {
+    // Confirmat: 30 de zile de la 10 martie se încheie pe 9 aprilie.
+    expect(zi(sfarsitTermen(new Date(2026, 2, 10), { ani: 0, luni: 0, zile: 30 })))
+      .toBe("2026-04-09");
+  });
+
+  it("la ani plus luni NU se scade: nu e termen numai în ani", () => {
+    expect(zi(sfarsitTermen(new Date(2026, 2, 10), { ani: 2, luni: 6, zile: 0 })))
+      .toBe("2028-09-10");
   });
 
   it("adăugarea fără scăderea zilei dă chiar ziua corespunzătoare", () => {
@@ -131,13 +144,11 @@ describe("sfârșitul termenului", () => {
       .toBe("2026-02-28");
   });
 
-  it("când ziua există în luna țintă, se scade ziua ca de obicei", () => {
-    // Martie are 31 de zile, deci o lună de la 1 martie ține martie întreg.
+  it("o lună de la 1 martie se încheie pe 1 aprilie", () => {
+    // Confirmat de utilizator. Ziua nu se scade la termenele în luni, deci
+    // rezultatul e data corespunzătoare din luna următoare, nu ziua dinainte.
     expect(zi(sfarsitTermen(new Date(2026, 2, 1), { ani: 0, luni: 1, zile: 0 })))
-      .toBe("2026-03-31");
-    // Februarie 2026 are 28: o lună de la 1 februarie ține februarie întreg.
-    expect(zi(sfarsitTermen(new Date(2026, 1, 1), { ani: 0, luni: 1, zile: 0 })))
-      .toBe("2026-02-28");
+      .toBe("2026-04-01");
   });
 
   it("un an de la 31 ianuarie nu retează: ianuarie are 31 de zile", () => {
@@ -235,12 +246,12 @@ describe("formula documentată", () => {
     // arestului înaintea adunării termenului, regula zilei precedente s-ar
     // aplica altui număr și data ar aluneca.
     const start = new Date(2026, 2, 1);
-    const termen = { ani: 3, luni: 6, zile: 0 };
+    const termen = { ani: 3, luni: 0, zile: 0 }; // numai ani: aici se scade ziua
     const arest = zileIntre(new Date(2026, 0, 1), new Date(2026, 2, 1)); // 59 zile
 
     const r = calculeazaTermen(start, termen, "2/3", arest);
 
-    const asteptat = new Date(2029, 8, 1); // 1 sept 2029
+    const asteptat = new Date(2029, 2, 1); // 1 martie 2029
     asteptat.setDate(asteptat.getDate() - arest - 1);
     expect(zi(r.sfarsitCuArest)).toBe(zi(asteptat));
   });
