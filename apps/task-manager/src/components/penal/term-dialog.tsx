@@ -15,7 +15,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { scadeArest, sfarsitTermen, termenText, zileIntre, type Termen } from "@/lib/penal/termene";
+import {
+  scadeArest,
+  scadeTermen,
+  sfarsitTermen,
+  termenText,
+  zileIntre,
+  type Termen,
+} from "@/lib/penal/termene";
 
 /**
  * Calculatorul de sfârșit de termen.
@@ -30,6 +37,11 @@ export function TermDialog() {
   const [ani, setAni] = useState("");
   const [luni, setLuni] = useState("");
   const [zile, setZile] = useState("");
+  const [reducereActiva, setReducereActiva] = useState(false);
+  const [redDe, setRedDe] = useState("");
+  const [redAni, setRedAni] = useState("");
+  const [redLuni, setRedLuni] = useState("");
+  const [redZile, setRedZile] = useState("");
   const [arestActiv, setArestActiv] = useState(false);
   const [arestDeLa, setArestDeLa] = useState("");
   const [arestPanaLa, setArestPanaLa] = useState("");
@@ -69,6 +81,21 @@ export function TermDialog() {
   const cuArest = sfarsit ? scadeArest(sfarsit, zileArest) : null;
 
   const dataRo = (d: Date) => format(d, "d MMMM yyyy", { locale: ro });
+  const toISO = (d: Date) => format(d, "yyyy-MM-dd");
+
+  /*
+   * Reducerea merge în două feluri, fiindcă și munca vine în două feluri.
+   *
+   * Uneori sfârșitul tocmai a fost calculat mai sus; alteori e deja scris în
+   * dosar și n-ai la îndemână data începerii. Câmpul se completează singur cu
+   * sfârșitul de sus când există, dar rămâne de scris peste — altfel cine are
+   * doar încheierea și data ar fi trebuit să reconstituie întâi pedeapsa.
+   */
+  const sfarsitEfectiv = cuArest ?? sfarsit;
+  const redBaza = data(redDe) ?? sfarsitEfectiv;
+  const reducere: Termen = { ani: n(redAni), luni: n(redLuni), zile: n(redZile) };
+  const areReducere = reducere.ani + reducere.luni + reducere.zile > 0;
+  const dupaReducere = redBaza && areReducere ? scadeTermen(redBaza, reducere) : null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -196,6 +223,69 @@ export function TermDialog() {
               </p>
             </div>
           )}
+
+          {/* Reducerea stă după rezultat, nu înaintea lui: e o corectare a unui
+              sfârșit deja stabilit, nu o parte a pedepsei. */}
+          <div className="space-y-2 rounded-lg border p-3">
+            <label className="flex items-center gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={reducereActiva}
+                onChange={(e) => setReducereActiva(e.target.checked)}
+                className="h-4 w-4 rounded border-input accent-primary"
+              />
+              <span className="font-medium">Reducere de termen</span>
+              <span className="text-xs text-muted-foreground">prin încheiere</span>
+            </label>
+
+            {reducereActiva && (
+              <div className="space-y-3 pt-1">
+                <div className="space-y-1">
+                  <Input
+                    type="date"
+                    value={redDe || (sfarsitEfectiv ? toISO(sfarsitEfectiv) : "")}
+                    onChange={(e) => setRedDe(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Sfârșitul de la care se scade
+                    {!redDe && sfarsitEfectiv && " — luat din calculul de mai sus"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { v: redAni, set: setRedAni, eticheta: "Ani" },
+                    { v: redLuni, set: setRedLuni, eticheta: "Luni" },
+                    { v: redZile, set: setRedZile, eticheta: "Zile" },
+                  ].map((c) => (
+                    <div key={c.eticheta} className="space-y-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        value={c.v}
+                        onChange={(e) => c.set(e.target.value)}
+                        placeholder="0"
+                      />
+                      <p className="text-xs text-muted-foreground">{c.eticheta}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {dupaReducere && redBaza && (
+                  <div className="rounded-xl border bg-muted/40 p-4">
+                    <p className="text-xs text-muted-foreground">
+                      {dataRo(redBaza)}, redus cu {termenText(reducere)}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold">{dataRo(dupaReducere)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      sfârșitul termenului după reducere
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

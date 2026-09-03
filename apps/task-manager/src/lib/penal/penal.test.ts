@@ -13,6 +13,7 @@ import {
   calculeazaTermen,
   fractieDinTermen,
   scadeArest,
+  scadeTermen,
   sfarsitTermen,
   zileIntre,
   termenText,
@@ -284,5 +285,50 @@ describe("termenul scris în cuvinte", () => {
 
   it("termenul gol", () => {
     expect(termenText({ ani: 0, luni: 0, zile: 0 })).toBe("0 zile");
+  });
+});
+
+describe("reducerea termenului", () => {
+  // Cazul: sfârșitul e stabilit, iar o încheiere reduce pedeapsa.
+  it("zece zile dintr-un sfârșit de termen", () => {
+    expect(zi(scadeTermen(new Date(2027, 0, 25), { ani: 0, luni: 0, zile: 10 })))
+      .toBe("2027-01-15");
+  });
+
+  it("un an, șapte luni și două zile", () => {
+    // Se scade pe rând: anul, apoi lunile, apoi zilele.
+    expect(zi(scadeTermen(new Date(2027, 0, 25), { ani: 1, luni: 7, zile: 2 })))
+      .toBe("2025-06-23");
+  });
+
+  it("retezarea lucrează și înapoi", () => {
+    // „31 februarie" nu există în niciun sens, nici scăzând.
+    expect(zi(scadeTermen(new Date(2027, 2, 31), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2027-02-28");
+    expect(zi(scadeTermen(new Date(2027, 4, 31), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2027-04-30");
+  });
+
+  it("29 februarie minus un an cade pe 28", () => {
+    expect(zi(scadeTermen(new Date(2028, 1, 29), { ani: 1, luni: 0, zile: 0 })))
+      .toBe("2027-02-28");
+  });
+
+  it("trece peste hotarul anului", () => {
+    expect(zi(scadeTermen(new Date(2027, 0, 5), { ani: 0, luni: 0, zile: 10 })))
+      .toBe("2026-12-26");
+  });
+
+  it("NU se scade ziua precedentă a doua oară", () => {
+    // Regula privește termenele care expiră. Sfârșitul e deja calculat; o
+    // reducere doar îl dă înapoi. Aplicată și aici, ziua ar fi scăzută de două
+    // ori, iar omul ar ieși cu o zi mai devreme decât spune încheierea.
+    const sfarsit = new Date(2027, 0, 25);
+    expect(zi(scadeTermen(sfarsit, { ani: 1, luni: 0, zile: 0 }))).toBe("2026-01-25");
+  });
+
+  it("reducere zero nu mișcă data", () => {
+    expect(zi(scadeTermen(new Date(2027, 0, 25), { ani: 0, luni: 0, zile: 0 })))
+      .toBe("2027-01-25");
   });
 });

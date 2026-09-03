@@ -14,7 +14,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-02",
-    text: "Două unelte noi pe pagina principală: „Calculator termen” — sfârșitul pedepsei din data începerii, cu arestul preventiv scăzut — și „Clasificare infracțiune” — categoria după art. 16 CP RM și fracțiile pentru art. 91 și 92. Se deschid într-o fereastră și se închid după ce ai socotit.",
+    text: "Două unelte noi pe pagina principală: „Calculator termen” — sfârșitul pedepsei din data începerii, cu arestul preventiv scăzut și cu reducerile dispuse prin încheiere — și „Clasificare infracțiune” — categoria după art. 16 CP RM și fracțiile pentru art. 91 și 92. Se deschid într-o fereastră și se închid după ce ai socotit.",
   },
   {
     date: "2026-09-02",

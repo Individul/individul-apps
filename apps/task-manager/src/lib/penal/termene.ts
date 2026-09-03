@@ -86,6 +86,25 @@ export function adaugaTermen(data: Date, t: Termen, sfarsit = false): Date {
 }
 
 /**
+ * Scade un termen dintr-o dată — reducerea dispusă printr-o încheiere.
+ *
+ * Nu se aplică regula zilei precedente. Ea privește termenele care EXPIRĂ, iar
+ * o reducere e o cantitate scăzută dintr-o dată deja stabilită: sfârșitul era
+ * calculat, se dă înapoi cu atât. Adăugată aici, ziua ar fi fost scăzută de
+ * două ori.
+ *
+ * Retezarea la ultima zi a lunii lucrează și înapoi: 31 martie minus o lună
+ * cade pe 28 februarie, fiindcă „31 februarie" nu există în niciun sens.
+ */
+export function scadeTermen(data: Date, t: Termen): Date {
+  let rez = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  if (t.ani > 0) rez = adaugaLuni(rez, -t.ani * 12).data;
+  if (t.luni > 0) rez = adaugaLuni(rez, -t.luni).data;
+  if (t.zile > 0) rez = new Date(rez.getFullYear(), rez.getMonth(), rez.getDate() - t.zile);
+  return rez;
+}
+
+/**
  * Sfârșitul termenului: data începerii plus termenul, minus o zi.
  *
  * Asta cere secția cel mai des — până când e omul de ținut.
