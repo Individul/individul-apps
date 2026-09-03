@@ -2,11 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, Search, X } from "lucide-react";
+import { FileText, ListTodo, Loader2, Search, Truck, UserSquare, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { searchAll } from "@/app/cautare/actions";
-import { MIN_QUERY, countHits, type SearchGroup } from "@/lib/search";
+import {
+  MIN_QUERY,
+  countHits,
+  type SearchGroup,
+  type SearchKind,
+  type StateTone,
+} from "@/lib/search";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,6 +23,30 @@ import { cn } from "@/lib/utils";
  * grupate pe registre: cine caută un nume vrea să vadă dintr-o privire în câte
  * locuri apare, nu o listă amestecată din care să deducă singur.
  */
+/*
+ * Culorile stărilor, aceleași ca în module.
+ *
+ * Nu e o paletă nouă: sarcinile își colorează deja stările așa în listă, iar
+ * petițiile la fel. Un rezultat care arată ca registrul din care vine nu cere
+ * învățat un al doilea cod de culori — iar panoul încetează să fie un perete
+ * cenușiu în care toate rândurile par la fel.
+ */
+const TON: Record<StateTone, string> = {
+  slate: "bg-slate-100 text-slate-700",
+  blue: "bg-blue-100 text-blue-700",
+  violet: "bg-violet-100 text-violet-700",
+  amber: "bg-amber-100 text-amber-800",
+  green: "bg-green-100 text-green-700",
+};
+
+/** Iconița grupului: fiecare registru se recunoaște înainte de a-i citi numele. */
+const ICOANA: Record<SearchKind, typeof ListTodo> = {
+  sarcina: ListTodo,
+  petitie: FileText,
+  transfer: Truck,
+  prevenit: UserSquare,
+};
+
 export function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [groups, setGroups] = useState<SearchGroup[]>([]);
@@ -156,7 +186,11 @@ export function GlobalSearch() {
             <div className="divide-y">
               {groups.map((g) => (
                 <div key={g.kind} className="py-1.5">
-                  <div className="px-4 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <div className="flex items-center gap-1.5 px-4 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {(() => {
+                      const Ico = ICOANA[g.kind];
+                      return <Ico className="h-3.5 w-3.5" aria-hidden />;
+                    })()}
                     {g.label}
                   </div>
                   {g.hits.map((h) => (
@@ -176,7 +210,12 @@ export function GlobalSearch() {
                         )}
                       </div>
                       {h.state && (
-                        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                            TON[h.tone],
+                          )}
+                        >
                           {h.state}
                         </span>
                       )}
