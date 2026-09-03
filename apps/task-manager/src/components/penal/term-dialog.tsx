@@ -190,8 +190,9 @@ export function TermDialog() {
               {/* Regula nu e evidentă, iar cine verifică socoteala pe hârtie
                   trebuie să știe de ce data e cu o zi mai devreme. */}
               <p className="border-t pt-3 text-xs text-muted-foreground">
-                Termenii în ani și luni expiră în ziua precedentă zilei
-                corespunzătoare. Rezultatul e orientativ.
+                Termenii exprimați numai în ani expiră în ziua precedentă zilei
+                corespunzătoare; la luni și zile, chiar în ziua corespunzătoare.
+                Rezultatul e orientativ.
               </p>
             </div>
           )}

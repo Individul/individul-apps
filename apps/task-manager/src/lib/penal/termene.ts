@@ -37,19 +37,32 @@ function adaugaLuni(d: Date, luni: number): { data: Date; retezat: boolean } {
 }
 
 /**
+ * Ziua precedentă se scade doar la termenele exprimate NUMAI în ani.
+ *
+ * Regulile vin de la utilizator, care le-a dat pe cazuri:
+ *  — numai luni: nu se scade (o lună de la 31.01.2026 → 28.02.2026);
+ *  — micst, cu zile: nu se scade (2 ani, 6 luni și 10 zile de la 10.03.2026 →
+ *    20.09.2028);
+ *  — numai ani: se scade (un an de la 10.03.2026 → 09.03.2027).
+ *
+ * Aplicația de origine scădea la toate, deși propriul ei comentariu spunea
+ * altceva — codul și comentariul se contraziceau, iar codul câștiga tăcut.
+ */
+function scadeZiua(t: Termen): boolean {
+  return t.ani > 0 && t.luni === 0 && t.zile === 0;
+}
+
+/**
  * Adaugă un termen la o dată.
  *
- * `scadeOZi` aplică regula zilei precedente — dar NU când s-a retezat. Cele două
- * reguli spun același lucru din capete diferite: termenul expiră la data
- * corespunzătoare din ultima lună, iar dacă acea zi nu există în luna aceea,
- * expiră în ultima ei zi. Când s-a retezat, ultima zi a lunii E expirarea, deci
- * n-are de unde să mai dea un pas înapoi.
+ * `sfarsit` cere sfârșitul termenului, adică aplică regula de mai sus. Fără el
+ * se obține data la care termenul se împlinește — ce trebuie la fracții, care
+ * sunt cantități de executat, nu termene care expiră.
  *
- * Verificat pe cazul dat de utilizator: 31.01.2026 plus o lună se încheie pe
- * 28.02.2026 — nu pe 27 (scăzând o zi din februarie retezat) și nici pe 2 martie
- * (cum dădea rostogolirea din aplicația de origine).
+ * Retezarea la ultima zi a lunii se face întotdeauna: „31 februarie" nu există,
+ * iar rostogolirea din JavaScript ar duce în martie.
  */
-export function adaugaTermen(data: Date, t: Termen, scadeOZi = false): Date {
+export function adaugaTermen(data: Date, t: Termen, sfarsit = false): Date {
   let rez = new Date(data.getFullYear(), data.getMonth(), data.getDate());
   let retezat = false;
 
@@ -66,7 +79,9 @@ export function adaugaTermen(data: Date, t: Termen, scadeOZi = false): Date {
   if (t.zile > 0) {
     rez = new Date(rez.getFullYear(), rez.getMonth(), rez.getDate() + t.zile);
   }
-  if (scadeOZi && !retezat) rez.setDate(rez.getDate() - 1);
+  // Nici când s-a retezat: ultima zi a lunii e chiar expirarea, deci n-are de
+  // unde să mai dea un pas înapoi.
+  if (sfarsit && scadeZiua(t) && !retezat) rez.setDate(rez.getDate() - 1);
   return rez;
 }
 
