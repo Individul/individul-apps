@@ -1,0 +1,196 @@
+import { describe, expect, it } from "vitest";
+import { fractiuni, type Categorie } from "./categorii";
+import {
+  INFRACTIUNI,
+  alineatePentru,
+  articole,
+  ceaMaiGrava,
+  gasesteInfractiune,
+  parseArticol,
+} from "./clasificare";
+import {
+  adaugaTermen,
+  calculeazaTermen,
+  fractieDinTermen,
+  scadeArest,
+  sfarsitTermen,
+  termenText,
+} from "./termene";
+
+const zi = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+describe("catalogul de infracțiuni", () => {
+  it("a fost portat întreg", () => {
+    // Dacă la o actualizare se pierd intrări, aici se vede.
+    expect(INFRACTIUNI.length).toBe(664);
+    expect(articole().length).toBe(250);
+  });
+
+  it("fiecare intrare are o categorie cunoscută", () => {
+    const valide: Categorie[] = ["U", "MPG", "G", "DG", "EG"];
+    const straine = INFRACTIUNI.filter((i) => !valide.includes(i.cat));
+    expect(straine).toEqual([]);
+  });
+});
+
+describe("găsirea infracțiunii", () => {
+  it("potrivire directă pe articol și alineat", () => {
+    expect(gasesteInfractiune("145", "1")?.cat).toBe("DG");
+    expect(gasesteInfractiune("145", "2")?.cat).toBe("EG");
+  });
+
+  it("alineatele cu exponent se găsesc", () => {
+    // „1¹" nu e „11": exponentul face parte din alineat.
+    expect(gasesteInfractiune("149", "1¹")).not.toBeNull();
+  });
+
+  it("bara face parte din articol, nu e alineat", () => {
+    // În Codul penal „217/1" e numărul articolului.
+    expect(parseArticol("217/1")).toEqual({ articol: "217", alineatDinArticol: "1" });
+  });
+
+  it("un articol inexistent nu întoarce nimic", () => {
+    expect(gasesteInfractiune("9999", "1")).toBeNull();
+  });
+
+  it("alineatele unui articol se pot lista", () => {
+    expect(alineatePentru("145")).toContain("1");
+    expect(alineatePentru("145")).toContain("2");
+  });
+});
+
+describe("cea mai gravă categorie", () => {
+  const inf = (art: string, alin: string, cat: Categorie) => ({ art, alin, cat, pedeapsa_max: "" });
+
+  it("dintre mai multe, hotărăște cea mai gravă", () => {
+    const r = ceaMaiGrava([inf("1", "1", "U"), inf("145", "2", "EG"), inf("2", "1", "G")]);
+    expect(r.categorie).toBe("EG");
+    expect(r.articolDeterminant).toBe("Art. 145 alin. 2");
+  });
+
+  it("fără infracțiuni, nu hotărăște nimic", () => {
+    expect(ceaMaiGrava([]).categorie).toBeNull();
+  });
+});
+
+describe("fracțiile art. 91 și 92", () => {
+  it("adultul nu beneficiază de reducere", () => {
+    const f = fractiuni("G", "adult");
+    expect(f.art91.fractiune).toBe("2/3");
+    expect(f.art91.temeiLegal).toBe("art. 91 alin. (4) lit. b) CP RM");
+  });
+
+  it("minorul beneficiază", () => {
+    expect(fractiuni("G", "minor").art91.fractiune).toBe("1/2");
+  });
+
+  it("nota de 90 de zile apare doar la adult, U și MPG", () => {
+    expect(fractiuni("U", "adult").art91.nota).toContain("90");
+    expect(fractiuni("U", "minor").art91.nota).toBeNull();
+    expect(fractiuni("G", "adult").art91.nota).toBeNull();
+  });
+
+  it("art. 92 nu ține seama de vârstă", () => {
+    expect(fractiuni("G", "adult").art92.fractiune).toBe(fractiuni("G", "minor").art92.fractiune);
+  });
+});
+
+describe("sfârșitul termenului", () => {
+  it("un an expiră în ziua precedentă", () => {
+    // Regula RM: un an de la 10 martie 2026 se încheie pe 9 martie 2027.
+    expect(zi(sfarsitTermen(new Date(2026, 2, 10), { ani: 1, luni: 0, zile: 0 })))
+      .toBe("2027-03-09");
+  });
+
+  it("lunile la fel", () => {
+    expect(zi(sfarsitTermen(new Date(2026, 0, 10), { ani: 0, luni: 6, zile: 0 })))
+      .toBe("2026-07-09");
+  });
+
+  it("termen mixt: ani, luni și zile", () => {
+    expect(zi(sfarsitTermen(new Date(2026, 0, 1), { ani: 2, luni: 6, zile: 10 })))
+      .toBe("2028-07-10");
+  });
+
+  it("adăugarea fără scăderea zilei dă chiar ziua corespunzătoare", () => {
+    expect(zi(adaugaTermen(new Date(2026, 2, 10), { ani: 1, luni: 0, zile: 0 })))
+      .toBe("2027-03-10");
+  });
+
+  it("PĂSTRAT DIN ORIGINAL: lunile scurte se rostogolesc", () => {
+    // 31 ianuarie + o lună dă 3 martie, nu 28 februarie — așa se poartă
+    // `setMonth` din JavaScript, și așa se purta și aplicația de origine.
+    // Testul îl descrie ca să nu se schimbe din greșeală: mutarea unei date de
+    // eliberare e o hotărâre juridică, nu una de programare.
+    expect(zi(adaugaTermen(new Date(2026, 0, 31), { ani: 0, luni: 1, zile: 0 })))
+      .toBe("2026-03-03");
+  });
+});
+
+describe("fracția din termen", () => {
+  it("jumătate dintr-un an e șase luni, nu 182 de zile", () => {
+    expect(fractieDinTermen({ ani: 1, luni: 0, zile: 0 }, "1/2"))
+      .toEqual({ ani: 0, luni: 6, zile: 0 });
+  });
+
+  it("două treimi din trei ani", () => {
+    expect(fractieDinTermen({ ani: 3, luni: 0, zile: 0 }, "2/3"))
+      .toEqual({ ani: 2, luni: 0, zile: 0 });
+  });
+
+  it("restul din luni curge în zile", () => {
+    // 1 lună la 1/2 = 15 zile.
+    expect(fractieDinTermen({ ani: 0, luni: 1, zile: 0 }, "1/2"))
+      .toEqual({ ani: 0, luni: 0, zile: 15 });
+  });
+
+  it("zilele peste 30 se strâng înapoi în luni", () => {
+    expect(fractieDinTermen({ ani: 0, luni: 5, zile: 0 }, "1/2"))
+      .toEqual({ ani: 0, luni: 2, zile: 15 });
+  });
+
+  it("o fracție fără înțeles nu produce un termen", () => {
+    expect(fractieDinTermen({ ani: 1, luni: 0, zile: 0 }, "-"))
+      .toEqual({ ani: 0, luni: 0, zile: 0 });
+  });
+});
+
+describe("arestul preventiv", () => {
+  it("se scade din data calculată", () => {
+    expect(zi(scadeArest(new Date(2027, 2, 9), 30))).toBe("2027-02-07");
+  });
+
+  it("zero zile nu mișcă nimic", () => {
+    expect(zi(scadeArest(new Date(2027, 2, 9), 0))).toBe("2027-03-09");
+  });
+});
+
+describe("calculul întreg", () => {
+  it("sfârșit, fracție și eligibilitate deodată", () => {
+    // 3 ani de la 1 martie 2026, categoria gravă, adult: fracția e 2/3.
+    const r = calculeazaTermen(new Date(2026, 2, 1), { ani: 3, luni: 0, zile: 0 }, "2/3", 0);
+    expect(zi(r.sfarsit)).toBe("2029-02-28");
+    expect(r.deExecutat).toEqual({ ani: 2, luni: 0, zile: 0 });
+    expect(zi(r.eligibil)).toBe("2028-03-01");
+  });
+
+  it("arestul preventiv mută ambele date înapoi", () => {
+    const r = calculeazaTermen(new Date(2026, 2, 1), { ani: 3, luni: 0, zile: 0 }, "2/3", 60);
+    expect(zi(r.sfarsitCuArest)).toBe("2028-12-30");
+    expect(zi(r.eligibil)).toBe("2028-01-01");
+  });
+});
+
+describe("termenul scris în cuvinte", () => {
+  it("toate trei unitățile", () => {
+    expect(termenText({ ani: 2, luni: 6, zile: 10 })).toBe("2 ani, 6 luni și 10 zile");
+  });
+
+  it("singularul se scrie corect", () => {
+    expect(termenText({ ani: 1, luni: 1, zile: 1 })).toBe("1 an, 1 lună și 1 zi");
+  });
+
+  it("termenul gol", () => {
+    expect(termenText({ ani: 0, luni: 0, zile: 0 })).toBe("0 zile");
+  });
+});
