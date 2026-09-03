@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { DefendantDialog } from "@/components/defendants/defendant-dialog";
 import { markConvicted, undoConvicted } from "@/app/inculpati/actions";
 import {
+  CATEGORY_LABEL,
   REGIME_LABEL,
+  categoryOf,
   activeDefendants,
   convictedDefendants,
   countDefendants,
@@ -77,8 +79,17 @@ export function DefendantList({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-5 sm:grid-cols-4">
+      {/*
+        Aceiași oameni, numărați în două feluri.
+        „În evidență" e ancora: preveniți + inculpați îl dau, și tot el îl dau
+        și închis + semiînchis. Fără ancoră, cinci cifre alăturate ar părea
+        cinci grupuri deosebite, iar cine le-ar aduna ar număra fiecare om de
+        două ori.
+      */}
+      <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-5 sm:grid-cols-3 lg:grid-cols-6">
         {[
+          { label: "În evidență", value: counts.activi },
+          { label: "Preveniți", value: counts.preveniti },
           { label: "Inculpați", value: counts.inculpati },
           { label: "Închis", value: counts.inchis },
           { label: "Semiînchis", value: counts.semiinchis },
@@ -201,6 +212,7 @@ function Lista({
     <div className="overflow-hidden rounded-xl border bg-card">
       <div className="flex items-center gap-3 border-b bg-muted/30 px-3.5 py-2 text-[11px] font-medium text-muted-foreground">
         <span className="min-w-0 flex-1">Numele și instanța</span>
+        <span className="w-24 shrink-0">Categoria</span>
         <span className="w-28 shrink-0">Tipul</span>
         <span className="w-28 shrink-0">Stabilit</span>
         <span className="w-28 shrink-0" aria-hidden />
@@ -219,6 +231,17 @@ function Lista({
                 <span className="ml-2 text-muted-foreground">dosar {d.case_number}</span>
               )}
             </button>
+            {/* Categoria înaintea tipului: ea spune ce fel de om e, tipul spune
+                unde merge. Îngroșat cel cu măsură preventivă, ca la „Închis" —
+                aceeași convenție, nu o culoare nouă cu alt înțeles. */}
+            <span
+              className={cn(
+                "w-24 shrink-0",
+                d.preventive_measure ? "font-medium" : "text-muted-foreground",
+              )}
+            >
+              {CATEGORY_LABEL[categoryOf(d)]}
+            </span>
             <span
               className={cn(
                 "w-28 shrink-0",

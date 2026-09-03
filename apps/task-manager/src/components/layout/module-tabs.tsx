@@ -9,7 +9,11 @@ const MODULES = [
   { href: "/petitii", label: "Petiții", matchPrefixes: ["/petitii"] },
   { href: "/sedinte", label: "Ședințe", matchPrefixes: ["/sedinte"] },
   { href: "/transferuri", label: "Transferuri", matchPrefixes: ["/transferuri"] },
-  { href: "/inculpati", label: "Inculpați", matchPrefixes: ["/inculpati"] },
+  // Numele întreg, deși e lung: „Inculpați" numea jumătate din registru, iar
+  // „Preveniți" ar numi cealaltă jumătate. Adresa rămâne /inculpati — o
+  // schimbare de adresă ar rupe legăturile din notificări și din însemnări
+  // vechi, fără să câștige nimic.
+  { href: "/inculpati", label: "Preveniți și inculpați", matchPrefixes: ["/inculpati"] },
   { href: "/obligatii", label: "Informări", matchPrefixes: ["/obligatii"] },
   { href: "/statistici", label: "Statistici", matchPrefixes: ["/statistici"] },
 ] as const;

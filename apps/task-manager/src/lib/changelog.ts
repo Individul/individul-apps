@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-02",
+    text: "Registrul ține acum ambele categorii: preveniți și inculpați. Se bifează măsura preventivă, iar categoria se citește din ea — cine are măsură e prevenit, ceilalți inculpați. Cifrele de sus arată ambele împărțiri.",
+  },
+  {
+    date: "2026-09-02",
     text: "La planificarea transferurilor se poate alege temeiul: ședință de judecată sau decizie. La ședință transferul se face în ultima zi programată dinaintea ei; la decizie, în prima zi programată de la data parvenirii.",
   },
   {

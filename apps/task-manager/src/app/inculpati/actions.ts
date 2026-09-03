@@ -13,6 +13,10 @@ export interface DefendantInput {
   established_on: string;
   court: string;
   case_number: string;
+  /** Are măsură preventivă? De aici se citește categoria „prevenit". */
+  preventive_measure: boolean;
+  /** Data măsurii, dacă e știută. Ignorată când nu există măsură. */
+  preventive_measure_on: string;
   note: string;
 }
 
@@ -48,6 +52,14 @@ export async function saveDefendant(
     established_on: input.established_on,
     court: input.court ? input.court : null,
     case_number: input.case_number.trim() ? input.case_number.trim() : null,
+    preventive_measure: input.preventive_measure,
+    // Oglindește `defendants_preventive` din migrarea 0028: fără măsură, data
+    // se scrie `null` — o dată a unei măsuri care nu există ar fi o afirmație
+    // despre nimic, iar baza ar respinge-o oricum.
+    preventive_measure_on:
+      input.preventive_measure && input.preventive_measure_on
+        ? input.preventive_measure_on
+        : null,
     note: input.note.trim() ? input.note.trim() : null,
     updated_by: userId,
   };
