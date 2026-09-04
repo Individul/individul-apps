@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
+    text: "La clasificare se pot alege și articolele cu indice — art. 217/1, 245/10 și celelalte 90 din Cod. Se scriu cu bară, iar sub câmp apar toate articolele cu același număr, de unde se aleg dintr-un click. Până acum nu se găseau deloc, fiindcă în catalog stau scrise cu exponent, care nu se poate tasta; cine căuta art. 217/1 alin. 4 și adăuga art. 217 alin. 4 primea „gravă” în loc de „deosebit de gravă”, deci altă fracție și altă dată.",
+  },
+  {
+    date: "2026-09-04",
     text: "Clasificarea infracțiunii a coborât pe aceeași pagină cu calculatorul de termen, sub el. Pedeapsa scrisă sus se folosește mai departe, deci fracțiile pentru art. 91 și 92 nu mai apar doar ca numere, ci și ca date: când se poate cere liberarea condiționată și când înlocuirea părții neexecutate, cu arestul preventiv scăzut din amândouă. Dacă vrei doar categoria, lași datele de sus goale.",
   },
   {

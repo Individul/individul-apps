@@ -6,8 +6,9 @@ import {
   alineatePentru,
   articole,
   ceaMaiGrava,
+  cheieNumar,
   gasesteInfractiune,
-  parseArticol,
+  variantePentru,
 } from "./clasificare";
 import {
   adaugaTermen,
@@ -47,9 +48,23 @@ describe("găsirea infracțiunii", () => {
     expect(gasesteInfractiune("149", "1¹")).not.toBeNull();
   });
 
-  it("bara face parte din articol, nu e alineat", () => {
-    // În Codul penal „217/1" e numărul articolului.
-    expect(parseArticol("217/1")).toEqual({ articol: "217", alineatDinArticol: "1" });
+  it("articolele cu indice se găsesc scrise cu bară", () => {
+    // Catalogul le ține cu exponent — „217¹" — dar exponentul nu se poate tasta.
+    expect(gasesteInfractiune("217/1", "4")?.art).toBe("217¹");
+    expect(gasesteInfractiune("217¹", "4")?.art).toBe("217¹");
+  });
+
+  it("articolul cu indice NU e același cu articolul de bază", () => {
+    // Chiar cazul care strică rezultatul fără să pară: aceleași cifre, alt
+    // alineat, altă categorie — deci altă fracție și altă dată de liberare.
+    expect(gasesteInfractiune("217", "4")?.cat).toBe("G");
+    expect(gasesteInfractiune("217/1", "4")?.cat).toBe("DG");
+  });
+
+  it("indicele din două cifre nu se rupe", () => {
+    // „245¹⁰" e articolul 245/10, nu 245/1 urmat de un zero.
+    expect(gasesteInfractiune("245/10", "(1)")?.art).toBe("245¹⁰");
+    expect(gasesteInfractiune("245/1", "(1)")?.art).not.toBe("245¹⁰");
   });
 
   it("un articol inexistent nu întoarce nimic", () => {
@@ -59,6 +74,67 @@ describe("găsirea infracțiunii", () => {
   it("alineatele unui articol se pot lista", () => {
     expect(alineatePentru("145")).toContain("1");
     expect(alineatePentru("145")).toContain("2");
+  });
+
+  it("alineatele articolului de bază nu le cuprind pe ale celui cu indice", () => {
+    // Art. 217 are alineatele 2, 3 și 4; 217¹ are 1, 2, 3 și 4. Amestecate, se
+    // putea alege un alineat 1 care nu există la articolul din listă.
+    expect([...new Set(alineatePentru("217"))].sort()).toEqual(["2", "3", "4"]);
+    expect([...new Set(alineatePentru("217/1"))].sort()).toEqual(["1", "2", "3", "4"]);
+  });
+});
+
+describe("scrierea numerelor de articol", () => {
+  it("toate felurile de a scrie același articol duc în același loc", () => {
+    for (const scris of ["217/1", "217¹", "217-1", "217 1", "art. 217/1", "217^1"]) {
+      expect(cheieNumar(scris)).toBe("217/1");
+    }
+  });
+
+  it("articolul fără indice rămâne fără indice", () => {
+    expect(cheieNumar("217")).toBe("217");
+    expect(cheieNumar("art. 145")).toBe("145");
+  });
+
+  it("alineatele cu paranteze și exponenți se aduc la aceeași formă", () => {
+    expect(cheieNumar("(2¹)")).toBe("2/1");
+    expect(cheieNumar("2¹")).toBe("2/1");
+    expect(cheieNumar("(1)")).toBe("1");
+  });
+
+  it("ce nu conține nicio cifră nu e număr de articol", () => {
+    expect(cheieNumar("")).toBe("");
+    expect(cheieNumar("art.")).toBe("");
+    expect(gasesteInfractiune("", "1")).toBeNull();
+  });
+
+  it("normalizarea nu suprapune două intrări deosebite din catalog", () => {
+    // Dacă o actualizare a catalogului ar aduce două intrări care se pliază pe
+    // aceeași cheie, aici se vede — înainte ca una s-o ascundă tăcut pe alta.
+    const chei = INFRACTIUNI.map((i) => `${cheieNumar(i.art)}#${cheieNumar(i.alin)}`);
+    expect(new Set(chei).size).toBe(INFRACTIUNI.length);
+  });
+});
+
+describe("variantele unui articol", () => {
+  it("le adună pe toate cele care împart numărul", () => {
+    expect(variantePentru("217")).toEqual(["217", "217¹", "217³", "217⁴", "217⁵", "217⁶"]);
+  });
+
+  it("se ajunge la aceeași listă pornind de la oricare dintre ele", () => {
+    expect(variantePentru("217/4")).toEqual(variantePentru("217"));
+  });
+
+  it("un articol fără variante se întoarce singur", () => {
+    expect(variantePentru("145")).toEqual(["145"]);
+  });
+
+  it("articolele se listează în ordinea din Cod, nu cum s-au nimerit", () => {
+    const toate = articole();
+    const i = (a: string) => toate.indexOf(a);
+    expect(i("165")).toBeLessThan(i("165¹"));
+    expect(i("165¹")).toBeLessThan(i("166"));
+    expect(i("245⁹")).toBeLessThan(i("245¹⁰"));
   });
 });
 

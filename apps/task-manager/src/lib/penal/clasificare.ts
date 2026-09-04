@@ -5,8 +5,13 @@ import { ORDINE_GRAVITATE, type Categorie } from "./categorii";
  * Clasificarea unei infracțiuni după articol și alineat.
  *
  * Portată din `Individul/clasificare`. Catalogul are 664 de intrări acoperind
- * 250 de articole; alineatele pot avea exponenți („1¹"), iar unele articole au
- * ele însele o parte după bară („217/1"), de unde și căutarea în două trepte.
+ * 250 de articole, dintre care 90 cu indice — scrise cu exponenți Unicode:
+ * „217¹", „245¹⁰". Exponenții nu se pot tasta, iar omul scrie „217/1", deci
+ * potrivirea se face pe o formă canonică, nu pe șirul din catalog.
+ *
+ * Nu e o comoditate: art. 217 alin. 4 e infracțiune gravă, iar art. 217/1
+ * alin. 4 e deosebit de gravă. Cine caută al doilea și nu-l găsește îl adaugă
+ * pe primul — și iese cu altă fracție și altă dată de liberare.
  */
 
 export interface Infractiune {
@@ -18,33 +23,73 @@ export interface Infractiune {
 
 export const INFRACTIUNI = (date as { infractiuni: Infractiune[] }).infractiuni;
 
-/**
- * Desparte ce a scris omul: „217/1" e articolul 217/1, nu articolul 217
- * alineatul 1. Bara face parte din numărul articolului în Codul penal.
- */
-export function parseArticol(input: string): { articol: string; alineatDinArticol: string | null } {
-  if (!input) return { articol: "", alineatDinArticol: null };
-  const parts = input.split("/");
-  return { articol: parts[0], alineatDinArticol: parts[1] || null };
-}
+const EXPONENTI = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
 /**
- * Caută infracțiunea. Întâi potrivire directă; dacă nu, se încearcă articolele
- * cu bară, fiindcă „217" + alineatul „1" poate fi scris în catalog ca „217/1".
+ * Forma canonică a unui număr de articol sau de alineat: „număr" sau
+ * „număr/indice".
+ *
+ * Aceeași intrare din Cod se scrie în cinci feluri — „217¹" în catalog, „217/1"
+ * la tastatură, „217-1" în unele acte, „art. 217 1" copiat dintr-o sentință —
+ * și toate trebuie să ducă în același loc. Deci: cifrele de la început fac
+ * numărul, orice exponent sau semn de despărțire trece în indice, restul
+ * (literele din „art.", punctuația, spațiile) se ignoră.
+ *
+ * Merge și pentru alineate, care în catalog apar și cu paranteze — „(2¹)" și
+ * „2¹" sunt același alineat. Verificat pe tot catalogul: normalizarea nu
+ * suprapune două intrări deosebite.
  */
+export function cheieNumar(input: string): string {
+  let numar = "";
+  let indice = "";
+  let inIndice = false;
+
+  for (const c of input.trim()) {
+    const exponent = EXPONENTI.indexOf(c);
+    if (exponent >= 0) {
+      inIndice = true;
+      indice += exponent;
+      continue;
+    }
+    if (c >= "0" && c <= "9") {
+      if (inIndice) indice += c;
+      else numar += c;
+      continue;
+    }
+    // Semnul de despărțire contează doar după ce a început numărul: altfel
+    // spațiul din „art. 217" ar deschide indicele înainte de prima cifră.
+    if (numar && "/-^ ".includes(c)) inIndice = true;
+  }
+
+  if (!numar) return "";
+  return indice ? `${numar}/${indice}` : numar;
+}
+
+/** Caută infracțiunea, oricum ar fi scris omul articolul și alineatul. */
 export function gasesteInfractiune(
   articol: string,
   alineat: string,
   catalog: Infractiune[] = INFRACTIUNI,
 ): Infractiune | null {
-  const directa = catalog.find((i) => i.art === articol && i.alin === alineat);
-  if (directa) return directa;
+  const a = cheieNumar(articol);
+  const al = cheieNumar(alineat);
+  if (!a || !al) return null;
+  return catalog.find((i) => cheieNumar(i.art) === a && cheieNumar(i.alin) === al) ?? null;
+}
 
-  if (/^\d+$/.test(articol)) {
-    const cuBara = catalog.find((i) => i.art.split("/")[0] === articol && i.alin === alineat);
-    if (cuBara) return cuBara;
-  }
-  return null;
+/**
+ * Articolele din catalog care împart același număr cu cel scris: 217 și
+ * 217¹…217⁶.
+ *
+ * Ele sunt infracțiuni deosebite, cu categorii deosebite, dar omul care scrie
+ * „217" n-are de unde ști că mai există cinci. De aceea se arată sub câmp, de
+ * unde se aleg dintr-un click — singura cale de a scrie exponentul.
+ */
+export function variantePentru(articol: string, catalog: Infractiune[] = INFRACTIUNI): string[] {
+  const numar = cheieNumar(articol).split("/")[0];
+  if (!numar) return [];
+  const gasite = [...new Set(catalog.filter((i) => cheieNumar(i.art).split("/")[0] === numar).map((i) => i.art))];
+  return gasite.sort(comparaArticole);
 }
 
 export interface CeaMaiGrava {
@@ -78,20 +123,31 @@ export function ceaMaiGrava(adaugate: Infractiune[]): CeaMaiGrava {
   };
 }
 
-/** Alineatele existente pentru un articol, pentru lista din formular. */
+/**
+ * Alineatele existente pentru un articol, pentru lista din formular.
+ *
+ * Numai ale articolului cerut. Până acum le aduna și pe ale articolelor cu
+ * același număr — 217 arăta și alineatele lui 217¹ — iar alineatul ales de
+ * acolo nimerea apoi pe altă infracțiune decât cea din listă.
+ */
 export function alineatePentru(articol: string, catalog: Infractiune[] = INFRACTIUNI): string[] {
-  const baza = articol.split("/")[0];
-  return catalog
-    .filter((i) => i.art === articol || i.art.split("/")[0] === baza)
-    .map((i) => i.alin);
+  const a = cheieNumar(articol);
+  if (!a) return [];
+  return catalog.filter((i) => cheieNumar(i.art) === a).map((i) => i.alin);
 }
 
-/** Articolele distincte din catalog, în ordine numerică. */
+/**
+ * Ordinea din Cod: după număr, apoi după indice. Se compară forma canonică —
+ * `Number("217¹")` e NaN, iar o sortare pe NaN lasă lista în ordinea în care s-a
+ * nimerit să fie citită.
+ */
+function comparaArticole(a: string, b: string): number {
+  const [na, ia] = cheieNumar(a).split("/");
+  const [nb, ib] = cheieNumar(b).split("/");
+  return Number(na) - Number(nb) || Number(ia ?? 0) - Number(ib ?? 0);
+}
+
+/** Articolele distincte din catalog, în ordinea din Cod. */
 export function articole(catalog: Infractiune[] = INFRACTIUNI): string[] {
-  const set = [...new Set(catalog.map((i) => i.art))];
-  return set.sort((a, b) => {
-    const [na, sa] = a.split("/");
-    const [nb, sb] = b.split("/");
-    return Number(na) - Number(nb) || (sa ?? "").localeCompare(sb ?? "");
-  });
+  return [...new Set(catalog.map((i) => i.art))].sort(comparaArticole);
 }

@@ -24,7 +24,9 @@ import {
 import {
   alineatePentru,
   ceaMaiGrava,
+  cheieNumar,
   gasesteInfractiune,
+  variantePentru,
   type Infractiune,
 } from "@/lib/penal/clasificare";
 import { calculeazaTermen, termenText, type Termen } from "@/lib/penal/termene";
@@ -108,6 +110,16 @@ export function ClassifyTool({ baza = null }: { baza?: BazaTermen | null }) {
     [articol],
   );
 
+  // Articolele care împart numărul scris: 217 și 217¹…217⁶. Se arată doar când
+  // sunt mai multe — la un articol fără indice, un singur buton lângă câmp ar
+  // fi zgomot.
+  const variante = useMemo(() => {
+    const gasite = variantePentru(articol.trim());
+    return gasite.length > 1 ? gasite : [];
+  }, [articol]);
+
+  const alesa = cheieNumar(articol.trim());
+
   const adauga = () => {
     const inf = gasesteInfractiune(articol.trim(), alineat.trim());
     if (!inf) {
@@ -143,8 +155,7 @@ export function ClassifyTool({ baza = null }: { baza?: BazaTermen | null }) {
                 setAlineat("");
                 setEroare(null);
               }}
-              placeholder="145"
-              inputMode="numeric"
+              placeholder="145 sau 217/1"
             />
           </div>
           <div className="space-y-2">
@@ -166,6 +177,41 @@ export function ClassifyTool({ baza = null }: { baza?: BazaTermen | null }) {
             Adaugă
           </Button>
         </div>
+
+        {variante.length > 0 && (
+          /*
+            Exponentul nu se poate tasta, deci articolele cu indice se aleg de
+            aici. Apar de la primul număr scris, fiindcă tocmai cine nu știe că
+            art. 217 mai are cinci variante are nevoie să le vadă.
+          */
+          <div className="space-y-1.5">
+            <p className="text-xs text-muted-foreground">Articole cu acest număr:</p>
+            <div className="flex flex-wrap gap-1.5">
+              {variante.map((v) => {
+                const activ = cheieNumar(v) === alesa;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => {
+                      setArticol(v);
+                      setAlineat("");
+                      setEroare(null);
+                    }}
+                    className={cn(
+                      "rounded-full border px-2.5 py-1 text-xs tabular-nums transition-colors",
+                      activ
+                        ? "border-transparent bg-primary text-primary-foreground"
+                        : "border-input hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    {v}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {eroare && <p className="text-xs text-destructive">{eroare}</p>}
 
