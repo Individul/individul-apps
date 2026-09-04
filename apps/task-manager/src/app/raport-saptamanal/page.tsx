@@ -2,21 +2,13 @@ import Link from "next/link";
 import { addDays } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { ExportButtons } from "@/components/weekly/export-buttons";
 import { ReleaseEntry } from "@/components/weekly/release-entry";
 import { ReportView } from "@/components/weekly/report-view";
 import { missingWorkdays } from "@/lib/hearings";
 import { rangeLabelRo, toISODate, todayInChisinau, type DateRange } from "@/lib/periods";
-import {
-  getCurrentProfile,
-  getHearings,
-  getNotifications,
-  getReleases,
-  getTransfers,
-  getUnreadCount,
-} from "@/lib/queries";
+import { getCurrentProfile, getHearings, getReleases, getTransfers } from "@/lib/queries";
 import { readWeek, reportWeek, shiftWeek, weeklyFigures } from "@/lib/weekly-report";
 
 export const dynamic = "force-dynamic";
@@ -43,10 +35,8 @@ export default async function RaportSaptamanalPage({
   const from = toISODate(week.from);
   const to = toISODate(week.to);
 
-  const [profile, notifications, unread, hearings, transfers, releases] = await Promise.all([
+  const [profile, hearings, transfers, releases] = await Promise.all([
     getCurrentProfile(),
-    getNotifications(),
-    getUnreadCount(),
     getHearings(from, to),
     getTransfers(),
     getReleases(from, to),
@@ -64,7 +54,6 @@ export default async function RaportSaptamanalPage({
     <>
       {/* Antetul aplicației nu are ce căuta pe hârtie. */}
       <div className="no-print">
-        <AppHeader profile={profile} notifications={notifications} unread={unread} />
       </div>
 
       <main className="mx-auto max-w-3xl space-y-6 p-4 xl:px-10 print:max-w-none print:p-0">

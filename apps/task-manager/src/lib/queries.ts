@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import type {
   Task,
@@ -139,17 +141,46 @@ export async function getAuditLog(
   return (data ?? []) as unknown as AuditEntry[];
 }
 
-export async function getCurrentProfile(): Promise<Profile | null> {
+/**
+ * Profilul celui conectat.
+ *
+ * Învelit în `cache` din React: antetul stă acum în layout, iar unele pagini au
+ * și ele nevoie de profil ca să știe dacă e admin. Fără învelișul acesta,
+ * aceeași randare ar cere de două ori același lucru — și, mai scump, ar face de
+ * două ori `getUser()`, care întreabă serverul Supabase prin rețea. `cache`
+ * ține răspunsul cât ține o singură randare; între cereri nu păstrează nimic,
+ * deci nimeni nu poate primi profilul altuia.
+ */
+/**
+ * Identitatea celui conectat, sau `null`.
+ *
+ * Scoasă separat fiindcă antetul trebuie să atârne de sesiune, nu de profil:
+ * un cont fără rând în `profiles` — se întâmplă la un utilizator abia creat —
+ * ar rămâne altfel fără bară, deci și fără butonul de deconectare, adică fără
+ * nicio ieșire.
+ *
+ * `cache` o face să coste un singur drum prin rețea pe randare, oricâți o cer:
+ * `getUser()` întreabă serverul Supabase, nu citește doar cookie-ul.
+ */
+export const getCurrentUserId = cache(async function getCurrentUserId(): Promise<string | null> {
   const supabase = createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const uid = userData.user?.id;
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+});
+
+export const getCurrentProfile = cache(async function getCurrentProfile(): Promise<Profile | null> {
+  const supabase = createClient();
+  const uid = await getCurrentUserId();
   if (!uid) return null;
   const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
   if (error) throw error;
   return (data ?? null) as Profile | null;
-}
+});
 
-export async function getNotifications(limit = 20): Promise<Notification[]> {
+/** Ultimele înștiințări. Memorate pe durata randării, ca profilul de mai sus. */
+export const getNotifications = cache(async function getNotifications(
+  limit = 20,
+): Promise<Notification[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("notifications")
@@ -158,7 +189,7 @@ export async function getNotifications(limit = 20): Promise<Notification[]> {
     .limit(limit);
   if (error) return [];
   return (data ?? []) as unknown as Notification[];
-}
+});
 
 export async function getPetitions(): Promise<Petition[]> {
   const supabase = createClient();
@@ -283,7 +314,8 @@ export async function getStatValues(
   );
 }
 
-export async function getUnreadCount(): Promise<number> {
+/** Câte înștiințări necitite. Memorată pe durata randării. */
+export const getUnreadCount = cache(async function getUnreadCount(): Promise<number> {
   const supabase = createClient();
   const { count, error } = await supabase
     .from("notifications")
@@ -291,7 +323,7 @@ export async function getUnreadCount(): Promise<number> {
     .eq("read", false);
   if (error) return 0;
   return count ?? 0;
-}
+});
 
 export async function getHearings(from: string, to: string): Promise<Hearing[]> {
   const supabase = createClient();

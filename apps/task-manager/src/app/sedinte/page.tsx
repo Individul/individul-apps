@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
-import { getCurrentProfile, getNotifications, getUnreadCount } from "@/lib/queries";
 import { getHearing, getHearings } from "@/lib/queries";
-import { AppHeader } from "@/components/layout/app-header";
 import { DailyForm } from "@/components/hearings/daily-form";
 import { DayPicker } from "@/components/hearings/day-picker";
 import { PeriodReport } from "@/components/hearings/period-report";
@@ -52,60 +50,54 @@ export default async function SedintePage({
   const range = rangeForPeriod(period, anchor);
   const esteCurenta = range.from <= azi && azi <= range.to;
 
-  const [profile, notifications, unread, hearing, hearings] = await Promise.all([
-    getCurrentProfile(),
-    getNotifications(),
-    getUnreadCount(),
+  const [hearing, hearings] = await Promise.all([
     getHearing(day),
     getHearings(toISODate(range.from), toISODate(range.to)),
   ]);
 
   return (
-    <>
-      <AppHeader profile={profile} notifications={notifications} unread={unread} />
-      <main className="mx-auto max-w-5xl space-y-8 p-4 xl:px-10">
-        <div>
-          <h1 className="text-2xl font-semibold">Ședințe de judecată</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Evidența zilnică, cumulată pe toate judecătoriile.
-          </p>
+    <main className="mx-auto max-w-5xl space-y-8 p-4 xl:px-10">
+      <div>
+        <h1 className="text-2xl font-semibold">Ședințe de judecată</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Evidența zilnică, cumulată pe toate judecătoriile.
+        </p>
+      </div>
+
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-medium">Introducere — {formatDateRo(day)}</h2>
+          <DayPicker day={day} today={today} />
         </div>
+        <DailyForm date={day} hearing={hearing} />
+      </section>
 
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-sm font-medium">Introducere — {formatDateRo(day)}</h2>
-            <DayPicker day={day} today={today} />
-          </div>
-          <DailyForm date={day} hearing={hearing} />
-        </section>
-
-        <section className="space-y-4 border-t pt-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-medium">Raport</h2>
-            <Link
-              // Duce cu ea și perioada aleasă: altfel, uitându-te la august și
-              // apăsând „tipărește", ai primi septembrie.
-              href={`/sedinte/raport?perioada=${period}&la=${toISODate(anchor)}`}
-              // Roșu la cererea utilizatorului, ca legătura să sară în ochi.
-              // Notă pentru cine trece pe aici: în restul aplicației roșul
-              // înseamnă „restant" — dacă vreodată se face ordine în culori,
-              // ăsta e locul care iese din rând, dinadins.
-              className="text-[13px] font-medium text-red-600 transition-colors hover:text-red-700"
-            >
-              Versiune de tipărit →
-            </Link>
-          </div>
-          <Suspense fallback={null}>
-            <PeriodReport
-              period={period}
-              range={range}
-              hearings={hearings}
-              inapoi={toISODate(shiftPeriod(period, anchor, -1))}
-              inainte={esteCurenta ? null : toISODate(shiftPeriod(period, anchor, 1))}
-            />
-          </Suspense>
-        </section>
-      </main>
-    </>
+      <section className="space-y-4 border-t pt-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-medium">Raport</h2>
+          <Link
+            // Duce cu ea și perioada aleasă: altfel, uitându-te la august și
+            // apăsând „tipărește", ai primi septembrie.
+            href={`/sedinte/raport?perioada=${period}&la=${toISODate(anchor)}`}
+            // Roșu la cererea utilizatorului, ca legătura să sară în ochi.
+            // Notă pentru cine trece pe aici: în restul aplicației roșul
+            // înseamnă „restant" — dacă vreodată se face ordine în culori,
+            // ăsta e locul care iese din rând, dinadins.
+            className="text-[13px] font-medium text-red-600 transition-colors hover:text-red-700"
+          >
+            Versiune de tipărit →
+          </Link>
+        </div>
+        <Suspense fallback={null}>
+          <PeriodReport
+            period={period}
+            range={range}
+            hearings={hearings}
+            inapoi={toISODate(shiftPeriod(period, anchor, -1))}
+            inainte={esteCurenta ? null : toISODate(shiftPeriod(period, anchor, 1))}
+          />
+        </Suspense>
+      </section>
+    </main>
   );
 }

@@ -1,16 +1,7 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
 
-import {
-  getTaskCounts,
-  getPetitionCounts,
-  getProfiles,
-  getCurrentProfile,
-  getNotifications,
-  getUnreadCount,
-  getTransferCounts,
-  getObligations,
-} from "@/lib/queries";
+import { getTaskCounts, getPetitionCounts, getProfiles, getCurrentProfile, getTransferCounts, getObligations } from "@/lib/queries";
 import {
   taskStats,
   petitionStats,
@@ -20,7 +11,6 @@ import {
 } from "@/lib/hub-stats";
 import { aggregate, byInstitution, nextScheduled } from "@/lib/transfers";
 import { formatDateRo, rangeForPeriod, todayInChisinau, toISODate } from "@/lib/periods";
-import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { GlobalSearch } from "@/components/hub/global-search";
 import { ModuleCard, type ModuleCardStat } from "@/components/hub/module-card";
@@ -95,17 +85,14 @@ export default async function HubPage() {
   // titlurile, descrierile, responsabilii încorporați și fișierele atașate ale
   // celor trei registre ar traversa rețeaua ca să fie aruncate. Modulele lor
   // (/sarcini, /petitii, /transferuri) au mai departe rândurile întregi.
-  const [tasks, petitions, profiles, profile, notifications, unread, transfers, obligations] =
-    await Promise.all([
-      getTaskCounts(),
-      getPetitionCounts(),
-      getProfiles(),
-      getCurrentProfile(),
-      getNotifications(),
-      getUnreadCount(),
-      getTransferCounts(),
-      getObligations(),
-    ]);
+  const [tasks, petitions, profiles, profile, transfers, obligations] = await Promise.all([
+    getTaskCounts(),
+    getPetitionCounts(),
+    getProfiles(),
+    getCurrentProfile(),
+    getTransferCounts(),
+    getObligations(),
+  ]);
 
   const isAdmin = profile?.role === "admin";
   const me = profile?.id ?? null;
@@ -153,7 +140,6 @@ export default async function HubPage() {
 
   return (
     <>
-      <AppHeader profile={profile} notifications={notifications} unread={unread} />
       {/* Mai lat decât înainte: cardurile duc acum și defalcarea pe coloane. */}
       <main className="mx-auto max-w-6xl p-4 xl:px-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">

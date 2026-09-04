@@ -1,8 +1,6 @@
 import Link from "next/link";
 
-import { AppHeader } from "@/components/layout/app-header";
 import { PdfTool } from "@/components/pdf/pdf-tool";
-import { getCurrentProfile, getNotifications, getUnreadCount } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -20,32 +18,23 @@ export const dynamic = "force-dynamic";
  * mult 4,5 MB în corpul cererii, adică mai puțin decât un dosar scanat.
  */
 export default async function PdfPage() {
-  const [profile, notifications, unread] = await Promise.all([
-    getCurrentProfile(),
-    getNotifications(),
-    getUnreadCount(),
-  ]);
-
   return (
-    <>
-      <AppHeader profile={profile} notifications={notifications} unread={unread} />
-      <main className="mx-auto max-w-3xl p-4 xl:px-10">
-        <div className="mb-2 flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">Unelte PDF</h1>
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            ← Acasă
-          </Link>
-        </div>
-        <p className="mb-6 max-w-2xl text-sm text-muted-foreground">
-          Unește mai multe PDF-uri într-unul singur, scoate paginile care nu trebuie sau
-          ia numai paginile care trebuie. Fișierele rămân pe calculatorul tău — nu se
-          încarcă nicăieri.
-        </p>
-        <PdfTool />
-      </main>
-    </>
+    <main className="mx-auto max-w-3xl p-4 xl:px-10">
+      <div className="mb-2 flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">Unelte PDF</h1>
+        <Link
+          href="/"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Acasă
+        </Link>
+      </div>
+      <p className="mb-6 max-w-2xl text-sm text-muted-foreground">
+        Unește mai multe PDF-uri într-unul singur, scoate paginile care nu trebuie sau
+        ia numai paginile care trebuie. Fișierele rămân pe calculatorul tău — nu se
+        încarcă nicăieri.
+      </p>
+      <PdfTool />
+    </main>
   );
 }

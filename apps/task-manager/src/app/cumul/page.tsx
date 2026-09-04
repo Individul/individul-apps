@@ -1,9 +1,7 @@
 import Link from "next/link";
 
-import { AppHeader } from "@/components/layout/app-header";
 import { TestingWatermark } from "@/components/layout/testing-watermark";
 import { CumulTool } from "@/components/penal/cumul-tool";
-import { getCurrentProfile, getNotifications, getUnreadCount } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -21,15 +19,8 @@ export const dynamic = "force-dynamic";
  * nu se preia.
  */
 export default async function CumulPage() {
-  const [profile, notifications, unread] = await Promise.all([
-    getCurrentProfile(),
-    getNotifications(),
-    getUnreadCount(),
-  ]);
-
   return (
     <>
-      <AppHeader profile={profile} notifications={notifications} unread={unread} />
       {/*
        * `relative` întinde filigranul exact peste pagină; `isolate` îi ține
        * `z-10` închis aici. Ca la /statistici.

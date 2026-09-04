@@ -1,10 +1,4 @@
-import {
-  getCurrentProfile,
-  getNotifications,
-  getStatReports,
-  getUnreadCount,
-} from "@/lib/queries";
-import { AppHeader } from "@/components/layout/app-header";
+import { getCurrentProfile, getStatReports } from "@/lib/queries";
 import { TestingWatermark } from "@/components/layout/testing-watermark";
 import { ImportDialog } from "@/components/stats/import-dialog";
 import { ReportSection } from "@/components/stats/report-section";
@@ -22,11 +16,9 @@ export const dynamic = "force-dynamic";
 const KINDS = Object.keys(REPORT_VIEWS) as StatKind[];
 
 export default async function StatisticiPage() {
-  const [reports, currentProfile, notifications, unread, series] = await Promise.all([
+  const [reports, currentProfile, series] = await Promise.all([
     getStatReports(),
     getCurrentProfile(),
-    getNotifications(),
-    getUnreadCount(),
     // Toate seriile deodată: opt citiri paralele, nu opt așteptări una după
     // alta. `listSeries` întoarce `[]` și când migrarea 0016 lipsește, deci
     // pagina rămâne în picioare — fiecare secțiune își arată starea goală.
@@ -36,7 +28,6 @@ export default async function StatisticiPage() {
 
   return (
     <>
-      <AppHeader profile={currentProfile} notifications={notifications} unread={unread} />
       {/*
        * `relative` întinde filigranul exact peste pagină; `isolate` îi ține
        * `z-10` închis aici, ca dialogul de import — randat în portal la nivelul
