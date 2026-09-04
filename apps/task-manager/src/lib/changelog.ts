@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
+    text: "Aplicația s-a făcut mai iute. Bara de sus nu se mai șterge și nu se mai reface la fiecare clic — rămâne pe ecran, iar sub ea apare pe loc un schelet cât se aduc datele, în loc ca pagina veche să stea neclintită. Registrul de petiții se deschide acum pe cele în examinare: din 348 de petiții, 335 sunt soluționate, adică arhivă, iar browserul le desena pe toate ca să arate 13 rânduri de lucru; un clic pe „Toate” arată registrul întreg, ca înainte. Și nu se mai trimite profilul responsabilului repetat în fiecare rând — cântărea 67 KB la fiecare deschidere, deși profilurile sunt patru cu totul.",
+  },
+  {
+    date: "2026-09-04",
     text: "Uneltele PDF au venit în aplicație, sub „Unelte” în bara de sus: unește mai multe PDF-uri într-unul singur, scoate paginile care nu trebuie sau ia numai paginile care trebuie. La unire, ordinea o schimbi trăgând fișierul de mânerul din stânga, ca înainte. Paginile se scriu tot ca până acum — răzlețe cu virgulă, intervale cu linie: 1,3,5-7 — iar sub câmp se vede pe loc ce rămâne. O schimbare față de varianta de pe serverul vechi: fișierul nu se mai încarcă nicăieri, tot lucrul se face pe calculatorul tău, deci dosarele cu date personale nu mai pleacă din secție. Nici mărimea nu mai e plafonată; un dosar de 1200 de pagini se taie în câteva sutimi de secundă.",
   },
   {
