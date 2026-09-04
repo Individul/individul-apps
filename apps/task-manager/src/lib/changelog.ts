@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
+    text: "Uneltele PDF au venit în aplicație, sub „Unelte” în bara de sus: unește mai multe PDF-uri într-unul singur, scoate paginile care nu trebuie sau ia numai paginile care trebuie. Paginile se scriu ca până acum — răzlețe cu virgulă, intervale cu linie: 1,3,5-7 — iar sub câmp se vede pe loc ce rămâne. O schimbare față de varianta de pe serverul vechi: fișierul nu se mai încarcă nicăieri, tot lucrul se face pe calculatorul tău, deci dosarele cu date personale nu mai pleacă din secție. Nici mărimea nu mai e plafonată; un dosar de 1200 de pagini se taie în câteva sutimi de secundă.",
+  },
+  {
+    date: "2026-09-04",
     text: "Calculatoarele penale se deschid acum din meniul „Unelte” din bara de sus, de pe orice pagină — nu doar de acasă. Până acum, ca să afli un termen în mijlocul unei petiții, trebuia să te întorci pe pagina principală și pe urmă să-ți cauți din nou locul. Sub „Unelte” stau „Calculator termen și clasificare” și „Concurs sau cumul de sentințe”; butoanele lor de lângă salut au dispărut. „Raportul de marți” a rămas unde era.",
   },
   {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarClock, ChevronDown, Scale } from "lucide-react";
+import { CalendarClock, ChevronDown, FileStack, Scale } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -13,17 +13,22 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * Uneltele de socotit, adunate sub un singur nume în bara de sus.
+ * Uneltele, adunate sub un singur nume în bara de sus.
  *
- * Stăteau pe pagina de start, lipite de „Bun venit, …", și de acolo veneau două
- * neajunsuri. Unul de rang: arătau ca acțiunile acelui titlu, când sunt de fapt
- * o destinație a aplicației. Altul, mai greu: la ele se ajungea doar de acasă,
- * deși tocmai în mijlocul unei petiții sau al unei sarcini îți trebuie un
- * termen — și atunci omul își pierde locul ca să se întoarcă după el.
+ * Cele două calculatoare penale stăteau pe pagina de start, lipite de „Bun
+ * venit, …", și de acolo veneau două neajunsuri. Unul de rang: arătau ca
+ * acțiunile acelui titlu, când sunt de fapt o destinație a aplicației. Altul,
+ * mai greu: la ele se ajungea doar de acasă, deși tocmai în mijlocul unei
+ * petiții sau al unei sarcini îți trebuie un termen — și atunci omul își pierde
+ * locul ca să se întoarcă după el.
  *
  * Nu sunt tab-uri lângă module fiindcă nu sunt registre: nu se completează, nu
- * păstrează nimic, nu au rânduri. Se intră când ai de socotit ceva și se iese.
- * De aici meniul — un singur cuvânt în bară, deschis de oriunde.
+ * păstrează nimic, nu au rânduri. Se intră când ai ceva de făcut cu ele și se
+ * iese. De aici meniul — un singur cuvânt în bară, deschis de oriunde.
+ *
+ * Uneltele PDF au venit mai târziu, de pe serverul Hetzner care se închide.
+ * Erau singurul lucru de acolo fără înlocuitor aici, iar meniul avea deja
+ * numele potrivit pentru ele.
  */
 const UNELTE = [
   {
@@ -40,6 +45,12 @@ const UNELTE = [
     // Aceeași vorbă ca filigranul de pe pagină: cine o vede aici n-are cum s-o
     // ia drept unealtă așezată doar fiindcă a intrat prin meniu.
     inTestare: true,
+  },
+  {
+    href: "/pdf",
+    icon: FileStack,
+    nume: "Unelte PDF",
+    descriere: "Unește, șterge sau extrage pagini",
   },
 ] as const;
 
