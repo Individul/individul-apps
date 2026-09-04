@@ -14,7 +14,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
-    text: "Uneltele PDF au venit în aplicație, sub „Unelte” în bara de sus: unește mai multe PDF-uri într-unul singur, scoate paginile care nu trebuie sau ia numai paginile care trebuie. Paginile se scriu ca până acum — răzlețe cu virgulă, intervale cu linie: 1,3,5-7 — iar sub câmp se vede pe loc ce rămâne. O schimbare față de varianta de pe serverul vechi: fișierul nu se mai încarcă nicăieri, tot lucrul se face pe calculatorul tău, deci dosarele cu date personale nu mai pleacă din secție. Nici mărimea nu mai e plafonată; un dosar de 1200 de pagini se taie în câteva sutimi de secundă.",
+    text: "Uneltele PDF au venit în aplicație, sub „Unelte” în bara de sus: unește mai multe PDF-uri într-unul singur, scoate paginile care nu trebuie sau ia numai paginile care trebuie. La unire, ordinea o schimbi trăgând fișierul de mânerul din stânga, ca înainte. Paginile se scriu tot ca până acum — răzlețe cu virgulă, intervale cu linie: 1,3,5-7 — iar sub câmp se vede pe loc ce rămâne. O schimbare față de varianta de pe serverul vechi: fișierul nu se mai încarcă nicăieri, tot lucrul se face pe calculatorul tău, deci dosarele cu date personale nu mai pleacă din secție. Nici mărimea nu mai e plafonată; un dosar de 1200 de pagini se taie în câteva sutimi de secundă.",
   },
   {
     date: "2026-09-04",

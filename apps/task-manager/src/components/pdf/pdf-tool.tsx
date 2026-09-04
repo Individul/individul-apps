@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Download, FilePlus2, Loader2, X } from "lucide-react";
+import { Download, FilePlus2, GripVertical, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   uneste,
   type FisierPdf,
 } from "@/lib/pdf/operatii";
+import { reordoneaza } from "@/lib/reordoneaza";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,7 +44,7 @@ const MODURI: Record<Mod, DescriereMod> = {
     eticheta: "Unește",
     titlu: "Unește mai multe PDF-uri",
     explicatie:
-      "Fișierele se leagă cap la cap, în ordinea din listă. Ordinea o schimbi cu săgețile.",
+      "Fișierele se leagă cap la cap, în ordinea din listă. Ordinea o schimbi trăgând fișierul de mânerul din stânga.",
     adaos: "unit",
   },
   sterge: {
@@ -73,6 +74,10 @@ export function PdfTool() {
   const [spec, setSpec] = useState("");
   const [eroare, setEroare] = useState<string | null>(null);
   const [lucreaza, setLucreaza] = useState(false);
+  // Rândul luat cu mâna și rândul deasupra căruia stă acum. Al doilea e numai
+  // pentru desen: fără el n-ai vedea unde se va așeza înainte să dai drumul.
+  const [tras, setTras] = useState<number | null>(null);
+  const [deasupra, setDeasupra] = useState<number | null>(null);
   const camp = useRef<HTMLInputElement>(null);
 
   const unSingurFisier = mod !== "uneste";
@@ -124,14 +129,15 @@ export function PdfTool() {
     }
   }
 
-  function muta(index: number, cuCat: number) {
-    setFisiere((f) => {
-      const tinta = index + cuCat;
-      if (tinta < 0 || tinta >= f.length) return f;
-      const copie = [...f];
-      [copie[index], copie[tinta]] = [copie[tinta], copie[index]];
-      return copie;
-    });
+  /**
+   * Scoate fișierul de pe locul lui și îl pune pe altul.
+   *
+   * Nu e o schimbare între vecini, ci o mutare: la tragere fișierul poate sări
+   * peste mai multe rânduri deodată, iar cine trage al cincilea peste primul se
+   * așteaptă să-l vadă primul — nu pe primul ajuns al cincilea.
+   */
+  function muta(de: number, la: number) {
+    setFisiere((f) => reordoneaza(f, de, la));
   }
 
   function scoate(index: number) {
@@ -245,10 +251,63 @@ export function PdfTool() {
           {fisiere.map((f, i) => (
             <li
               key={`${f.nume}-${i}`}
-              className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm"
+              draggable={!unSingurFisier && !lucreaza}
+              onDragStart={(e) => {
+                setTras(i);
+                // Fără date, Firefox nu pornește tragerea deloc.
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(i));
+              }}
+              onDragOver={(e) => {
+                if (tras === null) return;
+                // Implicit, browserul refuză să lase ceva să cadă aici.
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                setDeasupra(i);
+              }}
+              onDragLeave={() => setDeasupra((d) => (d === i ? null : d))}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (tras !== null) muta(tras, i);
+                setTras(null);
+                setDeasupra(null);
+              }}
+              // Și când tragerea se termină în gol: altfel rândul ar rămâne
+              // pe jumătate șters până la următoarea atingere.
+              onDragEnd={() => {
+                setTras(null);
+                setDeasupra(null);
+              }}
+              className={cn(
+                "flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm transition-colors",
+                tras === i && "opacity-40",
+                deasupra === i && tras !== i && "border-primary bg-muted",
+              )}
             >
               {!unSingurFisier && (
-                <span className="w-5 shrink-0 tabular-nums text-muted-foreground">{i + 1}.</span>
+                <>
+                  {/* Mânerul. Nu mută el nimic la clic — tragerea o duce rândul
+                      întreg — dar arată unde se pune degetul, iar de la
+                      tastatură săgețile lui fac aceeași mutare. Cine nu poate
+                      trage cu mausul rămâne astfel cu o cale. */}
+                  <button
+                    type="button"
+                    className="shrink-0 cursor-grab text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+                    aria-label={`Mută „${f.nume}” — trage cu mausul sau folosește săgețile sus și jos`}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp" && i > 0) {
+                        e.preventDefault();
+                        muta(i, i - 1);
+                      } else if (e.key === "ArrowDown" && i < fisiere.length - 1) {
+                        e.preventDefault();
+                        muta(i, i + 1);
+                      }
+                    }}
+                  >
+                    <GripVertical className="h-4 w-4" />
+                  </button>
+                  <span className="w-5 shrink-0 tabular-nums text-muted-foreground">{i + 1}.</span>
+                </>
               )}
               <span className="min-w-0 flex-1 truncate" title={f.nume}>
                 {f.nume}
@@ -256,32 +315,6 @@ export function PdfTool() {
               <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
                 {f.pagini} {f.pagini === 1 ? "pagină" : "pagini"}
               </span>
-              {!unSingurFisier && (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={i === 0}
-                    onClick={() => muta(i, -1)}
-                    aria-label={`Mută „${f.nume}” mai sus`}
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    disabled={i === fisiere.length - 1}
-                    onClick={() => muta(i, 1)}
-                    aria-label={`Mută „${f.nume}” mai jos`}
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
               <Button
                 type="button"
                 variant="ghost"
