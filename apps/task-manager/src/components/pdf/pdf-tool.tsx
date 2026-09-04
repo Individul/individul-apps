@@ -280,6 +280,11 @@ export function PdfTool() {
               }}
               className={cn(
                 "flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm transition-colors",
+                // Mâna pe tot rândul, nu doar pe mâner: rândul întreg e cel
+                // care se trage, iar mânerul doar arată de unde se apucă. Dacă
+                // mâna s-ar vedea numai deasupra lui, restul rândului ar părea
+                // că nu se mișcă — și tocmai peste nume trece mausul întâi.
+                !unSingurFisier && !lucreaza && "cursor-grab active:cursor-grabbing",
                 tras === i && "opacity-40",
                 deasupra === i && tras !== i && "border-primary bg-muted",
               )}
@@ -319,7 +324,7 @@ export function PdfTool() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7 cursor-pointer"
                 onClick={() => scoate(i)}
                 aria-label={`Scoate „${f.nume}”`}
               >
