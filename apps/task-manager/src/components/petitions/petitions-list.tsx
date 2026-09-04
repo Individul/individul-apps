@@ -259,6 +259,16 @@ export function PetitionsList({
   const [sort, setSort] = useState<SortState>(null);
 
   /*
+   * Responsabilul se caută aici, nu vine încorporat în fiecare petiție.
+   *
+   * Așa venea până acum, și cântărea: pe datele din producție, profilul repetat
+   * în cele 348 de rânduri făcea 67 din cei 320 KB ai paginii — deși profilurile
+   * sunt patru cu totul. Lista lor se primește oricum, prin `profiles`.
+   */
+  const dupaId = useMemo(() => new Map(profiles.map((pr) => [pr.id, pr])), [profiles]);
+  const responsabil = (id: string | null) => (id ? dupaId.get(id) ?? null : null);
+
+  /*
    * Petiția din adresă se deschide o singură dată, la sosire.
    *
    * Se caută în `petitions`, lista întreagă, nu în rândurile filtrate: membrul
@@ -434,17 +444,20 @@ export function PetitionsList({
 
                     {/* Responsabil */}
                     <div className="flex w-36 min-w-0 shrink-0 items-center gap-2">
-                      {p.assignee ? (
+                      {responsabil(p.assignee_id) ? (
                         <>
                           <Avatar className="h-6 w-6">
                             <AvatarFallback
-                              className={cn("text-[10px]", avatarColor(p.assignee.id))}
+                              className={cn(
+                                "text-[10px]",
+                                avatarColor(responsabil(p.assignee_id)!.id),
+                              )}
                             >
-                              {initials(p.assignee.full_name)}
+                              {initials(responsabil(p.assignee_id)!.full_name)}
                             </AvatarFallback>
                           </Avatar>
                           <span className="truncate text-[13px]">
-                            {p.assignee.full_name ?? "—"}
+                            {responsabil(p.assignee_id)!.full_name ?? "—"}
                           </span>
                         </>
                       ) : (
