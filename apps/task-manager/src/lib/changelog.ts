@@ -13,8 +13,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-04",
+    text: "Calculatorul de termen și clasificarea infracțiunii au acum pagini proprii, nu ferestre. La calculator cele două socoteli — din data începerii și reducerea de termen — stau alături, deci nu se mai comută între ele; la clasificare, lista de articole crește în stânga fără să împingă răspunsul afară din ecran. Se ajunge la ele tot de pe pagina principală, din butoanele de lângă salut.",
+  },
+  {
     date: "2026-09-02",
-    text: "Două unelte noi pe pagina principală: „Calculator termen” — sfârșitul pedepsei din data începerii, cu arestul preventiv scăzut și cu reducerile dispuse prin încheiere — și „Clasificare infracțiune” — categoria după art. 16 CP RM și fracțiile pentru art. 91 și 92. Se deschid într-o fereastră și se închid după ce ai socotit.",
+    text: "Două unelte noi pe pagina principală: „Calculator termen” — sfârșitul pedepsei din data începerii, cu arestul preventiv scăzut și cu reducerile dispuse prin încheiere — și „Clasificare infracțiune” — categoria după art. 16 CP RM și fracțiile pentru art. 91 și 92.",
   },
   {
     date: "2026-09-02",
