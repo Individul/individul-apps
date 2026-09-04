@@ -1,6 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { ANTET_SESIUNE } from "@/lib/session-header";
+
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -50,5 +53,20 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return supabaseResponse;
+  /**
+   * Un indiciu pentru layout: are cererea o sesiune sau nu.
+   *
+   * Doar de desen. Layout-ul îl citește ca să știe dacă să rezerve locul barei
+   * de sus înainte de a afla cine e conectat — altfel pe pagina de autentificare
+   * ar clipi o bară care apoi dispare. Cine e omul se află tot din Supabase, în
+   * componenta barei; aici nu trece nicio identitate.
+   *
+   * Se scrie MEREU, și pe „0". Așa, un antet cu același nume venit din afară nu
+   * poate supraviețui: e suprascris la fiecare cerere.
+   */
+  const antete = new Headers(request.headers);
+  antete.set(ANTET_SESIUNE, user ? "1" : "0");
+  const raspuns = NextResponse.next({ request: { headers: antete } });
+  supabaseResponse.cookies.getAll().forEach((c) => raspuns.cookies.set(c));
+  return raspuns;
 }

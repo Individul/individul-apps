@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-import { AppHeader } from "@/components/layout/app-header";
-import {
-  getCurrentProfile,
-  getCurrentUserId,
-  getNotifications,
-  getUnreadCount,
-} from "@/lib/queries";
+import { AppHeaderSchelet, AppHeaderSlot } from "@/components/layout/app-header-slot";
+import { ANTET_SESIUNE } from "@/lib/session-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,31 +23,31 @@ export const metadata: Metadata = {
  * ținea randarea pe server, apoi le punea înapoi — adică semăna leit cu o
  * reîncărcare de pagină, chiar dacă nu era.
  *
- * Acum se schimbă doar ce e sub antet, iar `loading.tsx` de alături pune pe loc
- * un schelet în locul lui. Clicul are din nou un răspuns imediat.
+ * Layout-ul nu așteaptă nimic el însuși. Prima oară l-am scris cu `await` pe
+ * datele antetului, și asta ținea pe loc tot ce venea după: nu pleca niciun
+ * octet până nu se întorcea autentificarea, deci nici scheletul paginii nu
+ * apărea mai devreme — adică tocmai ce voiam să reparăm rămânea în urma unui
+ * drum prin rețea. Acum antetul curge sub `Suspense`, iar `loading.tsx` de
+ * alături desenează conținutul pe loc.
  *
- * Layout-ul rădăcină nu se re-randează la navigare, deci datele de aici sunt
+ * Layout-ul rădăcină nu se re-randează la navigare, deci datele antetului sunt
  * cele de la deschiderea aplicației. Nu e o scăpare: clopoțelul e abonat la
  * schimbări în timp real și se ține singur la zi, iar numele din profil se
  * împrospătează prin `router.refresh()` după salvare.
- *
- * Fără utilizator nu se desenează nimic — așa rămâne pagina de autentificare
- * curată, fără o listă de adrese publice ținută la zi pe alături. Hotărăște
- * sesiunea, nu profilul: un cont fără rând în `profiles` ar rămâne altfel fără
- * bară, deci fără butonul de deconectare, adică fără nicio ieșire.
  */
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [uid, profile, notifications, unread] = await Promise.all([
-    getCurrentUserId(),
-    getCurrentProfile(),
-    getNotifications(),
-    getUnreadCount(),
-  ]);
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Doar ca să știm dacă rezervăm locul barei. Fără indiciul ăsta, pagina de
+  // autentificare ar arăta o clipă un schelet de bară, care apoi dispare.
+  const areSesiune = headers().get(ANTET_SESIUNE) === "1";
 
   return (
     <html lang="ro">
       <body>
-        {uid && <AppHeader profile={profile} notifications={notifications} unread={unread} />}
+        {areSesiune && (
+          <Suspense fallback={<AppHeaderSchelet />}>
+            <AppHeaderSlot />
+          </Suspense>
+        )}
         {children}
         <Toaster richColors position="top-right" />
         <SpeedInsights />
