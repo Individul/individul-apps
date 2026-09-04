@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ModuleTabs } from "@/components/layout/module-tabs";
+import { ToolsMenu } from "@/components/layout/tools-menu";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ProfileDialog } from "@/components/account/profile-dialog";
 import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
@@ -21,6 +22,10 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
           Acasă
         </Link>
         <ModuleTabs />
+        {/* Despărțit de tab-uri prin golul de 3 al barei, nu printr-o linie:
+            înăuntrul tab-urilor golul e de 1, deci ochiul vede singur că
+            „Unelte" nu e al optulea registru. */}
+        <ToolsMenu />
         <div className="ml-auto flex items-center gap-2">
           {profile && (
             <NotificationBell
