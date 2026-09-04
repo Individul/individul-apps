@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, FileText, Scale } from "lucide-react";
+import { CalendarClock, FileText } from "lucide-react";
 
 import {
   getTaskCounts,
@@ -166,24 +166,18 @@ export default async function HubPage() {
               modul. Discret, deci — dar lângă salut, fiindcă mai jos de titlu
               nu l-ar găsi nimeni fără să i se spună. */}
           {/* Unelte, nu module: se intră când ai de socotit ceva și se iese.
-              De aceea legături de aici, nu tab-uri în bara de sus — acolo stau
+              De aceea o legătură de aici, nu un tab în bara de sus — acolo stau
               registrele, care se completează zilnic.
 
-              Amândouă duc la aceeași pagină: termenul și clasificarea se
-              socotesc de obicei împreună, pe aceeași pedeapsă. A doua legătură
-              rămâne fiindcă la clasificare se vine și când n-ai de calculat
-              niciun termen — și fiindcă așa se numea butonul de până acum. */}
+              Un singur buton, deși pagina ține două unelte: erau două, și
+              amândouă duceau în același loc — al doilea doar mai jos, la
+              clasificare. Văzute alături, arătau a scăpare. Numele le spune pe
+              amândouă, ca cine caută clasificarea să n-o creadă pierdută. */}
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href="/termen">
                 <CalendarClock className="mr-2 h-4 w-4" />
-                Calculator termen
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/termen#clasificare">
-                <Scale className="mr-2 h-4 w-4" />
-                Clasificare infracțiune
+                Calculator termen și clasificare
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">

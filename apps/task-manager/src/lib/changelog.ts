@@ -26,7 +26,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: "2026-09-04",
-    text: "Calculatorul de termen a ieșit din fereastră pe pagină proprie. Cele două socoteli — din data începerii și reducerea de termen — stau alături, deci nu se mai comută între ele. Se ajunge la el tot de pe pagina principală, din butoanele de lângă salut.",
+    text: "Calculatorul de termen a ieșit din fereastră pe pagină proprie. Cele două socoteli — din data începerii și reducerea de termen — stau alături, deci nu se mai comută între ele. Se ajunge la el tot de pe pagina principală, din butonul „Calculator termen și clasificare” de lângă salut.",
   },
   {
     date: "2026-09-02",
