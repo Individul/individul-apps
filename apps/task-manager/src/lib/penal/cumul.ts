@@ -72,3 +72,65 @@ export function temeiCumul({ savarsire, pronuntare, sfarsitPrimei }: DateCumul):
 
   return { temei: "art85", aceeasiZi };
 }
+
+/** O sentință din lanț, așa cum o introduce omul. */
+export interface Sentinta {
+  /** Data pronunțării. Ea dă ordinea în lanț. */
+  pronuntare: Date;
+  /** Data săvârșirii faptei judecate prin ea. */
+  savarsire: Date;
+  /** Sfârșitul pedepsei stabilite prin ea, dacă e cunoscut. */
+  sfarsit?: Date | null;
+}
+
+export interface PasLant {
+  /** A câta e în lanț, numărând de la 1 după data pronunțării. */
+  numar: number;
+  sentinta: Sentinta;
+  /** Sentința dinaintea ei, cea față de care se hotărăște temeiul. */
+  fataDe: Sentinta;
+  temei: Temei;
+  aceeasiZi: boolean;
+  /**
+   * Fapta e datată după propria sentință — imposibil, deci o greșeală de
+   * introducere. Se semnalează, nu se corectează: nu se poate ști care dintre
+   * cele două date e cea greșită.
+   */
+  dataImposibila: boolean;
+}
+
+/**
+ * Temeiul la fiecare treaptă, când sentințele sunt mai multe de două.
+ *
+ * Se merge în lanț, în ordinea pronunțării: fiecare sentință se cântărește față
+ * de cea dinaintea ei, nu față de prima. Pedeapsa aflată în executare la venirea
+ * unei sentințe noi e cea stabilită de ultima dinaintea ei, deci ea e „prima
+ * cauză" pentru treapta aceea.
+ *
+ * De aceea un lanț poate schimba temeiul de la o treaptă la alta: o faptă
+ * săvârșită între două sentințe e „după" pentru una și „înainte" pentru
+ * cealaltă. Nu e o contradicție, sunt două trepte deosebite.
+ *
+ * Sortarea se face aici, nu se cere de la om: sentințele vin din dosar în
+ * ordinea în care s-au găsit, nu în cea a calendarului.
+ */
+export function lantulTemeiurilor(sentinte: Sentinta[]): PasLant[] {
+  const ordonate = [...sentinte].sort((a, b) => zi(a.pronuntare) - zi(b.pronuntare));
+
+  return ordonate.slice(1).map((sentinta, i) => {
+    const fataDe = ordonate[i];
+    const { temei, aceeasiZi } = temeiCumul({
+      savarsire: sentinta.savarsire,
+      pronuntare: fataDe.pronuntare,
+      sfarsitPrimei: fataDe.sfarsit,
+    });
+    return {
+      numar: i + 2,
+      sentinta,
+      fataDe,
+      temei,
+      aceeasiZi,
+      dataImposibila: zi(sentinta.savarsire) > zi(sentinta.pronuntare),
+    };
+  });
+}
