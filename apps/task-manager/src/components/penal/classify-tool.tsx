@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
+import { ro } from "date-fns/locale";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,7 @@ import {
   gasesteInfractiune,
   type Infractiune,
 } from "@/lib/penal/clasificare";
+import { calculeazaTermen, termenText, type Termen } from "@/lib/penal/termene";
 import { cn } from "@/lib/utils";
 
 /** Culorile categoriilor, urcând cu gravitatea — ca stările din căutare. */
@@ -37,17 +40,63 @@ const TON: Record<string, string> = {
 };
 
 /**
- * Clasificarea infracțiunii și fracțiile art. 91 / 92.
+ * Pedeapsa de sus, când e completată: din ea ies datele, nu doar fracțiile.
+ */
+export interface BazaTermen {
+  inceput: Date;
+  pedeapsa: Termen;
+  zileArest: number;
+}
+
+/** O fracție, cu data ei — sau doar fracția, dacă pedeapsa nu e completată. */
+function Fractie({
+  fractiune,
+  titlu,
+  temeiLegal,
+  baza,
+}: {
+  fractiune: string;
+  titlu: string;
+  temeiLegal: string;
+  baza: BazaTermen | null;
+}) {
+  const calcul = baza
+    ? calculeazaTermen(baza.inceput, baza.pedeapsa, fractiune, baza.zileArest)
+    : null;
+
+  return (
+    <div>
+      <p className="text-2xl font-semibold tabular-nums">{fractiune}</p>
+      {/* Două rânduri rezervate: „înlocuirea părții neexecutate" se rupe, iar
+          fără înălțimea fixă datele celor două coloane ar sta la niveluri
+          diferite — exact rândul pe care omul îl compară. */}
+      <p className="min-h-[2rem] text-xs leading-4 text-muted-foreground">{titlu}</p>
+      {calcul && (
+        <p className="mt-1 text-base font-semibold">
+          {format(calcul.eligibil, "d MMMM yyyy", { locale: ro })}
+          <span className="block text-[11px] font-normal text-muted-foreground">
+            după {termenText(calcul.deExecutat)} de executat
+          </span>
+        </p>
+      )}
+      <p className="mt-1 text-[11px] text-muted-foreground">{temeiLegal}</p>
+    </div>
+  );
+}
+
+/**
+ * Clasificarea infracțiunii, fracțiile art. 91 / 92 și datele lor.
  *
  * Se adaugă mai multe infracțiuni fiindcă fracția se calculează pe cea mai
  * gravă dintre ele — o singură infracțiune introdusă ar da un răspuns corect
  * doar din întâmplare, când chiar aia era cea mai gravă.
  *
- * Pe pagină, lista introdusă stă în stânga și răspunsul în dreapta, lipit de
- * marginea de sus: în fereastră răspunsul cobora sub listă și, la patru-cinci
- * infracțiuni, ieșea din ecran chiar când era mai mult de citit.
+ * `baza` vine de la calculatorul de deasupra. Cu ea, fracția nu mai e un număr
+ * pe care omul îl duce singur mai departe, ci o dată: cine socotește sfârșitul
+ * termenului socotește oricum și când se poate cere liberarea. Fără ea — când
+ * se caută doar categoria — se arată tot, mai puțin datele.
  */
-export function ClassifyTool() {
+export function ClassifyTool({ baza = null }: { baza?: BazaTermen | null }) {
   const [articol, setArticol] = useState("");
   const [alineat, setAlineat] = useState("");
   const [varsta, setVarsta] = useState<CategorieVarsta>("adult");
@@ -187,19 +236,36 @@ export function ClassifyTool() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 border-t pt-3">
-            <div>
-              <p className="text-2xl font-semibold tabular-nums">{f.art91.fractiune}</p>
-              <p className="text-xs text-muted-foreground">Art. 91 — liberare condiționată</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">{f.art91.temeiLegal}</p>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold tabular-nums">{f.art92.fractiune}</p>
-              <p className="text-xs text-muted-foreground">
-                Art. 92 — înlocuirea părții neexecutate
-              </p>
-              <p className="mt-1 text-[11px] text-muted-foreground">{f.art92.temeiLegal}</p>
-            </div>
+            <Fractie
+              fractiune={f.art91.fractiune}
+              titlu="Art. 91 — liberare condiționată"
+              temeiLegal={f.art91.temeiLegal}
+              baza={baza}
+            />
+            <Fractie
+              fractiune={f.art92.fractiune}
+              titlu="Art. 92 — înlocuirea părții neexecutate"
+              temeiLegal={f.art92.temeiLegal}
+              baza={baza}
+            />
           </div>
+
+          {/* Spune de unde vin datele — altfel par să iasă de nicăieri — și, când
+              lipsesc, ce anume le lipsește. */}
+          {baza ? (
+            <p className="border-t pt-3 text-xs text-muted-foreground">
+              Datele se socotesc din {format(baza.inceput, "d MMMM yyyy", { locale: ro })}, pe
+              pedeapsa de {termenText(baza.pedeapsa)}
+              {baza.zileArest > 0
+                ? `, cu ${baza.zileArest} ${baza.zileArest === 1 ? "zi" : "zile"} de arest preventiv scăzute`
+                : ""}
+              .
+            </p>
+          ) : (
+            <p className="border-t pt-3 text-xs text-muted-foreground">
+              Completează sus data începerii și pedeapsa, ca fracțiile să iasă și ca date.
+            </p>
+          )}
 
           {f.art91.nota && <p className="border-t pt-3 text-xs text-amber-800">{f.art91.nota}</p>}
           <p className="text-xs text-muted-foreground">Rezultatul e orientativ.</p>
@@ -210,7 +276,8 @@ export function ClassifyTool() {
         <section className="rounded-xl border border-dashed p-5">
           <p className="text-sm text-muted-foreground">
             Adaugă articolele din sentință. Categoria se ia după cea mai gravă dintre
-            ele, iar din categorie ies fracțiile pentru art. 91 și 92.
+            ele, iar din categorie ies fracțiile pentru art. 91 și 92 — cu datele lor,
+            dacă pedeapsa de sus e completată.
           </p>
         </section>
       )}

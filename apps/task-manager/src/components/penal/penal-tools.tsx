@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
+import { ClassifyTool, type BazaTermen } from "@/components/penal/classify-tool";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,13 +17,17 @@ import {
 } from "@/lib/penal/termene";
 
 /**
- * Calculatorul de termen: două socoteli independente, arătate deodată.
+ * Uneltele penale, pe o singură pagină.
  *
- * În fereastră încăpea doar una, deci se alegeau din pastile — și fiecare
- * comutare mișca chenarul. Pe pagină stau alături, deci nu se mai alege nimic:
- * cine are data începerii lucrează în stânga, cine are deja sfârșitul în dosar
- * și o încheiere de reducere lucrează în dreapta. Sunt separate fiindcă a doua
- * întrebare vine rareori cu datele primeia.
+ * Sus, două socoteli de termen independente: din data începerii și reducerea
+ * dispusă prin încheiere. În fereastră încăpea doar una, deci se comuta între
+ * ele din pastile; alături, nu se mai alege nimic.
+ *
+ * Jos, clasificarea infracțiunii — nu ca a treia unealtă fără legătură, ci ca
+ * urmarea firească a primei: cine socotește sfârșitul termenului socotește
+ * aproape întotdeauna și categoria, și datele art. 91 și 92. Pedeapsa de sus
+ * coboară acolo ca `baza`, deci fracțiile ies direct ca date. Fără ea,
+ * clasificarea lucrează singură și dă doar fracțiile.
  */
 
 /** Trei câmpuri de durată, folosite de amândouă uneltele. */
@@ -92,7 +97,7 @@ function Unealta({
   );
 }
 
-export function TermTool() {
+export function PenalTools() {
   // Unealta 1
   const [inceput, setInceput] = useState("");
   const [ani, setAni] = useState("");
@@ -135,10 +140,17 @@ export function TermTool() {
   const cuArest = sfarsit ? scadeArest(sfarsit, zileArest) : null;
 
   // ── Unealta 2: din sfârșitul cunoscut ────────────────────────────────────
-  const baza = data(sfarsitCunoscut);
+  const sfarsitDinDosar = data(sfarsitCunoscut);
   const reducere: Termen = { ani: n(redAni), luni: n(redLuni), zile: n(redZile) };
   const areReducere = reducere.ani + reducere.luni + reducere.zile > 0;
-  const dupaReducere = baza && areReducere ? scadeTermen(baza, reducere) : null;
+  const dupaReducere =
+    sfarsitDinDosar && areReducere ? scadeTermen(sfarsitDinDosar, reducere) : null;
+
+  // ── Ce coboară la clasificare ────────────────────────────────────────────
+  // Doar din unealta 1, și doar când e completă: o dată de eligibilitate scoasă
+  // dintr-o pedeapsă pe jumătate introdusă ar fi tot o dată plauzibilă.
+  const baza: BazaTermen | null =
+    valid1 && start ? { inceput: start, pedeapsa: termen, zileArest } : null;
 
   return (
     <div className="space-y-6">
@@ -265,9 +277,9 @@ export function TermTool() {
             />
           </div>
 
-          {dupaReducere && baza && (
+          {dupaReducere && sfarsitDinDosar && (
             <Rezultat
-              context={`${dataRo(baza)}, redus cu ${termenText(reducere)}`}
+              context={`${dataRo(sfarsitDinDosar)}, redus cu ${termenText(reducere)}`}
               data={dupaReducere}
               explicatie="sfârșitul termenului după reducere"
             />
@@ -275,7 +287,26 @@ export function TermTool() {
         </Unealta>
       </div>
 
-      {/* Nota stă jos, sub amândouă: regula e aceeași oriunde se socotește. */}
+      {/*
+        Clasificarea, dedesubt. Aceeași pedeapsă merge mai departe: dacă e
+        completată sus, fracțiile de la art. 91 și 92 ies ca date, nu ca numere
+        pe care omul le duce singur mai departe.
+
+        Arestul preventiv intră și el în bază, fiindcă scade la fel din data
+        eligibilității ca din sfârșitul termenului.
+      */}
+      <section id="clasificare" className="scroll-mt-6 space-y-4 border-t pt-6">
+        <div>
+          <h2 className="text-lg font-semibold">Clasificarea infracțiunii</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Categoria după art. 16 CP RM și fracțiile pentru art. 91 și 92, cu datele
+            lor.
+          </p>
+        </div>
+        <ClassifyTool baza={baza} />
+      </section>
+
+      {/* Nota stă jos, sub toate: regula e aceeași oriunde se socotește. */}
       <p className="border-t pt-3 text-xs text-muted-foreground">
         Termenii exprimați numai în ani expiră în ziua precedentă zilei
         corespunzătoare; la luni și zile, chiar în ziua corespunzătoare. Rezultatul e
