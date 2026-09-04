@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, FileText } from "lucide-react";
+import { CalendarClock, FileText, Scale } from "lucide-react";
 
 import {
   getTaskCounts,
@@ -169,15 +169,22 @@ export default async function HubPage() {
               De aceea o legătură de aici, nu un tab în bara de sus — acolo stau
               registrele, care se completează zilnic.
 
-              Un singur buton, deși pagina ține două unelte: erau două, și
-              amândouă duceau în același loc — al doilea doar mai jos, la
-              clasificare. Văzute alături, arătau a scăpare. Numele le spune pe
-              amândouă, ca cine caută clasificarea să n-o creadă pierdută. */}
+              Primul buton duce la o pagină cu două unelte, și le numește pe
+              amândouă: au fost cândva două butoane spre același loc, ceea ce
+              arăta a scăpare. Al doilea e altă pagină, nu altă intrare în
+              aceeași — acolo se socotește un termen, aici se răspunde la o
+              întrebare de dinaintea pedepsei. */}
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href="/termen">
                 <CalendarClock className="mr-2 h-4 w-4" />
                 Calculator termen și clasificare
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/cumul">
+                <Scale className="mr-2 h-4 w-4" />
+                Concurs sau cumul de sentințe
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">

@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
+    text: "Unealtă nouă: „Concurs sau cumul de sentințe”. Când un condamnat primește a doua sentință, spune dacă temeiul e art. 84 alin. (4) sau art. 85 — cele două se despart după data săvârșirii faptei față de data pronunțării primei sentințe, regulă care nu e scrisă ca atare în Cod, ci iese din câte un cuvânt al fiecărui articol. Arată și motivul, în datele introduse, și ce urmează din temeiul ales: la art. 84 durata executată intră în termen, la art. 85 partea neexecutată se adaugă. Pedeapsa definitivă rămâne a instanței.",
+  },
+  {
+    date: "2026-09-04",
     text: "Catalogul de infracțiuni a fost refăcut din tabelul Codului penal și are acum 793 de intrări pe 327 de articole, față de 664 pe 250. Lipseau, fără să se vadă, trei feluri de intrări: articolele cu un singur alineat nenumerotat — printre ele art. 342, cu detențiune pe viață, și art. 338 și 340, cu 20 de ani — faptele pedepsite cu amendă, precum art. 217 alin. 1, și cele cu muncă neremunerată. Tot atunci s-au îndreptat 17 intrări de 17–20 de ani trecute drept „excepțional de grave”: după art. 16 alin. (6) excepțional de gravă e numai fapta pedepsită cu detențiune pe viață, deci sunt deosebit de grave. Fracțiile art. 91 și 92 rămân aceleași; se schimbă numai denumirea categoriei.",
   },
   {
