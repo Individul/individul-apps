@@ -44,9 +44,15 @@ export async function updateSession(request: NextRequest) {
   );
 
   // IMPORTANT: getUser() must be called to refresh the session.
+  //
+  // Cronometrat fiindcă e singurul drum prin rețea făcut aici, iar durata lui
+  // pleacă mai jos într-un antet `Server-Timing`: din browser se vede atunci
+  // cât din așteptare e verificarea sesiunii și cât e restul.
+  const inceputAuth = Date.now();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const durataAuth = Date.now() - inceputAuth;
 
   const { pathname } = request.nextUrl;
   /**
@@ -73,6 +79,7 @@ export async function updateSession(request: NextRequest) {
     deTrimis.forEach(({ name, value, options }) =>
       redirectionare.cookies.set(name, value, options),
     );
+    redirectionare.headers.set("Server-Timing", timing(durataAuth));
     return redirectionare;
   }
 
@@ -92,5 +99,20 @@ export async function updateSession(request: NextRequest) {
 
   const raspuns = NextResponse.next({ request: { headers: antete } });
   deTrimis.forEach(({ name, value, options }) => raspuns.cookies.set(name, value, options));
+  raspuns.headers.set("Server-Timing", timing(durataAuth));
   return raspuns;
+}
+
+/**
+ * Cât a durat verificarea sesiunii, într-o formă pe care browserul o înțelege.
+ *
+ * Se citește în Chrome la Inspectare → Network → cererea paginii → Timing, unde
+ * apare lângă timpul total. Fără ea, din afară se vede doar o singură cifră —
+ * „a durat 400 ms" — fără să se știe cât din ea e autentificarea, cât sunt
+ * datele și cât pornirea funcției.
+ *
+ * Nu e o scurgere: spune o durată, nu cine e omul.
+ */
+function timing(durataAuth: number): string {
+  return `auth;dur=${durataAuth};desc="verificare sesiune"`;
 }
