@@ -6,8 +6,10 @@ import {
   alineatePentru,
   articole,
   ceaMaiGrava,
+  cheieAlineat,
   cheieNumar,
   gasesteInfractiune,
+  numeInfractiune,
   variantePentru,
 } from "./clasificare";
 import {
@@ -24,10 +26,47 @@ import {
 const zi = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 describe("catalogul de infracțiuni", () => {
-  it("a fost portat întreg", () => {
-    // Dacă la o actualizare se pierd intrări, aici se vede.
-    expect(INFRACTIUNI.length).toBe(664);
-    expect(articole().length).toBe(250);
+  it("cuprinde tot tabelul Codului penal", () => {
+    // 789 de rânduri în tabel, dintre care unul acoperă alineatele 2–6 ale art.
+    // 185², desfăcute aici. Dacă la o regenerare se pierd intrări, aici se vede.
+    expect(INFRACTIUNI.length).toBe(793);
+    expect(articole().length).toBe(327);
+  });
+
+  it("categoria fiecărei intrări iese din pedeapsa ei", () => {
+    // Catalogul e generat, dar generatorul se poate schimba; asta reface
+    // socoteala art. 16 pe toate cele 793 de intrări. O categorie care nu se mai
+    // potrivește cu pedeapsa scrisă alături e chiar felul de greșeală care nu se
+    // vede: un rând plauzibil, cu altă fracție.
+    const asteptata = (pedeapsa: string): Categorie => {
+      if (/detențiune pe viață/.test(pedeapsa)) return "EG";
+      if (!/an|luni/.test(pedeapsa)) return "U"; // amendă, muncă neremunerată
+      const ani = /(\d+)\s*(?:ani|an)\b/.exec(pedeapsa);
+      const luni = /(\d+)\s*luni/.exec(pedeapsa);
+      const total = (ani ? Number(ani[1]) : 0) + (luni ? Number(luni[1]) / 12 : 0);
+      if (total > 12) return "DG";
+      if (total > 5) return "G";
+      if (total > 2) return "MPG";
+      return "U";
+    };
+    const gresite = INFRACTIUNI.filter((i) => i.cat !== asteptata(i.pedeapsa_max));
+    expect(gresite).toEqual([]);
+  });
+
+  it("excepțional de gravă înseamnă numai detențiune pe viață", () => {
+    // Art. 16 alin. (6). Catalogul portat trecea acolo și 17 intrări de 17–20 de
+    // ani, contrazicându-și propriul tabel de categorii.
+    const eg = INFRACTIUNI.filter((i) => i.cat === "EG");
+    expect(eg.length).toBeGreaterThan(0);
+    expect(eg.every((i) => i.pedeapsa_max === "detențiune pe viață")).toBe(true);
+  });
+
+  it("ține și faptele fără închisoare, și articolele fără alineate", () => {
+    // Trei feluri de intrări pe care catalogul portat le pierdea în tăcere.
+    expect(gasesteInfractiune("217", "1")?.pedeapsa_max).toBe("amendă 400 u.c.");
+    expect(gasesteInfractiune("217/5", "1")?.pedeapsa_max).toBe("muncă neremunerată 240 ore");
+    expect(gasesteInfractiune("342", "-")?.cat).toBe("EG");
+    expect(gasesteInfractiune("338", "-")?.cat).toBe("DG");
   });
 
   it("fiecare intrare are o categorie cunoscută", () => {
@@ -77,10 +116,16 @@ describe("găsirea infracțiunii", () => {
   });
 
   it("alineatele articolului de bază nu le cuprind pe ale celui cu indice", () => {
-    // Art. 217 are alineatele 2, 3 și 4; 217¹ are 1, 2, 3 și 4. Amestecate, se
-    // putea alege un alineat 1 care nu există la articolul din listă.
-    expect([...new Set(alineatePentru("217"))].sort()).toEqual(["2", "3", "4"]);
-    expect([...new Set(alineatePentru("217/1"))].sort()).toEqual(["1", "2", "3", "4"]);
+    // Amestecate, se putea alege un alineat care nu există la articolul din
+    // listă.
+    expect([...new Set(alineatePentru("217"))].sort()).toEqual(["1", "2", "3", "4"]);
+    expect([...new Set(alineatePentru("217/2"))]).toEqual(["-"]);
+  });
+
+  it("articolul fără alineate se scrie fără „alin.”", () => {
+    const fara = gasesteInfractiune("342", "-")!;
+    expect(numeInfractiune(fara)).toBe("Art. 342");
+    expect(numeInfractiune(gasesteInfractiune("217/1", "4")!)).toBe("Art. 217¹ alin. 4");
   });
 });
 
@@ -108,17 +153,32 @@ describe("scrierea numerelor de articol", () => {
     expect(gasesteInfractiune("", "1")).toBeNull();
   });
 
+  it("lipsa alineatului nu se confundă cu un câmp gol", () => {
+    // Altfel un articol fără alineate s-ar potrivi cu orice căutare neîncepută.
+    expect(cheieAlineat("-")).toBe("-");
+    expect(cheieAlineat("")).toBe("");
+    expect(gasesteInfractiune("342", "")).toBeNull();
+  });
+
   it("normalizarea nu suprapune două intrări deosebite din catalog", () => {
-    // Dacă o actualizare a catalogului ar aduce două intrări care se pliază pe
-    // aceeași cheie, aici se vede — înainte ca una s-o ascundă tăcut pe alta.
-    const chei = INFRACTIUNI.map((i) => `${cheieNumar(i.art)}#${cheieNumar(i.alin)}`);
+    // Dacă o regenerare ar aduce două intrări care se pliază pe aceeași cheie,
+    // aici se vede — înainte ca una s-o ascundă tăcut pe alta.
+    const chei = INFRACTIUNI.map((i) => `${cheieNumar(i.art)}#${cheieAlineat(i.alin)}`);
     expect(new Set(chei).size).toBe(INFRACTIUNI.length);
   });
 });
 
 describe("variantele unui articol", () => {
   it("le adună pe toate cele care împart numărul", () => {
-    expect(variantePentru("217")).toEqual(["217", "217¹", "217³", "217⁴", "217⁵", "217⁶"]);
+    expect(variantePentru("217")).toEqual([
+      "217",
+      "217¹",
+      "217²",
+      "217³",
+      "217⁴",
+      "217⁵",
+      "217⁶",
+    ]);
   });
 
   it("se ajunge la aceeași listă pornind de la oricare dintre ele", () => {

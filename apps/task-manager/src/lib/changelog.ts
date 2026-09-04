@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
+    text: "Catalogul de infracțiuni a fost refăcut din tabelul Codului penal și are acum 793 de intrări pe 327 de articole, față de 664 pe 250. Lipseau, fără să se vadă, trei feluri de intrări: articolele cu un singur alineat nenumerotat — printre ele art. 342, cu detențiune pe viață, și art. 338 și 340, cu 20 de ani — faptele pedepsite cu amendă, precum art. 217 alin. 1, și cele cu muncă neremunerată. Tot atunci s-au îndreptat 17 intrări de 17–20 de ani trecute drept „excepțional de grave”: după art. 16 alin. (6) excepțional de gravă e numai fapta pedepsită cu detențiune pe viață, deci sunt deosebit de grave. Fracțiile art. 91 și 92 rămân aceleași; se schimbă numai denumirea categoriei.",
+  },
+  {
+    date: "2026-09-04",
     text: "La clasificare se pot alege și articolele cu indice — art. 217/1, 245/10 și celelalte 90 din Cod. Se scriu cu bară, iar sub câmp apar toate articolele cu același număr, de unde se aleg dintr-un click. Până acum nu se găseau deloc, fiindcă în catalog stau scrise cu exponent, care nu se poate tasta; cine căuta art. 217/1 alin. 4 și adăuga art. 217 alin. 4 primea „gravă” în loc de „deosebit de gravă”, deci altă fracție și altă dată.",
   },
   {

@@ -12,6 +12,10 @@ import { ORDINE_GRAVITATE, type Categorie } from "./categorii";
  * Nu e o comoditate: art. 217 alin. 4 e infracțiune gravă, iar art. 217/1
  * alin. 4 e deosebit de gravă. Cine caută al doilea și nu-l găsește îl adaugă
  * pe primul — și iese cu altă fracție și altă dată de liberare.
+ *
+ * Unele articole n-au alineate numerotate — art. 342, de pildă. Alineatul lor e
+ * `FARA_ALINEAT`, o stare deosebită, nu un alineat 1: „art. 342 alin. 1" nu
+ * există în Cod și n-are ce fi scris nici pe ecran.
  */
 
 export interface Infractiune {
@@ -65,6 +69,24 @@ export function cheieNumar(input: string): string {
   return indice ? `${numar}/${indice}` : numar;
 }
 
+/** Articolele fără alineate numerotate poartă asta în loc de număr. */
+export const FARA_ALINEAT = "-";
+
+/**
+ * Cheia unui alineat. Ca a articolului, plus starea „articol fără alineate":
+ * ea trebuie să se potrivească doar cu ea însăși, nu cu un câmp gol.
+ */
+export function cheieAlineat(input: string): string {
+  const curat = input.trim();
+  if (curat === "-" || curat === "–" || curat === "—") return FARA_ALINEAT;
+  return cheieNumar(curat);
+}
+
+/** Cum se scrie infracțiunea pe ecran, cu sau fără alineat. */
+export function numeInfractiune(inf: Infractiune): string {
+  return inf.alin === FARA_ALINEAT ? `Art. ${inf.art}` : `Art. ${inf.art} alin. ${inf.alin}`;
+}
+
 /** Caută infracțiunea, oricum ar fi scris omul articolul și alineatul. */
 export function gasesteInfractiune(
   articol: string,
@@ -72,9 +94,9 @@ export function gasesteInfractiune(
   catalog: Infractiune[] = INFRACTIUNI,
 ): Infractiune | null {
   const a = cheieNumar(articol);
-  const al = cheieNumar(alineat);
+  const al = cheieAlineat(alineat);
   if (!a || !al) return null;
-  return catalog.find((i) => cheieNumar(i.art) === a && cheieNumar(i.alin) === al) ?? null;
+  return catalog.find((i) => cheieNumar(i.art) === a && cheieAlineat(i.alin) === al) ?? null;
 }
 
 /**
@@ -118,7 +140,7 @@ export function ceaMaiGrava(adaugate: Infractiune[]): CeaMaiGrava {
   }
   return {
     categorie: ORDINE_GRAVITATE[maxIndex],
-    articolDeterminant: determinanta ? `Art. ${determinanta.art} alin. ${determinanta.alin}` : "",
+    articolDeterminant: determinanta ? numeInfractiune(determinanta) : "",
     infractiune: determinanta,
   };
 }

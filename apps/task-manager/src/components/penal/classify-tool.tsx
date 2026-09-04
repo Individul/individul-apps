@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { X } from "lucide-react";
@@ -22,10 +22,12 @@ import {
   type CategorieVarsta,
 } from "@/lib/penal/categorii";
 import {
+  FARA_ALINEAT,
   alineatePentru,
   ceaMaiGrava,
   cheieNumar,
   gasesteInfractiune,
+  numeInfractiune,
   variantePentru,
   type Infractiune,
 } from "@/lib/penal/clasificare";
@@ -120,10 +122,21 @@ export function ClassifyTool({ baza = null }: { baza?: BazaTermen | null }) {
 
   const alesa = cheieNumar(articol.trim());
 
+  // Un singur alineat de ales nu e o alegere. Se completează singur — mai ales
+  // la articolele fără alineate numerotate, unde lista are o intrare care spune
+  // chiar că nu e nimic de ales.
+  useEffect(() => {
+    if (alineate.length === 1) setAlineat(alineate[0]);
+  }, [alineate]);
+
   const adauga = () => {
     const inf = gasesteInfractiune(articol.trim(), alineat.trim());
     if (!inf) {
-      setEroare(`Art. ${articol} alin. ${alineat} nu e în catalog.`);
+      setEroare(
+        alineat === FARA_ALINEAT
+          ? `Art. ${articol} nu e în catalog.`
+          : `Art. ${articol} alin. ${alineat} nu e în catalog.`,
+      );
       return;
     }
     // Aceeași infracțiune de două ori n-ar schimba cea mai gravă, dar ar face
@@ -167,7 +180,7 @@ export function ClassifyTool({ baza = null }: { baza?: BazaTermen | null }) {
               <SelectContent className="max-h-64">
                 {alineate.map((a) => (
                   <SelectItem key={a} value={a}>
-                    {a}
+                    {a === FARA_ALINEAT ? "fără alineate" : a}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -223,7 +236,7 @@ export function ClassifyTool({ baza = null }: { baza?: BazaTermen | null }) {
                 className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-[13px]"
               >
                 <span className="min-w-0 flex-1">
-                  Art. {inf.art} alin. {inf.alin}
+                  {numeInfractiune(inf)}
                   <span className="ml-2 text-xs text-muted-foreground">{inf.pedeapsa_max}</span>
                 </span>
                 <span
