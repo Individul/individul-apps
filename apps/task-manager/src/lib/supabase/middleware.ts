@@ -3,9 +3,27 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { ANTET_SESIUNE } from "@/lib/session-header";
 
+/** Un cookie pe care Supabase vrea să-l trimită înapoi browserului. */
+interface CookieDeTrimis {
+  name: string;
+  value: string;
+  options: CookieOptions;
+}
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  /**
+   * Cookie-urile pe care Supabase le cere la reîmprospătarea sesiunii se strâng
+   * aici și se pun pe răspuns o singură dată, la sfârșit.
+   *
+   * Înainte se construia câte un răspuns nou la fiecare `setAll`, iar la capăt
+   * se returna ultimul. Mergea, dar nu mai merge de când răspunsul trebuie să
+   * poarte și un antet care se știe abia după `getUser()`: ar fi însemnat să
+   * mutăm cookie-uri de sesiune dintr-un răspuns în altul, adică fix locul unde
+   * o scăpare îi deconectează pe toți fără să se vadă în teste.
+   *
+   * Strânse într-o listă, ele se scriu o dată, pe singurul răspuns care pleacă.
+   */
+  const deTrimis: CookieDeTrimis[] = [];
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,12 +33,11 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        setAll(cookiesToSet: CookieDeTrimis[]) {
+          // Pe cererea trimisă mai departe, ca randarea paginii să vadă
+          // sesiunea proaspătă, nu pe cea de dinainte de reîmprospătare.
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
+          deTrimis.push(...cookiesToSet);
         },
       },
     },
@@ -50,23 +67,30 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    const redirectionare = NextResponse.redirect(url);
+    // Și pe drumul acesta: dacă sesiunea tocmai s-a reîmprospătat, cookie-urile
+    // ei trebuie să ajungă la browser, altfel munca lui `getUser()` se pierde.
+    deTrimis.forEach(({ name, value, options }) =>
+      redirectionare.cookies.set(name, value, options),
+    );
+    return redirectionare;
   }
 
   /**
    * Un indiciu pentru layout: are cererea o sesiune sau nu.
    *
-   * Doar de desen. Layout-ul îl citește ca să știe dacă să rezerve locul barei
-   * de sus înainte de a afla cine e conectat — altfel pe pagina de autentificare
-   * ar clipi o bară care apoi dispare. Cine e omul se află tot din Supabase, în
-   * componenta barei; aici nu trece nicio identitate.
+   * Doar de desen. Layout-ul îl citește ca să știe dacă rezervă locul barei de
+   * sus înainte de a afla cine e conectat — altfel pagina de autentificare ar
+   * arăta o clipă o bară care apoi dispare. Nicio identitate nu trece prin el;
+   * cine e omul se află tot din Supabase, în componenta barei.
    *
-   * Se scrie MEREU, și pe „0". Așa, un antet cu același nume venit din afară nu
+   * Se scrie MEREU, și pe „0”. Așa, un antet cu același nume venit din afară nu
    * poate supraviețui: e suprascris la fiecare cerere.
    */
   const antete = new Headers(request.headers);
   antete.set(ANTET_SESIUNE, user ? "1" : "0");
+
   const raspuns = NextResponse.next({ request: { headers: antete } });
-  supabaseResponse.cookies.getAll().forEach((c) => raspuns.cookies.set(c));
+  deTrimis.forEach(({ name, value, options }) => raspuns.cookies.set(name, value, options));
   return raspuns;
 }
