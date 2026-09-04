@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, FileText, Scale } from "lucide-react";
+import { FileText } from "lucide-react";
 
 import {
   getTaskCounts,
@@ -160,40 +160,23 @@ export default async function HubPage() {
           <h1 className="text-2xl font-semibold">
             {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
           </h1>
-          {/* Raportul săptămânal se deschide de aici, nu dintr-un tab în antet:
-              nu e un registru în care se lucrează, ci hârtia unei singure
-              dimineți, iar un tab în plus lângă celelalte l-ar da drept încă un
-              modul. Discret, deci — dar lângă salut, fiindcă mai jos de titlu
-              nu l-ar găsi nimeni fără să i se spună. */}
-          {/* Unelte, nu module: se intră când ai de socotit ceva și se iese.
-              De aceea o legătură de aici, nu un tab în bara de sus — acolo stau
-              registrele, care se completează zilnic.
+          {/* Calculatoarele penale au plecat de aici în meniul „Unelte" din
+              bara de sus: la ele se ajunge acum din orice modul, nu doar de
+              acasă — iar cine socotește un termen o face de obicei în mijlocul
+              unei petiții, nu înainte de a o deschide.
 
-              Primul buton duce la o pagină cu două unelte, și le numește pe
-              amândouă: au fost cândva două butoane spre același loc, ceea ce
-              arăta a scăpare. Al doilea e altă pagină, nu altă intrare în
-              aceeași — acolo se socotește un termen, aici se răspunde la o
-              întrebare de dinaintea pedepsei. */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/termen">
-                <CalendarClock className="mr-2 h-4 w-4" />
-                Calculator termen și clasificare
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/cumul">
-                <Scale className="mr-2 h-4 w-4" />
-                Concurs sau cumul de sentințe
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/raport-saptamanal">
-                <FileText className="mr-2 h-4 w-4" />
-                Raportul de marți
-              </Link>
-            </Button>
-          </div>
+              Raportul rămâne, fiindcă nu e de același soi: nu se socotește
+              nimic cu el, e hârtia unei singure dimineți, legată de pagina asta
+              și de săptămâna ei. Nici tab în antet nu se face — un tab în plus
+              lângă celelalte l-ar da drept încă un registru. Discret, deci, dar
+              lângă salut: mai jos de titlu nu l-ar găsi nimeni fără să i se
+              spună. */}
+          <Button asChild variant="outline" size="sm">
+            <Link href="/raport-saptamanal">
+              <FileText className="mr-2 h-4 w-4" />
+              Raportul de marți
+            </Link>
+          </Button>
         </div>
 
         {/* Deasupra benzii de termene: căutarea e ce faci cu intenție, banda e
