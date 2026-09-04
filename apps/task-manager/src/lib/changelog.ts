@@ -14,7 +14,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
-    text: "Unealtă nouă: „Concurs sau cumul de sentințe”. Când un condamnat primește încă o sentință, spune dacă temeiul e art. 84 alin. (4) sau art. 85. Le desparte o singură întrebare: era omul deja condamnat când a săvârșit fapta? Deci data săvârșirii față de data pronunțării primei sentințe. Sentințele pot fi oricâte — se așază singure în ordinea pronunțării, iar temeiul se hotărăște pentru fiecare, așa că într-un lanț unele pot fi concurs și altele cumul. Arată și motivul, în datele introduse, și ce urmează din temei: la art. 84 durata executată intră în termen, la art. 85 partea neexecutată se adaugă. Pedeapsa definitivă rămâne a instanței.",
+    text: "Unealtă nouă, încă în testare: „Concurs sau cumul de sentințe”. Când un condamnat primește încă o sentință, spune dacă temeiul e art. 84 alin. (4) sau art. 85. Le desparte o singură întrebare: era omul deja condamnat când a săvârșit fapta? Deci data săvârșirii față de data pronunțării primei sentințe. Sentințele pot fi oricâte — se așază singure în ordinea pronunțării, iar temeiul se hotărăște pentru fiecare, așa că într-un lanț unele pot fi concurs și altele cumul. Arată și motivul, în datele introduse, și ce urmează din temei: la art. 84 durata executată intră în termen, la art. 85 partea neexecutată se adaugă. Pedeapsa definitivă rămâne a instanței.",
   },
   {
     date: "2026-09-04",

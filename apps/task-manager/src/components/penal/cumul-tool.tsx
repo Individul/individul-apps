@@ -207,6 +207,11 @@ export function CumulTool() {
             <p className="border-t pt-3 text-xs text-muted-foreground">
               Pedeapsa definitivă o stabilește instanța. Aici se arată doar temeiul.
             </p>
+            {/* Scris și aici, nu doar în filigran: acesta e locul din care omul
+                pleacă mai departe cu un răspuns. */}
+            <p className="text-xs font-medium text-amber-800">
+              Unealta e încă în testare — verifică temeiul înainte de a-l folosi.
+            </p>
           </div>
         </section>
       ) : (
