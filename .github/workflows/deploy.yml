@@ -1,9 +1,19 @@
+# Livrarea aplicațiilor rămase pe serverul Hetzner.
+#
+# NU se mai pornește la push. Task Manager-ul, singurul lucru care se mai
+# schimbă în depozit, a trecut pe Vercel și Supabase — pașii lui au fost scoși
+# de aici (`d724997`), dar declanșatorul rămăsese pe orice push în `main`. Așa
+# că fiecare împingere care nu atingea serverul cu nimic reconstruia totuși
+# prin docker-compose șase aplicații pe el: Portal, PDF Toolbox, Termene,
+# Petiții, Mega-App și Monitor Ședințe.
+#
+# Rămâne pornirea manuală, nu se șterge fișierul: aplicațiile acelea sunt încă
+# vii pe server, iar parola de root e pierdută — cheia din `secrets` e singura
+# cale înapoi la mașină. Un flux șters ar închide-o.
+
 name: Deploy to Hetzner
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 env:
