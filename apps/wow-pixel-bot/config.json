@@ -1,7 +1,0 @@
-{
-  "pixel": {"x": 960, "y": 540},
-  "tolerance": 30,
-  "delay": {"mean": 120, "std": 30, "min": 50, "max": 250},
-  "hotkey": "f6",
-  "rules": []
-}
