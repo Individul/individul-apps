@@ -178,6 +178,8 @@ export function CumulTool() {
         <p className="text-xs text-muted-foreground">
           Ordinea în care le scrii nu contează: se așază singure după data pronunțării.
           Ziua pronunțării, nu cea a rămânerii definitive — așa scriu amândouă articolele.
+          Temeiul fiecărei sentințe se hotărăște față de prima: art. 84 alin. (4) o numește
+          „sentinţa în prima cauză”.
         </p>
       </section>
 
@@ -210,14 +212,14 @@ export function CumulTool() {
       ) : (
         <section className="rounded-xl border border-dashed p-5">
           <p className="text-sm text-muted-foreground">
-            Hotărăște data săvârșirii față de data pronunțării sentinței dinainte: fapta
-            dinaintea ei e concurs de infracțiuni, cea de după e cumul de sentințe. Nu
-            contează gravitatea, ordinea în care au venit sentințele și nici când s-a
-            descoperit fapta.
+            Întrebarea de fond e dacă omul era deja condamnat când a săvârșit fapta.
+            Fapta dinaintea primei sentințe e concurs de infracțiuni; cea de după, cumul de
+            sentințe. Nu contează gravitatea, ordinea în care au venit sentințele și nici
+            când s-a descoperit fapta.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            Cu mai multe sentințe, fiecare se cântărește față de cea dinaintea ei, deci
-            temeiul se poate schimba de la o treaptă la alta.
+            Oricâte ar fi, toate se cântăresc față de prima — ea e „prima cauză” din art.
+            84 alin. (4).
           </p>
         </section>
       )}
@@ -243,19 +245,21 @@ function Treapta({ pas, dataRo }: { pas: PasLant; dataRo: (d: Date) => string })
           verifica, iar aici verificarea o face un om. */}
       <p className="border-t pt-3 text-sm">
         {pas.temei === "art84"
-          ? `Fapta a fost săvârșită la ${dataRo(pas.sentinta.savarsire)}, înainte de pronunțarea sentinței ${pas.numar - 1} (${dataRo(pas.fataDe.pronuntare)}).`
+          ? `Fapta a fost săvârșită la ${dataRo(pas.sentinta.savarsire)}, înainte de pronunțarea sentinței 1 (${dataRo(pas.prima.pronuntare)}), deci pe atunci omul nu era condamnat.`
           : pas.temei === "art85"
-            ? `Fapta a fost săvârșită la ${dataRo(pas.sentinta.savarsire)}, după pronunțarea sentinței ${pas.numar - 1} (${dataRo(pas.fataDe.pronuntare)})${
-                pas.fataDe.sfarsit ? ` și înainte de sfârșitul ei (${dataRo(pas.fataDe.sfarsit)})` : ""
+            ? `Fapta a fost săvârșită la ${dataRo(pas.sentinta.savarsire)}, după pronunțarea sentinței 1 (${dataRo(pas.prima.pronuntare)}), deci omul era deja condamnat${
+                pas.inExecutare?.sfarsit
+                  ? ` și executa pedeapsa din sentința ${pas.numarInExecutare}, până la ${dataRo(pas.inExecutare.sfarsit)}`
+                  : ""
               }.`
-            : `Fapta a fost săvârșită la ${dataRo(pas.sentinta.savarsire)}, după executarea completă a pedepsei din sentința ${pas.numar - 1}${
-                pas.fataDe.sfarsit ? ` (${dataRo(pas.fataDe.sfarsit)})` : ""
+            : `Fapta a fost săvârșită la ${dataRo(pas.sentinta.savarsire)}, după executarea completă a pedepsei din sentința ${pas.numarInExecutare}${
+                pas.inExecutare?.sfarsit ? ` (${dataRo(pas.inExecutare.sfarsit)})` : ""
               }.`}
       </p>
 
       {pas.aceeasiZi && (
         <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-          Fapta e săvârșită chiar în ziua pronunțării sentinței {pas.numar - 1}. „Înainte” și
+          Fapta e săvârșită chiar în ziua pronunțării sentinței 1. „Înainte” și
           „după” se despart la ora citirii sentinței, iar data singură nu o cuprinde: dacă
           fapta a fost săvârșită mai devreme în acea zi, temeiul e art. 84 alin. (4).
         </p>
@@ -267,10 +271,11 @@ function Treapta({ pas, dataRo }: { pas: PasLant; dataRo: (d: Date) => string })
         </p>
       )}
 
-      {pas.temei === "art85" && !pas.fataDe.sfarsit && (
+      {pas.temei === "art85" && !pas.inExecutare?.sfarsit && (
         <p className="text-xs text-muted-foreground">
           Sub condiția că pedeapsa nu era executată integral la data faptei — completează
-          sfârșitul pedepsei din sentința {pas.numar - 1} ca să se verifice și asta.
+          sfârșitul pedepsei din sentința {pas.numarInExecutare ?? 1} ca să se verifice și
+          asta.
         </p>
       )}
     </div>

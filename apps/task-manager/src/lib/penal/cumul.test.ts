@@ -82,28 +82,40 @@ describe("lanțul de sentințe", () => {
     sfarsit: sfarsit ? d(sfarsit) : null,
   });
 
-  it("fiecare sentință se cântărește față de cea dinaintea ei", () => {
-    // Cazul care a ridicat întrebarea: fapta a treia (01.09.2025) e săvârșită
-    // între primele două sentințe (01.01.2025 și 01.06.2026). Față de prima ar
-    // fi art. 85, față de a doua e art. 84 — și a doua hotărăște, fiindcă ea a
-    // stabilit pedeapsa aflată în executare când a venit a treia.
+  it("cazul din dosar: fapta de după prima sentință e cumul, oricâte sentințe ar fi între", () => {
+    // Patru sentințe reale. Fapta din sentința 4 (05.08.2024) e săvârșită după
+    // pronunțarea sentinței 1 (17.07.2024) — cu trei săptămâni. Că e înainte de
+    // sentințele 2 și 3 nu schimbă nimic: omul era deja condamnat.
+    const pasi = lantulTemeiurilor([
+      s("2024-07-17", "2022-10-21"),
+      s("2025-01-22", "2021-06-20"),
+      s("2025-02-12", "2024-06-30"),
+      s("2026-02-06", "2024-08-05"),
+    ]);
+    expect(pasi.map((p) => p.temei)).toEqual(["art84", "art84", "art85"]);
+  });
+
+  it("ancora e prima sentință, nu cea dinaintea fiecăreia", () => {
+    // Fapta a treia e săvârșită între sentințele 1 și 2. Față de a doua ar părea
+    // concurs, dar art. 84 alin. (4) vorbește de „sentinţa în prima cauză", iar
+    // la 01.09.2025 omul era condamnat de opt luni.
     const pasi = lantulTemeiurilor([
       s("2025-01-01", "2024-05-10"),
       s("2026-06-01", "2025-03-01"),
       s("2027-03-01", "2025-09-01"),
     ]);
-    expect(pasi.map((p) => p.temei)).toEqual(["art85", "art84"]);
+    expect(pasi.map((p) => p.temei)).toEqual(["art85", "art85"]);
   });
 
   it("le pune în ordinea pronunțării, oricum ar fi introduse", () => {
     // Din dosar ies în ordinea în care s-au găsit, nu a calendarului.
     const pasi = lantulTemeiurilor([
-      s("2027-03-01", "2025-09-01"),
-      s("2025-01-01", "2024-05-10"),
-      s("2026-06-01", "2025-03-01"),
+      s("2026-02-06", "2024-08-05"),
+      s("2024-07-17", "2022-10-21"),
+      s("2025-02-12", "2024-06-30"),
     ]);
     expect(pasi.map((p) => p.numar)).toEqual([2, 3]);
-    expect(pasi.map((p) => p.temei)).toEqual(["art85", "art84"]);
+    expect(pasi.map((p) => p.temei)).toEqual(["art84", "art85"]);
   });
 
   it("prima sentință n-are treaptă a ei", () => {
@@ -121,15 +133,25 @@ describe("lanțul de sentințe", () => {
     expect(pasi.map((p) => p.temei)).toEqual(["art84", "art84"]);
   });
 
-  it("sfârșitul pedepsei anterioare se ia de la treapta ei, nu de la prima", () => {
-    // A treia faptă e săvârșită după ce se încheiase pedeapsa din sentința a
-    // doua, deci acolo nu mai e nici concurs, nici cumul.
+  it("executarea completă se cântărește față de pedeapsa din acel moment, nu de prima", () => {
+    // Pedeapsa din sentința 1 se încheiase în 2025, dar omul executa pedeapsa
+    // din sentința 2 până în 2029. O faptă din 2027 e tot cumul de sentințe.
     const pasi = lantulTemeiurilor([
-      s("2025-01-01", "2024-05-10", "2025-12-31"),
-      s("2026-06-01", "2025-09-01", "2027-01-01"),
+      s("2024-01-01", "2023-05-10", "2025-01-01"),
+      s("2024-06-01", "2023-06-10", "2029-01-01"),
       s("2028-03-01", "2027-06-01"),
     ]);
-    expect(pasi.map((p) => p.temei)).toEqual(["art85", "niciunul"]);
+    expect(pasi.map((p) => p.temei)).toEqual(["art84", "art85"]);
+    expect(pasi[1].numarInExecutare).toBe(2);
+  });
+
+  it("fapta de după executarea completă nu e nici concurs, nici cumul", () => {
+    const pasi = lantulTemeiurilor([
+      s("2024-01-01", "2023-05-10", "2025-01-01"),
+      s("2026-03-01", "2025-06-01"),
+    ]);
+    expect(pasi.map((p) => p.temei)).toEqual(["niciunul"]);
+    expect(pasi[0].numarInExecutare).toBe(1);
   });
 
   it("fapta datată după propria sentință se semnalează", () => {

@@ -35,10 +35,11 @@ export default async function CumulPage() {
         </div>
         <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
           Când un condamnat primește încă o sentință, temeiul e art. 84 alin. (4) sau
-          art. 85. Cele două se despart după data săvârșirii faptei față de data
-          pronunțării sentinței dinaintea ei — regulă care nu e scrisă ca atare, ci iese
-          din câte un cuvânt al fiecărui articol. Sentințele pot fi oricâte: se așază în
-          ordinea pronunțării, iar temeiul se hotărăște la fiecare treaptă.
+          art. 85. Le desparte o singură întrebare: era omul deja condamnat când a
+          săvârșit fapta? Deci data săvârșirii față de data pronunțării primei sentințe —
+          „sentinţa în prima cauză”, cum îi zice art. 84 alin. (4). Sentințele pot fi
+          oricâte: se așază în ordinea pronunțării, iar temeiul se hotărăște pentru
+          fiecare.
         </p>
         <CumulTool />
       </main>
