@@ -87,8 +87,16 @@ export interface PasLant {
   /** A câta e în lanț, numărând de la 1 după data pronunțării. */
   numar: number;
   sentinta: Sentinta;
-  /** Sentința dinaintea ei, cea față de care se hotărăște temeiul. */
-  fataDe: Sentinta;
+  /** Sentința întâi — cea față de care se hotărăște „înainte" sau „după". */
+  prima: Sentinta;
+  /**
+   * Sentința a cărei pedeapsă se executa la data faptei, dacă a fost vreuna.
+   * Ea dă condiția art. 85: fapta trebuie săvârșită înainte de executarea
+   * completă.
+   */
+  inExecutare: Sentinta | null;
+  /** A câta e aceea în lanț, pentru ce se scrie pe ecran. */
+  numarInExecutare: number | null;
   temei: Temei;
   aceeasiZi: boolean;
   /**
@@ -100,34 +108,53 @@ export interface PasLant {
 }
 
 /**
- * Temeiul la fiecare treaptă, când sentințele sunt mai multe de două.
+ * Temeiul la fiecare sentință care se adaugă celor dinainte.
  *
- * Se merge în lanț, în ordinea pronunțării: fiecare sentință se cântărește față
- * de cea dinaintea ei, nu față de prima. Pedeapsa aflată în executare la venirea
- * unei sentințe noi e cea stabilită de ultima dinaintea ei, deci ea e „prima
- * cauză" pentru treapta aceea.
+ * Ancora e PRIMA sentință, nu cea dinaintea fiecăreia. Art. 84 alin. (4) o
+ * numește: „săvârșite înainte de pronunţarea sentinţei în prima cauză". Iar
+ * întrebarea de fond e chiar asta — era omul deja condamnat când a săvârșit
+ * fapta? Dacă da, art. 85; dacă nu, concurs. Cum sentințele stau în ordinea
+ * pronunțării, „după vreo sentință" înseamnă „după prima".
  *
- * De aceea un lanț poate schimba temeiul de la o treaptă la alta: o faptă
- * săvârșită între două sentințe e „după" pentru una și „înainte" pentru
- * cealaltă. Nu e o contradicție, sunt două trepte deosebite.
+ * Condiția a doua a art. 85 — fapta să fie săvârșită înainte de executarea
+ * completă — se cântărește însă față de pedeapsa care se executa CHIAR ATUNCI,
+ * adică cea stabilită de ultima sentință pronunțată înaintea faptei. Prima poate
+ * fi de mult încheiată, fără ca omul să fi ieșit din executare.
  *
  * Sortarea se face aici, nu se cere de la om: sentințele vin din dosar în
  * ordinea în care s-au găsit, nu în cea a calendarului.
  */
 export function lantulTemeiurilor(sentinte: Sentinta[]): PasLant[] {
   const ordonate = [...sentinte].sort((a, b) => zi(a.pronuntare) - zi(b.pronuntare));
+  const prima = ordonate[0];
+  if (!prima) return [];
 
   return ordonate.slice(1).map((sentinta, i) => {
-    const fataDe = ordonate[i];
+    // Doar sentințele dinaintea ei: la data faptei, cele de după nu existau.
+    const anterioare = ordonate.slice(0, i + 1);
+    // Căutare de la coadă, cu buclă: `findLastIndex` cere un browser destul de
+    // nou, iar pe calculatoarele secției nu se știe care e.
+    let indexInExecutare = -1;
+    for (let j = anterioare.length - 1; j >= 0; j--) {
+      if (zi(anterioare[j].pronuntare) <= zi(sentinta.savarsire)) {
+        indexInExecutare = j;
+        break;
+      }
+    }
+    const inExecutare = indexInExecutare >= 0 ? anterioare[indexInExecutare] : null;
+
     const { temei, aceeasiZi } = temeiCumul({
       savarsire: sentinta.savarsire,
-      pronuntare: fataDe.pronuntare,
-      sfarsitPrimei: fataDe.sfarsit,
+      pronuntare: prima.pronuntare,
+      sfarsitPrimei: inExecutare?.sfarsit,
     });
+
     return {
       numar: i + 2,
       sentinta,
-      fataDe,
+      prima,
+      inExecutare,
+      numarInExecutare: indexInExecutare >= 0 ? indexInExecutare + 1 : null,
       temei,
       aceeasiZi,
       dataImposibila: zi(sentinta.savarsire) > zi(sentinta.pronuntare),
