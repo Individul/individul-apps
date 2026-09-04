@@ -14,7 +14,11 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-04",
-    text: "Calculatorul de termen și clasificarea infracțiunii au acum pagini proprii, nu ferestre. La calculator cele două socoteli — din data începerii și reducerea de termen — stau alături, deci nu se mai comută între ele; la clasificare, lista de articole crește în stânga fără să împingă răspunsul afară din ecran. Se ajunge la ele tot de pe pagina principală, din butoanele de lângă salut.",
+    text: "Clasificarea infracțiunii a coborât pe aceeași pagină cu calculatorul de termen, sub el. Pedeapsa scrisă sus se folosește mai departe, deci fracțiile pentru art. 91 și 92 nu mai apar doar ca numere, ci și ca date: când se poate cere liberarea condiționată și când înlocuirea părții neexecutate, cu arestul preventiv scăzut din amândouă. Dacă vrei doar categoria, lași datele de sus goale.",
+  },
+  {
+    date: "2026-09-04",
+    text: "Calculatorul de termen a ieșit din fereastră pe pagină proprie. Cele două socoteli — din data începerii și reducerea de termen — stau alături, deci nu se mai comută între ele. Se ajunge la el tot de pe pagina principală, din butoanele de lângă salut.",
   },
   {
     date: "2026-09-02",

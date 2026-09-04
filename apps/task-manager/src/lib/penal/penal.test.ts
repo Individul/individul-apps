@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fractiuni, type Categorie } from "./categorii";
+import { ceaMaiGrava as ceaMaiGravaCat } from "./clasificare";
 import {
   INFRACTIUNI,
   alineatePentru,
@@ -330,5 +331,74 @@ describe("reducerea termenului", () => {
   it("reducere zero nu mișcă data", () => {
     expect(zi(scadeTermen(new Date(2027, 0, 25), { ani: 0, luni: 0, zile: 0 })))
       .toBe("2027-01-25");
+  });
+});
+
+/**
+ * Drumul întreg, cum îl parcurge pagina: articolele din sentință dau categoria,
+ * categoria dă fracția, iar fracția — cu pedeapsa de sus — dă data.
+ *
+ * Până acum bucățile erau verificate una câte una, dar nimic nu ținea legătura
+ * dintre ele. Ea e chiar ce vede omul pe ecran: o dată, nu o fracție.
+ */
+describe("de la articol la data art. 91 / 92", () => {
+  const infractiunile = (...perechi: [string, string][]) =>
+    perechi.map(([art, alin]) => gasesteInfractiune(art, alin)!);
+
+  it("omor, adult: 2/3 dintr-o pedeapsă de 15 ani", () => {
+    const grava = ceaMaiGravaCat(infractiunile(["145", "1"]));
+    expect(grava.categorie).toBe("DG");
+
+    const f = fractiuni(grava.categorie!, "adult");
+    expect(f.art91.fractiune).toBe("2/3");
+
+    // 15 ani, din 1 martie 2026. Două treimi fac 10 ani: 1 martie 2036.
+    const r = calculeazaTermen(
+      new Date(2026, 2, 1),
+      { ani: 15, luni: 0, zile: 0 },
+      f.art91.fractiune,
+    );
+    expect(termenText(r.deExecutat)).toBe("10 ani");
+    expect(zi(r.eligibil)).toBe("2036-03-01");
+    // Sfârșitul e altă dată decât eligibilitatea, și se scade ziua: termen numai
+    // în ani.
+    expect(zi(r.sfarsit)).toBe("2041-02-28");
+  });
+
+  it("aceeași faptă, minor: fracția scade, deci scade și data", () => {
+    const grava = ceaMaiGravaCat(infractiunile(["186", "1"]));
+    const adult = fractiuni(grava.categorie!, "adult").art91.fractiune;
+    const minor = fractiuni(grava.categorie!, "minor").art91.fractiune;
+    expect([adult, minor]).toEqual(["1/2", "1/3"]);
+
+    const pedeapsa = { ani: 3, luni: 0, zile: 0 };
+    const start = new Date(2026, 0, 10);
+    expect(zi(calculeazaTermen(start, pedeapsa, adult).eligibil)).toBe("2027-07-10");
+    expect(zi(calculeazaTermen(start, pedeapsa, minor).eligibil)).toBe("2027-01-10");
+  });
+
+  it("arestul preventiv scade și din data eligibilității, nu doar din sfârșit", () => {
+    // Altfel omul ar aștepta zilele pe care le-a stat deja închis.
+    const f = fractiuni("G", "adult");
+    const r = calculeazaTermen(
+      new Date(2026, 2, 1),
+      { ani: 6, luni: 0, zile: 0 },
+      f.art91.fractiune,
+      100,
+    );
+    const faraArest = calculeazaTermen(
+      new Date(2026, 2, 1),
+      { ani: 6, luni: 0, zile: 0 },
+      f.art91.fractiune,
+      0,
+    );
+    expect(zileIntre(r.eligibil, faraArest.eligibil)).toBe(100);
+  });
+
+  it("cea mai gravă hotărăște fracția, nu ultima introdusă", () => {
+    // Cazul pentru care lista primește mai multe articole.
+    const grava = ceaMaiGravaCat(infractiunile(["145", "1"], ["186", "1"]));
+    expect(grava.categorie).toBe("DG");
+    expect(fractiuni(grava.categorie!, "adult").art91.fractiune).toBe("2/3");
   });
 });

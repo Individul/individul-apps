@@ -167,8 +167,12 @@ export default async function HubPage() {
               nu l-ar găsi nimeni fără să i se spună. */}
           {/* Unelte, nu module: se intră când ai de socotit ceva și se iese.
               De aceea legături de aici, nu tab-uri în bara de sus — acolo stau
-              registrele, care se completează zilnic. Au ajuns pagini fiindcă
-              în lățimea unei ferestre nu încăpea decât o socoteală pe rând. */}
+              registrele, care se completează zilnic.
+
+              Amândouă duc la aceeași pagină: termenul și clasificarea se
+              socotesc de obicei împreună, pe aceeași pedeapsă. A doua legătură
+              rămâne fiindcă la clasificare se vine și când n-ai de calculat
+              niciun termen — și fiindcă așa se numea butonul de până acum. */}
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href="/termen">
@@ -177,7 +181,7 @@ export default async function HubPage() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <Link href="/clasificare">
+              <Link href="/termen#clasificare">
                 <Scale className="mr-2 h-4 w-4" />
                 Clasificare infracțiune
               </Link>

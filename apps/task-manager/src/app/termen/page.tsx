@@ -1,18 +1,21 @@
 import Link from "next/link";
 
 import { AppHeader } from "@/components/layout/app-header";
-import { TermTool } from "@/components/penal/term-tool";
+import { PenalTools } from "@/components/penal/penal-tools";
 import { getCurrentProfile, getNotifications, getUnreadCount } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Calculatorul de termen, ca pagină.
+ * Uneltele penale, pe o pagină.
  *
- * A fost întâi fereastră, pe ideea că e o socoteală pe care o faci și o închizi.
- * Dar în lățimea unei ferestre cele două unelte nu încăpeau decât pe rând, deci
- * se comuta între ele — iar pagina le ține alături. Nu e în bara de module:
- * acolo stau registrele, care se completează; asta doar socotește.
+ * Au fost întâi ferestre, pe ideea că sunt socoteli pe care le faci și le
+ * închizi. Dar în lățimea unei ferestre nu încăpea decât una pe rând, iar cele
+ * două chiar merg împreună: cine socotește sfârșitul termenului socotește
+ * aproape întotdeauna și categoria infracțiunii, și datele art. 91 și 92.
+ * Împărțite în două ferestre, pedeapsa se scria de două ori.
+ *
+ * Nu e în bara de module: acolo stau registrele, care se completează zilnic.
  */
 export default async function TermenPage() {
   const [profile, notifications, unread] = await Promise.all([
@@ -34,7 +37,7 @@ export default async function TermenPage() {
             ← Acasă
           </Link>
         </div>
-        <TermTool />
+        <PenalTools />
       </main>
     </>
   );
