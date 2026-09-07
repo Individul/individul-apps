@@ -7,6 +7,29 @@ const nextConfig = {
     },
 
     /**
+     * Cât ține browserul minte o pagină deja vizitată, ca să n-o mai ceară.
+     *
+     * Valorile de aici sunt EXACT cele implicite din Next 14.2 — citite din
+     * `node_modules/next/dist/server/config-shared.js`, nu presupuse. Deci
+     * astăzi nu schimbă nimic; e o ancoră.
+     *
+     * În Next 15 implicitul pentru rutele dinamice coboară la 0, adică fiecare
+     * întoarcere la un modul deja deschis ar cere din nou serverului. Toate
+     * paginile de aici sunt dinamice, deci ziua trecerii la 15 ar face
+     * navigarea vizibil mai greoaie — fără ca nimic din codul nostru să se fi
+     * schimbat și fără vreo eroare care să arate de ce.
+     *
+     * 30 de secunde e o fereastră scurtă: ce vezi la a doua intrare într-un
+     * registru poate fi cu o jumătate de minut mai vechi. Pentru cifre care se
+     * schimbă de câteva ori pe zi e o târguială bună, iar orice salvare proprie
+     * cheamă `router.refresh()`, care golește memoria.
+     */
+    staleTimes: {
+      dynamic: 30,
+      static: 300,
+    },
+
+    /**
      * Fonturile pentru PDF, cărate explicit în funcția care le citește.
      *
      * `/raport-saptamanal/pdf` deschide `src/fonts/*.ttf` cu `fs` la fiecare
