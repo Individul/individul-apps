@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-07",
+    text: "La planificarea transferurilor, persoanele pentru care nu mai există zi de transfer înainte de ședință au acum un buton „Înștiințare expediată”. După apăsare rămâne scris când a plecat hârtia, iar în capul grupului se vede câte au mai rămas de trimis; când au plecat toate, grupul nu mai e chihlimbariu. Bifa se poate scoate, dacă a fost apăsată din greșeală. Un lucru de știut: bifa ține minte pentru care ședință s-a trimis înștiințarea — dacă instanța amână și noua dată iar n-are zi de transfer înainte, butonul se întoarce, fiindcă e altă înștiințare de trimis.",
+  },
+  {
     date: "2026-09-04",
     text: "Aplicația s-a făcut mai iute. Bara de sus nu se mai șterge și nu se mai reface la fiecare clic — rămâne pe ecran, iar sub ea apare pe loc un schelet cât se aduc datele, în loc ca pagina veche să stea neclintită. Registrul de petiții se deschide acum pe cele în examinare: din 348 de petiții, 335 sunt soluționate, adică arhivă, iar browserul le desena pe toate ca să arate 13 rânduri de lucru; un clic pe „Toate” arată registrul întreg, ca înainte. Și nu se mai trimite profilul responsabilului repetat în fiecare rând — cântărea 67 KB la fiecare deschidere, deși profilurile sunt patru cu totul.",
   },

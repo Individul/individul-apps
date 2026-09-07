@@ -35,6 +35,14 @@ export interface TransferPlan {
   /** Data parvenirii deciziei; completată doar la temei „decizie". */
   decision_date: string | null;
   done: boolean;
+  /**
+   * Când s-a expediat instanței înștiințarea despre imposibilitatea executării.
+   * Opționale toate trei: până la aplicarea migrării 0029 lipsesc din rânduri.
+   */
+  notified_at?: string | null;
+  notified_by?: string | null;
+  /** Ședința pentru care s-a trimis înștiințarea. Vezi `esteInstiintat`. */
+  notified_hearing_date?: string | null;
   note: string | null;
   created_by: string | null;
   updated_by: string | null;
@@ -145,4 +153,21 @@ export function groupByTransferDay(
     if (b.day === null) return 1;
     return a.day.localeCompare(b.day);
   });
+}
+
+/**
+ * Are omul înștiințarea deja expediată pentru situația de ACUM?
+ *
+ * Nu e de ajuns ca `notified_at` să fie completat. Ziua de transfer se
+ * calculează din data ședinței, deci o amânare scoate omul din grupul „de
+ * înștiințat"; dacă se amână iarăși într-o zi imposibilă, e altă imposibilitate
+ * și cere altă hârtie. Bifa veche, lăsată aprinsă, ar spune că instanța a fost
+ * înștiințată despre ceva ce nu s-a înștiințat — iar cineva ar afla asta abia
+ * când omul n-ar ajunge la ședință.
+ *
+ * De aceea se compară cu ședința pentru care s-a trimis.
+ */
+export function esteInstiintat(plan: TransferPlan): boolean {
+  if (!plan.notified_at || !plan.notified_hearing_date) return false;
+  return plan.notified_hearing_date === plan.hearing_date;
 }

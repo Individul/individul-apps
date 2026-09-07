@@ -108,6 +108,78 @@ export async function setPlanDone(id: string, done: boolean): Promise<Result> {
   return { success: true };
 }
 
+/**
+ * Bifează că înștiințarea despre imposibilitatea executării a fost expediată.
+ *
+ * Se ține minte și ședința pentru care s-a trimis, nu doar data expedierii:
+ * ziua de transfer se calculează din data ședinței, deci o amânare scoate omul
+ * din grupul „de înștiințat", iar dacă se amână iarăși într-o zi imposibilă e
+ * altă situație și cere altă hârtie. Vezi `esteInstiintat`.
+ *
+ * Ședința se citește din rândul din bază, nu din ce trimite pagina: între
+ * încărcarea listei și apăsarea butonului, altcineva poate să fi mutat data —
+ * iar atunci bifa ar fi ajuns pe ședința veche, care nu mai există.
+ */
+export async function setPlanNotified(id: string, notified: boolean): Promise<Result> {
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { error: "Neautentificat." };
+
+  const { data: rand, error: eCitire } = await supabase
+    .from("transfer_plans")
+    .select("hearing_date")
+    .eq("id", id)
+    .maybeSingle();
+  if (eCitire) return { error: eCitire.message };
+  if (!rand) {
+    return { error: "Însemnarea nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+  }
+  if (notified && !rand.hearing_date) {
+    // Grupul „de înștiințat" apare numai la ședințe; fără dată n-ar avea ce
+    // acoperi hârtia.
+    return { error: "Însemnarea n-are dată de ședință, deci nu are ce înștiința." };
+  }
+
+  const values = notified
+    ? {
+        notified_at: new Date().toISOString(),
+        notified_by: userId,
+        notified_hearing_date: rand.hearing_date,
+        updated_by: userId,
+      }
+    : {
+        notified_at: null,
+        notified_by: null,
+        notified_hearing_date: null,
+        updated_by: userId,
+      };
+
+  const { data, error } = await supabase
+    .from("transfer_plans")
+    .update(values)
+    .eq("id", id)
+    .select();
+  if (error) {
+    // Până se aplică migrarea 0029, coloanele nu există, iar Postgres o spune
+    // în limba lui. Cine apasă butonul are nevoie să afle ce e de făcut, nu
+    // cum se numește coloana lipsă.
+    if (/notified_/.test(error.message)) {
+      return {
+        error:
+          "Bifa înștiințării nu poate fi salvată: migrarea 0029 nu e aplicată în baza de date.",
+      };
+    }
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) {
+    return { error: "Însemnarea nu mai există — probabil a fost ștearsă. Reîncarcă pagina." };
+  }
+
+  revalidatePath("/transferuri/planificare");
+  return { success: true };
+}
+
 export async function deletePlan(id: string): Promise<Result> {
   const supabase = createClient();
   const { data, error } = await supabase

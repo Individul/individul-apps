@@ -4,13 +4,18 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { AlertTriangle, Check, Plus, Undo2 } from "lucide-react";
+import { AlertTriangle, Check, MailCheck, Plus, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { PlanDialog } from "@/components/transfers/plan-dialog";
-import { setPlanDone } from "@/app/transferuri/planificare/actions";
-import { groupByTransferDay, planDate, type TransferPlan } from "@/lib/transfer-plans";
+import { setPlanDone, setPlanNotified } from "@/app/transferuri/planificare/actions";
+import {
+  esteInstiintat,
+  groupByTransferDay,
+  planDate,
+  type TransferPlan,
+} from "@/lib/transfer-plans";
 import { institutionLabel } from "@/lib/transfers";
 import { parseISODate } from "@/lib/periods";
 
@@ -47,6 +52,22 @@ export function PlanList({
   const incheiate = plans
     .filter((p) => p.done)
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+
+  const setInstiintat = (plan: TransferPlan, instiintat: boolean) => {
+    startTransition(async () => {
+      const res = await setPlanNotified(plan.id, instiintat);
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(
+        instiintat
+          ? `${plan.last_name} ${plan.first_name} — înștiințarea e bifată ca expediată.`
+          : `${plan.last_name} ${plan.first_name} — bifa înștiințării a fost scoasă.`,
+      );
+      router.refresh();
+    });
+  };
 
   const setDone = (plan: TransferPlan, done: boolean) => {
     startTransition(async () => {
@@ -92,32 +113,56 @@ export function PlanList({
           <span className="min-w-0 flex-1">Persoana și instanța</span>
           <span className="w-40 shrink-0">Penitenciarul</span>
           <span className="w-28 shrink-0">Data ședinței</span>
-          <span className="w-24 shrink-0" aria-hidden />
+          {/* Lățime egală în antet și în rânduri, deși în grupurile obișnuite
+              rămâne mai goală: la „de înștiințat" mai încape un buton, iar dacă
+              lățimea ar diferi de la un grup la altul, coloanele fixe dinaintea
+              ei s-ar deplasa doar acolo. */}
+          <span className="w-56 shrink-0" aria-hidden />
         </div>
       )}
 
       {groups.map((group) => {
         const imposibil = group.day === null;
+        // Câți din grup mai așteaptă hârtia. Antetul care ar spune mai departe
+        // „De înștiințat instanța" după ce toate au plecat ar cere o muncă
+        // deja făcută — iar cine îl citește de la distanță ar crede că a rămas
+        // ceva de trimis.
+        const deTrimis = imposibil ? group.plans.filter((p) => !esteInstiintat(p)).length : 0;
         return (
           <section
             key={group.day ?? "imposibil"}
             className={cn(
               "overflow-hidden rounded-xl border bg-card",
-              imposibil && "border-amber-300",
+              imposibil && (deTrimis > 0 ? "border-amber-300" : "border-emerald-300"),
             )}
           >
             <header
               className={cn(
                 "flex items-center gap-2 border-b px-3.5 py-2 text-[13px]",
-                imposibil ? "bg-amber-50 text-amber-900" : "bg-muted/30",
+                !imposibil && "bg-muted/30",
+                // Chihlimbariul cheamă la o faptă. După ce hârtiile au plecat,
+                // grupul rămâne deosebit — oamenii tot nu pot fi transferați —
+                // dar nu mai strigă după ceva ce s-a făcut.
+                imposibil && (deTrimis > 0 ? "bg-amber-50 text-amber-900" : "bg-emerald-50 text-emerald-900"),
               )}
             >
               {imposibil ? (
                 <>
-                  <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+                  {deTrimis > 0 ? (
+                    <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+                  ) : (
+                    <MailCheck className="h-4 w-4 shrink-0" aria-hidden />
+                  )}
                   <span className="font-medium">
-                    De înștiințat instanța — nu mai există zi de transfer înainte de ședință
+                    {deTrimis > 0
+                      ? "De înștiințat instanța — nu mai există zi de transfer înainte de ședință"
+                      : "Instanțele au fost înștiințate — nu mai există zi de transfer înainte de ședință"}
                   </span>
+                  {deTrimis > 0 && group.plans.length > deTrimis && (
+                    <span className="shrink-0 rounded-full bg-amber-200/70 px-2 py-0.5 text-[11px] font-medium">
+                      {deTrimis} de trimis
+                    </span>
+                  )}
                 </>
               ) : (
                 <span className="font-medium">
@@ -152,7 +197,34 @@ export function PlanList({
                   <span className="w-28 shrink-0 tabular-nums">
                     {dataPlanului(p)}
                   </span>
-                  <span className="flex w-24 shrink-0 justify-end">
+                  <span className="flex w-56 shrink-0 items-center justify-end gap-1">
+                    {/* Numai la cei fără zi de transfer: doar pentru ei se
+                        trimite hârtia. Bifa arată situația de ACUM — după o
+                        amânare care lasă iar ziua imposibilă, butonul se
+                        întoarce, fiindcă e altă înștiințare de trimis. */}
+                    {imposibil &&
+                      (esteInstiintat(p) ? (
+                        <button
+                          type="button"
+                          onClick={() => setInstiintat(p, false)}
+                          title="Scoate bifa înștiințării"
+                          className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 transition-colors hover:bg-emerald-200"
+                        >
+                          <MailCheck className="h-3 w-3" aria-hidden />
+                          Înștiințată{" "}
+                          {format(new Date(p.notified_at!), "d MMM", { locale: ro })}
+                        </button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 border-amber-300 px-2 text-xs text-amber-900 hover:bg-amber-100"
+                          onClick={() => setInstiintat(p, true)}
+                        >
+                          <MailCheck className="mr-1 h-3.5 w-3.5" /> Înștiințare expediată
+                        </Button>
+                      ))}
                     <Button
                       type="button"
                       variant="ghost"

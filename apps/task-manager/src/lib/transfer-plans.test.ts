@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  esteInstiintat,
   groupByTransferDay,
   planTransferDay,
   transferDayFor,
@@ -163,5 +164,76 @@ describe("ședințe și decizii în aceeași listă", () => {
     expect(grupe).toHaveLength(1);
     expect(grupe[0].day).toBe("2026-07-20");
     expect(grupe[0].plans.map((x) => x.id).sort()).toEqual(["d", "s"]);
+  });
+});
+
+describe("înștiințarea instanței despre imposibilitatea executării", () => {
+  it("fără nimic completat, nu e înștiințată", () => {
+    expect(esteInstiintat(plan({}))).toBe(false);
+  });
+
+  it("expediată pentru ședința de acum", () => {
+    expect(
+      esteInstiintat(
+        plan({
+          hearing_date: "2026-08-05",
+          notified_at: "2026-08-01T09:00:00Z",
+          notified_hearing_date: "2026-08-05",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("după amânare nu mai acoperă noua ședință", () => {
+    // Cazul pentru care există coloana. Hârtia s-a trimis pentru ședința din 5
+    // august; instanța a amânat pe 20 septembrie, care iar n-are zi de transfer
+    // înainte. E altă imposibilitate și cere altă înștiințare — iar bifa veche,
+    // lăsată aprinsă, ar fi spus contrariul.
+    expect(
+      esteInstiintat(
+        plan({
+          hearing_date: "2026-09-20",
+          notified_at: "2026-08-01T09:00:00Z",
+          notified_hearing_date: "2026-08-05",
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("dacă ședința se întoarce la data dintâi, înștiințarea o acoperă iar", () => {
+    // Nu e o subtilitate căutată: instanțele revin la termenul dintâi. Hârtia
+    // trimisă atunci vorbea chiar despre ședința asta.
+    expect(
+      esteInstiintat(
+        plan({
+          hearing_date: "2026-08-05",
+          notified_at: "2026-08-01T09:00:00Z",
+          notified_hearing_date: "2026-08-05",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("o dată fără ședința pentru care s-a trimis nu se ia drept înștiințare", () => {
+    // Constrângerea din 0029 nu îngăduie starea asta, dar rândurile scrise
+    // înaintea migrării n-au coloanele deloc — iar de acolo vin `undefined`.
+    expect(esteInstiintat(plan({ notified_at: "2026-08-01T09:00:00Z" }))).toBe(false);
+    expect(esteInstiintat(plan({ notified_hearing_date: "2026-08-05" }))).toBe(false);
+  });
+
+  it("la temei „decizie” nu se pune problema", () => {
+    // Acolo ziua de transfer există întotdeauna, deci nu se ajunge niciodată la
+    // grupul „de înștiințat"; `hearing_date` e `null` și nimic nu se potrivește.
+    expect(
+      esteInstiintat(
+        plan({
+          basis: "decizie",
+          hearing_date: null,
+          decision_date: "2026-08-01",
+          notified_at: "2026-08-01T09:00:00Z",
+          notified_hearing_date: "2026-08-05",
+        }),
+      ),
+    ).toBe(false);
   });
 });
