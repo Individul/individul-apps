@@ -85,6 +85,25 @@ export function PetitionFormDialog({
   // Petiția tocmai creată în acest dialog: o ține deschis, în modul editare,
   // ca fișierele să poată fi atașate imediat (atașamentele au nevoie de id).
   const [created, setCreated] = useState<{ id: string; number: string } | null>(null);
+  /**
+   * S-a schimbat ceva ce registrul din spate ar trebui să afle?
+   *
+   * Reîmprospătarea NU se mai face cât fereastra e deschisă. `loading.tsx` e o
+   * graniță `Suspense` peste tot conținutul paginii, iar `router.refresh()`
+   * cade în ea și demontează subarborele — cu tot cu starea ferestrei. La
+   * înregistrarea unei petiții noi fereastra trebuie însă să rămână deschisă,
+   * ca scanarea să poată fi atașată pe loc; înainte se închidea singură, iar
+   * omul rămânea cu petiția scrisă și fără fișier.
+   *
+   * Reprodus și măsurat, nu presupus — vezi comentariul din
+   * `src/app/loading.tsx`. Înfășurarea reîmprospătării într-un `startTransition`
+   * nu ajută: am încercat, starea se pierde la fel.
+   *
+   * Deci se ține minte că e ceva de împrospătat și se face la închidere, când
+   * fereastra oricum dispare și n-are ce pierde. Registrul din spate e acoperit
+   * până atunci.
+   */
+  const areSchimbari = useRef(false);
   const filesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -171,6 +190,20 @@ export function PetitionFormDialog({
     response_date: responseDate,
   });
 
+  /**
+   * Închide fereastra și, dacă s-a schimbat ceva, împrospătează registrul.
+   *
+   * Aici e singurul loc din fereastră unde se cheamă `router.refresh()`: după
+   * ce fereastra a dispărut, demontarea subarborelui nu mai ia nimic cu ea.
+   */
+  const inchide = () => {
+    onOpenChange(false);
+    if (areSchimbari.current) {
+      areSchimbari.current = false;
+      router.refresh();
+    }
+  };
+
   const submit = () => {
     setError(null);
     startTransition(async () => {
@@ -181,8 +214,8 @@ export function PetitionFormDialog({
           return;
         }
         toast.success("Petiție salvată.");
-        onOpenChange(false);
-        router.refresh();
+        areSchimbari.current = true;
+        inchide();
         return;
       }
 
@@ -194,15 +227,15 @@ export function PetitionFormDialog({
       if (!res.id || !res.number) {
         // Rândul e scris, dar fără id nu putem atașa nimic aici.
         toast.success("Petiție înregistrată.");
-        onOpenChange(false);
-        router.refresh();
+        areSchimbari.current = true;
+        inchide();
         return;
       }
       // Nu închidem: petiția există acum, deci se pot atașa fișierele pe loc.
+      areSchimbari.current = true;
       setCreated({ id: res.id, number: res.number });
       setNumberField(res.number);
       toast.success("Petiție înregistrată. Atașează scanarea.");
-      router.refresh();
     });
   };
 
@@ -217,8 +250,8 @@ export function PetitionFormDialog({
         return;
       }
       toast.success("Petiție ștearsă.");
-      onOpenChange(false);
-      router.refresh();
+      areSchimbari.current = true;
+      inchide();
     });
   };
 
@@ -229,7 +262,7 @@ export function PetitionFormDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : inchide())}>
       {/* Secțiunea de fișiere alungește dialogul — îl lăsăm să deruleze, ca footerul să rămână accesibil. */}
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
@@ -434,6 +467,9 @@ export function PetitionFormDialog({
             <h3 className="text-sm font-medium">Fișiere</h3>
             {activeId ? (
               <PetitionAttachments
+                onSchimbare={() => {
+                  areSchimbari.current = true;
+                }}
                 petitionId={activeId}
                 petitionNumber={activeNumber}
                 petitioner={petition?.petitioner ?? petitioner}
@@ -470,7 +506,7 @@ export function PetitionFormDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={inchide}
                 disabled={isPending}
               >
                 {readOnly || created ? "Închide" : "Anulează"}

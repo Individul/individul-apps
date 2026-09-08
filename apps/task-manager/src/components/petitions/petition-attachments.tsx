@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { FileText, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +38,21 @@ interface PetitionAttachmentsProps {
   petitionNumber: string;
   petitioner: string;
   canEdit: boolean;
+  /**
+   * Se cheamă când s-a atașat sau s-a șters un fișier.
+   *
+   * Aici NU se mai cheamă `router.refresh()`. Componenta trăiește numai
+   * înăuntrul ferestrei de petiție, iar o reîmprospătare cât fereastra e
+   * deschisă o închide: `loading.tsx` e o graniță `Suspense` peste tot
+   * conținutul paginii, iar reîmprospătarea cade în ea și demontează
+   * subarborele, cu tot cu starea ferestrei. Reprodus și măsurat — vezi
+   * comentariul din `src/app/loading.tsx`.
+   *
+   * Lista proprie se împrospătează oricum, prin `reload()`. Registrul din
+   * spate poate aștepta: e acoperit de fereastră, iar părintele îl
+   * împrospătează la închidere.
+   */
+  onSchimbare?: () => void;
 }
 
 export function PetitionAttachments({
@@ -46,8 +60,8 @@ export function PetitionAttachments({
   petitionNumber,
   petitioner,
   canEdit,
+  onSchimbare,
 }: PetitionAttachmentsProps) {
-  const router = useRouter();
   const [items, setItems] = useState<PetitionAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   // O singură operațiune odată: blochează încărcarea și ștergerea cât timp rulează.
@@ -134,7 +148,7 @@ export function PetitionAttachments({
       }
       toast.success("Fișier atașat");
       await reload();
-      router.refresh();
+      onSchimbare?.();
     } finally {
       setBusy(false);
     }
@@ -177,7 +191,7 @@ export function PetitionAttachments({
       }
       toast.success("Fișier șters");
       await reload();
-      router.refresh();
+      onSchimbare?.();
     } finally {
       setBusy(false);
     }

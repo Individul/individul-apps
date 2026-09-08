@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-08",
+    text: "Fereastra petiției rămâne din nou deschisă după înregistrare, ca scanarea să poată fi atașată pe loc. Din 4 septembrie se închidea singură, iar petiția rămânea scrisă fără fișier. Aceeași defecțiune era și la „Gestionează etichetele”: fereastra se închidea după fiecare etichetă redenumită sau ștearsă. Cauza a fost o schimbare de-a noastră de la 4 septembrie, făcută pentru viteză — registrul din spate se împrospătează acum la închiderea ferestrei, nu în timp ce lucrezi în ea.",
+  },
+  {
+    date: "2026-09-08",
     text: "Bara de sus nu se mai tipărește. Din 4 septembrie, de când bara a fost mutată ca să rămână pe ecran între pagini, ea ieșea și pe hârtie — la raportul de marți și la raportul de ședințe. Acum e scris o singură dată, la bară, că e cadrul aplicației și n-are ce căuta într-un act tipărit.",
   },
   {

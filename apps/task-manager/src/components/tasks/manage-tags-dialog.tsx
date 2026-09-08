@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,7 +17,15 @@ import { Input } from "@/components/ui/input";
 import { updateTag, deleteTag } from "@/app/tasks/actions";
 import type { Tag } from "@/lib/types";
 
-function TagRow({ tag, onChanged }: { tag: Tag; onChanged: () => void }) {
+function TagRow({
+  tag,
+  onSchimbat,
+  onSters,
+}: {
+  tag: Tag;
+  onSchimbat: () => void;
+  onSters: () => void;
+}) {
   const [name, setName] = useState(tag.name);
   const [color, setColor] = useState(tag.color);
   const [isPending, startTransition] = useTransition();
@@ -31,7 +39,7 @@ function TagRow({ tag, onChanged }: { tag: Tag; onChanged: () => void }) {
         return;
       }
       toast.success("Etichetă actualizată");
-      onChanged();
+      onSchimbat();
     });
   };
 
@@ -46,7 +54,7 @@ function TagRow({ tag, onChanged }: { tag: Tag; onChanged: () => void }) {
         return;
       }
       toast.success("Etichetă ștearsă");
-      onChanged();
+      onSters();
     });
   };
 
@@ -86,6 +94,33 @@ function TagRow({ tag, onChanged }: { tag: Tag; onChanged: () => void }) {
 export function ManageTagsDialog({ tags }: { tags: Tag[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  /**
+   * Reîmprospătarea se face la închidere, nu după fiecare etichetă.
+   *
+   * `router.refresh()` cât fereastra e deschisă o închide: `loading.tsx` e o
+   * graniță `Suspense` peste tot conținutul, iar reîmprospătarea demontează
+   * subarborele cu tot cu starea ferestrei. Vezi comentariul din
+   * `src/app/loading.tsx` — și `petition-form-dialog.tsx`, unde a ieșit la
+   * iveală întâi.
+   *
+   * Aici nu se pierde nimic din ce se vede: rândul își ține singur numele și
+   * culoarea, deci după redenumire arată deja bine. Numai ștergerea are nevoie
+   * ca rândul să dispară — de aceea se ține minte aici ce s-a șters.
+   */
+  const areSchimbari = useRef(false);
+  const [sterse, setSterse] = useState<string[]>([]);
+
+  const inchide = (deschis: boolean) => {
+    setOpen(deschis);
+    if (deschis) return;
+    setSterse([]);
+    if (areSchimbari.current) {
+      areSchimbari.current = false;
+      router.refresh();
+    }
+  };
+
+  const ramase = tags.filter((t) => !sterse.includes(t.id));
 
   return (
     <>
@@ -97,7 +132,7 @@ export function ManageTagsDialog({ tags }: { tags: Tag[] }) {
       >
         <Pencil className="mr-1 h-3.5 w-3.5" /> Gestionează
       </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={inchide}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Gestionează etichetele</DialogTitle>
@@ -106,12 +141,22 @@ export function ManageTagsDialog({ tags }: { tags: Tag[] }) {
               sarcinile.
             </DialogDescription>
           </DialogHeader>
-          {tags.length === 0 ? (
+          {ramase.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nicio etichetă.</p>
           ) : (
             <div className="max-h-[420px] space-y-2 overflow-auto">
-              {tags.map((t) => (
-                <TagRow key={t.id} tag={t} onChanged={() => router.refresh()} />
+              {ramase.map((t) => (
+                <TagRow
+                  key={t.id}
+                  tag={t}
+                  onSchimbat={() => {
+                    areSchimbari.current = true;
+                  }}
+                  onSters={() => {
+                    areSchimbari.current = true;
+                    setSterse((v) => [...v, t.id]);
+                  }}
+                />
               ))}
             </div>
           )}

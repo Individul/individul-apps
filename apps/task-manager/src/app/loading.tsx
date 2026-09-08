@@ -18,6 +18,25 @@
  * Formele sunt anume nedeslușite — un titlu, câteva dreptunghiuri. Un schelet
  * care ar imita prea bine pagina adevărată se citește ca date care încă nu
  * există.
+ *
+ * DE ȘTIUT, fiindcă a costat deja o defecțiune în producție: fișierul acesta e
+ * o graniță `Suspense` peste tot conținutul paginii, iar `router.refresh()`
+ * cade în ea și DEMONTEAZĂ subarborele — se pierde toată starea de client de
+ * sub el, inclusiv ferestrele deschise. Documentația lui Next spune că
+ * `refresh()` păstrează starea; cu `loading.tsx` prezent, nu o păstrează.
+ *
+ * Măsurat pe o reproducere minimală, cu aceeași versiune de Next:
+ *
+ *   acțiune de server, apoi setState, FĂRĂ refresh ....... starea rămâne
+ *   aceleași, cu `router.refresh()` .................... starea se pierde
+ *   aceleași, fără `loading.tsx` ....................... starea rămâne
+ *   `router.refresh()` înfășurat în `startTransition` .. starea se pierde
+ *
+ * Scheletul nu apare la reîmprospătare — nu clipește nimic — dar subarborele
+ * se reface oricum. Deci: NU chema `router.refresh()` cât timp o fereastră
+ * trebuie să rămână deschisă. Amână-l până la închidere, ca în
+ * `petition-form-dialog.tsx`, unde înregistrarea unei petiții ține fereastra
+ * deschisă pentru atașarea scanării.
  */
 export default function Loading() {
   return (
