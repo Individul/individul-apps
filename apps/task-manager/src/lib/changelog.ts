@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-08",
+    text: "Bara de sus nu se mai tipărește. Din 4 septembrie, de când bara a fost mutată ca să rămână pe ecran între pagini, ea ieșea și pe hârtie — la raportul de marți și la raportul de ședințe. Acum e scris o singură dată, la bară, că e cadrul aplicației și n-are ce căuta într-un act tipărit.",
+  },
+  {
     date: "2026-09-07",
     text: "La planificarea transferurilor, persoanele pentru care nu mai există zi de transfer înainte de ședință au acum un buton „Înștiințare expediată”. După apăsare rămâne scris când a plecat hârtia, iar în capul grupului se vede câte au mai rămas de trimis; când au plecat toate, grupul nu mai e chihlimbariu. Bifa se poate scoate, dacă a fost apăsată din greșeală. Un lucru de știut: bifa ține minte pentru care ședință s-a trimis înștiințarea — dacă instanța amână și noua dată iar n-are zi de transfer înainte, butonul se întoarce, fiindcă e altă înștiințare de trimis.",
   },

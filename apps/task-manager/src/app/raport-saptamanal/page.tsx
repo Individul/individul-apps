@@ -52,10 +52,6 @@ export default async function RaportSaptamanalPage({
 
   return (
     <>
-      {/* Antetul aplicației nu are ce căuta pe hârtie. */}
-      <div className="no-print">
-      </div>
-
       <main className="mx-auto max-w-3xl space-y-6 p-4 xl:px-10 print:max-w-none print:p-0">
         <div className="no-print flex flex-wrap items-center gap-2 border-b pb-4">
           <Link
