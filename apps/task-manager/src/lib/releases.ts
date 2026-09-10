@@ -53,7 +53,7 @@ export type ReleaseGround =
  * grupele meniului se citesc din harta asta, deci nu pot rămâne în urmă.
  *
  * Aceleași nouăsprezece coduri sunt scrise în `check (ground in …)` din
- * migrarea 0027, iar `releases-schema.test.ts` cade dacă cele două se despart.
+ * migrarea 0029, iar `releases-schema.test.ts` cade dacă cele două se despart.
  */
 export const RELEASE_GROUNDS: Record<
   ReleaseGround,
@@ -226,7 +226,7 @@ export function monthSummary(
  * viu și n-ar mai anunța pe nimeni. Un anunț ajuns la cine nu trebuie se vede
  * și se repară; unul care n-a plecat, nu.
  *
- * Aceeași regulă e scrisă și în `notify_todays_releases()` (migrarea 0027).
+ * Aceeași regulă e scrisă și în `notify_todays_releases()` (migrarea 0029).
  * Două locuri fiindcă sunt două momente: acolo o aplică pg_cron dimineața, aici
  * o citește pagina ca să poată spune dinainte cui va pleca.
  */

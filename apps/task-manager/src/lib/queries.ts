@@ -426,7 +426,7 @@ export async function getReleasePlans(month: string): Promise<ReleasePlanRegistr
     .gte("release_date", `${month}-01`)
     .lt("release_date", `${shiftMonth(month, 1)}-01`)
     .order("release_date", { ascending: true });
-  // Nu se aruncă: fără migrarea 0027 restul paginii de start trebuie să se
+  // Nu se aruncă: fără migrarea 0029 restul paginii de start trebuie să se
   // vadă. Dar nici nu se tace — `available: false` obligă chenarul să spună că
   // n-a putut citi, în loc să arate o lună liniștită.
   if (error) return { rows: [], available: false };

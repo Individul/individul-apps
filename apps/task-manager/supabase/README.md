@@ -145,7 +145,7 @@ rulează [`migrations/0016_statistics.sql`](./migrations/0016_statistics.sql)
 ## 2k. Eliberări
 
 Registrul nominal al eliberărilor. Rulează
-[`migrations/0027_release_plans.sql`](./migrations/0027_release_plans.sql) **DUPĂ**
+[`migrations/0029_release_plans.sql`](./migrations/0029_release_plans.sql) **DUPĂ**
 `0026_releases.sql`. Migrarea:
 
 1. creează tabela `release_plans` (un rând per om: nume, data eliberării, temeiul,
@@ -167,7 +167,7 @@ dar reușește doar dacă `pg_cron` e deja activată; altfel trece mai departe c
 apelabilă manual — doar că dimineața nu primește nimeni nimic**, iar registrul merge
 în rest întreg.
 
-1. Rulează `migrations/0027_release_plans.sql` în **SQL Editor**.
+1. Rulează `migrations/0029_release_plans.sql` în **SQL Editor**.
 2. **Database → Extensions** → caută `pg_cron` și activeaz-o.
 3. Programează sarcina, o singură dată:
 

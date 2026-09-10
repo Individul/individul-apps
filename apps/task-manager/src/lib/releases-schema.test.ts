@@ -8,7 +8,7 @@ import type { NotificationType } from "./types";
 
 /*
  * Temeiurile sunt scrise în două locuri — harta din `releases.ts` și
- * `check (ground in …)` din migrarea 0027 — fiindcă unul e TypeScript și
+ * `check (ground in …)` din migrarea 0029 — fiindcă unul e TypeScript și
  * celălalt SQL, iar niciunul nu poate fi generat din celălalt la rulare.
  *
  * Două copii înseamnă că se pot despărți, iar despărțirea nu doare nicăieri
@@ -32,7 +32,7 @@ const MIGRATIONS = join(
  * Valorile dintr-un `check (<coloană> in ('a', 'b', …))`.
  *
  * `[^)]*` se oprește la prima paranteză închisă, ceea ce e exact lista căutată:
- * niciunul dintre cele două `check`-uri din 0027 n-are paranteze între apostrofi.
+ * niciunul dintre cele două `check`-uri din 0029 n-are paranteze între apostrofi.
  * Coloana intră în șablon, deci `ground` și `type` nu se pot încurca între ele,
  * chiar dacă stau în același fișier.
  */
@@ -50,8 +50,8 @@ function checkValues(sql: string, column: string): string[] {
 /**
  * Toate migrările, în ordine, lipite una de alta.
  *
- * Nu doar 0027. O migrare viitoare care rescrie lista de temeiuri sau pe cea de
- * tipuri ar lăsa un test fixat pe 0027 verde peste o bază care s-a mișcat — și
+ * Nu doar 0029. O migrare viitoare care rescrie lista de temeiuri sau pe cea de
+ * tipuri ar lăsa un test fixat pe 0029 verde peste o bază care s-a mișcat — și
  * atunci garda nu doar că n-ar mai păzi nimic, ci ar și liniști pe cine o
  * caută. Fișierele se citesc sortate, iar `checkValues` ia ultima potrivire,
  * deci rezultatul e ce spune baza după ultima migrare aplicată.
