@@ -21,27 +21,7 @@ const MODULES = [
 export function ModuleTabs() {
   const pathname = usePathname();
   return (
-    /*
-     * Se pliază, nu se derulează.
-     *
-     * Șapte file pe un rând fac vreo 500px. Fără `flex-wrap`, `nav` e un singur
-     * element de flex care nici nu se rupe, nici nu se micșorează sub lățimea
-     * conținutului — deci pe un telefon de 375px ieșea din ecran și împingea
-     * întregul document: `scrollWidth` 554 pe *fiecare* pagină a aplicației,
-     * nu doar aici. Antetul e comun, deci și defectul era comun.
-     *
-     * Cealaltă reparație la îndemână era `overflow-x-auto` pe filele astea. Ar
-     * fi ținut antetul scund, dar ar fi ascuns ultimele patru file în spatele
-     * unui gest de glisare — iar într-un instrument de lucru pe care omul îl
-     * deschide de câteva ori pe lună de pe telefon, o filă pe care n-o vezi e
-     * o filă care nu există. Un antet mai înalt se plătește o dată, la fiecare
-     * încărcare; o filă nedescoperită se plătește o dată, pentru totdeauna.
-     *
-     * `min-w-0` e explicit, deși un container care se pliază s-ar micșora și
-     * fără el: fără regula asta scrisă, prima filă mai lungă adăugată aici
-     * readuce tăcut derularea de la care am plecat.
-     */
-    <nav className="flex min-w-0 flex-wrap items-center gap-1">
+    <nav className="flex items-center gap-1">
       {MODULES.map((m) => {
         const active = m.matchPrefixes.some(
           (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),

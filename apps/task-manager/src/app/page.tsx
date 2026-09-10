@@ -140,20 +140,8 @@ export default async function HubPage() {
 
   return (
     <>
-      {/*
-        Aceeași lățime ca bara de sus și ca paginile de registru.
-
-        Pagina de start era singura dintre paginile mari rămasă la 1152px, iar
-        pe un ecran lat asta se vedea ca o bară de sus „împinsă la stânga": bara
-        pornea de la marginea celor 1800, conținutul de la marginea celor 1152,
-        și între ele rămâneau vreo trei sute de pixeli de nimic.
-
-        Îngustarea barei ar fi mutat neregula, nu ar fi șters-o — pe sarcini,
-        petiții, statistici și administrare bara ar fi intrat cu aceiași trei
-        sute de pixeli înăuntrul tabelului. Nepotrivit era conținutul de aici,
-        nu bara: acum nicio pagină nu mai iese din rând.
-      */}
-      <main className="mx-auto max-w-[1800px] p-4 xl:px-10">
+      {/* Mai lat decât înainte: cardurile duc acum și defalcarea pe coloane. */}
+      <main className="mx-auto max-w-6xl p-4 xl:px-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">
             {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}

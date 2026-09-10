@@ -1,37 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppHeaderSchelet, AppHeaderSlot } from "@/components/layout/app-header-slot";
 import { ANTET_SESIUNE } from "@/lib/session-header";
 import "./globals.css";
-
-/**
- * Inter — fontul celorlalte aplicații de pe dumitru.cloud.
- *
- * Până acum era doar numit: `globals.css` scria `font-family: 'Inter', …` și
- * `tailwind.config.ts` îl trecea la `font-sans`, dar nimic nu-l aducea vreodată
- * — nici `<link>`, nici `next/font`. Așa că aplicația rula în Segoe UI, iar de
- * acolo venea cea mai mare parte din impresia că nu seamănă cu vecinele ei.
- *
- * `latin-ext`, nu doar `latin`: ă, â, î, ș și ț stau în extensie. Fără ea,
- * fiecare cuvânt cu diacritice ar fi împrumutat literele de la fontul de
- * rezervă — adică exact cuvintele românești ar fi ieșit din rând.
- *
- * Prin `next/font`, nu prin Google Fonts ca în portal: fișierele se descarcă la
- * construire și se servesc de pe domeniul nostru. Portalul e o pagină publică
- * de prezentare; asta e o aplicație de serviciu, iar o cerere către Google la
- * fiecare deschidere ar spune cuiva din afară cine intră și când. În plus,
- * fontul sosește odată cu pagina, deci textul nu mai sare la încărcare.
- */
-const inter = Inter({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Sarcini · Secția evidența deținuți",
@@ -66,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const areSesiune = headers().get(ANTET_SESIUNE) === "1";
 
   return (
-    <html lang="ro" className={inter.variable}>
+    <html lang="ro">
       <body>
         {areSesiune && (
           <Suspense fallback={<AppHeaderSchelet />}>
