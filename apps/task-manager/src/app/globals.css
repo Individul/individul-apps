@@ -4,31 +4,49 @@
 
 @layer base {
   :root {
-    /* High-End Institutional SaaS Design System */
-    --background: 210 40% 96.1%; /* #F1F5F9 */
-    --foreground: 215 25% 17%; /* #1E293B */
+    /*
+     * Paleta comună a aplicațiilor de pe dumitru.cloud.
+     *
+     * Aceleași valori ca în `apps/portal/styles.css` și `apps/pdf/web`, scrise
+     * aici în HSL fiindcă shadcn/ui așa le cere — componentele le compun în
+     * `hsl(var(--token))`. Hexazecimalul din dreapta fiecărei linii e cel din
+     * portal, ca nepotrivirea să se vadă dintr-o privire dacă vreuna se abate.
+     *
+     * Nu se scriu culori direct în componente. O culoare pusă de mână scapă de
+     * aici, iar la următoarea aliniere rămâne singura care nu se mișcă — exact
+     * cum s-a întâmplat cu fundalul lui `body`, care avea `bg-[#F1F5F9]` și
+     * ignora liniștit jetonul de deasupra lui.
+     */
+    --background: 220 20% 97%; /* #F6F7F9 */
+    --foreground: 225 7% 11%; /* #1A1B1E */
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 17%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 225 7% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 17%;
+    --popover-foreground: 225 7% 11%;
 
-    /* Primary - Institutional Blue */
-    --primary: 215 25% 17%;
+    /*
+     * Bleumarinul care leagă vizual aplicațiile între ele.
+     *
+     * Înainte `--primary` era identică cu culoarea textului, deci fiecare buton
+     * principal ieșea aproape negru — aplicația n-avea niciun accent, și de
+     * acolo venea mare parte din impresia că nu e din aceeași familie.
+     */
+    --primary: 215 51% 25%; /* #1F3A5F */
     --primary-foreground: 210 40% 98%;
 
     /* Secondary */
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 215 25% 17%;
+    --secondary: 220 20% 97%;
+    --secondary-foreground: 225 7% 11%;
 
     /* Muted */
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%; /* #64748B */
+    --muted: 220 20% 97%;
+    --muted-foreground: 220 9% 46%; /* #6B7280 */
 
     /* Accent */
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 215 25% 17%;
+    --accent: 220 20% 97%;
+    --accent-foreground: 225 7% 11%;
 
     /* Destructive */
     --destructive: 0 72% 51%;
@@ -38,11 +56,19 @@
     --success: 160 84% 39%; /* #059669 */
     --success-bg: 152 81% 96%; /* #ECFDF5 */
 
-    --border: 214 32% 91%; /* #E2E8F0 */
-    --input: 214 32% 91%;
-    --ring: 215 25% 17%;
+    --border: 220 13% 91%; /* #E5E7EB */
+    --input: 220 13% 91%;
+    --ring: 215 51% 25%; /* urmează accentul, nu textul */
 
-    --radius: 0.375rem; /* rounded-md */
+    /*
+     * Raza. Portalul folosește 8px la butoane și 16px la carduri, dar shadcn le
+     * derivă pe toate dintr-una singură: `lg` = raza, `md` = raza − 2, `sm` =
+     * raza − 4. La 12px ies 12/10/8 — cardul puțin mai ascuțit decât în portal,
+     * butonul cu doi pixeli peste. Mijlocul e singurul loc din care ambele ies
+     * aproape; 16px ar rotunji butoanele la 14, prea mult pentru un instrument
+     * de lucru.
+     */
+    --radius: 0.75rem;
 
     /*
      * Paleta categorică a graficelor: opt nuanțe în ordine fixă, atribuite pe
@@ -69,8 +95,17 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#F1F5F9] text-[#1E293B] antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /*
+     * Prin jetoane, nu prin hexazecimale scrise aici. Cele două culori de
+     * dinainte erau fixate de mână și nu se clinteau când se schimba paleta de
+     * deasupra — adică fundalul aplicației rămânea pe cont propriu.
+     *
+     * Fontul nu se mai numește aici: vine din `--font-inter`, pe care îl pune
+     * `next/font` în layout, iar Tailwind îl citește prin `font-sans`. Înainte
+     * scria „Inter" fără ca cineva să-l aducă vreodată, deci aplicația rula de
+     * fapt în Segoe UI.
+     */
+    @apply bg-background font-sans text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
@@ -81,19 +116,19 @@
   font-feature-settings: "tnum";
 }
 
-/* Data labels - institutional style */
+/* Etichetă de cifră — pe jeton, nu pe hexazecimal scris aici. */
 .data-label {
-  @apply uppercase text-[10px] font-bold tracking-widest text-[#64748B];
+  @apply uppercase text-[10px] font-bold tracking-widest text-muted-foreground;
 }
 
-/* Data value - precision style */
+/* Cifra însăși. */
 .data-value {
-  @apply text-[#1E293B] font-medium tabular-nums;
+  @apply font-medium tabular-nums text-foreground;
 }
 
-/* Institutional card */
+/* Card instituțional. */
 .card-institutional {
-  @apply bg-white border border-[#E2E8F0] rounded-md;
+  @apply rounded-md border border-border bg-card;
 }
 
 /* Custom scrollbar - minimal */
