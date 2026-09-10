@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -27,30 +27,42 @@ function SubmitButton() {
   );
 }
 
+/*
+ * Fereastra nu-și mai aduce butonul.
+ *
+ * Îl avea, împreună cu starea lui, cât timp stătea singură în bară. De când se
+ * deschide din meniul de cont, cel care o cheamă e un element de meniu — iar
+ * două butoane, unul ascuns și unul vizibil, ar fi însemnat două locuri din
+ * care se deschide aceeași fereastră. Aici rămâne doar fereastra; cine o
+ * deschide o spune prin `open`.
+ */
 interface ProfileDialogProps {
   currentFullName: string;
   currentUsername: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function ProfileDialog({ currentFullName, currentUsername }: ProfileDialogProps) {
+export function ProfileDialog({
+  currentFullName,
+  currentUsername,
+  open,
+  onOpenChange,
+}: ProfileDialogProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [state, formAction] = useFormState(updateProfile, null);
 
   useEffect(() => {
     if (state?.success) {
       toast.success("Profil actualizat.");
-      setOpen(false);
+      onOpenChange(false);
       router.refresh();
     }
-  }, [state, router]);
+  }, [state, router, onOpenChange]);
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Profilul meu
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Profilul meu</DialogTitle>
@@ -91,7 +103,7 @@ export function ProfileDialog({ currentFullName, currentUsername }: ProfileDialo
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
               >
                 Anulează
               </Button>

@@ -2,8 +2,7 @@ import Link from "next/link";
 import { ModuleTabs } from "@/components/layout/module-tabs";
 import { ToolsMenu } from "@/components/layout/tools-menu";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { ProfileDialog } from "@/components/account/profile-dialog";
-import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
+import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import type { Notification, Profile } from "@/lib/types";
 
@@ -58,16 +57,10 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
               </Button>
             </Link>
           )}
-          <ProfileDialog
-            currentFullName={profile?.full_name ?? ""}
-            currentUsername={profile?.username ?? ""}
-          />
-          <ChangePasswordDialog />
-          <form action="/auth/signout" method="post">
-            <Button variant="outline" size="sm" type="submit">
-              Deconectare
-            </Button>
-          </form>
+          {/* Trei butoane conturate deveniseră unul singur: vezi `UserMenu`
+              pentru cei 44 de pixeli de antet pe care îi câștigă pe telefon și
+              pentru motivul care contează mai mult decât ei. */}
+          <UserMenu profile={profile} />
         </div>
       </div>
     </header>

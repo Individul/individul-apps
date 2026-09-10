@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
@@ -26,25 +26,27 @@ function SubmitButton() {
   );
 }
 
-export function ChangePasswordDialog() {
-  const [open, setOpen] = useState(false);
+/** Controlată din afară, ca `ProfileDialog` — vezi motivul scris acolo. */
+interface ChangePasswordDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
   const [state, formAction] = useFormState(changePassword, null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state?.success) {
       toast.success("Parola a fost schimbată.");
-      setOpen(false);
+      onOpenChange(false);
       formRef.current?.reset();
     }
-  }, [state]);
+  }, [state, onOpenChange]);
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Schimbă parola
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Schimbă parola</DialogTitle>
@@ -82,7 +84,7 @@ export function ChangePasswordDialog() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
               >
                 Anulează
               </Button>
