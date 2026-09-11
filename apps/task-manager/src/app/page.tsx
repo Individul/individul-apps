@@ -191,10 +191,19 @@ export default async function HubPage() {
             pendingFor(o, obligations.completed.get(o.id) ?? new Set()),
           )}
         />
-        {/* Două carduri sus, egale. Al treilea modul ia rândul întreg dedesubt:
-            trei nu se împart la două coloane, iar transferurile n-au defalcare
-            pe persoane, deci într-o jumătate ar rămâne pe jumătate goale. */}
-        <div className="grid gap-4 md:grid-cols-2">
+        {/* Pe ecranul lat, cele trei module stau pe un singur rând.
+
+            Pagina ține lățimea barei de sus (1800px), iar cu două coloane
+            fiecare card ajungea pe la 850px: numele din tabelul de defalcare
+            rămânea la marginea stângă și cifrele lui la cea dreaptă, cu sute de
+            pixeli de gol între ele, iar banda de transferuri rămânea pe două
+            treimi albă. Trei coloane aduc fiecare card înapoi pe la 550px — cam
+            cât avea când pagina era îngustă — fără să strice alinierea cu bara.
+
+            De la `2xl` (1536px), nu de la `xl`: la 1280px o coloană ar avea sub
+            400px, prea puțin pentru cele șase cifre ale sarcinilor. Între `md`
+            și `2xl` rămân două coloane, iar transferurile iau rândul întreg. */}
+        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           <ModuleCard
             href="/sarcini"
             title="Sarcini"
@@ -217,12 +226,13 @@ export default async function HubPage() {
             stats={toStats(PETITION_COLUMNS, ps, psAll)}
             breakdown={petitionBreakdown}
           />
+          <TransferBand
+            className="md:col-span-2 2xl:col-span-1"
+            totals={trs}
+            institutions={transferInstitutions}
+            nextTransfer={formatDateRo(nextScheduled(todayInChisinau()))}
+          />
         </div>
-        <TransferBand
-          totals={trs}
-          institutions={transferInstitutions}
-          nextTransfer={formatDateRo(nextScheduled(todayInChisinau()))}
-        />
         <ChangelogSection />
       </main>
     </>

@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-11",
+    text: "Pe ecranele late, pagina de start așază Sarcini, Petiții și Transferuri pe un singur rând, în trei coloane. Pe două coloane chenarele ajunseseră prea late: în tabelele pe responsabili numele rămânea la o margine și cifrele lui la cealaltă, iar Transferuri era pe două treimi gol. Pe laptop rămân două coloane, ca înainte.",
+  },
+  {
+    date: "2026-09-11",
     text: "Aplicația a luat culorile și fontul (Inter) celorlalte aplicații de pe dumitru.cloud. Profilul, schimbarea parolei și deconectarea s-au strâns într-un singur meniu, sub numele tău din dreapta sus. Pe telefon bara de sus se pliază pe mai multe rânduri, în loc să iasă în afara ecranului. Iar pagina de start are acum aceeași lățime ca celelalte pagini, ca să nu mai pară împinsă la stânga față de bară.",
   },
   {
