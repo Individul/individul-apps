@@ -14,6 +14,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-11",
+    text: "Butonul „Adaugă comentariu” de la o sarcină e acum de aceeași mărime ca „Adaugă” de la pași. Era cel mai mare buton de pe pagină și atrăgea privirea de la sarcina însăși.",
+  },
+  {
+    date: "2026-09-11",
     text: "Paginile late — start, Sarcini, Petiții, Statistici, Administrare — și bara de sus s-au îngustat la 1536 px, cu margini egale în stânga și în dreapta. Pe un monitor lat conținutul ajungea la aproape 1720 px și se citea greu de la un capăt la altul. Pe laptop nu se schimbă nimic. Pe pagina de start, pe ecranul lat, cifrele de la Sarcini folosesc etichetele scurte („Așteptare” în loc de „În așteptare”), ca să încapă pe un rând; numele întreg apare la trecerea cu mausul.",
   },
   {

@@ -195,8 +195,11 @@ export function Comments({ taskId, comments, currentUserId, isAdmin }: CommentsP
           rows={3}
         />
         <div className="flex justify-end">
-          <Button onClick={handleAdd} disabled={isPending}>
-            <Send className="mr-2 h-4 w-4" /> Adaugă comentariu
+          {/* Aceeași mărime ca „Adaugă" de la pași, pe aceeași pagină: la mărimea
+              obișnuită era butonul cel mai mare de pe pagină și trăgea ochiul
+              de la sarcina însăși. */}
+          <Button size="sm" className="h-8" onClick={handleAdd} disabled={isPending}>
+            <Send className="mr-1.5 h-3.5 w-3.5" /> Adaugă comentariu
           </Button>
         </div>
       </div>
