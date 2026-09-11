@@ -53,10 +53,15 @@ export function AppHeaderSchelet() {
         <span className="text-sm font-medium">Acasă</span>
         <ModuleTabs />
         <ToolsMenu />
-        <div aria-hidden className="ml-auto flex items-center gap-2">
+        {/* Aceeași formă ca blocul din dreapta al barei adevărate: clopoțelul și
+            meniul de cont, cu aceeași pliere pe ecrane înguste. Până la meniul
+            de cont aici erau trei butoane fără pliere — pe telefon scheletul ar
+            fi ieșit tocmai în lățime, exact ce repară bara adevărată.
+            „Administrare" nu are loc rezervat: nu se știe încă cine e conectat,
+            deci la admin bara se lățește cu un buton când sosește. */}
+        <div aria-hidden className="ml-auto flex flex-wrap items-center justify-end gap-2">
           <div className="h-9 w-9 animate-pulse rounded-md bg-muted" />
-          <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
-          <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+          <div className="h-8 w-16 animate-pulse rounded-md bg-muted sm:w-40" />
         </div>
       </div>
     </header>

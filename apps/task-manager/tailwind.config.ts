@@ -53,7 +53,11 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        // Variabila pusă de `next/font` în layout, nu numele „Inter" scris de
+        // mână: numele singur cere fontul de la sistem, iar dacă nu e instalat
+        // — și pe Windows nu e — se trece tăcut la următorul din listă. Prin
+        // variabilă, fontul e cel adus de noi sau niciunul.
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
     },
   },

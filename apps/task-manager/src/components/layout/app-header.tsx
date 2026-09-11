@@ -2,8 +2,7 @@ import Link from "next/link";
 import { ModuleTabs } from "@/components/layout/module-tabs";
 import { ToolsMenu } from "@/components/layout/tools-menu";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { ProfileDialog } from "@/components/account/profile-dialog";
-import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
+import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import type { Notification, Profile } from "@/lib/types";
 
@@ -38,7 +37,12 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
             înăuntrul tab-urilor golul e de 1, deci ochiul vede singur că
             „Unelte" nu e al optulea registru. */}
         <ToolsMenu />
-        <div className="ml-auto flex items-center gap-2">
+        {/* Se pliază și el, din același motiv ca filele de module.
+            Butoanele fac laolaltă mai mult decât filele — deci plierea filelor
+            singură lăsa antetul tot mai lat decât un telefon. „Unelte", venit
+            între timp, mai adaugă din lățime pe același rând.
+            `ml-auto` rămâne: pe un rând propriu, blocul se lipește la dreapta. */}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           {profile && (
             <NotificationBell
               initialItems={notifications}
@@ -53,16 +57,10 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
               </Button>
             </Link>
           )}
-          <ProfileDialog
-            currentFullName={profile?.full_name ?? ""}
-            currentUsername={profile?.username ?? ""}
-          />
-          <ChangePasswordDialog />
-          <form action="/auth/signout" method="post">
-            <Button variant="outline" size="sm" type="submit">
-              Deconectare
-            </Button>
-          </form>
+          {/* Trei butoane conturate deveniseră unul singur: vezi `UserMenu`
+              pentru cei 44 de pixeli de antet pe care îi câștigă pe telefon și
+              pentru motivul care contează mai mult decât ei. */}
+          <UserMenu profile={profile} />
         </div>
       </div>
     </header>
