@@ -152,8 +152,15 @@ export default async function HubPage() {
         petiții, statistici și administrare bara ar fi intrat cu aceiași trei
         sute de pixeli înăuntrul tabelului. Nepotrivit era conținutul de aici,
         nu bara: acum nicio pagină nu mai iese din rând.
+
+        Mai târziu (11 septembrie) lățimea a coborât de la 1800 la 1536px, dar
+        pentru toate deodată — bara, pagina de start, sarcini, petiții,
+        statistici și administrare — tocmai ca alinierea de mai sus să rămână.
+        La 1800px, pe un monitor lat, conținutul ajungea la ~1720px și ochiul
+        avea prea mult de străbătut de la un capăt la altul. Pe laptop nu se
+        schimbă nimic: acolo pagina e oricum mai îngustă de 1536px.
       */}
-      <main className="mx-auto max-w-[1800px] p-4 xl:px-10">
+      <main className="mx-auto max-w-[1536px] p-4 xl:px-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">
             {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
@@ -193,12 +200,12 @@ export default async function HubPage() {
         />
         {/* Pe ecranul lat, cele trei module stau pe un singur rând.
 
-            Pagina ține lățimea barei de sus (1800px), iar cu două coloane
-            fiecare card ajungea pe la 850px: numele din tabelul de defalcare
-            rămânea la marginea stângă și cifrele lui la cea dreaptă, cu sute de
-            pixeli de gol între ele, iar banda de transferuri rămânea pe două
-            treimi albă. Trei coloane aduc fiecare card înapoi pe la 550px — cam
-            cât avea când pagina era îngustă — fără să strice alinierea cu bara.
+            Pagina ține lățimea barei de sus (1536px). Cu două coloane fiecare
+            card ar avea ~710px: numele din tabelul de defalcare ar rămâne la
+            marginea stângă și cifrele lui la cea dreaptă, iar banda de
+            transferuri ar fi pe jumătate albă. Trei coloane dau ~475px de card.
+            E strâmt pentru cele șase cifre ale sarcinilor — de aceea
+            `ModuleCard` trece acolo la etichetele scurte.
 
             De la `2xl` (1536px), nu de la `xl`: la 1280px o coloană ar avea sub
             400px, prea puțin pentru cele șase cifre ale sarcinilor. Între `md`

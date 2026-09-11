@@ -48,6 +48,7 @@ export function ModuleCard({
   /** Defalcare pe responsabil (doar pentru admin). Lipsă → cardul arată doar cifrele. */
   breakdown?: ModuleCardBreakdownRow[];
 }) {
+  const sase = stats.length >= 6;
   return (
     <Link
       href={href}
@@ -74,8 +75,26 @@ export function ModuleCard({
             >
               {s.value}
             </div>
-            <div className="text-xs text-muted-foreground" title={s.title}>
-              {s.label}
+            {/*
+              La trei coloane (`2xl`) cardul are ~475px, iar cu șase cifre
+              fiecare coloană rămâne sub 60px: „În așteptare" se rupea pe două
+              rânduri și strâmba tot rândul de cifre. Acolo se folosește forma
+              scurtă, aceeași ca în antetul defalcării, cu numele întreg la
+              hover. Doar la cardurile cu șase cifre — la cinci, etichetele
+              întregi încap (verificat pe probă la 1920px).
+            */}
+            <div
+              className="text-xs text-muted-foreground"
+              title={s.title ?? (sase && s.short ? s.label : undefined)}
+            >
+              {sase && s.short ? (
+                <>
+                  <span className="2xl:hidden">{s.label}</span>
+                  <span className="hidden 2xl:inline">{s.short}</span>
+                </>
+              ) : (
+                s.label
+              )}
             </div>
             {s.of !== undefined && (
               <div className="text-[11px] tabular-nums text-muted-foreground/70">

@@ -49,7 +49,7 @@ export async function AppHeaderSlot() {
 export function AppHeaderSchelet() {
   return (
     <header className="no-print border-b bg-card">
-      <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-3 p-4 xl:px-10">
+      <div className="mx-auto flex max-w-[1536px] flex-wrap items-center gap-3 p-4 xl:px-10">
         <span className="text-sm font-medium">Acasă</span>
         <ModuleTabs />
         <ToolsMenu />

@@ -19,7 +19,7 @@ export default async function PetitiiPage({
   const isAdmin = currentProfile?.role === "admin";
 
   return (
-    <main className="mx-auto max-w-[1800px] p-4 xl:px-10">
+    <main className="mx-auto max-w-[1536px] p-4 xl:px-10">
       <h1 className="mb-4 text-2xl font-semibold">Petiții</h1>
       <PetitionsWorkspace
         petitions={petitions}

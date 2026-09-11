@@ -33,7 +33,7 @@ export default async function StatisticiPage() {
        * `z-10` închis aici, ca dialogul de import — randat în portal la nivelul
        * lui `body` — să rămână deasupra lui.
        */}
-      <main className="relative isolate mx-auto max-w-[1800px] p-4 xl:px-10">
+      <main className="relative isolate mx-auto max-w-[1536px] p-4 xl:px-10">
         <TestingWatermark />
 
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">

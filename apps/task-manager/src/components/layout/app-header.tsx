@@ -28,7 +28,7 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
   const isAdmin = profile?.role === "admin";
   return (
     <header className="no-print border-b bg-card">
-      <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-3 p-4 xl:px-10">
+      <div className="mx-auto flex max-w-[1536px] flex-wrap items-center gap-3 p-4 xl:px-10">
         <Link href="/" className="text-sm font-medium">
           Acasă
         </Link>
