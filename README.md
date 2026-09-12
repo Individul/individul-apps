@@ -76,13 +76,11 @@ din monorepo și din livrare; depozitul de origine rămâne
 Fișierele deja urcate pe server, la `/var/www/html/clasificare/`, nu se șterg
 singure odată cu pasul de livrare — trebuie scoase de acolo separat.
 
-### PDF Toolbox
-Instrumente PDF pentru procesarea documentelor. (FastAPI + Docker)
-
-- Comprimare PDF
-- Conversie imagini în PDF
-- Îmbinare PDF-uri
-- Ștergere și extragere pagini
+### PDF Toolbox — retras
+Instrumentele PDF au trecut la [unelte.dumitru.cloud](https://unelte.dumitru.cloud/pdf)
+(depozitul `Individul/unelte`), unde lucrează în browser: fișierul nu mai pleacă
+de pe calculatorul omului. Sursa FastAPI a fost scoasă din depozit; containerul
+de pe server nu s-a oprit singur odată cu ea.
 
 ### Task Manager
 Task manager de echipă (4-5 persoane), **Vercel-native**. Găzduire GitHub + Vercel (separat de serverul Hetzner). (Next.js + Supabase)
@@ -116,7 +114,6 @@ individul-apps/
 │   ├── petitii/         # Registru Petiții
 │   │   ├── backend/     # Django API
 │   │   └── frontend/    # Next.js App
-│   ├── pdf/             # PDF Toolbox (FastAPI)
 │   └── task-manager/    # Task Manager (Next.js + Supabase, Vercel-native)
 ├── .github/
 │   └── workflows/       # GitHub Actions (deploy.yml)
@@ -132,7 +129,6 @@ Automat via GitHub Actions la fiecare push pe branch-ul `main`.
 | Aplicație | Frontend | API | Ruta nginx |
 |-----------|----------|-----|------------|
 | Portal | 80 (nginx static) | - | `/` |
-| PDF Toolbox | - | 8001 | `/pdf/` |
 | Petiții | 3003 | 8002 | `/petitii/`, `/petitii-api/` |
 | Termene | 3004 | 8003 | `/termene/`, `/termene-api/` |
 | Hub | 3005 | 8004 | `/hub/`, `/hub-api/` |
@@ -151,5 +147,5 @@ Automat via GitHub Actions la fiecare push pe branch-ul `main`.
 - Hub: http://46.224.209.71/hub/
 - Termene: http://46.224.209.71/termene/
 - Petiții: http://46.224.209.71/petitii/
-- PDF Toolbox: http://46.224.209.71/pdf/
+- Unelte (termen, cumul, PDF): https://unelte.dumitru.cloud
 - Task Manager: găzduit pe Vercel (vezi `apps/task-manager/README.md`)
