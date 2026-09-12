@@ -5,7 +5,8 @@
 # de aici (`d724997`), dar declanșatorul rămăsese pe orice push în `main`. Așa
 # că fiecare împingere care nu atingea serverul cu nimic reconstruia totuși
 # prin docker-compose șase aplicații pe el: Portal, PDF Toolbox, Termene,
-# Petiții, Mega-App și Monitor Ședințe.
+# Petiții, Mega-App și Monitor Ședințe. (PDF Toolbox a fost retras între timp —
+# uneltele lui sunt la unelte.dumitru.cloud — deci au rămas cinci.)
 #
 # Rămâne pornirea manuală, nu se șterge fișierul: aplicațiile acelea sunt încă
 # vii pe server, iar parola de root e pierdută — cheia din `secrets` e singura
@@ -48,73 +49,6 @@ jobs:
             cp /var/www/html/portal/index.html /var/www/html/index.html || true
             echo "Portal files deployed"
 
-      # ========== Deploy PDF Toolbox ==========
-      - name: Prepare PDF Toolbox directory
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            mkdir -p /opt/pdf-toolbox/app
-            mkdir -p /opt/pdf-toolbox/web/landing
-            mkdir -p /opt/pdf-toolbox/web
-
-      - name: Copy PDF Toolbox app files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "apps/pdf/app/*"
-          target: "/opt/pdf-toolbox/app/"
-          strip_components: 3
-
-      - name: Copy PDF Toolbox web files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "apps/pdf/web/*"
-          target: "/opt/pdf-toolbox/web/"
-          strip_components: 3
-
-      - name: Copy PDF Toolbox landing files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "apps/pdf/web/landing/*"
-          target: "/opt/pdf-toolbox/web/landing/"
-          strip_components: 4
-
-      - name: Copy PDF Toolbox Dockerfile
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "apps/pdf/Dockerfile,apps/pdf/requirements.txt"
-          target: "/opt/pdf-toolbox/"
-          strip_components: 2
-
-      - name: Build PDF Toolbox docker-compose
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.SERVER_HOST }}
-          username: ${{ env.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /opt/pdf-toolbox
-            printf '%s\n' 'version: "3.8"' 'services:' '  app:' '    build: .' '    container_name: pdf-toolbox-app' '    restart: unless-stopped' '    ports:' '      - "8001:8000"' '    environment:' '      - PYTHONUNBUFFERED=1' > docker-compose.yml
-            docker stop pdf-toolbox-app 2>/dev/null || true
-            docker rm pdf-toolbox-app 2>/dev/null || true
-            docker-compose build
-            docker-compose up -d
-            docker ps | grep pdf-toolbox
-
       - name: Configure nginx for all apps
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -136,19 +70,7 @@ jobs:
                     try_files $uri $uri/ =404;
                 }
 
-                location /pdf/ {
-                    proxy_pass http://127.0.0.1:8001/;
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    client_max_body_size 500M;
-                }
-
-                location /pdf/api/ {
-                    proxy_pass http://127.0.0.1:8001/api/;
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    client_max_body_size 500M;
-                }
+                # PDF Toolbox: retras — uneltele sunt la unelte.dumitru.cloud
 
                 # Task Manager: mutat pe Vercel (nu mai e servit de acest nginx)
 
@@ -558,9 +480,6 @@ jobs:
             echo ""
             echo "Nginx status:"
             systemctl is-active nginx
-            echo ""
-            echo "PDF Toolbox health:"
-            curl -s http://localhost:8001/health || echo "PDF Toolbox not responding"
             echo ""
             echo "Petitii API health:"
             curl -s http://localhost:8002/api/ || echo "Petitii API not responding"

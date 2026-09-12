@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ModuleTabs } from "@/components/layout/module-tabs";
-import { ToolsMenu } from "@/components/layout/tools-menu";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
@@ -33,14 +32,9 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
           Acasă
         </Link>
         <ModuleTabs />
-        {/* Despărțit de tab-uri prin golul de 3 al barei, nu printr-o linie:
-            înăuntrul tab-urilor golul e de 1, deci ochiul vede singur că
-            „Unelte" nu e al optulea registru. */}
-        <ToolsMenu />
         {/* Se pliază și el, din același motiv ca filele de module.
             Butoanele fac laolaltă mai mult decât filele — deci plierea filelor
-            singură lăsa antetul tot mai lat decât un telefon. „Unelte", venit
-            între timp, mai adaugă din lățime pe același rând.
+            singură lăsa antetul tot mai lat decât un telefon.
             `ml-auto` rămâne: pe un rând propriu, blocul se lipește la dreapta. */}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           {profile && (

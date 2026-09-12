@@ -1,6 +1,5 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleTabs } from "@/components/layout/module-tabs";
-import { ToolsMenu } from "@/components/layout/tools-menu";
 import {
   getCurrentProfile,
   getCurrentUserId,
@@ -52,7 +51,6 @@ export function AppHeaderSchelet() {
       <div className="mx-auto flex max-w-[1536px] flex-wrap items-center gap-3 p-4 xl:px-10">
         <span className="text-sm font-medium">Acasă</span>
         <ModuleTabs />
-        <ToolsMenu />
         {/* Aceeași formă ca blocul din dreapta al barei adevărate: clopoțelul și
             meniul de cont, cu aceeași pliere pe ecrane înguste. Până la meniul
             de cont aici erau trei butoane fără pliere — pe telefon scheletul ar
