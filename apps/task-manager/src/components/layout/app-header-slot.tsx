@@ -1,6 +1,5 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleTabs } from "@/components/layout/module-tabs";
-import { ToolsMenu } from "@/components/layout/tools-menu";
 import {
   getCurrentProfile,
   getCurrentUserId,
@@ -52,7 +51,6 @@ export function AppHeaderSchelet() {
       <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-3 p-4 xl:px-10">
         <span className="text-sm font-medium">Acasă</span>
         <ModuleTabs />
-        <ToolsMenu />
         <div aria-hidden className="ml-auto flex items-center gap-2">
           <div className="h-9 w-9 animate-pulse rounded-md bg-muted" />
           <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
