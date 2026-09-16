@@ -2,8 +2,12 @@ import { fold } from "./text";
 import type { Profile } from "./types";
 
 /**
- * Împărțirea petițiilor între colege, după litera cu care începe numele
- * petiționarului.
+ * Împărțirea lucrului între colege, după litera cu care începe: numele
+ * petiționarului la petiții, titlul la sarcini.
+ *
+ * Aceeași listă de litere pentru amândouă, dinadins: e o singură împărțire a
+ * alfabetului între aceleași două colege, nu două reguli care s-ar putea
+ * depărta una de alta pe tăcute.
  *
  * Literele sunt scrise pliate — fără diacritice și cu minuscule — fiindcă asta
  * întoarce `fold`. Nu e o simplificare: „Ș" merge la aceeași persoană ca „S", iar
@@ -22,18 +26,18 @@ const DUPA_LITERA: { nume: string; litere: string }[] = [
 ];
 
 /**
- * Cine ar trebui să primească petiția, după numele petiționarului.
+ * Cine ar trebui să primească lucrarea, după textul care o deschide.
  *
  * `null` înseamnă „nu știu" și se traduce printr-un câmp lăsat gol, nu printr-o
- * ghicire: nume gol, literă neacoperită, sau persoana din regulă negăsită
- * printre profiluri.
+ * ghicire: text gol, primul caracter neacoperit (o cifră, o ghilimea, o literă
+ * din afara listelor), sau persoana din regulă negăsită printre profiluri.
  *
  * Ultimul caz merită atenție: potrivirea se face pe nume, deci dacă una dintre
  * colege își schimbă numele în profil, regula încetează să se aplice — tăcut,
  * dar fără să greșească. Atunci se schimbă numele aici, într-un rând.
  */
-export function autoAssignee(petitioner: string, profiles: Profile[]): string | null {
-  const litera = fold(petitioner.trim())[0];
+export function autoAssignee(text: string, profiles: Profile[]): string | null {
+  const litera = fold(text.trim())[0];
   if (!litera) return null;
 
   const regula = DUPA_LITERA.find((r) => r.litere.includes(litera));

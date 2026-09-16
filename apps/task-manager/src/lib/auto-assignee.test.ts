@@ -46,6 +46,20 @@ describe("cui îi revine petiția", () => {
   });
 });
 
+describe("cui îi revine sarcina", () => {
+  it("decide prima literă a titlului, ca la petiții numele", () => {
+    expect(autoAssignee("Demers instanța Bălți", PROFILURI)).toBe("n1");
+    expect(autoAssignee("Raport săptămânal", PROFILURI)).toBe("a1");
+  });
+
+  it("titlul care nu începe cu literă lasă câmpul gol", () => {
+    // Titlurile nu sunt nume: încep și cu cifre, și cu ghilimele. Atunci alege
+    // omul, ca la o literă neacoperită.
+    expect(autoAssignee("2 dosare de verificat", PROFILURI)).toBeNull();
+    expect(autoAssignee("„Termen” de calculat", PROFILURI)).toBeNull();
+  });
+});
+
 describe("structura regulii", () => {
   it("nicio literă nu e trecută la amândouă", () => {
     // O literă în ambele liste ar face atribuirea să depindă de ordinea din cod.

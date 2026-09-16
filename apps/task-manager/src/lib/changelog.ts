@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-16",
+    text: "La o sarcină nouă, responsabilul se completează singur după litera cu care începe titlul — aceeași împărțire a alfabetului ca la petiții, unde decide numele petiționarului. Câmpul rămâne gol dacă titlul începe cu o cifră sau cu o literă neacoperită (K, Q, X, Y), iar odată ce alegi tu pe cineva din listă, titlul nu mai schimbă nimic. Merge doar la administrator: la ceilalți sarcina rămâne, ca până acum, pe numele celui care o scrie.",
+  },
+  {
     date: "2026-09-11",
     text: "Butonul „Adaugă comentariu” de la o sarcină e acum de aceeași mărime ca „Adaugă” de la pași. Era cel mai mare buton de pe pagină și atrăgea privirea de la sarcina însăși.",
   },

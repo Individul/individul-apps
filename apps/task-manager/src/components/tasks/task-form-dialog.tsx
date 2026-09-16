@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createTask, updateTask } from "@/app/tasks/actions";
+import { autoAssignee } from "@/lib/auto-assignee";
 import { canReassignTask } from "@/lib/permissions";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,8 @@ export function TaskFormDialog({
 }: TaskFormDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  // Dacă omul a ales el responsabilul, regula după literă tace de acolo încolo.
+  const [assigneeAles, setAssigneeAles] = useState(false);
   const isEdit = Boolean(task);
   const canReassign = canReassignTask(isAdmin);
 
@@ -108,8 +111,34 @@ export function TaskFormDialog({
     if (open) {
       reset(defaultValues(task, canReassign, currentUserId));
       setSelectedTagIds((task?.tags ?? []).map((t) => t.id));
+      // La fiecare deschidere se pornește de la zero. Pe o sarcină deschisă din
+      // listă responsabilul e deja hotărât: regula n-are ce rescrie acolo.
+      setAssigneeAles(Boolean(task));
     }
   }, [open, task, canReassign, currentUserId, reset]);
+
+  const title = watch("title");
+
+  /*
+   * Responsabilul se completează singur, după litera cu care începe titlul —
+   * aceeași împărțire a alfabetului ca la petiții, unde decide numele
+   * petiționarului.
+   *
+   * Doar la sarcini noi și doar la administrator: unui membru câmpul îi e
+   * oricum blocat, iar `defaultValues` i-l pune pe el însuși, ceea ce regula
+   * n-are voie să strice.
+   *
+   * Se face aici, în formular, nu la salvare: omul vede cui îi revine înainte
+   * să apese și schimbă pe loc dacă nu-i convine.
+   *
+   * `null` (titlu încă gol, titlu care începe cu o cifră) golește câmpul în loc
+   * să-l lase pe cel dinainte — altfel, ștergând titlul, ar rămâne agățat
+   * responsabilul calculat pentru un titlu care nu mai există.
+   */
+  useEffect(() => {
+    if (task || !canReassign || assigneeAles) return;
+    setValue("assignee_id", autoAssignee(title ?? "", profiles) ?? "");
+  }, [title, task, canReassign, assigneeAles, profiles, setValue]);
 
   const onSubmit = (values: TaskInput) => {
     startTransition(async () => {
@@ -238,7 +267,10 @@ export function TaskFormDialog({
                 render={({ field }) => (
                   <Select
                     value={field.value ? field.value : UNASSIGNED}
-                    onValueChange={(v) => field.onChange(v === UNASSIGNED ? "" : v)}
+                    onValueChange={(v) => {
+                      field.onChange(v === UNASSIGNED ? "" : v);
+                      setAssigneeAles(true);
+                    }}
                     disabled={!canReassign}
                   >
                     <SelectTrigger>
