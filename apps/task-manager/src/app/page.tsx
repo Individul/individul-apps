@@ -240,7 +240,7 @@ export default async function HubPage() {
             nextTransfer={formatDateRo(nextScheduled(todayInChisinau()))}
           />
         </div>
-        <ChangelogSection />
+        <ChangelogSection esteAdmin={isAdmin} />
       </main>
     </>
   );

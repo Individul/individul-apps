@@ -5,11 +5,15 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 
-import { CHANGELOG, HUB_CHANGELOG_COUNT, isNewSince } from "@/lib/changelog";
+import { changelogPentru, HUB_CHANGELOG_COUNT, isNewSince } from "@/lib/changelog";
 
 const STORAGE_KEY = "changelog-seen";
 
-export function ChangelogSection() {
+export function ChangelogSection({ esteAdmin }: { esteAdmin: boolean }) {
+  // Lista omului acesta: cele doar-pentru-admin nu ajung la ceilalți nici aici,
+  // nici la numărătoarea marcajului „nou" de mai jos.
+  const intrari = changelogPentru(esteAdmin);
+
   // localStorage nu există la randarea pe server: se citește după montare, ca
   // marcajul „nou" să nu producă nepotrivire de hidratare. Tot atunci se
   // însemnează vizita, deci marcajele dispar la următoarea intrare.
@@ -17,18 +21,22 @@ export function ChangelogSection() {
 
   useEffect(() => {
     setLastSeen(window.localStorage.getItem(STORAGE_KEY));
-    const newest = CHANGELOG[0]?.date;
+    // Lista se recalculează aici, nu se ia din `intrari`: acela e un vector nou
+    // la fiecare randare, iar ca dependență ar reporni efectul după propriul
+    // `setLastSeen`. A doua rulare ar citi data abia scrisă și ar însemna-o ca
+    // „văzută", deci marcajul „nou" n-ar mai apărea niciodată.
+    const newest = changelogPentru(esteAdmin)[0]?.date;
     if (newest) window.localStorage.setItem(STORAGE_KEY, newest);
-  }, []);
+  }, [esteAdmin]);
 
-  const shown = CHANGELOG.slice(0, HUB_CHANGELOG_COUNT);
+  const shown = intrari.slice(0, HUB_CHANGELOG_COUNT);
   if (shown.length === 0) return null;
 
   return (
     <section className="mt-8 border-t pt-4">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-[13px] font-medium">Noutăți</h2>
-        {CHANGELOG.length > shown.length && (
+        {intrari.length > shown.length && (
           <Link
             href="/noutati"
             className="text-xs text-muted-foreground transition-colors hover:text-foreground"

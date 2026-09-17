@@ -2,11 +2,15 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { ro } from "date-fns/locale";
 
-import { CHANGELOG } from "@/lib/changelog";
+import { changelogPentru } from "@/lib/changelog";
+import { getCurrentProfile } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function NoutatiPage() {
+  const me = await getCurrentProfile();
+  const intrari = changelogPentru(me?.role === "admin");
+
   return (
     <main className="mx-auto max-w-3xl p-4 xl:px-10">
       <div className="mb-6 flex items-center gap-3">
@@ -19,11 +23,11 @@ export default async function NoutatiPage() {
         </Link>
       </div>
 
-      {CHANGELOG.length === 0 ? (
+      {intrari.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nimic deocamdată.</p>
       ) : (
         <ul className="space-y-3">
-          {CHANGELOG.map((entry) => (
+          {intrari.map((entry) => (
             <li key={`${entry.date}-${entry.text}`} className="flex gap-4">
               <span className="w-24 shrink-0 tabular-nums text-[13px] text-muted-foreground">
                 {format(parseISO(entry.date), "d MMM yyyy", { locale: ro })}

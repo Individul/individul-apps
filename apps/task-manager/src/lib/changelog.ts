@@ -9,11 +9,21 @@ export interface ChangelogEntry {
   /** ISO (AAAA-LL-ZZ). Se compară ca text, deci formatul e obligatoriu. */
   date: string;
   text: string;
+  /**
+   * Se arată doar administratorului.
+   *
+   * Pentru schimbările care se petrec într-un loc unde ceilalți n-au cum intra.
+   * O noutate despre un buton din Administrare nu-i spune unui membru decât că
+   * există ceva ce nu poate deschide — iar noutățile sunt citite de toți, pe
+   * pagina de start.
+   */
+  doarAdmin?: true;
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-17",
+    doarAdmin: true,
     text: "În Administrare a apărut „Raport de activitate”: pe săptămână, lună, trimestru, semestru sau an se vede, pe fiecare responsabil, câte sarcini și petiții a încheiat, câte i-au intrat și câte îi rămâneau deschise la sfârșitul perioadei — iar sub cifre, lista lucrărilor, ca să se vadă și care anume. Se poate tipări. Ca să poată fi numărate pe perioade, sarcinile rețin de acum ziua în care au trecut pe „Gata”; cele încheiate până la 28 iulie sunt dinaintea jurnalului din care s-a refăcut trecutul și apar deoparte, ca nedatate.",
   },
   {
@@ -237,6 +247,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     text: "Pagina principală adună dintr-o privire cifrele pe sarcini și petiții.",
   },
 ];
+
+/**
+ * Noutățile pe care le vede omul acesta.
+ *
+ * Un singur loc din care ies și lista de pe pagina de start, și cea din
+ * /noutati, și data după care se aprinde marcajul „nou". Filtrate separat, cele
+ * trei s-ar fi despărțit: marcajul „nou" numără din cea mai recentă intrare,
+ * deci unui membru i s-ar fi aprins pentru o noutate pe care n-o vede nicăieri.
+ */
+export function changelogPentru(esteAdmin: boolean): ChangelogEntry[] {
+  return esteAdmin ? CHANGELOG : CHANGELOG.filter((e) => !e.doarAdmin);
+}
 
 /** Câte se arată pe pagina principală; restul stau în /noutati. */
 export const HUB_CHANGELOG_COUNT = 4;
