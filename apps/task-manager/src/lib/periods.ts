@@ -159,3 +159,16 @@ export function readAnchor(value: string | string[] | undefined, azi: Date): Dat
   if (Number.isNaN(zi.getTime()) || toISODate(zi) !== cerut) return azi;
   return zi > azi ? azi : zi;
 }
+
+/**
+ * Ziua calendaristică (AAAA-LL-ZZ) în care cade un instant, la Chișinău.
+ *
+ * Perechea lui `todayInChisinau`, pentru momente citite din bază: acolo orele
+ * sunt scrise în UTC, iar o sarcină încheiată pe 1 septembrie la 23:30 e scrisă
+ * `2026-09-01T20:30Z`. Tăiată cu `slice(0, 10)`, ar cădea în august pentru orice
+ * raport lunar — o zi mutată dintr-o lună în alta, tăcut, chiar la hotarul unde
+ * se uită omul.
+ */
+export function ziuaChisinau(instant: Date | string): string {
+  return toISODate(todayInChisinau(typeof instant === "string" ? new Date(instant) : instant));
+}

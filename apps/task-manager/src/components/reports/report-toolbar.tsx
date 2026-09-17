@@ -7,9 +7,14 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PERIODS, type Period } from "@/lib/periods";
 import { cn } from "@/lib/utils";
-import { PeriodNav } from "./period-nav";
+import { PeriodNav } from "@/components/reports/period-nav";
 
 interface ReportToolbarProps {
+  /** Adresa raportului, pe care se pun parametrii. */
+  basePath: string;
+  /** Unde duce săgeata de întoarcere, și cum se numește locul. */
+  inapoiHref: string;
+  inapoiEticheta: string;
   period: Period;
   /** Intervalul afișat, scris în litere — ce vede omul între săgeți. */
   eticheta: string;
@@ -19,8 +24,22 @@ interface ReportToolbarProps {
   inainte: string | null;
 }
 
-/** Bara de deasupra raportului. Nu se tipărește — vezi clasa `no-print`. */
-export function ReportToolbar({ period, eticheta, inapoi, inainte }: ReportToolbarProps) {
+/**
+ * Bara de deasupra unui raport pe perioadă. Nu se tipărește — clasa `no-print`.
+ *
+ * Aceeași piesă la ședințe și la raportul de activitate din administrare: felul
+ * perioadei, săgețile și butonul de tipărit se poartă la fel oriunde, iar două
+ * copii ale ei s-ar fi despărțit la prima corectură.
+ */
+export function ReportToolbar({
+  basePath,
+  inapoiHref,
+  inapoiEticheta,
+  period,
+  eticheta,
+  inapoi,
+  inainte,
+}: ReportToolbarProps) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -34,16 +53,16 @@ export function ReportToolbar({ period, eticheta, inapoi, inainte }: ReportToolb
   const mergiLa = (chei: Record<string, string>) => {
     const q = new URLSearchParams(params.toString());
     for (const [k, v] of Object.entries(chei)) q.set(k, v);
-    router.push(`/sedinte/raport?${q.toString()}`);
+    router.push(`${basePath}?${q.toString()}`);
   };
 
   return (
     <div className="no-print mb-6 flex flex-wrap items-center gap-2 border-b pb-4">
       <Link
-        href="/sedinte"
+        href={inapoiHref}
         className="text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        ← Ședințe
+        ← {inapoiEticheta}
       </Link>
 
       <div className="ml-4 flex flex-wrap gap-1.5">
@@ -66,7 +85,7 @@ export function ReportToolbar({ period, eticheta, inapoi, inainte }: ReportToolb
 
       <div className="w-full sm:ml-4 sm:w-auto">
         <PeriodNav
-          basePath="/sedinte/raport"
+          basePath={basePath}
           eticheta={eticheta}
           inapoi={inapoi}
           inainte={inainte}

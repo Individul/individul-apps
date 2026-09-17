@@ -13,6 +13,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-17",
+    text: "În Administrare a apărut „Raport de activitate”: pe săptămână, lună, trimestru, semestru sau an se vede, pe fiecare responsabil, câte sarcini și petiții a încheiat, câte i-au intrat și câte îi rămâneau deschise la sfârșitul perioadei — iar sub cifre, lista lucrărilor, ca să se vadă și care anume. Se poate tipări. Ca să poată fi numărate pe perioade, sarcinile rețin de acum ziua în care au trecut pe „Gata”; cele încheiate până la 28 iulie sunt dinaintea jurnalului din care s-a refăcut trecutul și apar deoparte, ca nedatate.",
+  },
+  {
     date: "2026-09-16",
     text: "La o sarcină nouă, responsabilul se completează singur după litera cu care începe titlul — aceeași împărțire a alfabetului ca la petiții, unde decide numele petiționarului. Câmpul rămâne gol dacă titlul începe cu o cifră sau cu o literă neacoperită (K, Q, X, Y), iar odată ce alegi tu pe cineva din listă, titlul nu mai schimbă nimic. Merge doar la administrator: la ceilalți sarcina rămâne, ca până acum, pe numele celui care o scrie.",
   },

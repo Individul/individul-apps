@@ -23,6 +23,8 @@ export interface Task {
   due_date: string | null;
   /** De când așteaptă răspuns extern; null în orice altă stare. */
   waiting_since: string | null;
+  /** Când a intrat în „Gata"; null în orice altă stare. O pune baza (0030). */
+  completed_at: string | null;
   assignee_id: string | null;
   created_by: string;
   created_at: string;

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, BarChart3, Download } from "lucide-react";
 
 import { getCurrentProfile, getProfiles, getAuditLog, getLastBackupRun } from "@/lib/queries";
 import { BackupStatus } from "@/components/admin/backup-status";
@@ -56,6 +56,20 @@ export default async function AdminPage({
             <CreateUserDialog />
           </div>
           <UserRoleTable profiles={profiles} currentUserId={me.id} />
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Raport de activitate</h2>
+          <p className="text-sm text-muted-foreground">
+            Cine câte și ce sarcini și petiții a încheiat într-o perioadă — săptămână,
+            lună, trimestru, semestru sau an — plus câte i-au intrat și câte i-au rămas
+            deschise la sfârșitul ei.
+          </p>
+          <Link href="/admin/raport">
+            <Button variant="outline">
+              <BarChart3 className="mr-2 h-4 w-4" /> Deschide raportul
+            </Button>
+          </Link>
         </section>
 
         <section className="space-y-3">

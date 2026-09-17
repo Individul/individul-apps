@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
-import { PeriodNav } from "./period-nav";
+import { PeriodNav } from "@/components/reports/period-nav";
 import {
   aggregate,
   computeIndicators,

@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
 import { getCurrentProfile, getHearings } from "@/lib/queries";
-import { ReportToolbar } from "@/components/hearings/report-toolbar";
+import { ReportToolbar } from "@/components/reports/report-toolbar";
 import { aggregate, computeIndicators, missingWorkdays } from "@/lib/hearings";
 import {
   PERIODS,
@@ -65,6 +65,9 @@ export default async function RaportSedintePage({
   return (
     <main className="mx-auto max-w-3xl p-6 print:max-w-none print:p-0">
       <ReportToolbar
+        basePath="/sedinte/raport"
+        inapoiHref="/sedinte"
+        inapoiEticheta="Ședințe"
         period={period}
         eticheta={rangeLabelRo(range)}
         inapoi={toISODate(shiftPeriod(period, anchor, -1))}

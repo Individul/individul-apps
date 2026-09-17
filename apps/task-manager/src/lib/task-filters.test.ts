@@ -4,7 +4,7 @@ import type { Task } from "./types";
 
 const t = (over: Partial<Task>): Task => ({
   id: "1", title: "x", description: null, status: "todo", priority: "medium",
-  due_date: null, waiting_since: null,
+  due_date: null, waiting_since: null, completed_at: null,
   assignee_id: null, created_by: "u", created_at: "", updated_at: "", ...over,
 });
 

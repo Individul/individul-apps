@@ -1,6 +1,12 @@
 import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  COLOANE_PETITIE,
+  COLOANE_SARCINA,
+  type PetitieRaport,
+  type SarcinaRaport,
+} from "@/lib/raport-activitate";
 import type {
   Task,
   Profile,
@@ -533,4 +539,31 @@ export async function getDefendants(): Promise<Defendant[]> {
   // Grațios dacă migrarea 0025 nu e încă aplicată.
   if (error) return [];
   return (data ?? []) as unknown as Defendant[];
+}
+
+/**
+ * Sarcinile și petițiile din care se face raportul de activitate.
+ *
+ * Se aduc toate, nu doar cele din perioadă: raportul spune și câte rămâneau
+ * neîncheiate în ultima zi, iar la întrebarea asta răspund tocmai rândurile
+ * vechi, din afara intervalului. O filtrare după perioadă ar tăia exact ce
+ * trebuie numărat.
+ *
+ * Rămâne cinstit cât registrul e mic — sub o sută de sarcini și sub patru sute
+ * de petiții, din care se aduc șase, respectiv șapte coloane. Când numărul va
+ * crește destul cât să se simtă, socoteala se mută într-o interogare de-a bazei;
+ * până atunci, o funcție SQL în plus e mai mult de întreținut decât de câștigat.
+ */
+export async function getSarciniRaport(): Promise<SarcinaRaport[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("tasks").select(COLOANE_SARCINA.join(","));
+  if (error) throw error;
+  return (data ?? []) as unknown as SarcinaRaport[];
+}
+
+export async function getPetitiiRaport(): Promise<PetitieRaport[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("petitions").select(COLOANE_PETITIE.join(","));
+  if (error) throw error;
+  return (data ?? []) as unknown as PetitieRaport[];
 }
