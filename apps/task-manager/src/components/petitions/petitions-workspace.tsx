@@ -60,9 +60,28 @@ export function PetitionsWorkspace({
    * deci se strângea la zero și apoi conținutul dădea peste vecini: antetele se
    * suprapuneau, iar „Stare” ieșea din ecran.
    *
-   * Vederile (224px) rămân lângă tabel de la 1280. Rezumatul (288px) cere 1700,
-   * altfel coboară sub tabel pe două coloane — acolo se citește la fel de bine,
-   * fiindcă e informație de referință, nu navigare.
+   * Vederile (224px) rămân lângă tabel de la 1280. Rezumatul cere 1700, altfel
+   * coboară sub tabel pe două coloane — acolo se citește la fel de bine, fiindcă
+   * e informație de referință, nu navigare.
+   *
+   * Lățimile de aici nu sunt de gust, sunt socotite, iar socoteala se face pe
+   * CHENARUL paginii, nu pe fereastră. Pagina e plafonată la 1536px, deci de la
+   * 1616px în sus fereastra poate să crească oricât: tabelului tot atât îi
+   * rămâne. La 1536 − 80 (marginile paginii) = 1456 de împărțit, din care
+   * vederile iau 224 + 32 gol, iar rezumatul lățimea lui + golul lui.
+   *
+   * Cu rezumatul la 288 și golul la 32, tabelului îi rămâneau 878 — cu 22 mai
+   * puțin decât cei 900 sub care `petitions-list` pune bară de derulare. Așa a
+   * și fost, din 11 septembrie până în 18: pragul de 1700 fusese socotit când
+   * pagina era largă de 1800, iar îngustarea la 1536 l-a lăsat în urmă. Nimic
+   * nu se rupsese vizibil — doar apăruse o bară de derulare orizontală într-un
+   * chenar, adică tocmai felul de defect pe care nimeni nu-l raportează ca
+   * defect.
+   *
+   * Rezumatul a scăzut la 256 și golul la 24, deci tabelul are acum 918 —
+   * măsurat în browser, la 1700, 1999 și 2560, nu socotit pe hârtie. Rămân 18px
+   * de rezervă: cine schimbă vreo lățime de aici să măsoare din nou, fiindcă
+   * sub 900 bara se întoarce fără să se rupă nimic altceva.
    */
   return (
     <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
@@ -75,7 +94,7 @@ export function PetitionsWorkspace({
         />
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-6 min-[1700px]:flex-row min-[1700px]:items-start min-[1700px]:gap-8">
+      <div className="flex min-w-0 flex-1 flex-col gap-6 min-[1700px]:flex-row min-[1700px]:items-start min-[1700px]:gap-6">
         <div className="min-w-0 flex-1">
           <PetitionsList
             petitions={petitions}
@@ -88,7 +107,7 @@ export function PetitionsWorkspace({
           />
         </div>
 
-        <aside className="grid gap-4 sm:grid-cols-2 min-[1700px]:w-72 min-[1700px]:shrink-0 min-[1700px]:grid-cols-1">
+        <aside className="grid gap-4 sm:grid-cols-2 min-[1700px]:w-64 min-[1700px]:shrink-0 min-[1700px]:grid-cols-1">
           <PetitionSummary
             petitions={summaryPetitions}
             label={isAdmin ? "Rezumat" : "Rezumatul meu"}

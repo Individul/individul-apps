@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-18",
+    text: "La Petiții, pe ecran lat, tabelul nu mai cere derulare într-o parte ca să se vadă coloana „Stare”. Din 11 septembrie, de când paginile late s-au îngustat, rezumatul din dreapta lăsa tabelului cu 22 de pixeli mai puțin decât îi trebuie, iar chenarul lui căpătase o bară de derulare orizontală. Rezumatul s-a subțiat puțin, iar tabelul are acum tot ce-i trebuie, cu „Obiect” încăpând întreg.",
+  },
+  {
+    date: "2026-09-18",
     text: "În banda de cifre a registrului „Preveniți și inculpați”, sub „Preveniți” și sub „Inculpați” scrie acum și câți dintre ei sunt la închis și câți la semiînchis. Până acum se vedea doar totalul fiecărei categorii, iar împărțirea pe tip era dată doar pe tot registrul, la grămadă.",
   },
   {
