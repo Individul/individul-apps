@@ -103,8 +103,8 @@ export function DefendantList({
       <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-5 sm:grid-cols-3 lg:grid-cols-6">
         {[
           { label: "În evidență", value: counts.activi },
-          { label: "Preveniți", value: counts.preveniti },
-          { label: "Inculpați", value: counts.inculpati },
+          { label: "Preveniți", value: counts.preveniti, dupaTip: counts.peCategorie.prevenit },
+          { label: "Inculpați", value: counts.inculpati, dupaTip: counts.peCategorie.inculpat },
           { label: "Închis", value: counts.inchis },
           { label: "Semiînchis", value: counts.semiinchis },
           { label: "Trecuți la condamnat", value: counts.condamnati },
@@ -112,6 +112,17 @@ export function DefendantList({
           <div key={s.label}>
             <div className="text-2xl font-medium tabular-nums">{s.value}</div>
             <div className="text-xs text-muted-foreground">{s.label}</div>
+            {/*
+              Despărțirea pe tip stă doar sub cele două categorii, nu și sub
+              „Închis" și „Semiînchis". Acolo ar fi aceleași patru cifre scrise
+              a doua oară, de-a curmezișul — iar cine ar aduna banda în gând ar
+              număra fiecare om de patru ori.
+            */}
+            {s.dupaTip && (
+              <div className="text-xs tabular-nums text-muted-foreground">
+                {s.dupaTip.inchis} închis · {s.dupaTip.semiinchis} semiînchis
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -48,6 +48,60 @@ describe("countDefendants", () => {
     expect(countDefendants([])).toEqual({
       activi: 0, preveniti: 0, inculpati: 0,
       inchis: 0, semiinchis: 0, condamnati: 0, total: 0,
+      peCategorie: {
+        prevenit: { inchis: 0, semiinchis: 0, total: 0 },
+        inculpat: { inchis: 0, semiinchis: 0, total: 0 },
+      },
+    });
+  });
+
+  describe("împărțirea pe tip, în fiecare categorie", () => {
+    const rows = [
+      d({ id: "p1", preventive_measure: true, regime: "inchis" }),
+      d({ id: "p2", preventive_measure: true, regime: "inchis" }),
+      d({ id: "p3", preventive_measure: true, regime: "semiinchis" }),
+      d({ id: "i1", preventive_measure: false, regime: "inchis" }),
+      d({ id: "i2", preventive_measure: false, regime: "semiinchis" }),
+      // Condamnat: are și măsură, și tip, dar a ieșit din grija curentă.
+      d({
+        id: "c1", preventive_measure: true, regime: "inchis",
+        status: "condamnat", convicted_on: "2026-08-20",
+      }),
+    ];
+
+    it("fiecare categorie își are tipurile numărate", () => {
+      const c = countDefendants(rows);
+      expect(c.peCategorie.prevenit).toEqual({ inchis: 2, semiinchis: 1, total: 3 });
+      expect(c.peCategorie.inculpat).toEqual({ inchis: 1, semiinchis: 1, total: 2 });
+    });
+
+    it("condamnatul nu intră în nicio căsuță", () => {
+      // Are măsură preventivă și tip închis; dacă ar fi numărat, preveniții
+      // închiși ar fi 3 în loc de 2, iar banda ar arăta mai mulți oameni în
+      // grijă decât sunt.
+      const c = countDefendants(rows);
+      expect(c.peCategorie.prevenit.inchis).toBe(2);
+      expect(c.condamnati).toBe(1);
+    });
+
+    it("marginile tabelului sunt chiar cifrele vechi", () => {
+      // Cifrele din bandă se adună acum din tabel, nu dintr-o a doua trecere
+      // prin registru. Dacă vreodată s-ar despărți, asta pică.
+      const c = countDefendants(rows);
+      const { prevenit, inculpat } = c.peCategorie;
+      expect(c.preveniti).toBe(prevenit.total);
+      expect(c.inculpati).toBe(inculpat.total);
+      expect(c.inchis).toBe(prevenit.inchis + inculpat.inchis);
+      expect(c.semiinchis).toBe(prevenit.semiinchis + inculpat.semiinchis);
+      expect(c.activi).toBe(prevenit.total + inculpat.total);
+      expect(c.activi).toBe(c.inchis + c.semiinchis);
+    });
+
+    it("totalul fiecărei categorii e suma tipurilor ei", () => {
+      const c = countDefendants(rows);
+      for (const cat of [c.peCategorie.prevenit, c.peCategorie.inculpat]) {
+        expect(cat.total).toBe(cat.inchis + cat.semiinchis);
+      }
     });
   });
 });

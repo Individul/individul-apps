@@ -100,6 +100,13 @@ export function filterByCategory(
   return rows.filter((d) => categoryOf(d) === filter);
 }
 
+/** Câți, și din ei câți la fiecare tip de penitenciar. */
+export interface RegimeCounts {
+  inchis: number;
+  semiinchis: number;
+  total: number;
+}
+
 export interface DefendantCounts {
   /** Toți cei aflați acum în grijă — preveniți plus inculpați. */
   activi: number;
@@ -112,6 +119,16 @@ export interface DefendantCounts {
   semiinchis: number;
   condamnati: number;
   total: number;
+  /**
+   * Aceleași cifre încrucișate: fiecare categorie, despărțită pe tip.
+   *
+   * Din ea ies toate celelalte numere de mai sus, nu dintr-o a doua
+   * numărătoare — două treceri prin registru, scrise separat, ar fi putut
+   * ajunge să spună lucruri diferite despre aceiași oameni, iar dezacordul
+   * s-ar fi văzut tocmai în banda de cifre, unde se uită omul ca să aibă
+   * încredere.
+   */
+  peCategorie: Record<"prevenit" | "inculpat", RegimeCounts>;
 }
 
 /**
@@ -122,10 +139,8 @@ export interface DefendantCounts {
  * la nesfârșit, adică exact numărul pe care nimeni nu-l poate folosi.
  */
 export function countDefendants(rows: Defendant[]): DefendantCounts {
-  let inchis = 0;
-  let semiinchis = 0;
-  let preveniti = 0;
-  let inculpati = 0;
+  const gol = (): RegimeCounts => ({ inchis: 0, semiinchis: 0, total: 0 });
+  const peCategorie = { prevenit: gol(), inculpat: gol() };
   let condamnati = 0;
 
   for (const d of rows) {
@@ -133,22 +148,26 @@ export function countDefendants(rows: Defendant[]): DefendantCounts {
       condamnati++;
       continue;
     }
-    // Aceiași oameni, numărați în două feluri: după măsură și după tip. Ambele
-    // sume trebuie să dea `activi` — un test o verifică.
-    if (d.preventive_measure) preveniti++;
-    else inculpati++;
-    if (d.regime === "inchis") inchis++;
-    else semiinchis++;
+    // O singură bifă pe om, în căsuța lui: măsură × tip. Toate celelalte cifre
+    // se adună din tabelul ăsta, deci nu se pot contrazice cu el.
+    const c = peCategorie[d.preventive_measure ? "prevenit" : "inculpat"];
+    if (d.regime === "inchis") c.inchis++;
+    else c.semiinchis++;
+    c.total++;
   }
 
+  const { prevenit, inculpat } = peCategorie;
   return {
-    activi: preveniti + inculpati,
-    preveniti,
-    inculpati,
-    inchis,
-    semiinchis,
+    activi: prevenit.total + inculpat.total,
+    preveniti: prevenit.total,
+    inculpati: inculpat.total,
+    // Marginile tabelului, nu o a doua numărătoare: pe tip se strâng cele două
+    // categorii, la fel cum pe categorie se strâng cele două tipuri.
+    inchis: prevenit.inchis + inculpat.inchis,
+    semiinchis: prevenit.semiinchis + inculpat.semiinchis,
     condamnati,
     total: rows.length,
+    peCategorie,
   };
 }
 

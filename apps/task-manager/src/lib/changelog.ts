@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-09-18",
+    text: "În banda de cifre a registrului „Preveniți și inculpați”, sub „Preveniți” și sub „Inculpați” scrie acum și câți dintre ei sunt la închis și câți la semiînchis. Până acum se vedea doar totalul fiecărei categorii, iar împărțirea pe tip era dată doar pe tot registrul, la grămadă.",
+  },
+  {
+    date: "2026-09-18",
     text: "În registrul „Preveniți și inculpați” se poate alege ce se vede: toți, doar preveniții sau doar inculpații. Alegerea stă lângă căutare și merge împreună cu ea. Cifrele de sus rămân pe întreg registrul, ca să se vadă oricând câți sunt în total, iar cei trecuți la condamnat rămân în rândul lor de jos, neatinși de această alegere.",
   },
   {
