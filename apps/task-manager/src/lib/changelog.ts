@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-18",
+    text: "În registrul „Preveniți și inculpați” se poate alege ce se vede: toți, doar preveniții sau doar inculpații. Alegerea stă lângă căutare și merge împreună cu ea. Cifrele de sus rămân pe întreg registrul, ca să se vadă oricând câți sunt în total, iar cei trecuți la condamnat rămân în rândul lor de jos, neatinși de această alegere.",
+  },
+  {
     date: "2026-09-17",
     doarAdmin: true,
     text: "În Administrare a apărut „Raport de activitate”: pe săptămână, lună, trimestru, semestru sau an se vede, pe fiecare responsabil, câte sarcini și petiții a încheiat, câte i-au intrat și câte îi rămâneau deschise la sfârșitul perioadei — iar sub cifre, lista lucrărilor, ca să se vadă și care anume. Se poate tipări. Ca să poată fi numărate pe perioade, sarcinile rețin de acum ziua în care au trecut pe „Gata”; cele încheiate până la 28 iulie sunt dinaintea jurnalului din care s-a refăcut trecutul și apar deoparte, ca nedatate.",

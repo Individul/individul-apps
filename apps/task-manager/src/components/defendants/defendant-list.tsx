@@ -12,14 +12,18 @@ import { Input } from "@/components/ui/input";
 import { DefendantDialog } from "@/components/defendants/defendant-dialog";
 import { markConvicted, undoConvicted } from "@/app/inculpati/actions";
 import {
+  CATEGORY_FILTER_EMPTY,
+  CATEGORY_FILTER_OPTIONS,
   CATEGORY_LABEL,
   REGIME_LABEL,
   categoryOf,
   activeDefendants,
   convictedDefendants,
   countDefendants,
+  filterByCategory,
   fullName,
   type Defendant,
+  type DefendantCategoryFilter,
 } from "@/lib/defendants";
 import { parseISODate, toISODate } from "@/lib/periods";
 import { fold } from "@/lib/text";
@@ -36,6 +40,7 @@ export function DefendantList({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Defendant | null>(null);
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<DefendantCategoryFilter>("toti");
   const [showConvicted, setShowConvicted] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -44,7 +49,11 @@ export function DefendantList({
   const matches = (d: Defendant) =>
     !q || fold(fullName(d)).includes(q) || fold(d.case_number ?? "").includes(q);
 
-  const activi = activeDefendants(defendants).filter(matches);
+  const activi = filterByCategory(activeDefendants(defendants), category).filter(matches);
+  // Secțiunea condamnaților nu ascultă de pastile: odată condamnat, categoria
+  // omului e „condamnat", măsura preventivă nu-l mai descrie. Filtrul
+  // „Preveniți" aplicat și aici ar goli secțiunea deși are oameni în ea, iar
+  // cine o deschide ar crede că s-a stricat ceva. Are deja comutatorul ei.
   const condamnati = convictedDefendants(defendants).filter(matches);
 
   const treci = (d: Defendant) => {
@@ -80,6 +89,11 @@ export function DefendantList({
   return (
     <div className="space-y-4">
       {/*
+        Cifrele rămân pe întreg registrul, nu urmează pastilele de mai jos.
+        „În evidență" e ancora lor, iar o bandă care ar urma filtrul ar scrie,
+        pe „Preveniți", „Inculpați: 0" — o cifră falsă despre registru. Același
+        precedent ca la sarcini, unde cifrele nu urmează filtrul.
+
         Aceiași oameni, numărați în două feluri.
         „În evidență" e ancora: preveniți + inculpați îl dau, și tot el îl dau
         și închis + semiînchis. Fără ancoră, cinci cifre alăturate ar părea
@@ -109,6 +123,24 @@ export function DefendantList({
           placeholder="Caută după nume sau dosar…"
           className="max-w-xs"
         />
+        <div className="flex flex-wrap gap-1.5">
+          {CATEGORY_FILTER_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => setCategory(o.value)}
+              aria-pressed={o.value === category}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs transition-colors",
+                o.value === category
+                  ? "border-transparent bg-primary text-primary-foreground"
+                  : "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
         <Button
           type="button"
           size="sm"
@@ -124,7 +156,7 @@ export function DefendantList({
 
       <Lista
         rows={activi}
-        gol="Niciun inculpat în evidență."
+        gol={CATEGORY_FILTER_EMPTY[category]}
         onEdit={(d) => {
           setEditing(d);
           setOpen(true);

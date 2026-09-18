@@ -55,6 +55,51 @@ export function categoryOf(d: Defendant): DefendantCategory {
   return d.preventive_measure ? "prevenit" : "inculpat";
 }
 
+/**
+ * Ce se alege din lista de lucru; „toti" e lista de azi, neschimbată.
+ *
+ * „condamnat" lipsește dinadins dintre valori: condamnații au secțiunea lor,
+ * pliabilă, sub listă. O a patra pastilă care ar goli lista principală ca să
+ * umple o secțiune închisă ar cere două gesturi pentru un singur lucru.
+ */
+export type DefendantCategoryFilter = "toti" | "prevenit" | "inculpat";
+
+export const CATEGORY_FILTER_LABEL: Record<DefendantCategoryFilter, string> = {
+  toti: "Toți",
+  prevenit: "Preveniți",
+  inculpat: "Inculpați",
+};
+
+/** Derivate din hartă, ca `REGIME_OPTIONS` — ordinea din hartă e ordinea pastilelor. */
+export const CATEGORY_FILTER_OPTIONS = optionsFrom(CATEGORY_FILTER_LABEL);
+
+/** Ce se spune când lista filtrată e goală; depinde de ce s-a cerut, nu de ce există. */
+export const CATEGORY_FILTER_EMPTY: Record<DefendantCategoryFilter, string> = {
+  toti: "Niciun inculpat în evidență.",
+  prevenit: "Niciun prevenit în evidență.",
+  inculpat: "Niciun inculpat fără măsură preventivă.",
+};
+
+/**
+ * Alege din listă după categorie.
+ *
+ * Se citește prin `categoryOf`, nu direct din `preventive_measure`: așa un
+ * condamnat cu măsura rămasă bifată nu iese la „Preveniți", adică exact
+ * întâietatea condamnării după care se face și banda de cifre. Aceeași regulă
+ * scrisă a doua oară aici ar fi putut să se despartă de aceea la prima
+ * schimbare.
+ *
+ * Nu sortează și nu reordonează: se aplică DUPĂ `activeDefendants`, care a
+ * așezat deja lista alfabetic, și întoarce oamenii în ordinea primită.
+ */
+export function filterByCategory(
+  rows: Defendant[],
+  filter: DefendantCategoryFilter,
+): Defendant[] {
+  if (filter === "toti") return rows;
+  return rows.filter((d) => categoryOf(d) === filter);
+}
+
 export interface DefendantCounts {
   /** Toți cei aflați acum în grijă — preveniți plus inculpați. */
   activi: number;

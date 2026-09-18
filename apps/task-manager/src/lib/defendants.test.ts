@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  CATEGORY_FILTER_OPTIONS,
   activeDefendants,
   convictedDefendants,
   countDefendants,
   categoryOf,
+  filterByCategory,
   fullName,
   type Defendant,
 } from "./defendants";
@@ -131,5 +133,85 @@ describe("cifrele registrului, cu ambele categorii", () => {
     const c = countDefendants(rows);
     expect(c.activi).toBe(3);
     expect(c.total).toBe(4);
+  });
+});
+
+describe("filterByCategory", () => {
+  /*
+   * Scrise DINADINS în dezordine alfabetică (Cornea, Albu, Dinu, Barbu).
+   *
+   * Sortate, probele de mai jos n-ar putea deosebi „păstrează ordinea primită"
+   * de „sortează alfabetic" — amândouă ar da același răspuns, iar un filtru
+   * care ar re-sorta pe ascuns ar trece nevăzut. Ordinea alfabetică e treaba
+   * lui `activeDefendants`, nu a filtrului.
+   */
+  const rows = [
+    d({ id: "p2", last_name: "Cornea", first_name: "C", preventive_measure: true }),
+    d({ id: "p1", last_name: "Albu", first_name: "A", preventive_measure: true }),
+    d({
+      id: "c1", last_name: "Dinu", first_name: "D",
+      status: "condamnat", convicted_on: "2026-08-20", preventive_measure: true,
+    }),
+    d({ id: "i1", last_name: "Barbu", first_name: "B", preventive_measure: false }),
+  ];
+
+  it("„toți” întoarce tot ce a primit, în aceeași ordine", () => {
+    expect(filterByCategory(rows, "toti").map((r) => r.id)).toEqual([
+      "p2", "p1", "c1", "i1",
+    ]);
+  });
+
+  it("„preveniți” lasă doar necondamnații cu măsură preventivă", () => {
+    // Ordinea e cea de la intrare, nu cea alfabetică: Cornea înaintea lui Albu.
+    expect(filterByCategory(rows, "prevenit").map((r) => r.id)).toEqual(["p2", "p1"]);
+  });
+
+  it("„inculpați” lasă doar necondamnații fără măsură preventivă", () => {
+    expect(filterByCategory(rows, "inculpat").map((r) => r.id)).toEqual(["i1"]);
+  });
+
+  it("condamnatul cu măsura rămasă bifată nu iese la niciuna dintre categorii", () => {
+    // Cazul pentru care filtrul citește prin `categoryOf`: măsura preventivă a
+    // rămas în rând după condamnare, dar nu-l mai descrie. Dacă s-ar citi
+    // direct din `preventive_measure`, omul ar apărea și la „Preveniți”, și în
+    // secțiunea condamnaților — de două ori pe aceeași pagină.
+    const ids = [
+      ...filterByCategory(rows, "prevenit"),
+      ...filterByCategory(rows, "inculpat"),
+    ].map((r) => r.id);
+    expect(ids).not.toContain("c1");
+  });
+
+  it("registru gol dă listă goală pentru toate cele trei alegeri", () => {
+    expect(filterByCategory([], "toti")).toEqual([]);
+    expect(filterByCategory([], "prevenit")).toEqual([]);
+    expect(filterByCategory([], "inculpat")).toEqual([]);
+  });
+
+  it("nu reordonează ce primește deja sortat", () => {
+    // Se aplică după `activeDefendants`, deci ordinea alfabetică trebuie să
+    // treacă prin filtru neatinsă.
+    const sortate = activeDefendants(rows);
+    expect(filterByCategory(sortate, "toti").map((r) => r.id)).toEqual(
+      sortate.map((r) => r.id),
+    );
+    expect(filterByCategory(sortate, "prevenit").map((r) => r.id)).toEqual(["p1", "p2"]);
+  });
+
+  it("filtrul și banda de cifre spun același lucru", () => {
+    // Invariantul care leagă pastilele de cifrele de deasupra lor: dacă se
+    // rupe, utilizatorul vede scris „Preveniți: 2" peste o listă cu trei.
+    const c = countDefendants(rows);
+    const activi = activeDefendants(rows);
+    const preveniti = filterByCategory(activi, "prevenit");
+    const inculpati = filterByCategory(activi, "inculpat");
+    expect(preveniti.length).toBe(c.preveniti);
+    expect(inculpati.length).toBe(c.inculpati);
+    expect(preveniti.length + inculpati.length).toBe(c.activi);
+  });
+
+  it("alegerile sunt trei, cu „toți” prima", () => {
+    expect(CATEGORY_FILTER_OPTIONS).toHaveLength(3);
+    expect(CATEGORY_FILTER_OPTIONS[0].value).toBe("toti");
   });
 });
