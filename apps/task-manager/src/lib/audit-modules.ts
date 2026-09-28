@@ -8,6 +8,7 @@ export type AuditModule =
   | "transferuri"
   | "informari"
   | "inculpati"
+  | "contravenienti"
   | "eliberari"
   | "utilizatori";
 
@@ -38,6 +39,7 @@ export const AUDIT_MODULES: {
     entities: ["obligations", "obligation_completions"],
   },
   { value: "inculpati", label: "Inculpați", entities: ["defendants"] },
+  { value: "contravenienti", label: "Contravenienți", entities: ["contraveners"] },
   // Modul propriu, nu la „Ședințe": o eliberare nu e o ședință de judecată, iar
   // pusă acolo ar umple filtrul ședințelor cu intrări care n-au legătură cu ele.
   // Un registru de sine stătător își ține tabul lui — ca „Inculpați".

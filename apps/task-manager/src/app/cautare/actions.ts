@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   MIN_QUERY,
   search,
+  type ContravenerRow,
   type DefendantRow,
   type PetitionRow,
   type PlanRow,
@@ -28,7 +29,7 @@ export async function searchAll(query: string): Promise<SearchGroup[]> {
 
   const supabase = createClient();
 
-  const [tasks, petitions, plans, defendants] = await Promise.all([
+  const [tasks, petitions, plans, defendants, contraveners] = await Promise.all([
     supabase
       .from("tasks")
       // `tags(*)` ca în `getTasks`: eticheta e esența sarcinii, deci se arată și
@@ -47,7 +48,11 @@ export async function searchAll(query: string): Promise<SearchGroup[]> {
       .from("defendants")
       .select("id,last_name,first_name,court,case_number,status,preventive_measure")
       .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as DefendantRow[]))),
+    supabase
+      .from("contraveners")
+      .select("id,last_name,first_name,patronymic,decision_date,arrest_days")
+      .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as ContravenerRow[]))),
   ]);
 
-  return search(query, { tasks, petitions, plans, defendants });
+  return search(query, { tasks, petitions, plans, defendants, contraveners });
 }

@@ -1,5 +1,6 @@
 import { fold } from "./text";
 import type { Defendant } from "./defendants";
+import { fullName as numeContravenient, type Contravener } from "./contraveners";
 import type { TransferPlan } from "./transfer-plans";
 import type { Petition, Task } from "./types";
 import { PETITION_STATUS_LABEL, TASK_STATUS_LABEL } from "./status-labels";
@@ -9,9 +10,9 @@ import { institutionLabel } from "./transfers";
  * Căutare peste toate registrele.
  *
  * Rostul ei nu e „să găsești mai repede o petiție" — pentru asta fiecare modul
- * are deja filtrul lui. Rostul e că același om e împrăștiat prin patru
+ * are deja filtrul lui. Rostul e că același om e împrăștiat prin cinci
  * registre: poate fi deodată titlu de sarcină, petiționar, om pe lista de
- * transfer și prevenit. Întrebarea care se pune de fapt în secție e „ce avem pe
+ * transfer, prevenit și contravenient. Întrebarea care se pune de fapt în secție e „ce avem pe
  * X?", iar până acum ea cerea patru căutări și o ținere de minte.
  *
  * Se caută în memorie, nu în baza de date, fiindcă toate registrele la un loc
@@ -22,7 +23,7 @@ import { institutionLabel } from "./transfers";
  * trebui mutată în bază.
  */
 
-export type SearchKind = "sarcina" | "petitie" | "transfer" | "prevenit";
+export type SearchKind = "sarcina" | "petitie" | "transfer" | "prevenit" | "contravenient";
 
 /** Numele culorilor deja folosite în module; UI-ul le traduce în clase. */
 export type StateTone = "slate" | "blue" | "violet" | "amber" | "green";
@@ -90,10 +91,11 @@ const LABEL: Record<SearchKind, string> = {
   petitie: "Petiții",
   transfer: "Planificare transferuri",
   prevenit: "Preveniți și inculpați",
+  contravenient: "Contravenienți",
 };
 
 /** Ordinea grupurilor: cele cu cel mai des căutat conținut întâi. */
-const ORDINE: SearchKind[] = ["sarcina", "petitie", "transfer", "prevenit"];
+const ORDINE: SearchKind[] = ["sarcina", "petitie", "transfer", "prevenit", "contravenient"];
 
 interface Candidat {
   hit: SearchHit;
@@ -122,11 +124,17 @@ export type DefendantRow = Pick<
   "id" | "last_name" | "first_name" | "court" | "case_number" | "status" | "preventive_measure"
 >;
 
+export type ContravenerRow = Pick<
+  Contravener,
+  "id" | "last_name" | "first_name" | "patronymic" | "decision_date" | "arrest_days"
+>;
+
 export interface SearchData {
   tasks: TaskRow[];
   petitions: PetitionRow[];
   plans: PlanRow[];
   defendants: DefendantRow[];
+  contraveners: ContravenerRow[];
 }
 
 function candidati(data: SearchData): Candidat[] {
@@ -221,6 +229,29 @@ function candidati(data: SearchData): Candidat[] {
           href: "/inculpati",
         },
         [d.last_name, d.first_name, d.court, d.case_number],
+      ),
+    );
+  }
+
+  for (const c of data.contraveners) {
+    const [an, luna, zi] = c.decision_date.split("-");
+    out.push(
+      candidat(
+        {
+          kind: "contravenient",
+          id: c.id,
+          title: numeContravenient(c),
+          // Zilele înaintea datei: ele spun ce fel de caz e, data doar îl
+          // deosebește de altul cu același nume.
+          detail: detaliu([`${c.arrest_days} zile arest`, `hotărârea din ${zi}.${luna}.${an}`]),
+          // Registrul n-are stări, deci nici însemn — un „activ" inventat aici
+          // ar spune despre om ceva ce registrul nu știe.
+          state: null,
+          tone: "slate",
+          finished: false,
+          href: "/contravenienti",
+        },
+        [c.last_name, c.first_name, c.patronymic],
       ),
     );
   }

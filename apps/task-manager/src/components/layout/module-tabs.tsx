@@ -14,6 +14,9 @@ const MODULES = [
   // schimbare de adresă ar rupe legăturile din notificări și din însemnări
   // vechi, fără să câștige nimic.
   { href: "/inculpati", label: "Preveniți și inculpați", matchPrefixes: ["/inculpati"] },
+  // Lângă inculpați, nu la coadă: tot oameni aflați în grija secției, căutați
+  // după nume, doar că pe temei contravențional.
+  { href: "/contravenienti", label: "Contravenienți", matchPrefixes: ["/contravenienti"] },
   { href: "/obligatii", label: "Informări", matchPrefixes: ["/obligatii"] },
   { href: "/statistici", label: "Statistici", matchPrefixes: ["/statistici"] },
 ] as const;

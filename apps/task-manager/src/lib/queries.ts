@@ -26,6 +26,7 @@ import type { TransferPlan } from "./transfer-plans";
 import type { BackupRun } from "./backup";
 import type { Obligation } from "./obligations";
 import type { Defendant } from "./defendants";
+import type { Contravener } from "./contraveners";
 
 export async function getTasks(): Promise<Task[]> {
   const supabase = createClient();
@@ -539,6 +540,15 @@ export async function getDefendants(): Promise<Defendant[]> {
   // Grațios dacă migrarea 0025 nu e încă aplicată.
   if (error) return [];
   return (data ?? []) as unknown as Defendant[];
+}
+
+export async function getContraveners(): Promise<Contravener[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("contraveners").select("*");
+  // Grațios dacă migrarea 0031 nu e încă aplicată: modulul se deschide gol, nu
+  // cu o pagină de eroare. Ordinea o dă `sortContraveners`, nu baza.
+  if (error) return [];
+  return (data ?? []) as unknown as Contravener[];
 }
 
 /**

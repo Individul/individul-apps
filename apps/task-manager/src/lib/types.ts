@@ -68,6 +68,7 @@ export interface AuditEntry {
     | "obligations"
     | "obligation_completions"
     | "defendants"
+    | "contraveners"
     | "releases"
     | "transfers";
   entity_id: string | null;

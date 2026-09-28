@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-28",
+    text: "Modul nou, „Contravenienți”, lângă „Preveniți și inculpați”: pentru cei aduși să execute arest contravențional. Se scriu numele, prenumele și patronimicul, data hotărârii, data devenirii definitive și zilele de arest. Patronimicul și data devenirii definitive se pot lăsa goale și completa mai târziu. Cele mai recente hotărâri stau primele, iar numele se găsesc și din căutarea de pe pagina de start.",
+  },
+  {
     date: "2026-09-18",
     text: "La Petiții, pe ecran lat, tabelul nu mai cere derulare într-o parte ca să se vadă coloana „Stare”. Din 11 septembrie, de când paginile late s-au îngustat, rezumatul din dreapta lăsa tabelului cu 22 de pixeli mai puțin decât îi trebuie, iar chenarul lui căpătase o bară de derulare orizontală. Rezumatul s-a subțiat puțin, iar tabelul are acum tot ce-i trebuie, cu „Obiect” încăpând întreg.",
   },

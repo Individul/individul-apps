@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { FileText, ListTodo, Loader2, Search, Truck, UserSquare, X } from "lucide-react";
+import { FileText, Hourglass, ListTodo, Loader2, Search, Truck, UserSquare, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { searchAll } from "@/app/cautare/actions";
@@ -45,6 +45,7 @@ const ICOANA: Record<SearchKind, typeof ListTodo> = {
   petitie: FileText,
   transfer: Truck,
   prevenit: UserSquare,
+  contravenient: Hourglass,
 };
 
 export function GlobalSearch() {

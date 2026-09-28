@@ -21,20 +21,25 @@ const DATE: SearchData = {
   defendants: [
     { id: "d1", last_name: "Țiganciuc", first_name: "Dumitru", court: null, case_number: "1-234/2026", status: "inculpat", preventive_measure: true },
   ],
+  contraveners: [
+    { id: "c1", last_name: "Țiganciuc", first_name: "Dumitru", patronymic: "Ștefan", decision_date: "2026-09-10", arrest_days: 15 },
+  ],
 };
 
 describe("căutarea peste module", () => {
   it("adună același om din toate registrele", () => {
-    // Rostul întregii funcții: patru registre, un singur nume.
+    // Rostul întregii funcții: cinci registre, un singur nume.
     const g = search("Țiganciuc", DATE);
-    expect(g.map((x) => x.kind)).toEqual(["sarcina", "petitie", "transfer", "prevenit"]);
-    expect(countHits(g)).toBe(4);
+    expect(g.map((x) => x.kind)).toEqual([
+      "sarcina", "petitie", "transfer", "prevenit", "contravenient",
+    ]);
+    expect(countHits(g)).toBe(5);
   });
 
   it("nu ține seama de diacritice", () => {
     // Scris fără diacritice, cum se tastează de obicei.
-    expect(countHits(search("tiganciuc", DATE))).toBe(4);
-    expect(countHits(search("TIGANCIUC", DATE))).toBe(4);
+    expect(countHits(search("tiganciuc", DATE))).toBe(5);
+    expect(countHits(search("TIGANCIUC", DATE))).toBe(5);
   });
 
   it("caută și în ce nu se vede în titlu", () => {
@@ -69,6 +74,16 @@ describe("căutarea peste module", () => {
     expect(hrefs.petitie).toBe("/petitii?petitie=p1");
     expect(hrefs.transfer).toBe("/transferuri/planificare");
     expect(hrefs.prevenit).toBe("/inculpati");
+    expect(hrefs.contravenient).toBe("/contravenienti");
+  });
+
+  it("contravenientul se găsește și după patronimic, cu zilele în rândul de jos", () => {
+    const g = search("stefan", DATE);
+    const c = g.find((x) => x.kind === "contravenient")?.hits[0];
+    expect(c?.title).toBe("Țiganciuc Dumitru Ștefan");
+    expect(c?.detail).toBe("15 zile arest · hotărârea din 10.09.2026");
+    // Registrul n-are stări: niciun însemn inventat.
+    expect(c?.state).toBeNull();
   });
 
   it("categoria preventului e starea lui, citită din măsură", () => {

@@ -7,6 +7,7 @@ import {
   DoorOpen,
   UserRound,
   Gavel,
+  Hourglass,
   ListChecks,
   Mail,
   MessageSquare,
@@ -41,6 +42,7 @@ const ENTITY_ICON: Record<AuditEntry["entity"], typeof Pencil> = {
   transfer_plans: UserRound,
   obligations: CalendarClock,
   defendants: Scale,
+  contraveners: Hourglass,
   releases: DoorOpen,
   obligation_completions: CalendarClock,
   profiles: Users,
@@ -60,6 +62,7 @@ const ENTITY_LABEL: Record<AuditEntry["entity"], string> = {
   transfer_plans: "planificarea transferului",
   obligations: "informarea periodică",
   defendants: "inculpatul",
+  contraveners: "contravenientul",
   releases: "evidența eliberărilor",
   obligation_completions: "un termen de informare",
 };
@@ -168,6 +171,19 @@ function phrase(e: AuditEntry): string {
     if (d.regime_from && d.regime_to) {
       return `a schimbat tipul de penitenciar la ${cine}: ${String(d.regime_from)} → ${String(d.regime_to)}`;
     }
+    return `a modificat însemnarea lui ${cine}`;
+  }
+  if (e.entity === "contraveners") {
+    const d = e.details ?? {};
+    const cine = d.name ? String(d.name) : "un contravenient";
+    if (e.action === "INSERT") return `a înscris ${cine} în registrul contravenienților`;
+    if (e.action === "DELETE") return `a șters ${cine} din registrul contravenienților`;
+    // Zilele sunt pedeapsa însăși: la o schimbare trebuie să se vadă cât a fost
+    // și cât s-a făcut, nu doar că s-a umblat la rând.
+    if (d.days_from !== undefined && d.days_to !== undefined) {
+      return `a schimbat zilele de arest la ${cine}: ${String(d.days_from)} → ${String(d.days_to)}`;
+    }
+    if (d.final_to) return `a trecut data devenirii definitive la ${cine}: ${String(d.final_to)}`;
     return `a modificat însemnarea lui ${cine}`;
   }
   if (e.entity === "hearings") {

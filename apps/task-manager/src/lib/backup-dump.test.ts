@@ -161,6 +161,7 @@ describe("lista tabelelor din copie", () => {
         "subtasks",
         "notifications",
         "audit_log",
+        "contraveners",
       ]),
     );
   });
