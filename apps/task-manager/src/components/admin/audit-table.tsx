@@ -178,6 +178,12 @@ function phrase(e: AuditEntry): string {
     const cine = d.name ? String(d.name) : "un contravenient";
     if (e.action === "INSERT") return `a înscris ${cine} în registrul contravenienților`;
     if (e.action === "DELETE") return `a șters ${cine} din registrul contravenienților`;
+    // Informarea și executarea întâi: sunt acte, nu corecturi, și schimbă dacă
+    // omul mai apare ca „de informat".
+    if (d.informed === true) return `a bifat informarea despre prescripție la ${cine} ca expediată`;
+    if (d.informed === false) return `a scos bifa informării despre prescripție la ${cine}`;
+    if (d.executed_to) return `a trecut arestul lui ${cine} ca executat din ${String(d.executed_to)}`;
+    if (d.executed_from) return `a scos executarea arestului la ${cine}`;
     // Zilele sunt pedeapsa însăși: la o schimbare trebuie să se vadă cât a fost
     // și cât s-a făcut, nu doar că s-a umblat la rând.
     if (d.days_from !== undefined && d.days_to !== undefined) {

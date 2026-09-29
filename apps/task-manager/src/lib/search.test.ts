@@ -22,7 +22,7 @@ const DATE: SearchData = {
     { id: "d1", last_name: "Țiganciuc", first_name: "Dumitru", court: null, case_number: "1-234/2026", status: "inculpat", preventive_measure: true },
   ],
   contraveners: [
-    { id: "c1", last_name: "Țiganciuc", first_name: "Dumitru", patronymic: "Ștefan", decision_date: "2026-09-10", arrest_days: 15 },
+    { id: "c1", last_name: "Țiganciuc", first_name: "Dumitru", patronymic: "Ștefan", decision_date: "2026-09-10", arrest_days: 15, final_date: null, executed_on: null, informed_at: null },
   ],
 };
 
@@ -82,8 +82,32 @@ describe("căutarea peste module", () => {
     const c = g.find((x) => x.kind === "contravenient")?.hits[0];
     expect(c?.title).toBe("Țiganciuc Dumitru Ștefan");
     expect(c?.detail).toBe("15 zile arest · hotărârea din 10.09.2026");
-    // Registrul n-are stări: niciun însemn inventat.
+    // Fără dată definitivă termenul nu se socotește: niciun însemn inventat.
     expect(c?.state).toBeNull();
+  });
+
+  it("contravenientul își arată termenul, socotit în ziua dată", () => {
+    const rand = (x: Partial<SearchData["contraveners"][number]>) => ({
+      ...DATE,
+      contraveners: [{ ...DATE.contraveners[0], ...x }],
+    });
+    const stare = (x: Partial<SearchData["contraveners"][number]>) =>
+      search("stefan", rand(x), "2026-09-29").find((g) => g.kind === "contravenient")?.hits[0];
+
+    // Definitivă în ianuarie 2025, neexecutată: prescrisă, fără informare.
+    expect(stare({ final_date: "2025-01-10" })).toMatchObject({
+      state: "De informat", tone: "amber", finished: false,
+    });
+    // Aceeași, cu informarea trimisă: încheiată.
+    expect(stare({ final_date: "2025-01-10", informed_at: "2026-01-12T08:00:00Z" })).toMatchObject({
+      state: "Prescris, informat", finished: true,
+    });
+    // Executată: termenul nu mai contează.
+    expect(stare({ final_date: "2025-01-10", executed_on: "2025-01-15" })).toMatchObject({
+      state: "Executat", tone: "green", finished: true,
+    });
+    // Expiră peste 10 zile.
+    expect(stare({ final_date: "2025-10-09" })?.state).toBe("Expiră curând");
   });
 
   it("categoria preventului e starea lui, citită din măsură", () => {

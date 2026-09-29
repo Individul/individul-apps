@@ -50,7 +50,7 @@ export async function searchAll(query: string): Promise<SearchGroup[]> {
       .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as DefendantRow[]))),
     supabase
       .from("contraveners")
-      .select("id,last_name,first_name,patronymic,decision_date,arrest_days")
+      .select("id,last_name,first_name,patronymic,decision_date,arrest_days,final_date,executed_on,informed_at")
       .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as ContravenerRow[]))),
   ]);
 

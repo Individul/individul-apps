@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-29",
+    text: "La „Contravenienți”, fiecare hotărâre își arată termenul de executare: un an de la data devenirii definitive. Cu 30 de zile înainte de expirare apare „Expiră în … zile”, iar după expirare „Prescris”, cu butonul „Informare expediată”. Cât timp există hotărâri prescrise fără informare, sus stă o bandă galbenă care spune câte sunt. În fereastra fiecărui om e și bifa „Arestul a fost pus în executare”: cei executați nu mai primesc avertizare. Căutarea de pe pagina de start arată și ea starea: „De informat”, „Executat”, „Expiră curând”.",
+  },
+  {
     date: "2026-09-28",
     text: "Modul nou, „Contravenienți”, lângă „Preveniți și inculpați”: pentru cei aduși să execute arest contravențional. Se scriu numele, prenumele și patronimicul, data hotărârii, data devenirii definitive și zilele de arest. Patronimicul și data devenirii definitive se pot lăsa goale și completa mai târziu. Cele mai recente hotărâri stau primele, iar numele se găsesc și din căutarea de pe pagina de start.",
   },

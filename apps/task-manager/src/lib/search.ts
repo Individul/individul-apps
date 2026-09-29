@@ -1,6 +1,7 @@
 import { fold } from "./text";
 import type { Defendant } from "./defendants";
-import { fullName as numeContravenient, type Contravener } from "./contraveners";
+import { fullName as numeContravenient, prescriptieOf, type Contravener } from "./contraveners";
+import { todayInChisinau, toISODate } from "./periods";
 import type { TransferPlan } from "./transfer-plans";
 import type { Petition, Task } from "./types";
 import { PETITION_STATUS_LABEL, TASK_STATUS_LABEL } from "./status-labels";
@@ -126,7 +127,15 @@ export type DefendantRow = Pick<
 
 export type ContravenerRow = Pick<
   Contravener,
-  "id" | "last_name" | "first_name" | "patronymic" | "decision_date" | "arrest_days"
+  | "id"
+  | "last_name"
+  | "first_name"
+  | "patronymic"
+  | "decision_date"
+  | "arrest_days"
+  | "final_date"
+  | "executed_on"
+  | "informed_at"
 >;
 
 export interface SearchData {
@@ -137,7 +146,7 @@ export interface SearchData {
   contraveners: ContravenerRow[];
 }
 
-function candidati(data: SearchData): Candidat[] {
+function candidati(data: SearchData, azi: string): Candidat[] {
   const out: Candidat[] = [];
 
   for (const t of data.tasks) {
@@ -244,11 +253,7 @@ function candidati(data: SearchData): Candidat[] {
           // Zilele înaintea datei: ele spun ce fel de caz e, data doar îl
           // deosebește de altul cu același nume.
           detail: detaliu([`${c.arrest_days} zile arest`, `hotărârea din ${zi}.${luna}.${an}`]),
-          // Registrul n-are stări, deci nici însemn — un „activ" inventat aici
-          // ar spune despre om ceva ce registrul nu știe.
-          state: null,
-          tone: "slate",
-          finished: false,
+          ...stareContravenient(c, azi),
           href: "/contravenienti",
         },
         [c.last_name, c.first_name, c.patronymic],
@@ -259,12 +264,44 @@ function candidati(data: SearchData): Candidat[] {
   return out;
 }
 
-/** Grupurile cu rezultate, în ordine fixă. Grupurile goale nu apar. */
-export function search(query: string, data: SearchData): SearchGroup[] {
+/**
+ * Starea unui contravenient, cu cuvintele din registrul lui.
+ *
+ * Doar cele care spun ceva: „De informat" și „Expiră curând" cer o faptă,
+ * „Executat" și „Prescris" (cu informare trimisă) sunt încheiate. O hotărâre în
+ * termen, sau fără dată definitivă, rămâne fără însemn — un „activ" inventat
+ * aici ar spune despre om ceva ce registrul nu știe.
+ */
+function stareContravenient(
+  c: ContravenerRow,
+  azi: string,
+): Pick<SearchHit, "state" | "tone" | "finished"> {
+  const p = prescriptieOf(c, azi);
+  if (p.stare === "executat") return { state: "Executat", tone: "green", finished: true };
+  if (p.stare === "prescris") {
+    return p.informatLa
+      ? { state: "Prescris, informat", tone: "slate", finished: true }
+      : { state: "De informat", tone: "amber", finished: false };
+  }
+  if (p.stare === "expira_curand") return { state: "Expiră curând", tone: "amber", finished: false };
+  return { state: null, tone: "slate", finished: false };
+}
+
+/**
+ * Grupurile cu rezultate, în ordine fixă. Grupurile goale nu apar.
+ *
+ * `azi` se poate da din afară ca probele să fixeze ziua; implicit e ziua
+ * Chișinăului, nu a ceasului serverului, care merge pe UTC.
+ */
+export function search(
+  query: string,
+  data: SearchData,
+  azi: string = toISODate(todayInChisinau()),
+): SearchGroup[] {
   const q = fold(query.trim());
   if (q.length < MIN_QUERY) return [];
 
-  const gasite = candidati(data).filter((c) => c.haystack.includes(q));
+  const gasite = candidati(data, azi).filter((c) => c.haystack.includes(q));
 
   return ORDINE.map((kind) => {
     const toate = gasite.filter((c) => c.hit.kind === kind).map((c) => c.hit);

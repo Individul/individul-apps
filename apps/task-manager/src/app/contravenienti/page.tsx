@@ -1,5 +1,6 @@
 import { getContraveners, getCurrentProfile } from "@/lib/queries";
 import { ContravenerList } from "@/components/contraveners/contravener-list";
+import { todayInChisinau, toISODate } from "@/lib/periods";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,20 @@ export default async function ContravenientiPage() {
       <div>
         <h1 className="text-2xl font-semibold">Contravenienți</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Cei aduși să execute arest contravențional. Cele mai recente hotărâri stau primele.
+          Hotărârile de arest contravențional. Cele mai recente stau primele. La un an de la
+          data devenirii definitive, hotărârea neexecutată se prescrie și cere informare.
         </p>
       </div>
 
-      <ContravenerList contraveners={contraveners} isAdmin={profile?.role === "admin"} />
+      {/* Ziua de azi, o singură dată și pe ora Chișinăului: din ea se socotește
+          termenul fiecărui rând. Serverul merge pe UTC, iar între miezul
+          nopții de aici și cel de la Greenwich lista ar fi numărat cu o zi în
+          urmă — tocmai la hotarul dintre „azi e ultima zi" și „prescris". */}
+      <ContravenerList
+        contraveners={contraveners}
+        isAdmin={profile?.role === "admin"}
+        azi={toISODate(todayInChisinau())}
+      />
     </main>
   );
 }

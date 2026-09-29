@@ -1,3 +1,6 @@
+import { addDays, addYears, differenceInCalendarDays } from "date-fns";
+
+import { parseISODate, toISODate } from "./periods";
 import { fold } from "./text";
 
 /** Un rând din registrul contravenienților (migrarea 0031). */
@@ -12,6 +15,11 @@ export interface Contravener {
   /** Data devenirii definitive; null cât timp nu e știută. */
   final_date: string | null;
   arrest_days: number;
+  /** Ziua în care arestul a fost pus în executare; null cât timp nu a fost. */
+  executed_on: string | null;
+  /** Când s-a bifat informarea despre prescripție ca expediată (0032). */
+  informed_at: string | null;
+  informed_by: string | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
@@ -26,6 +34,8 @@ export interface ContravenerInput {
   decision_date: string;
   final_date: string;
   arrest_days: string;
+  /** Gol când arestul nu a fost executat. */
+  executed_on: string;
 }
 
 /**
@@ -59,7 +69,7 @@ function ziValida(s: string): boolean {
  * Formularul din browser se bazează pe ea prin răspunsul acțiunii, nu pe o a
  * doua listă de reguli — două liste s-ar fi despărțit la prima regulă nouă.
  */
-export function validateContravener(input: ContravenerInput): string | null {
+export function validateContravener(input: ContravenerInput, azi?: string): string | null {
   if (!input.last_name.trim()) return "Numele e obligatoriu.";
   if (!input.first_name.trim()) return "Prenumele e obligatoriu.";
 
@@ -85,7 +95,122 @@ export function validateContravener(input: ContravenerInput): string | null {
   if (zile > MAX_ARREST_DAYS) {
     return `Arestul contravențional nu trece de ${MAX_ARREST_DAYS} de zile, nici la cumul. Verifică cifra.`;
   }
+
+  if (input.executed_on) {
+    if (!ziValida(input.executed_on)) return "Data executării nu e o zi care există.";
+    // Aceeași regulă ca `contraveners_executed_after_decision` din bază.
+    if (input.executed_on < input.decision_date) {
+      return "Arestul nu poate fi executat înainte de data hotărârii.";
+    }
+    // Ziua de azi vine de la server, pe ora Chișinăului. O executare „mâine"
+    // ar stinge de pe acum avertizarea de prescripție pentru un om care încă
+    // n-a intrat pe ușă.
+    if (azi && input.executed_on > azi) return "Data executării nu poate fi în viitor.";
+  }
   return null;
+}
+
+/*
+ * Prescripția executării.
+ *
+ * Hotărârea de arest contravențional nu mai poate fi pusă în executare dacă a
+ * trecut un an de la data la care a devenit definitivă. Termenul se socotește
+ * pe calendar: ultima zi în care se mai poate executa e ziua cu același număr,
+ * în aceeași lună, peste un an. De a doua zi, hotărârea e prescrisă.
+ *
+ * Un 29 februarie trece în 28 februarie al anului următor (`addYears` face
+ * asta): ziua nu există, iar a o împinge în 1 martie ar lungi termenul peste
+ * un an.
+ */
+export const TERMEN_PRESCRIPTIE_ANI = 1;
+
+/** Cu câte zile înainte de expirare se aprinde avertizarea. */
+export const AVERTIZARE_ZILE = 30;
+
+/** Ultima zi în care hotărârea se mai poate pune în executare. */
+export function ultimaZiDeExecutare(finalDate: string): string {
+  return toISODate(addYears(parseISODate(finalDate), TERMEN_PRESCRIPTIE_ANI));
+}
+
+export type Prescriptie =
+  /** Arestul a fost executat: termenul nu mai contează. */
+  | { stare: "executat"; executatLa: string }
+  /** Fără dată definitivă termenul nu se poate socoti. */
+  | { stare: "fara_data" }
+  | { stare: "in_termen"; ultimaZi: string; zileRamase: number }
+  /** Mai sunt cel mult `AVERTIZARE_ZILE` zile; 0 înseamnă că azi e ultima zi. */
+  | { stare: "expira_curand"; ultimaZi: string; zileRamase: number }
+  | { stare: "prescris"; prescrisDin: string; informatLa: string | null };
+
+/**
+ * Unde se află hotărârea față de termenul de executare, în ziua `azi`.
+ *
+ * `azi` e o zi AAAA-LL-ZZ, nu un instant, și se primește ca argument: pagina îl
+ * citește o dată, pe ora Chișinăului, și îl dă mai departe. Luat cu
+ * `new Date()` în browser, lista ar fi putut spune altceva decât serverul la
+ * miezul nopții, iar probele n-ar fi avut cum fixa ziua.
+ */
+export function prescriptieOf(
+  c: Pick<Contravener, "final_date" | "executed_on" | "informed_at">,
+  azi: string,
+): Prescriptie {
+  if (c.executed_on) return { stare: "executat", executatLa: c.executed_on };
+  if (!c.final_date) return { stare: "fara_data" };
+
+  const ultimaZi = ultimaZiDeExecutare(c.final_date);
+  const zileRamase = differenceInCalendarDays(parseISODate(ultimaZi), parseISODate(azi));
+  if (zileRamase < 0) {
+    return {
+      stare: "prescris",
+      prescrisDin: toISODate(addDays(parseISODate(ultimaZi), 1)),
+      informatLa: c.informed_at,
+    };
+  }
+  if (zileRamase <= AVERTIZARE_ZILE) return { stare: "expira_curand", ultimaZi, zileRamase };
+  return { stare: "in_termen", ultimaZi, zileRamase };
+}
+
+/** Prescrisă și fără informare expediată — cele pentru care e ceva de făcut. */
+export function deInformat(
+  c: Pick<Contravener, "final_date" | "executed_on" | "informed_at">,
+  azi: string,
+): boolean {
+  const p = prescriptieOf(c, azi);
+  return p.stare === "prescris" && !p.informatLa;
+}
+
+export type ContravenerFilter = "toti" | "de_informat" | "expira_curand";
+
+/**
+ * Alege din listă după termen.
+ *
+ * „Expiră curând" le cuprinde pe cele încă executabile, cu cel mult
+ * `AVERTIZARE_ZILE` zile rămase — cele la care se mai poate face ceva înainte
+ * de prescripție. Cele deja prescrise stau la „De informat", nu aici.
+ */
+export function filterContraveners(
+  rows: Contravener[],
+  filter: ContravenerFilter,
+  azi: string,
+): Contravener[] {
+  if (filter === "toti") return rows;
+  if (filter === "de_informat") return rows.filter((c) => deInformat(c, azi));
+  return rows.filter((c) => prescriptieOf(c, azi).stare === "expira_curand");
+}
+
+/** Câte sunt la fiecare filtru, pentru pastile și pentru avertizarea de sus. */
+export function countPrescriptie(
+  rows: Contravener[],
+  azi: string,
+): { deInformat: number; expiraCurand: number } {
+  let de = 0;
+  let curand = 0;
+  for (const c of rows) {
+    const p = prescriptieOf(c, azi);
+    if (p.stare === "prescris" && !p.informatLa) de++;
+    else if (p.stare === "expira_curand") curand++;
+  }
+  return { deInformat: de, expiraCurand: curand };
 }
 
 /** Numele întreg, cum se citește într-o listă: nume, prenume, patronimic. */
