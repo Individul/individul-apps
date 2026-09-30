@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { initials } from "@/lib/initials";
 import { isTaskOverdue } from "@/lib/hub-stats";
 import { PRIORITY_ORDER } from "@/lib/task-filters";
 import { canEditTask, canDeleteTask, canFinalizeTask } from "@/lib/permissions";
@@ -66,15 +67,9 @@ export const STATUS_ORDER: Record<TaskStatus, number> = {
   done: 3,
 };
 
-export function initials(name: string | null | undefined): string {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  return parts
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
-}
+// Mutată în `lib`, ca s-o poată folosi și căutarea fără să tragă după ea tot
+// tabelul; re-exportată aici, ca importurile vechi să meargă în continuare.
+export { initials };
 
 // Delegat, nu recalculat: cifra „restant" trebuie să fie una singură oriunde
 // apare — card, filtru, celulă, detaliu. Pagina de detaliu a avut propria

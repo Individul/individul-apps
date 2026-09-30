@@ -8,6 +8,7 @@ import {
   type DefendantRow,
   type PetitionRow,
   type PlanRow,
+  type SearchData,
   type SearchGroup,
   type TaskRow,
 } from "@/lib/search";
@@ -29,16 +30,16 @@ export async function searchAll(query: string): Promise<SearchGroup[]> {
 
   const supabase = createClient();
 
-  const [tasks, petitions, plans, defendants, contraveners] = await Promise.all([
+  const [tasks, petitions, plans, defendants, contraveners, profiles] = await Promise.all([
     supabase
       .from("tasks")
       // `tags(*)` ca în `getTasks`: eticheta e esența sarcinii, deci se arată și
       // se caută. Restul rândului tot nu se cere.
-      .select("id,title,description,status,tags(*)")
+      .select("id,title,description,status,assignee_id,tags(*)")
       .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as TaskRow[]))),
     supabase
       .from("petitions")
-      .select("id,number,petitioner,subject,status")
+      .select("id,number,petitioner,subject,status,assignee_id")
       .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as PetitionRow[]))),
     supabase
       .from("transfer_plans")
@@ -52,7 +53,12 @@ export async function searchAll(query: string): Promise<SearchGroup[]> {
       .from("contraveners")
       .select("id,last_name,first_name,patronymic,decision_date,arrest_days,final_date,executed_on,informed_at")
       .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as ContravenerRow[]))),
+    // Fără profiluri, rezultatele apar oricum — doar fără nume la responsabil.
+    supabase
+      .from("profiles")
+      .select("id,full_name")
+      .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as SearchData["profiles"]))),
   ]);
 
-  return search(query, { tasks, petitions, plans, defendants, contraveners });
+  return search(query, { tasks, petitions, plans, defendants, contraveners, profiles });
 }

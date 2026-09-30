@@ -4,11 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { FileText, Hourglass, ListTodo, Loader2, Search, Truck, UserSquare, X } from "lucide-react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { searchAll } from "@/app/cautare/actions";
+import { avatarColor } from "@/lib/avatar-color";
+import { initials } from "@/lib/initials";
 import {
   MIN_QUERY,
   countHits,
+  type Responsabil,
   type SearchGroup,
   type SearchKind,
   type StateTone,
@@ -146,7 +150,7 @@ export function GlobalSearch() {
           setDeschis(true);
         }}
         onFocus={() => setDeschis(true)}
-        placeholder="Caută un nume în toate registrele — sarcini, petiții, transferuri, preveniți"
+        placeholder="Caută un nume în toate registrele — sarcini, petiții, transferuri, preveniți, contravenienți"
         aria-label="Caută în toate registrele"
         className="h-12 rounded-xl border-input bg-card pl-12 pr-12 text-[15px] shadow-sm"
       />
@@ -210,16 +214,27 @@ export function GlobalSearch() {
                           <div className="truncate text-xs text-muted-foreground">{h.detail}</div>
                         )}
                       </div>
-                      {h.state && (
-                        <span
-                          className={cn(
-                            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                            TON[h.tone],
-                          )}
-                        >
-                          {h.state}
-                        </span>
-                      )}
+                      {h.responsabil && <ResponsabilRand r={h.responsabil} />}
+                      {/* Starea stă într-o cutie de lățime fixă, aliniată la
+                          dreapta. Fără ea, cercul responsabilului ar sări la
+                          fiecare rând după cât de lungă e starea de lângă el
+                          („De făcut" față de „În examinare"), iar coloana de
+                          nume n-ar mai fi o coloană. Rândurile fără responsabil
+                          păstrează cutia, ca starea să rămână în același loc.
+                          Pe telefon cutia cade: acolo locul e al titlului,
+                          care altfel s-ar tăia chiar la numele căutat. */}
+                      <span className="flex shrink-0 justify-end sm:w-32">
+                        {h.state && (
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                              TON[h.tone],
+                            )}
+                          >
+                            {h.state}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                   ))}
                   {g.more > 0 && (
@@ -234,5 +249,36 @@ export function GlobalSearch() {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Responsabilul unui rezultat, cum apare și în listele sarcinilor și
+ * petițiilor: inițialele în cercul colorat al omului, apoi numele. Aceeași
+ * culoare ca în module, ca Natalia să fie recunoscută dintr-o privire, fără
+ * să-i citești numele.
+ *
+ * Lățime fixă, ca starea din dreapta să rămână într-o coloană la toate
+ * rândurile. Pe telefon rămâne doar cercul: numele ar fi mâncat locul
+ * titlului, care e ce se caută.
+ */
+function ResponsabilRand({ r }: { r: Responsabil }) {
+  if (r === "neatribuit") {
+    return (
+      <span className="w-8 shrink-0 text-xs text-muted-foreground sm:w-36">
+        <span className="hidden sm:inline">Neatribuit</span>
+        <span className="sm:hidden" title="Neatribuit">—</span>
+      </span>
+    );
+  }
+  return (
+    <span className="flex w-8 min-w-0 shrink-0 items-center gap-2 sm:w-36" title={r.nume}>
+      <Avatar className="h-6 w-6">
+        <AvatarFallback className={cn("text-[10px]", avatarColor(r.id))}>
+          {initials(r.nume)}
+        </AvatarFallback>
+      </Avatar>
+      <span className="hidden truncate text-xs sm:inline">{r.nume}</span>
+    </span>
   );
 }

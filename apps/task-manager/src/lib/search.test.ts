@@ -6,13 +6,13 @@ const DATE: SearchData = {
   tasks: [
     {
       id: "t1", title: "Țiganciuc Dumitru Igor", description: "solicitare hotărîre", status: "todo",
-      tags: [{ id: "g1", name: "solicitare hotărîri" }] as never,
+      tags: [{ id: "g1", name: "solicitare hotărîri" }] as never, assignee_id: "n1",
     },
-    { id: "t2", title: "Ataman Iurie", description: null, status: "done", tags: [] as never },
+    { id: "t2", title: "Ataman Iurie", description: null, status: "done", tags: [] as never, assignee_id: null },
   ],
   petitions: [
-    { id: "p1", number: "M-535/26", petitioner: "Țiganciuc Dumitru", subject: "art. 91", status: "in_examinare" },
-    { id: "p2", number: "B-616/26", petitioner: "Ataman Iurie", subject: null, status: "solutionat" },
+    { id: "p1", number: "M-535/26", petitioner: "Țiganciuc Dumitru", subject: "art. 91", status: "in_examinare", assignee_id: "a1" },
+    { id: "p2", number: "B-616/26", petitioner: "Ataman Iurie", subject: null, status: "solutionat", assignee_id: "sters" },
   ],
   plans: [
     { id: "pl1", last_name: "Țiganciuc", first_name: "Dumitru", court: "Judecătoria Chișinău", institution: 13, note: null, done: false },
@@ -23,6 +23,10 @@ const DATE: SearchData = {
   ],
   contraveners: [
     { id: "c1", last_name: "Țiganciuc", first_name: "Dumitru", patronymic: "Ștefan", decision_date: "2026-09-10", arrest_days: 15, final_date: null, executed_on: null, informed_at: null },
+  ],
+  profiles: [
+    { id: "n1", full_name: "Natalia Spinei" },
+    { id: "a1", full_name: "Ana Cojocari" },
   ],
 };
 
@@ -174,5 +178,38 @@ describe("starea, cu numele din registru", () => {
     // Copiate, s-ar fi depărtat de registru la prima redenumire.
     expect(TASK_STATUS_LABEL.waiting).toBe("În așteptare");
     expect(PETITION_STATUS_LABEL.solutionat).toBe("Soluționat");
+  });
+});
+
+describe("responsabilul, la fiecare rezultat", () => {
+  const primul = (q: string, kind: string) =>
+    search(q, DATE).find((g) => g.kind === kind)?.hits[0];
+
+  it("sarcina și petiția își spun responsabilul, cu numele din profil", () => {
+    expect(primul("Țiganciuc", "sarcina")?.responsabil).toEqual({ id: "n1", nume: "Natalia Spinei" });
+    expect(primul("Țiganciuc", "petitie")?.responsabil).toEqual({ id: "a1", nume: "Ana Cojocari" });
+  });
+
+  it("fără responsabil scrie „neatribuit”, nu lasă locul gol", () => {
+    expect(primul("Ataman", "sarcina")?.responsabil).toBe("neatribuit");
+  });
+
+  it("un profil dispărut nu face rândul să dispară", () => {
+    // Petiția are un responsabil care nu mai e printre profiluri: rândul
+    // rămâne, doar numele lipsește — altfel s-ar fi pierdut un rezultat.
+    expect(primul("Ataman", "petitie")?.responsabil).toEqual({ id: "sters", nume: "(fără nume)" });
+  });
+
+  it("registrele fără responsabil nu pretind că au unul", () => {
+    // `null`, nu „neatribuit”: la transferuri sau la preveniți nu lipsește
+    // nimeni, pur și simplu registrul nu are rubrica asta.
+    for (const kind of ["transfer", "prevenit", "contravenient"]) {
+      expect(primul("Țiganciuc", kind)?.responsabil).toBeNull();
+    }
+  });
+
+  it("numele responsabilului nu intră în căutare", () => {
+    // Altfel „Spinei” ar aduce toate sarcinile Nataliei, nu omul căutat.
+    expect(countHits(search("Spinei", DATE))).toBe(0);
   });
 });

@@ -3,7 +3,7 @@ import type { Defendant } from "./defendants";
 import { fullName as numeContravenient, prescriptieOf, type Contravener } from "./contraveners";
 import { todayInChisinau, toISODate } from "./periods";
 import type { TransferPlan } from "./transfer-plans";
-import type { Petition, Task } from "./types";
+import type { Petition, Profile, Task } from "./types";
 import { PETITION_STATUS_LABEL, TASK_STATUS_LABEL } from "./status-labels";
 import { institutionLabel } from "./transfers";
 
@@ -67,8 +67,16 @@ export interface SearchHit {
   tone: StateTone;
   /** Terminat — rândul se stinge, ca ochiul să treacă peste el. */
   finished: boolean;
+  /**
+   * Cine răspunde de rând. `null` la registrele care n-au responsabil —
+   * transferuri, preveniți, contravenienți —, ca să nu se confunde cu
+   * „neatribuit", care e o lipsă într-un registru unde ar trebui să fie cineva.
+   */
+  responsabil: Responsabil | null;
   href: string;
 }
+
+export type Responsabil = { id: string; nume: string } | "neatribuit";
 
 export interface SearchGroup {
   kind: SearchKind;
@@ -114,8 +122,11 @@ function detaliu(parti: (string | null | undefined)[]): string | null {
   return p.length ? p.join(" · ") : null;
 }
 
-export type TaskRow = Pick<Task, "id" | "title" | "description" | "status" | "tags">;
-export type PetitionRow = Pick<Petition, "id" | "number" | "petitioner" | "subject" | "status">;
+export type TaskRow = Pick<Task, "id" | "title" | "description" | "status" | "tags" | "assignee_id">;
+export type PetitionRow = Pick<
+  Petition,
+  "id" | "number" | "petitioner" | "subject" | "status" | "assignee_id"
+>;
 export type PlanRow = Pick<
   TransferPlan,
   "id" | "last_name" | "first_name" | "court" | "institution" | "note" | "done"
@@ -144,10 +155,23 @@ export interface SearchData {
   plans: PlanRow[];
   defendants: DefendantRow[];
   contraveners: ContravenerRow[];
+  /** Pentru numele responsabililor; se cer doar id-ul și numele. */
+  profiles: Pick<Profile, "id" | "full_name">[];
 }
 
 function candidati(data: SearchData, azi: string): Candidat[] {
   const out: Candidat[] = [];
+
+  /*
+   * Numele se pun aici, din lista de profiluri, nu cu un join în interogare:
+   * profilurile sunt câteva rânduri, aduse o dată, iar așa un responsabil
+   * șters sau fără nume se vede ca atare în loc să facă rândul să dispară.
+   */
+  const nume = new Map(data.profiles.map((p) => [p.id, p.full_name]));
+  const responsabil = (id: string | null): Responsabil => {
+    if (!id) return "neatribuit";
+    return { id, nume: nume.get(id) || "(fără nume)" };
+  };
 
   for (const t of data.tasks) {
     /*
@@ -172,6 +196,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           state: TASK_STATUS_LABEL[t.status],
           tone: TON_SARCINA[t.status],
           finished: t.status === "done",
+          responsabil: responsabil(t.assignee_id),
           href: `/tasks/${t.id}`,
         },
         [t.title, t.description, ...etichete],
@@ -190,6 +215,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           state: PETITION_STATUS_LABEL[p.status],
           tone: TON_PETITIE[p.status],
           finished: p.status === "solutionat",
+          responsabil: responsabil(p.assignee_id),
           // Se deschide chiar petiția, nu registrul; vezi `notificationHref`.
           href: `/petitii?petitie=${p.id}`,
         },
@@ -211,6 +237,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           state: null,
           tone: "slate",
           finished: false,
+          responsabil: null,
           href: "/transferuri/planificare",
         },
         [p.last_name, p.first_name, p.court, p.note],
@@ -235,6 +262,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           // din grija curentă, ca o sarcină finalizată.
           tone: categorie === "prevenit" ? "amber" : categorie === "condamnat" ? "green" : "slate",
           finished: d.status === "condamnat",
+          responsabil: null,
           href: "/inculpati",
         },
         [d.last_name, d.first_name, d.court, d.case_number],
@@ -254,6 +282,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           // deosebește de altul cu același nume.
           detail: detaliu([`${c.arrest_days} zile arest`, `hotărârea din ${zi}.${luna}.${an}`]),
           ...stareContravenient(c, azi),
+          responsabil: null,
           href: "/contravenienti",
         },
         [c.last_name, c.first_name, c.patronymic],

@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-09-30",
+    text: "În căutarea de pe pagina de start, fiecare sarcină și petiție găsită își arată și responsabilul — cu inițialele în cercul lui colorat, ca în liste — sau „Neatribuit” când nu are. Transferurile, preveniții și contravenienții n-au responsabil în registrul lor, deci acolo rândul rămâne fără. Pe telefon apare doar cercul, ca titlul să încapă.",
+  },
+  {
     date: "2026-09-29",
     text: "La „Contravenienți”, fiecare hotărâre își arată termenul de executare: un an de la data devenirii definitive. Cu 30 de zile înainte de expirare apare „Expiră în … zile”, iar după expirare „Prescris”, cu butonul „Informare expediată”. Cât timp există hotărâri prescrise fără informare, sus stă o bandă galbenă care spune câte sunt. În fereastra fiecărui om e și bifa „Arestul a fost pus în executare”: cei executați nu mai primesc avertizare. Căutarea de pe pagina de start arată și ea starea: „De informat”, „Executat”, „Expiră curând”.",
   },
