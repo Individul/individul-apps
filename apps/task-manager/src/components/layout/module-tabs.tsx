@@ -18,7 +18,6 @@ const MODULES = [
   // după nume, doar că pe temei contravențional.
   { href: "/contravenienti", label: "Contravenienți", matchPrefixes: ["/contravenienti"] },
   { href: "/obligatii", label: "Informări", matchPrefixes: ["/obligatii"] },
-  { href: "/statistici", label: "Statistici", matchPrefixes: ["/statistici"] },
 ] as const;
 
 export function ModuleTabs() {

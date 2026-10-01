@@ -38,7 +38,6 @@ sarcini" (→ `/sarcini`).
 | `/petitii`    | registrul petițiilor                     |
 | `/sedinte`    | evidența ședințelor de judecată          |
 | `/transferuri`| registrul transferurilor                 |
-| `/statistici` | rapoarte statistice importate din Excel  |
 | `/tasks/[id]` | detaliul unei sarcini                    |
 | `/admin`      | administrare (doar admin)                |
 
@@ -174,72 +173,14 @@ Cine a scris rămâne în jurnalul de audit de la `/admin`, sub modulul
 
 ## Statistici
 
-Rapoartele statistice se completează în continuare în Excel, ca până acum.
-Aplicația le **importă**, păstrează **istoricul** și arată **evoluția în timp**.
-Se extrag doar datele penitenciarului **P-6**.
+Modulul de statistici nu mai e aici: din 1 octombrie 2026 stă în aplicația lui,
+la [statistici.dumitru.cloud](https://statistici.dumitru.cloud) (depozitul
+`Individul/statistici`), unde dările de seamă se preiau singure din Cloud
+Fișiere, fără încărcare de mână.
 
-Pagina are **o secțiune per raport**, fiecare cu graficele potrivite conținutului
-lui — forma urmează întrebarea, nu invers:
-
-| Raport | Întrebarea | Formă |
-| --- | --- | --- |
-| Populație | cum evoluează numărul de deținuți? | linie, cu plafonul ca reper punctat |
-| Liberări | din ce se compune totalul? | inel (sau bare, peste 6 motive) + linie în timp |
-| Comisia | art. 91 față de art. 92 | bare grupate |
-| Grațiere | ce s-a întâmplat cu demersurile? | bare |
-| Ședințe | teleconferință față de instanță | bare grupate |
-| Mecanism compensatoriu | cum evoluează? | două linii separate (persoane / termen) |
-| Amnistii | structura pe articole | bare orizontale |
-
-Fiecare secțiune are dedesubt **„Toate valorile"** — un tabel pliabil cu tot ce
-s-a importat pentru perioadă. Prezentarea aleasă nu ascunde niciodată date.
-
-Reguli de afișare care merită știute:
-
-- Indicatorii care sunt **0 în toate perioadele** nu apar în grafice (rapoartele
-  au zeci de rânduri care nu s-au întâmplat niciodată); rămân în „Toate valorile".
-- O valoare lipsă **rămâne lipsă** — linia se întrerupe, nu se completează cu 0.
-- Totalurile nu apar niciodată într-un grafic de compoziție, ca să nu stea totalul
-  ca felie lângă propriile lui părți.
-- „Suprapopularea" negativă se citește ca **locuri libere** (−5 → „Locuri libere 5").
-
-Tipuri de raport recunoscute (detectate automat din conținut):
-
-| Tip | Conținut |
-| --- | --- |
-| Raport lunar | plafon de detenție, deținuți, suprapopulare, femei, minori, liberați |
-| Liberări | liberări pe motive, decedați |
-| Comisia penitenciară | art. 91 / 92 CP — examinați, admiși, refuzați, expediați în judecată |
-| Grațiere | demersuri, examinați, grațiați, refuzați |
-| Amnistia 2016 / Amnistia 2021 | aplicarea legilor de amnistie |
-| Mecanism compensatoriu | reduceri de termen (art. 473/2 CPP) |
-| Ședințe de judecată | teleconferință, sediu, instanță, amânate |
-
-**Fluxul de import** (doar admin): alegi fișierul `.xlsx` → aplicația detectează
-tipul și propune perioada din numele fișierului → **previzualizezi** toți
-indicatorii extrași → confirmi perioada (dată + săptămânal/lunar) → se salvează.
-Fișierul original rămâne într-un bucket privat și se poate redeschide oricând.
-
-Câteva alegeri deliberate:
-
-- **Perioada se confirmă manual.** Datele din fișiere sunt contradictorii (un
-  fișier are „30.06.2023" în titlu și 31.03.2024 în celula alăturată), deci
-  ghicirea ar produce un istoric fals fără ca cineva să observe.
-- **Tipul detectat poate fi schimbat.** Dacă alegi alt tip, fișierul e recitit cu
-  el, așa că previzualizarea arată mereu exact ce se va salva.
-- **Reimportul aceleiași perioade înlocuiește** datele, nu le dublează.
-- Rapoartele cu **sub-rând de perioadă** (comisia, mecanism compensatoriu) se
-  salvează pe două serii: `cumulat` și `perioada`.
-- Localizarea coloanei/rândului P-6 se face **după text**, nu după coordonate, ca
-  o inserare de rând în Excel să nu strice importul. Un fișier nerecunoscut dă
-  eroare explicită, nu import tăcut greșit.
-
-Vizualizarea e pentru toți utilizatorii; importul și ștergerea, doar pentru admini
-(impus prin RLS, nu doar în interfață).
-
-> Migrarea [`supabase/migrations/0016_statistics.sql`](supabase/migrations/0016_statistics.sql)
-> trebuie aplicată (după `0015`); ea creează bucket-ul privat `statistics` și
-> tabelele `stat_reports` / `stat_values`.
+Tabelele `stat_reports` / `stat_values` și bucket-ul `statistics` din Supabase
+(migrarea `0016_statistics.sql`) au rămas neatinse, ca drum de întoarcere, și
+intră în continuare în backup. Nimic din aplicație nu mai scrie în ele.
 
 ## Raportul săptămânal
 

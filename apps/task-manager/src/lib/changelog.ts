@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-01",
+    text: "Fila „Statistici” nu mai e în bara de sus. Statisticile au trecut la statistici.dumitru.cloud, în aplicația lor: acolo dările de seamă lunare se preiau singure din mapa „Dări de seamă”, în fiecare noapte, fără să mai fie urcate de mână, și sunt toate lunile din 2025 și 2026, nu doar cele încărcate până acum. A apărut și Forma nr. 1, cu deținuții pe tipuri de penitenciar. Deocamdată adresa nouă se deschide doar pentru administrator.",
+  },
+  {
     date: "2026-09-30",
     text: "În căutarea de pe pagina de start, fiecare sarcină și petiție găsită își arată și responsabilul — cu inițialele în cercul lui colorat, ca în liste — sau „Neatribuit” când nu are. Transferurile, preveniții și contravenienții n-au responsabil în registrul lor, deci acolo rândul rămâne fără. Pe telefon apare doar cercul, ca titlul să încapă.",
   },
