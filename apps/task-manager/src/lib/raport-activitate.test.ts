@@ -239,3 +239,49 @@ describe("cine apare în tabel", () => {
     expect(raport.randuri[0].nume).toBe("Natalia Spinei");
   });
 });
+
+describe("etichetele sarcinilor încheiate", () => {
+  const eticheta = (id: string, name: string) => ({ id, name, color: "#123456" });
+
+  it("fiecare sarcină încheiată își poartă etichetele, alfabetic", () => {
+    // Titlul e numele omului; ce fel de lucrare a fost o spune eticheta.
+    const raport = construiesteRaport(
+      [
+        s({
+          id: "1",
+          completed_at: "2026-09-10T08:00:00+00:00",
+          tags: [eticheta("b", "Neclarități"), eticheta("a", "Cumulare")],
+        }),
+      ],
+      [],
+      PROFILURI,
+      SEPTEMBRIE,
+    );
+    const gasita = randul(raport, "Ana Cojocari")!.sarcini.incheiate[0];
+    expect(gasita.etichete.map((e) => e.name)).toEqual(["Cumulare", "Neclarități"]);
+  });
+
+  it("sarcina fără etichete are lista goală, nu lipsă", () => {
+    const raport = construiesteRaport(
+      [
+        s({ id: "fara", completed_at: "2026-09-10T08:00:00+00:00" }),
+        s({ id: "nul", completed_at: "2026-09-11T08:00:00+00:00", tags: null }),
+      ],
+      [],
+      PROFILURI,
+      SEPTEMBRIE,
+    );
+    const toate = randul(raport, "Ana Cojocari")!.sarcini.incheiate;
+    expect(toate.map((x) => x.etichete)).toEqual([[], []]);
+  });
+
+  it("petițiile n-au etichete", () => {
+    const raport = construiesteRaport(
+      [],
+      [p({ id: "1", response_date: "2026-09-05" })],
+      PROFILURI,
+      SEPTEMBRIE,
+    );
+    expect(raport.total.petitii.incheiate[0].etichete).toEqual([]);
+  });
+});

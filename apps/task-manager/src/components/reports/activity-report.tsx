@@ -27,10 +27,27 @@ function Lista({ titlu, coloana }: { titlu: string; coloana: Coloana }) {
       <ul className="space-y-0.5">
         {coloana.incheiate.map((x) => (
           <li key={x.id} className="flex break-inside-avoid gap-2 text-[13px]">
-            <span className="w-24 shrink-0 tabular-nums text-muted-foreground print:text-black">
+            {/* Destul de lată pentru „30 septembrie 2026" pe un rând: la 96px
+                lunile cu nume lung se rupeau în două și fiecare lucrare lua
+                două rânduri de hârtie în loc de unul. */}
+            <span className="w-36 shrink-0 tabular-nums text-muted-foreground print:text-black">
               {formatDateRo(x.zi)}
             </span>
-            <span className="min-w-0 flex-1">{x.eticheta}</span>
+            <span className="min-w-0 flex-1">
+              {x.eticheta}
+              {/* Contur și text colorat, nu pastilă plină ca în lista
+                  sarcinilor: la tipărire fundalurile nu ies, iar textul alb al
+                  unei pastile pline ar rămâne alb pe alb. */}
+              {x.etichete.map((e) => (
+                <span
+                  key={e.id}
+                  className="ml-2 inline-block rounded-full border px-2 py-px align-middle text-[11px] font-medium"
+                  style={{ borderColor: e.color, color: e.color }}
+                >
+                  {e.name}
+                </span>
+              ))}
+            </span>
           </li>
         ))}
       </ul>

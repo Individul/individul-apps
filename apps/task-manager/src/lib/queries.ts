@@ -505,7 +505,11 @@ export async function getContraveners(): Promise<Contravener[]> {
  */
 export async function getSarciniRaport(): Promise<SarcinaRaport[]> {
   const supabase = createClient();
-  const { data, error } = await supabase.from("tasks").select(COLOANE_SARCINA.join(","));
+  // Etichetele se cer pe lângă coloane: ele spun ce fel de lucrare a fost, iar
+  // raportul le arată în dreptul fiecărei sarcini încheiate.
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(`${COLOANE_SARCINA.join(",")},tags(id,name,color)`);
   if (error) throw error;
   return (data ?? []) as unknown as SarcinaRaport[];
 }

@@ -1,5 +1,5 @@
 import { ziuaChisinau, toISODate, type DateRange } from "./periods";
-import type { Petition, Profile, Task } from "./types";
+import type { Petition, Profile, Tag, Task } from "./types";
 
 /**
  * Cine ce a încheiat într-o perioadă — sarcini și petiții, pe fiecare om.
@@ -27,7 +27,15 @@ export const COLOANE_SARCINA = [
   "created_at",
   "completed_at",
 ] as const;
-export type SarcinaRaport = Pick<Task, (typeof COLOANE_SARCINA)[number]>;
+/**
+ * Etichetele vin pe lângă coloane, nu dintre ele: sunt o relație (`tags(...)`),
+ * nu o coloană a sarcinii, deci nu au ce căuta în lista de mai sus. Opționale,
+ * fiindcă o sarcină poate să nu aibă niciuna.
+ */
+export type EtichetaRaport = Pick<Tag, "id" | "name" | "color">;
+export type SarcinaRaport = Pick<Task, (typeof COLOANE_SARCINA)[number]> & {
+  tags?: EtichetaRaport[] | null;
+};
 
 export const COLOANE_PETITIE = [
   "id",
@@ -47,6 +55,15 @@ export interface Incheiata {
   eticheta: string;
   /** Ziua încheierii (AAAA-LL-ZZ), pentru sortare și afișare. */
   zi: string;
+  /**
+   * Etichetele sarcinii — ele spun ce fel de lucrare a fost.
+   *
+   * Titlul unei sarcini e numele omului, la fel la o cumulare de sentințe și
+   * la o simplă solicitare de hotărâre. Fără etichetă, „12 sarcini încheiate"
+   * nu spune nimic despre cât de grele au fost. La petiții lista e goală:
+   * petițiile n-au etichete.
+   */
+  etichete: EtichetaRaport[];
 }
 
 export interface Coloana {
@@ -138,7 +155,14 @@ export function construiesteRaport(
     const incheiata = s.completed_at ? ziuaChisinau(s.completed_at) : null;
 
     if (inInterval(incheiata)) {
-      c.incheiate.push({ id: s.id, eticheta: s.title, zi: incheiata! });
+      c.incheiate.push({
+        id: s.id,
+        eticheta: s.title,
+        zi: incheiata!,
+        // Alfabetic, ca aceeași sarcină să arate la fel la fiecare deschidere:
+        // baza nu promite nicio ordine pentru o relație.
+        etichete: [...(s.tags ?? [])].sort((a, b) => a.name.localeCompare(b.name, "ro")),
+      });
     }
     if (inInterval(creata)) c.intrate += 1;
     // Deschisă în ultima zi a perioadei: exista deja și încă nu se încheiase.
@@ -161,6 +185,7 @@ export function construiesteRaport(
         id: p.id,
         eticheta: `${p.number} — ${p.petitioner}`,
         zi: raspunsa!,
+        etichete: [],
       });
     }
     if (inInterval(primita)) c.intrate += 1;

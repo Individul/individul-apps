@@ -23,6 +23,11 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-01",
+    doarAdmin: true,
+    text: "În raportul de activitate din Administrare, fiecare sarcină încheiată își arată acum și etichetele („Cumulare”, „Audiență”…), în dreptul numelui. Titlul sarcinii e numele omului, la fel la o lucrare grea și la una ușoară; eticheta spune ce fel de lucrare a fost. Se văd și la tipărire.",
+  },
+  {
+    date: "2026-10-01",
     text: "Fila „Statistici” nu mai e în bara de sus. Statisticile au trecut la statistici.dumitru.cloud, în aplicația lor: acolo dările de seamă lunare se preiau singure din mapa „Dări de seamă”, în fiecare noapte, fără să mai fie urcate de mână, și sunt toate lunile din 2025 și 2026, nu doar cele încărcate până acum. A apărut și Forma nr. 1, cu deținuții pe tipuri de penitenciar. Deocamdată adresa nouă se deschide doar pentru administrator.",
   },
   {
