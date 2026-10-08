@@ -215,16 +215,18 @@ describe("responsabilul, la fiecare rezultat", () => {
 });
 
 describe("semnul „Atacat la CSJ” în căutare", () => {
-  it("stă primul în rândul de jos, înaintea etichetelor", () => {
+  it("vine ca semn aparte, nu amestecat printre etichete", () => {
     // Copie a datelor, cu prima sarcină atacată: datele comune rămân cum le
     // așteaptă probele de mai sus.
     const cuCsj = { ...DATE, tasks: [{ ...DATE.tasks[0], appealed_csj: true }, DATE.tasks[1]] };
     const t = search("Țiganciuc", cuCsj).find((g) => g.kind === "sarcina")?.hits[0];
-    expect(t?.detail).toBe("Atacat la CSJ · solicitare hotărîri");
+    expect(t?.atacatCsj).toBe(true);
+    // Gri pe gri, printre etichete, s-ar fi pierdut — de aceea nu e acolo.
+    expect(t?.detail).toBe("solicitare hotărîri");
   });
 
-  it("sarcina fără semn rămâne cum era", () => {
-    const t = search("Ataman", DATE).find((g) => g.kind === "sarcina")?.hits[0];
-    expect(t?.detail ?? "").not.toMatch(/CSJ/);
+  it("sarcina fără semn și celelalte registre nu-l poartă", () => {
+    const g = search("Țiganciuc", DATE);
+    expect(g.every((grup) => grup.hits.every((h) => h.atacatCsj === false))).toBe(true);
   });
 });

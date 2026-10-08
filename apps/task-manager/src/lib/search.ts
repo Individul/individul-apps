@@ -73,6 +73,12 @@ export interface SearchHit {
    * „neatribuit", care e o lipsă într-un registru unde ar trebui să fie cineva.
    */
   responsabil: Responsabil | null;
+  /**
+   * Sarcina e atacată la CSJ. Câmp aparte, nu text în `detail`: acolo s-ar fi
+   * pierdut printre etichete, gri pe gri, iar semnul trebuie să sară în ochi,
+   * ca în lista de sarcini și în pagina sarcinii.
+   */
+  atacatCsj: boolean;
   href: string;
 }
 
@@ -195,13 +201,12 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           kind: "sarcina",
           id: t.id,
           title: t.title,
-          // „Atacat la CSJ" întâi: e o stare a dosarului, nu un fel de lucrare,
-          // și e lucrul pe care îl caută cine întreabă „ce avem pe X?".
-          detail: detaliu([t.appealed_csj ? "Atacat la CSJ" : null, ...etichete]),
+          detail: detaliu(etichete),
           state: TASK_STATUS_LABEL[t.status],
           tone: TON_SARCINA[t.status],
           finished: t.status === "done",
           responsabil: responsabil(t.assignee_id),
+          atacatCsj: t.appealed_csj === true,
           href: `/tasks/${t.id}`,
         },
         [t.title, t.description, ...etichete],
@@ -221,6 +226,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           tone: TON_PETITIE[p.status],
           finished: p.status === "solutionat",
           responsabil: responsabil(p.assignee_id),
+          atacatCsj: false,
           // Se deschide chiar petiția, nu registrul; vezi `notificationHref`.
           href: `/petitii?petitie=${p.id}`,
         },
@@ -243,6 +249,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           tone: "slate",
           finished: false,
           responsabil: null,
+          atacatCsj: false,
           href: "/transferuri/planificare",
         },
         [p.last_name, p.first_name, p.court, p.note],
@@ -268,6 +275,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           tone: categorie === "prevenit" ? "amber" : categorie === "condamnat" ? "green" : "slate",
           finished: d.status === "condamnat",
           responsabil: null,
+          atacatCsj: false,
           href: "/inculpati",
         },
         [d.last_name, d.first_name, d.court, d.case_number],
@@ -288,6 +296,7 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           detail: detaliu([`${c.arrest_days} zile arest`, `hotărârea din ${zi}.${luna}.${an}`]),
           ...stareContravenient(c, azi),
           responsabil: null,
+          atacatCsj: false,
           href: "/contravenienti",
         },
         [c.last_name, c.first_name, c.patronymic],

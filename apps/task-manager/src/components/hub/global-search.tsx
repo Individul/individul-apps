@@ -6,6 +6,7 @@ import { FileText, Hourglass, ListTodo, Loader2, Search, Truck, UserSquare, X } 
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { CsjBadge } from "@/components/tasks/csj-badge";
 import { searchAll } from "@/app/cautare/actions";
 import { avatarColor } from "@/lib/avatar-color";
 import { initials } from "@/lib/initials";
@@ -209,7 +210,12 @@ export function GlobalSearch() {
                           rândurile în același loc, deci ochiul o poate coborî
                           pe verticală în loc s-o caute la alt capăt de frază. */}
                       <div className={cn("min-w-0 flex-1", h.finished && "opacity-60")}>
-                        <div className="truncate text-[13px]">{h.title}</div>
+                        {/* Semnul lângă nume, ca în lista de sarcini: acolo îl
+                            caută ochiul. Titlul se taie el, nu semnul. */}
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-[13px]">{h.title}</span>
+                          {h.atacatCsj && <CsjBadge />}
+                        </div>
                         {h.detail && (
                           <div className="truncate text-xs text-muted-foreground">{h.detail}</div>
                         )}

@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-08",
+    text: "În căutarea de pe pagina de start, „Atacat la CSJ” apare acum ca semn trandafiriu chiar lângă numele sarcinii, ca în lista de sarcini — nu ca text gri printre etichete, unde se pierdea.",
+  },
+  {
+    date: "2026-10-08",
     text: "O sarcină se poate marca „Atacat la CSJ”: cu butonul de lângă „Finalizează”, din pagina sarcinii, sau cu bifa de sub titlu, din fereastra de editare. Semnul apare chiar lângă numele sarcinii — în pagina ei, în lista de sarcini, în căutarea de pe pagina de start și în raportul de activitate —, iar punerea și scoaterea lui rămân în istoricul sarcinii.",
   },
   {
