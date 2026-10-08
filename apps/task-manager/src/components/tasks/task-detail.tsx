@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
-import { CheckCircle2, Pencil } from "lucide-react";
+import { CheckCircle2, Pencil, Scale } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import { TagPicker } from "@/components/tasks/tag-picker";
 import { Comments } from "./comments";
 import { SubtaskList } from "@/components/tasks/subtask-list";
 import { TaskHistory } from "@/components/tasks/task-history";
-import { finalizeTask } from "@/app/tasks/actions";
+import { CsjBadge } from "@/components/tasks/csj-badge";
+import { finalizeTask, setTaskAppealedCsj } from "@/app/tasks/actions";
 import { isTaskOverdue } from "@/lib/hub-stats";
 import { canEditTask, canFinalizeTask } from "@/lib/permissions";
 import { avatarColor } from "@/lib/avatar-color";
@@ -104,6 +105,19 @@ export function TaskDetail({
   // sub insigna violetă „În așteptare".
   const overdue = isTaskOverdue(task);
 
+  const toggleCsj = () => {
+    const nou = !task.appealed_csj;
+    startTransition(async () => {
+      const res = await setTaskAppealedCsj(task.id, nou);
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(nou ? "Marcată: atacat la CSJ" : "Semnul „Atacat la CSJ” a fost scos");
+      router.refresh();
+    });
+  };
+
   const handleFinalize = () => {
     startTransition(async () => {
       const res = await finalizeTask(task.id);
@@ -120,13 +134,35 @@ export function TaskDetail({
     <article className="space-y-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-3">
-          <h1 className="text-2xl font-semibold leading-tight tracking-tight">{task.title}</h1>
+          {/* Semnul stă chiar lângă nume, pe același rând — acolo l-a cerut
+              omul, și acolo îl caută ochiul. Pe ecran îngust trece dedesubt. */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <h1 className="text-2xl font-semibold leading-tight tracking-tight">{task.title}</h1>
+            {task.appealed_csj && <CsjBadge className="text-xs" />}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge className={status.className}>{status.label}</Badge>
             <Badge className={priority.className}>{priority.label}</Badge>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {/* Cine poate edita sarcina poate și pune semnul; aceeași regulă ca
+              politica `tasks update` din bază. Un clic, fără să deschidă
+              formularul: e un singur lucru de schimbat. */}
+          {canEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleCsj}
+              disabled={isPending}
+              aria-pressed={task.appealed_csj}
+              title={task.appealed_csj ? "Scoate semnul „Atacat la CSJ”" : "Marchează sarcina: atacat la CSJ"}
+              className={cn(task.appealed_csj && "border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100")}
+            >
+              <Scale className="mr-2 h-4 w-4" />
+              {task.appealed_csj ? "Atacat la CSJ ✓" : "Atacat la CSJ"}
+            </Button>
+          )}
           {canFinalize && (
             <Button size="sm" onClick={handleFinalize} disabled={isPending}>
               <CheckCircle2 className="mr-2 h-4 w-4" /> Finalizează

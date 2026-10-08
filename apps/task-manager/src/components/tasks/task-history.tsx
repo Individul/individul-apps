@@ -66,6 +66,9 @@ function changeLines(e: AuditEntry): string[] {
   }
   if (has("due_to")) out.push(`Termen: ${fmtDue(d.due_from)} → ${fmtDue(d.due_to)}`);
   if (has("title_to")) out.push("Titlu modificat");
+  if (has("csj_to")) {
+    out.push(d.csj_to ? "Marcată: atacat la CSJ" : "Scos semnul „Atacat la CSJ”");
+  }
   return out;
 }
 

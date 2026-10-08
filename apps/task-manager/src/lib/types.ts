@@ -25,6 +25,8 @@ export interface Task {
   waiting_since: string | null;
   /** Când a intrat în „Gata"; null în orice altă stare. O pune baza (0030). */
   completed_at: string | null;
+  /** Sentința a fost atacată la Curtea Supremă de Justiție (0033). */
+  appealed_csj: boolean;
   assignee_id: string | null;
   created_by: string;
   created_at: string;

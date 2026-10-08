@@ -35,7 +35,7 @@ export async function searchAll(query: string): Promise<SearchGroup[]> {
       .from("tasks")
       // `tags(*)` ca în `getTasks`: eticheta e esența sarcinii, deci se arată și
       // se caută. Restul rândului tot nu se cere.
-      .select("id,title,description,status,assignee_id,tags(*)")
+      .select("id,title,description,status,assignee_id,appealed_csj,tags(*)")
       .then((r) => (r.error ? [] : ((r.data ?? []) as unknown as TaskRow[]))),
     supabase
       .from("petitions")

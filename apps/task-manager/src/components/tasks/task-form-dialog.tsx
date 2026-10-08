@@ -75,6 +75,7 @@ function defaultValues(task: Task | undefined, canReassign: boolean, currentUser
     priority: task?.priority ?? "medium",
     due_date: task?.due_date ?? "",
     assignee_id,
+    appealed_csj: task?.appealed_csj ?? false,
   };
 }
 
@@ -172,6 +173,16 @@ export function TaskFormDialog({
             {errors.title && (
               <p className="text-sm text-destructive">{errors.title.message}</p>
             )}
+            {/* Chiar sub titlu, fiindcă acolo se și vede semnul: lângă numele
+                sarcinii, în listă și în pagina ei. */}
+            <label className="flex w-fit items-center gap-2 pt-1 text-sm">
+              <input
+                type="checkbox"
+                {...register("appealed_csj")}
+                className="h-4 w-4 rounded border-input accent-primary"
+              />
+              Atacat la CSJ
+            </label>
           </div>
 
           <div className="space-y-2">

@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-08",
+    text: "O sarcină se poate marca „Atacat la CSJ”: cu butonul de lângă „Finalizează”, din pagina sarcinii, sau cu bifa de sub titlu, din fereastra de editare. Semnul apare chiar lângă numele sarcinii — în pagina ei, în lista de sarcini, în căutarea de pe pagina de start și în raportul de activitate —, iar punerea și scoaterea lui rămân în istoricul sarcinii.",
+  },
+  {
     date: "2026-10-01",
     doarAdmin: true,
     text: "În raportul de activitate din Administrare, fiecare sarcină încheiată își arată acum și etichetele („Cumulare”, „Audiență”…), în dreptul numelui. Titlul sarcinii e numele omului, la fel la o lucrare grea și la una ușoară; eticheta spune ce fel de lucrare a fost. Se văd și la tipărire.",

@@ -122,7 +122,10 @@ function detaliu(parti: (string | null | undefined)[]): string | null {
   return p.length ? p.join(" · ") : null;
 }
 
-export type TaskRow = Pick<Task, "id" | "title" | "description" | "status" | "tags" | "assignee_id">;
+export type TaskRow = Pick<
+  Task,
+  "id" | "title" | "description" | "status" | "tags" | "assignee_id" | "appealed_csj"
+>;
 export type PetitionRow = Pick<
   Petition,
   "id" | "number" | "petitioner" | "subject" | "status" | "assignee_id"
@@ -192,7 +195,9 @@ function candidati(data: SearchData, azi: string): Candidat[] {
           kind: "sarcina",
           id: t.id,
           title: t.title,
-          detail: detaliu(etichete),
+          // „Atacat la CSJ" întâi: e o stare a dosarului, nu un fel de lucrare,
+          // și e lucrul pe care îl caută cine întreabă „ce avem pe X?".
+          detail: detaliu([t.appealed_csj ? "Atacat la CSJ" : null, ...etichete]),
           state: TASK_STATUS_LABEL[t.status],
           tone: TON_SARCINA[t.status],
           finished: t.status === "done",

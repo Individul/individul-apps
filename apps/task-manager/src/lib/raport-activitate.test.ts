@@ -16,6 +16,7 @@ const s = (x: Partial<SarcinaRaport> & { id: string }): SarcinaRaport => ({
   assignee_id: ANA.id,
   created_at: "2026-09-01T09:00:00+00:00",
   completed_at: null,
+  appealed_csj: false,
   ...x,
 });
 
@@ -283,5 +284,26 @@ describe("etichetele sarcinilor încheiate", () => {
       SEPTEMBRIE,
     );
     expect(raport.total.petitii.incheiate[0].etichete).toEqual([]);
+  });
+});
+
+describe("semnul „Atacat la CSJ” în raport", () => {
+  it("sarcina atacată la CSJ își poartă semnul, celelalte nu", () => {
+    const raport = construiesteRaport(
+      [
+        s({ id: "csj", completed_at: "2026-09-10T08:00:00+00:00", appealed_csj: true }),
+        s({ id: "simpla", completed_at: "2026-09-11T08:00:00+00:00" }),
+      ],
+      [p({ id: "pet", response_date: "2026-09-05" })],
+      PROFILURI,
+      SEPTEMBRIE,
+    );
+    const r = randul(raport, "Ana Cojocari")!;
+    expect(r.sarcini.incheiate.map((x) => [x.id, x.atacatCsj])).toEqual([
+      ["csj", true],
+      ["simpla", false],
+    ]);
+    // Petițiile n-au semnul.
+    expect(r.petitii.incheiate[0].atacatCsj).toBe(false);
   });
 });

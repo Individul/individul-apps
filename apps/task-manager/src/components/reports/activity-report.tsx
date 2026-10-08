@@ -35,6 +35,11 @@ function Lista({ titlu, coloana }: { titlu: string; coloana: Coloana }) {
             </span>
             <span className="min-w-0 flex-1">
               {x.eticheta}
+              {x.atacatCsj && (
+                <span className="ml-2 inline-block rounded-full border border-rose-300 px-2 py-px align-middle text-[11px] font-medium text-rose-800">
+                  Atacat la CSJ
+                </span>
+              )}
               {/* Contur și text colorat, nu pastilă plină ca în lista
                   sarcinilor: la tipărire fundalurile nu ies, iar textul alb al
                   unei pastile pline ar rămâne alb pe alb. */}

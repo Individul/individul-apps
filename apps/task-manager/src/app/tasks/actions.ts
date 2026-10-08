@@ -24,6 +24,11 @@ function normalize(input: TaskInput) {
     priority: input.priority,
     due_date: input.due_date ? input.due_date : null,
     assignee_id: input.assignee_id ? input.assignee_id : null,
+    // Doar dacă a fost trimis. Un apel care nu știe de câmp (o schimbare de
+    // stare dintr-un meniu, de pildă) ar fi scris altfel `false` și ar fi scos
+    // semnul „Atacat la CSJ" de pe o sarcină fără ca cineva să fi atins bifa.
+    // La creare, lipsa lui lasă valoarea implicită din bază, adică „nu".
+    ...(input.appealed_csj === undefined ? {} : { appealed_csj: input.appealed_csj }),
   };
 }
 
@@ -181,6 +186,33 @@ export async function deleteTask(id: string): Promise<ActionResult> {
 
   revalidatePath("/sarcini");
   revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * Pune sau scoate semnul „Atacat la CSJ".
+ *
+ * Acțiune proprie, nu prin `updateTask`: butonul din pagina sarcinii schimbă un
+ * singur lucru, iar trimiterea întregului formular ar fi rescris și câmpurile
+ * pe care omul nu le-a atins — cu ce avea pagina încărcată, poate de acum o oră.
+ * Dreptul îl hotărăște politica `tasks update` (admin, autorul sau
+ * responsabilul): fără drept, actualizarea atinge zero rânduri.
+ */
+export async function setTaskAppealedCsj(id: string, appealed: boolean): Promise<ActionResult> {
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { error: "Neautentificat." };
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ appealed_csj: appealed })
+    .eq("id", id)
+    .select("id");
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) return { error: "Sarcină inexistentă sau fără permisiune." };
+
+  revalidatePath("/sarcini");
+  revalidatePath(`/tasks/${id}`);
   return { success: true };
 }
 

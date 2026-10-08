@@ -29,6 +29,7 @@ import {
 import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { deleteTask, finalizeTask } from "@/app/tasks/actions";
+import { CsjBadge } from "@/components/tasks/csj-badge";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
@@ -235,6 +236,9 @@ export function TaskTable({
                       >
                         {t.title}
                       </Link>
+                      {/* Înaintea etichetelor: e o stare a dosarului, legată de
+                          nume, iar etichetele spun doar ce fel de lucrare e. */}
+                      {t.appealed_csj && <CsjBadge />}
                       {(t.tags ?? []).length > 0 && (
                         <div className="flex shrink-0 items-center gap-2">
                           {t.tags!.map((tag) => (

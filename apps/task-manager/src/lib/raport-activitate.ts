@@ -26,6 +26,7 @@ export const COLOANE_SARCINA = [
   "assignee_id",
   "created_at",
   "completed_at",
+  "appealed_csj",
 ] as const;
 /**
  * Etichetele vin pe lângă coloane, nu dintre ele: sunt o relație (`tags(...)`),
@@ -64,6 +65,8 @@ export interface Incheiata {
    * petițiile n-au etichete.
    */
   etichete: EtichetaRaport[];
+  /** Sentința atacată la CSJ — tot o măsură a greutății lucrării. */
+  atacatCsj: boolean;
 }
 
 export interface Coloana {
@@ -162,6 +165,7 @@ export function construiesteRaport(
         // Alfabetic, ca aceeași sarcină să arate la fel la fiecare deschidere:
         // baza nu promite nicio ordine pentru o relație.
         etichete: [...(s.tags ?? [])].sort((a, b) => a.name.localeCompare(b.name, "ro")),
+        atacatCsj: s.appealed_csj === true,
       });
     }
     if (inInterval(creata)) c.intrate += 1;
@@ -186,6 +190,7 @@ export function construiesteRaport(
         eticheta: `${p.number} — ${p.petitioner}`,
         zi: raspunsa!,
         etichete: [],
+        atacatCsj: false,
       });
     }
     if (inInterval(primita)) c.intrate += 1;

@@ -6,9 +6,9 @@ const DATE: SearchData = {
   tasks: [
     {
       id: "t1", title: "Țiganciuc Dumitru Igor", description: "solicitare hotărîre", status: "todo",
-      tags: [{ id: "g1", name: "solicitare hotărîri" }] as never, assignee_id: "n1",
+      tags: [{ id: "g1", name: "solicitare hotărîri" }] as never, assignee_id: "n1", appealed_csj: false,
     },
-    { id: "t2", title: "Ataman Iurie", description: null, status: "done", tags: [] as never, assignee_id: null },
+    { id: "t2", title: "Ataman Iurie", description: null, status: "done", tags: [] as never, assignee_id: null, appealed_csj: false },
   ],
   petitions: [
     { id: "p1", number: "M-535/26", petitioner: "Țiganciuc Dumitru", subject: "art. 91", status: "in_examinare", assignee_id: "a1" },
@@ -211,5 +211,20 @@ describe("responsabilul, la fiecare rezultat", () => {
   it("numele responsabilului nu intră în căutare", () => {
     // Altfel „Spinei” ar aduce toate sarcinile Nataliei, nu omul căutat.
     expect(countHits(search("Spinei", DATE))).toBe(0);
+  });
+});
+
+describe("semnul „Atacat la CSJ” în căutare", () => {
+  it("stă primul în rândul de jos, înaintea etichetelor", () => {
+    // Copie a datelor, cu prima sarcină atacată: datele comune rămân cum le
+    // așteaptă probele de mai sus.
+    const cuCsj = { ...DATE, tasks: [{ ...DATE.tasks[0], appealed_csj: true }, DATE.tasks[1]] };
+    const t = search("Țiganciuc", cuCsj).find((g) => g.kind === "sarcina")?.hits[0];
+    expect(t?.detail).toBe("Atacat la CSJ · solicitare hotărîri");
+  });
+
+  it("sarcina fără semn rămâne cum era", () => {
+    const t = search("Ataman", DATE).find((g) => g.kind === "sarcina")?.hits[0];
+    expect(t?.detail ?? "").not.toMatch(/CSJ/);
   });
 });
