@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-23",
+    text: "La „Planificarea transferurilor” a apărut un câmp de căutare: după nume, instanță, penitenciar („nr. 13”) sau ce scrie în observații, fără să conteze diacriticele. Caută și printre cei încheiați, care se deschid singuri cât timp cauți. Cifra de sus spune câți s-au găsit din câți sunt.",
+  },
+  {
     date: "2026-10-08",
     text: "În căutarea de pe pagina de start, „Atacat la CSJ” apare acum ca semn trandafiriu chiar lângă numele sarcinii, ca în lista de sarcini — nu ca text gri printre etichete, unde se pierdea.",
   },

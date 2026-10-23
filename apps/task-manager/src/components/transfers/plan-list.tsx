@@ -8,11 +8,13 @@ import { AlertTriangle, Check, MailCheck, Plus, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PlanDialog } from "@/components/transfers/plan-dialog";
 import { setPlanDone, setPlanNotified } from "@/app/transferuri/planificare/actions";
 import {
   esteInstiintat,
   groupByTransferDay,
+  matchesPlan,
   planDate,
   type TransferPlan,
 } from "@/lib/transfer-plans";
@@ -44,12 +46,28 @@ export function PlanList({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TransferPlan | null>(null);
+  const [search, setSearch] = useState("");
   const [, startTransition] = useTransition();
 
-  const groups = groupByTransferDay(plans);
+  const cautare = search.trim() !== "";
+  // Căutarea se aplică înainte de grupare, ca grupurile fără niciun rând
+  // potrivit să dispară cu totul, nu să rămână cu antetul și un corp gol.
+  const vizibile = plans.filter((p) => matchesPlan(p, search));
+  const groups = groupByTransferDay(vizibile);
+  const totalDeTransferat = plans.filter((p) => !p.done).length;
+  const gasiteDeTransferat = vizibile.filter((p) => !p.done).length;
+  /*
+   * Câte înștiințări mai sunt de trimis, socotite pe TOT grupul, nu doar pe ce
+   * a rămas după căutare. Altfel, căutând pe cineva deja înștiințat, antetul
+   * ar fi trecut pe verde — „Instanțele au fost înștiințate" — deși alții din
+   * același grup încă așteaptă hârtia.
+   */
+  const deTrimisTotal = groupByTransferDay(plans)
+    .filter((g) => g.day === null)
+    .reduce((n, g) => n + g.plans.filter((p) => !esteInstiintat(p)).length, 0);
   // Cele mai noi primele: cine caută un „Încheiat" apăsat din greșeală îl
   // caută pe cel de adineauri, nu pe cel de acum trei luni.
-  const incheiate = plans
+  const incheiate = vizibile
     .filter((p) => p.done)
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 
@@ -88,10 +106,21 @@ export function PlanList({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Caută după nume, instanță sau penitenciar…"
+          aria-label="Caută în planificare"
+          className="h-8 max-w-xs"
+        />
+        {/* Cu o căutare activă se spune și din câți, altfel „2" ar putea fi
+            citit drept toți cei de transferat. */}
         <p className="text-sm text-muted-foreground">
-          {groups.length === 0
-            ? "Nicio persoană în așteptare."
-            : `${groups.reduce((n, g) => n + g.plans.length, 0)} persoane de transferat`}
+          {cautare
+            ? `${gasiteDeTransferat} din ${totalDeTransferat} de transferat`
+            : totalDeTransferat === 0
+              ? "Nicio persoană în așteptare."
+              : `${totalDeTransferat} persoane de transferat`}
         </p>
         <Button
           type="button"
@@ -121,13 +150,23 @@ export function PlanList({
         </div>
       )}
 
+      {cautare && groups.length === 0 && incheiate.length === 0 && (
+        <div className="rounded-xl border bg-card px-4 py-10 text-center text-muted-foreground">
+          Niciun nume nu se potrivește cu „{search.trim()}”.
+        </div>
+      )}
+
       {groups.map((group) => {
         const imposibil = group.day === null;
         // Câți din grup mai așteaptă hârtia. Antetul care ar spune mai departe
         // „De înștiințat instanța" după ce toate au plecat ar cere o muncă
         // deja făcută — iar cine îl citește de la distanță ar crede că a rămas
         // ceva de trimis.
-        const deTrimis = imposibil ? group.plans.filter((p) => !esteInstiintat(p)).length : 0;
+        const deTrimis = imposibil
+          ? cautare
+            ? deTrimisTotal
+            : group.plans.filter((p) => !esteInstiintat(p)).length
+          : 0;
         return (
           <section
             key={group.day ?? "imposibil"}
@@ -250,7 +289,15 @@ export function PlanList({
         știa deja să povestească redeschiderea; acum are și cine s-o facă.
       */}
       {incheiate.length > 0 && (
-        <details className="rounded-xl border bg-card">
+        // Deschise singure cât timp se caută: cine caută un nume vrea să-l vadă
+        // oriunde ar fi, nu să afle după un clic că era printre încheiate.
+        // `key` le remontează doar când pornește sau se oprește căutarea, ca un
+        // pliu deschis de mână să nu se închidă la fiecare tastă.
+        <details
+          key={cautare ? "cautare" : "lista"}
+          open={cautare || undefined}
+          className="rounded-xl border bg-card"
+        >
           <summary className="cursor-pointer select-none px-3.5 py-2 text-[13px] text-muted-foreground">
             Încheiate ({incheiate.length})
           </summary>

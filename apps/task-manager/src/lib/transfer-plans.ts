@@ -1,6 +1,7 @@
 import { startOfDay, startOfMonth, subMonths } from "date-fns";
 
-import { nextScheduled, scheduledDays } from "./transfers";
+import { institutionLabel, nextScheduled, scheduledDays } from "./transfers";
+import { fold } from "./text";
 import { parseISODate, todayInChisinau, toISODate } from "./periods";
 
 /*
@@ -170,4 +171,24 @@ export function groupByTransferDay(
 export function esteInstiintat(plan: TransferPlan): boolean {
   if (!plan.notified_at || !plan.notified_hearing_date) return false;
   return plan.notified_hearing_date === plan.hearing_date;
+}
+
+/**
+ * Se potrivește planul cu ce s-a scris în căutare?
+ *
+ * Se caută în nume, instanță, penitenciar și observații — ce se vede pe rând,
+ * plus observațiile, unde stă adesea tocmai detaliul după care e căutat omul.
+ * Fără diacritice și fără majuscule, ca peste tot în aplicație: „Tiganciuc"
+ * găsește „Țiganciuc". Penitenciarul se caută după cum e scris pe ecran
+ * („Penitenciarul nr. 13"), deci merge și „nr. 13", și „13".
+ */
+export function matchesPlan(p: TransferPlan, query: string): boolean {
+  const q = fold(query.trim());
+  if (!q) return true;
+  const text = fold(
+    [p.last_name, p.first_name, p.court, institutionLabel(p.institution), p.note]
+      .filter(Boolean)
+      .join(" "),
+  );
+  return text.includes(q);
 }

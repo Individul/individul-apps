@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   esteInstiintat,
   groupByTransferDay,
+  matchesPlan,
   planTransferDay,
   transferDayFor,
   transferDayForDecision,
@@ -235,5 +236,43 @@ describe("înștiințarea instanței despre imposibilitatea executării", () => 
         }),
       ),
     ).toBe(false);
+  });
+});
+
+describe("matchesPlan", () => {
+  const p = plan({
+    last_name: "Țiganciuc", first_name: "Dumitru", court: "Judecătoria Bălți, sediul Central",
+    institution: 13, note: "vine din izolator",
+  });
+
+  it("căutarea goală le arată pe toate", () => {
+    expect(matchesPlan(p, "")).toBe(true);
+    expect(matchesPlan(p, "   ")).toBe(true);
+  });
+
+  it("după nume, fără diacritice și fără majuscule", () => {
+    expect(matchesPlan(p, "tiganciuc")).toBe(true);
+    expect(matchesPlan(p, "DUMITRU")).toBe(true);
+  });
+
+  it("după instanță", () => {
+    expect(matchesPlan(p, "balti")).toBe(true);
+  });
+
+  it("după penitenciar, cum e scris pe ecran", () => {
+    expect(matchesPlan(p, "nr. 13")).toBe(true);
+    expect(matchesPlan(p, "penitenciarul 13")).toBe(false);
+  });
+
+  it("și în observații, unde stă adesea detaliul căutat", () => {
+    expect(matchesPlan(p, "izolator")).toBe(true);
+  });
+
+  it("fără instanță și fără observații nu se strică", () => {
+    expect(matchesPlan(plan({ court: null, note: null }), "popescu")).toBe(true);
+  });
+
+  it("un nume străin nu se potrivește", () => {
+    expect(matchesPlan(p, "Popescu")).toBe(false);
   });
 });
