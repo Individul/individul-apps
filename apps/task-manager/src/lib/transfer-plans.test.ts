@@ -3,7 +3,10 @@ import {
   esteInstiintat,
   groupByTransferDay,
   matchesPlan,
+  planDate,
   planTransferDay,
+  termenDepasit,
+  termenLimita,
   transferDayFor,
   transferDayForDecision,
   type TransferPlan,
@@ -274,5 +277,58 @@ describe("matchesPlan", () => {
 
   it("un nume străin nu se potrivește", () => {
     expect(matchesPlan(p, "Popescu")).toBe(false);
+  });
+});
+
+describe("temeiul „30 zile”", () => {
+  // Încheiere din 15 octombrie, introdusă în modul pe 20 octombrie 2026.
+  const t30 = (over: Partial<TransferPlan> = {}) =>
+    plan({
+      basis: "termen30", hearing_date: null, decision_date: null,
+      ruling_date: "2026-10-15", term_start: "2026-10-20", ...over,
+    });
+
+  it("termenul curge de la introducere, nu de la data încheierii", () => {
+    expect(termenLimita(t30())).toBe("2026-11-19");
+  });
+
+  it("celelalte temeiuri n-au termen-limită", () => {
+    expect(termenLimita(plan({}))).toBeNull();
+    expect(termenLimita(plan({ basis: "decizie", hearing_date: null, decision_date: "2026-10-20" }))).toBeNull();
+  });
+
+  it("transferul e la prima zi programată de la introducere, ca la decizie", () => {
+    // De la 20 octombrie 2026, prima zi programată (luni 1 sau 3 din lună) e 2 noiembrie.
+    expect(planTransferDay(t30(), new Date(2026, 9, 20))).toBe("2026-11-02");
+  });
+
+  it("pe rând se arată data încheierii", () => {
+    expect(planDate(t30())).toBe("2026-10-15");
+  });
+
+  it("în termen, nu se semnalează nimic", () => {
+    expect(termenDepasit(t30(), new Date(2026, 9, 20))).toBe(false);
+  });
+
+  it("după ce trec cele 30 de zile, rândul neîncheiat se semnalează", () => {
+    // 20 noiembrie: termenul (19 noiembrie) a trecut, orice zi rămasă e după el.
+    expect(termenDepasit(t30(), new Date(2026, 10, 20))).toBe(true);
+  });
+
+  it("chiar înainte de termen, dacă prima zi de transfer cade după el", () => {
+    // Pe 18 noiembrie, ultima zi programată din termen (luni, 16 noiembrie) a
+    // trecut; următoarea e 7 decembrie — după 19 noiembrie, deci omul nu mai
+    // apucă să plece în termen, deși termenul încă n-a expirat.
+    expect(termenDepasit(t30(), new Date(2026, 10, 18))).toBe(true);
+  });
+
+  it("cel încheiat nu se mai semnalează: a plecat", () => {
+    expect(termenDepasit(t30({ done: true }), new Date(2026, 10, 25))).toBe(false);
+  });
+
+  it("fără ziua introducerii nu se poate socoti nimic", () => {
+    const fara = t30({ term_start: null });
+    expect(planTransferDay(fara, new Date(2026, 9, 20))).toBeNull();
+    expect(termenDepasit(fara, new Date(2026, 10, 25))).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { startOfDay, startOfMonth, subMonths } from "date-fns";
+import { addDays, startOfDay, startOfMonth, subMonths } from "date-fns";
 
 import { institutionLabel, nextScheduled, scheduledDays } from "./transfers";
 import { fold } from "./text";
@@ -19,8 +19,11 @@ import { parseISODate, todayInChisinau, toISODate } from "./periods";
  */
 import type { Court } from "./courts";
 
-/** Ce anume cere transferul. Vezi migrarea 0027. */
-export type TransferBasis = "sedinta" | "decizie";
+/** Ce anume cere transferul. Vezi migrările 0027 și 0034. */
+export type TransferBasis = "sedinta" | "decizie" | "termen30";
+
+/** Câte zile are temeiul „30 zile", de la introducerea încheierii. */
+export const TERMEN_ZILE = 30;
 
 export interface TransferPlan {
   id: string;
@@ -35,6 +38,13 @@ export interface TransferPlan {
   hearing_date: string | null;
   /** Data parvenirii deciziei; completată doar la temei „decizie". */
   decision_date: string | null;
+  /**
+   * Data încheierii, cum e scrisă pe ea; doar la temei „30 zile".
+   * Opționale amândouă: până la aplicarea migrării 0034 lipsesc din rânduri.
+   */
+  ruling_date?: string | null;
+  /** Ziua introducerii încheierii — de aici curg cele 30 de zile. O pune aplicația. */
+  term_start?: string | null;
   done: boolean;
   /**
    * Când s-a expediat instanței înștiințarea despre imposibilitatea executării.
@@ -98,9 +108,48 @@ export function transferDayForDecision(
   return toISODate(nextScheduled(d > t ? d : t));
 }
 
-/** Data de care atârnă transferul, oricare ar fi temeiul. */
+/**
+ * Data scrisă pe hârtia care cere transferul, oricare ar fi temeiul: ședința,
+ * parvenirea deciziei sau data încheierii. E data care se arată pe rând și după
+ * care se ordonează rândurile; ziua transferului se socotește separat.
+ */
 export function planDate(plan: TransferPlan): string | null {
-  return plan.basis === "decizie" ? plan.decision_date : plan.hearing_date;
+  if (plan.basis === "decizie") return plan.decision_date;
+  if (plan.basis === "termen30") return plan.ruling_date ?? null;
+  return plan.hearing_date;
+}
+
+/**
+ * Ultima zi a termenului de 30 de zile; `null` la celelalte temeiuri.
+ *
+ * Se numără de la introducerea încheierii (`term_start`), nu de la data scrisă
+ * pe ea — așa s-a cerut: termenul curge din momentul în care secția află de
+ * încheiere, nu de când a fost semnată în altă parte.
+ */
+export function termenLimita(plan: TransferPlan): string | null {
+  if (plan.basis !== "termen30" || !plan.term_start) return null;
+  return ultimaZiDinTermen(plan.term_start);
+}
+
+/** Ultima zi a celor 30, pornind de la ziua introducerii (AAAA-LL-ZZ). */
+export function ultimaZiDinTermen(termStart: string): string {
+  return toISODate(addDays(parseISODate(termStart), TERMEN_ZILE));
+}
+
+/**
+ * Omul nu mai apucă să plece în termen: prima zi de transfer care i-a rămas
+ * cade după ultima zi a celor 30.
+ *
+ * Fiindcă ziua de transfer se socotește de la azi încolo, întrebarea prinde și
+ * cazul în care termenul a trecut deja: atunci orice zi rămasă e după el.
+ * Planurile încheiate nu se mai semnalează — omul a plecat.
+ */
+export function termenDepasit(plan: TransferPlan, today: Date = todayInChisinau()): boolean {
+  if (plan.done) return false;
+  const limita = termenLimita(plan);
+  if (!limita) return false;
+  const zi = planTransferDay(plan, today);
+  return zi !== null && zi > limita;
 }
 
 /**
@@ -113,6 +162,12 @@ export function planTransferDay(
   plan: TransferPlan,
   today: Date = todayInChisinau(),
 ): string | null {
+  // La „30 zile" ziua se socotește de la introducerea încheierii, nu de la
+  // data scrisă pe ea: e aceeași regulă ca la decizie — prima zi programată —
+  // pornită din ziua în care secția a aflat.
+  if (plan.basis === "termen30") {
+    return plan.term_start ? transferDayForDecision(parseISODate(plan.term_start), today) : null;
+  }
   const d = planDate(plan);
   if (!d) return null;
   return plan.basis === "decizie"

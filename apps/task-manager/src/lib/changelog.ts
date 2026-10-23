@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-23",
+    text: "La „Planificarea transferurilor” s-a adăugat al treilea temei, „30 zile”, pe lângă „Ședință de judecată” și „Decizie”. Transferul se face la prima zi programată, iar cele 30 de zile curg din ziua în care introduceți încheierea; în formular se scrie data încheierii și instanța (obligatorie). Pe rând se vede până când e termenul, iar dacă omul nu mai apucă să plece în cele 30 de zile, apare „termen depășit”, cu roșu. Coloana de dată se numește acum „Temeiul și data”.",
+  },
+  {
+    date: "2026-10-23",
     text: "La „Planificarea transferurilor” a apărut un câmp de căutare: după nume, instanță, penitenciar („nr. 13”) sau ce scrie în observații, fără să conteze diacriticele. Caută și printre cei încheiați, care se deschid singuri cât timp cauți. Cifra de sus spune câți s-au găsit din câți sunt.",
   },
   {

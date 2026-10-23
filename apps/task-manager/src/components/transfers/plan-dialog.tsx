@@ -27,10 +27,34 @@ import {
 import { deletePlan, savePlan } from "@/app/transferuri/planificare/actions";
 import { COURTS } from "@/lib/courts";
 import { INSTITUTIONS, institutionLabel } from "@/lib/transfers";
-import { transferDayForDecision, type TransferBasis } from "@/lib/transfer-plans";
+import {
+  TERMEN_ZILE,
+  transferDayFor,
+  transferDayForDecision,
+  type TransferBasis,
+  type TransferPlan,
+  ultimaZiDinTermen,
+} from "@/lib/transfer-plans";
 import { cn } from "@/lib/utils";
-import { transferDayFor, type TransferPlan } from "@/lib/transfer-plans";
-import { parseISODate } from "@/lib/periods";
+import { parseISODate, todayInChisinau, toISODate } from "@/lib/periods";
+
+const TEMEIURI: { value: TransferBasis; label: string; regula: string }[] = [
+  {
+    value: "sedinta",
+    label: "Ședință de judecată",
+    regula: "Transferul se face în ultima zi programată dinaintea ședinței.",
+  },
+  {
+    value: "decizie",
+    label: "Decizie",
+    regula: "Transferul se face la prima zi programată de la parvenirea deciziei.",
+  },
+  {
+    value: "termen30",
+    label: "30 zile",
+    regula: `Transferul se face la prima zi programată. Termenul de ${TERMEN_ZILE} de zile curge din ziua în care introduceți încheierea.`,
+  },
+];
 
 interface PlanDialogProps {
   open: boolean;
@@ -50,6 +74,7 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
   const [basis, setBasis] = useState<TransferBasis>("sedinta");
   const [hearingDate, setHearingDate] = useState("");
   const [decisionDate, setDecisionDate] = useState("");
+  const [rulingDate, setRulingDate] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +88,7 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
     setBasis(plan?.basis ?? "sedinta");
     setHearingDate(plan?.hearing_date ?? "");
     setDecisionDate(plan?.decision_date ?? "");
+    setRulingDate(plan?.ruling_date ?? "");
     setNote(plan?.note ?? "");
   }, [open, plan]);
 
@@ -75,12 +101,34 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
    * întotdeauna. Avertizarea „de înștiințat instanța" rămâne deci numai la
    * ședințe, unde chiar se poate să nu mai fie loc înaintea termenului.
    */
-  const dataAleasa = basis === "decizie" ? decisionDate : hearingDate;
+  const dataAleasa =
+    basis === "decizie" ? decisionDate : basis === "termen30" ? rulingDate : hearingDate;
+  const setDataAleasa =
+    basis === "decizie" ? setDecisionDate : basis === "termen30" ? setRulingDate : setHearingDate;
+
+  /*
+   * La „30 zile", ziua de la care curge termenul nu se alege: e ziua
+   * introducerii. O însemnare care era deja pe „30 zile" o are pe a ei; una
+   * nouă sau mutată acum o primește pe cea de azi — exact ce face și acțiunea
+   * la salvare, ca fereastra să nu promită altă zi decât se scrie.
+   */
+  const azi = toISODate(todayInChisinau());
+  const termStart =
+    basis === "termen30"
+      ? plan?.basis === "termen30" && plan.term_start
+        ? plan.term_start
+        : azi
+      : null;
+  const limita = termStart ? ultimaZiDinTermen(termStart) : null;
+
   const day = !dataAleasa
     ? null
-    : basis === "decizie"
-      ? transferDayForDecision(parseISODate(dataAleasa))
-      : transferDayFor(parseISODate(dataAleasa));
+    : basis === "termen30"
+      ? transferDayForDecision(parseISODate(termStart!))
+      : basis === "decizie"
+        ? transferDayForDecision(parseISODate(dataAleasa))
+        : transferDayFor(parseISODate(dataAleasa));
+  const depasit = Boolean(limita && day && day > limita);
 
   const submit = () => {
     setError(null);
@@ -93,6 +141,7 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
         basis,
         hearing_date: hearingDate,
         decision_date: decisionDate,
+        ruling_date: rulingDate,
         note,
       });
       if (res.error) {
@@ -162,11 +211,8 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
           */}
           <div className="space-y-2">
             <Label>Temeiul transferului</Label>
-            <div className="flex gap-2">
-              {([
-                { value: "sedinta", label: "Ședință de judecată" },
-                { value: "decizie", label: "Decizie" },
-              ] as const).map((t) => (
+            <div className="flex flex-wrap gap-2">
+              {TEMEIURI.map((t) => (
                 <button
                   key={t.value}
                   type="button"
@@ -183,9 +229,7 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {basis === "sedinta"
-                ? "Transferul se face în ultima zi programată dinaintea ședinței."
-                : "Transferul se face la prima zi programată de la parvenirea deciziei."}
+              {TEMEIURI.find((t) => t.value === basis)?.regula}
             </p>
           </div>
 
@@ -224,22 +268,44 @@ export function PlanDialog({ open, onOpenChange, plan, isAdmin }: PlanDialogProp
 
             <div className="space-y-2">
               <Label htmlFor="p-data">
-                {basis === "decizie" ? "Data parvenirii deciziei" : "Data ședinței"}
+                {basis === "decizie"
+                  ? "Data parvenirii deciziei"
+                  : basis === "termen30"
+                    ? "Data încheierii"
+                    : "Data ședinței"}
               </Label>
               <Input
                 id="p-data"
                 type="date"
                 value={dataAleasa}
-                onChange={(e) =>
-                  basis === "decizie"
-                    ? setDecisionDate(e.target.value)
-                    : setHearingDate(e.target.value)
-                }
+                max={basis === "termen30" ? azi : undefined}
+                onChange={(e) => setDataAleasa(e.target.value)}
                 required
               />
+              {/* Termenul se vede înainte de salvare: de la ce zi curge și până
+                  când, ca o însemnare întârziată să fie văzută acum, nu la
+                  prima privire pe listă. */}
+              {basis === "termen30" && termStart && limita && (
+                <p className="text-xs text-muted-foreground">
+                  Cele {TERMEN_ZILE} de zile curg de la{" "}
+                  {format(parseISODate(termStart), "d MMMM yyyy", { locale: ro })}
+                  {plan?.basis === "termen30" ? " (ziua introducerii)" : " (azi, ziua introducerii)"} —
+                  până la{" "}
+                  <span className="font-medium text-foreground">
+                    {format(parseISODate(limita), "d MMMM yyyy", { locale: ro })}
+                  </span>
+                  .
+                </p>
+              )}
               {dataAleasa && (
                 <p className="text-xs text-muted-foreground">
-                  {day ? (
+                  {depasit ? (
+                    <span className="text-red-700">
+                      Prima zi de transfer rămasă (
+                      {format(parseISODate(day!), "d MMMM yyyy", { locale: ro })}) cade după
+                      termen — termen depășit.
+                    </span>
+                  ) : day ? (
                     <>
                       Transfer pe{" "}
                       <span className="font-medium text-foreground">

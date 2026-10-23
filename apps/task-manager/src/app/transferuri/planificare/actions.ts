@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isCourt } from "@/lib/courts";
 import { INSTITUTIONS } from "@/lib/transfers";
 import type { TransferBasis } from "@/lib/transfer-plans";
+import { todayInChisinau, toISODate } from "@/lib/periods";
 
 type Result = { error?: string; success?: boolean };
 
@@ -18,15 +19,19 @@ export interface PlanInput {
   hearing_date: string;
   /** Data parvenirii deciziei; completată la temei „decizie". */
   decision_date: string;
+  /** Data încheierii; completată la temei „30 zile". */
+  ruling_date: string;
   note: string;
 }
 
-function validate(input: PlanInput): string | null {
+function validate(input: PlanInput, azi: string): string | null {
   if (!input.last_name.trim()) return "Numele e obligatoriu.";
   if (!input.first_name.trim()) return "Prenumele e obligatoriu.";
   // Lista de instanțe e fixă în interfață; verificată și aici, fiindcă acțiunea
   // poate fi apelată și altfel decât prin formular.
-  if (input.basis !== "sedinta" && input.basis !== "decizie") return "Alege temeiul.";
+  if (input.basis !== "sedinta" && input.basis !== "decizie" && input.basis !== "termen30") {
+    return "Alege temeiul.";
+  }
   if (!INSTITUTIONS.includes(Number(input.institution))) return "Alege penitenciarul.";
 
   /*
@@ -41,6 +46,13 @@ function validate(input: PlanInput): string | null {
     // acțiunea poate fi apelată și altfel decât prin formular.
     if (!isCourt(input.court)) return "Alege instanța din listă.";
     if (!input.hearing_date) return "Data ședinței e obligatorie.";
+  } else if (input.basis === "termen30") {
+    // Instanța e obligatorie, ca la ședință — așa s-a cerut.
+    if (!isCourt(input.court)) return "Alege instanța din listă.";
+    if (!input.ruling_date) return "Data încheierii e obligatorie.";
+    // Aceeași regulă ca `transfer_plans_ruling_before_start`: o încheiere din
+    // viitor e aproape sigur o dată greșit tastată.
+    if (input.ruling_date > azi) return "Data încheierii nu poate fi în viitor.";
   } else {
     // Instanța rămâne opțională: o decizie poate veni și din altă parte.
     if (input.court && !isCourt(input.court)) return "Alege instanța din listă.";
@@ -50,13 +62,37 @@ function validate(input: PlanInput): string | null {
 }
 
 export async function savePlan(id: string | null, input: PlanInput): Promise<Result> {
-  const problem = validate(input);
+  // Ziua Chișinăului, nu a serverului: pe UTC, o încheiere introdusă după
+  // miezul nopții de aici și-ar fi pornit termenul cu o zi în urmă.
+  const azi = toISODate(todayInChisinau());
+  const problem = validate(input, azi);
   if (problem) return { error: problem };
 
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
+
+  /*
+   * Ziua de la care curg cele 30 de zile: ziua introducerii.
+   *
+   * O însemnare care era deja pe „30 zile" își păstrează ziua — altfel o
+   * corectură oarecare ar fi repornit termenul de la zero. Una nouă, sau una
+   * mutată acum de pe alt temei, o primește pe cea de azi: atunci a fost
+   * introdusă încheierea. Pe celelalte temeiuri se scrie `null`.
+   */
+  let termStart: string | null = null;
+  if (input.basis === "termen30") {
+    termStart = azi;
+    if (id) {
+      const { data: vechi } = await supabase
+        .from("transfer_plans")
+        .select("basis, term_start")
+        .eq("id", id)
+        .maybeSingle();
+      if (vechi?.basis === "termen30" && vechi.term_start) termStart = vechi.term_start as string;
+    }
+  }
 
   const values = {
     last_name: input.last_name.trim(),
@@ -68,6 +104,8 @@ export async function savePlan(id: string | null, input: PlanInput): Promise<Res
     // o planificare mutată de pe un temei pe altul să nu păstreze data veche.
     hearing_date: input.basis === "sedinta" ? input.hearing_date : null,
     decision_date: input.basis === "decizie" ? input.decision_date : null,
+    ruling_date: input.basis === "termen30" ? input.ruling_date : null,
+    term_start: termStart,
     note: input.note.trim() ? input.note.trim() : null,
     updated_by: userId,
   };

@@ -16,6 +16,8 @@ import {
   groupByTransferDay,
   matchesPlan,
   planDate,
+  termenDepasit,
+  termenLimita,
   type TransferPlan,
 } from "@/lib/transfer-plans";
 import { institutionLabel } from "@/lib/transfers";
@@ -32,7 +34,9 @@ function dataPlanului(p: TransferPlan): string {
   const iso = planDate(p);
   if (!iso) return "—";
   const zi = format(parseISODate(iso), "d MMM yyyy", { locale: ro });
-  return p.basis === "decizie" ? `decizie, ${zi}` : `ședință, ${zi}`;
+  if (p.basis === "decizie") return `decizie, ${zi}`;
+  if (p.basis === "termen30") return `încheiere, ${zi}`;
+  return `ședință, ${zi}`;
 }
 import { cn } from "@/lib/utils";
 
@@ -141,7 +145,10 @@ export function PlanList({
         <div className="flex items-center gap-3 px-3.5 text-[11px] font-medium text-muted-foreground">
           <span className="min-w-0 flex-1">Persoana și instanța</span>
           <span className="w-40 shrink-0">Penitenciarul</span>
-          <span className="w-28 shrink-0">Data ședinței</span>
+          {/* „Temeiul și data", nu „Data ședinței": rândul poate arăta o
+              ședință, o decizie sau o încheiere, iar data spune care. Lată cât
+              să încapă „încheiere, 10 sep 2026" pe un rând. */}
+          <span className="w-36 shrink-0">Temeiul și data</span>
           {/* Lățime egală în antet și în rânduri, deși în grupurile obișnuite
               rămâne mai goală: la „de înștiințat" mai încape un buton, iar dacă
               lățimea ar diferi de la un grup la altul, coloanele fixe dinaintea
@@ -233,10 +240,29 @@ export function PlanList({
                   <span className="w-40 shrink-0 truncate text-muted-foreground">
                     {institutionLabel(p.institution)}
                   </span>
-                  <span className="w-28 shrink-0 tabular-nums">
+                  <span className="w-36 shrink-0 tabular-nums">
                     {dataPlanului(p)}
                   </span>
                   <span className="flex w-56 shrink-0 items-center justify-end gap-1">
+                    {/* Termenul celor 30 de zile, lângă butoane: e singurul temei
+                        cu o zi-limită de după transfer, deci n-are coloana lui —
+                        o coloană goală la toate celelalte rânduri ar fi împins
+                        tabelul pentru un singur fel de însemnare. Roșu când omul
+                        nu mai apucă să plece în termen. */}
+                    {p.basis === "termen30" && termenLimita(p) && (
+                      termenDepasit(p) ? (
+                        <span
+                          className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800"
+                          title={`Termenul de 30 de zile s-a încheiat pe ${format(parseISODate(termenLimita(p)!), "d MMMM yyyy", { locale: ro })}`}
+                        >
+                          termen depășit
+                        </span>
+                      ) : (
+                        <span className="text-[11px] tabular-nums text-muted-foreground">
+                          termen {format(parseISODate(termenLimita(p)!), "d MMM", { locale: ro })}
+                        </span>
+                      )
+                    )}
                     {/* Numai la cei fără zi de transfer: doar pentru ei se
                         trimite hârtia. Bifa arată situația de ACUM — după o
                         amânare care lasă iar ziua imposibilă, butonul se
@@ -311,7 +337,7 @@ export function PlanList({
                   {p.last_name} {p.first_name}
                   <span className="ml-2">{p.court ?? "—"}</span>
                 </span>
-                <span className="w-28 shrink-0 tabular-nums">
+                <span className="w-36 shrink-0 tabular-nums">
                   {dataPlanului(p)}
                 </span>
                 <span className="flex w-28 shrink-0 justify-end">
