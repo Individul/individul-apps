@@ -8,6 +8,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AppHeaderSchelet, AppHeaderSlot } from "@/components/layout/app-header-slot";
 import { ANTET_SESIUNE } from "@/lib/session-header";
 import "./globals.css";
+import { DOAR_CITIRE, MESAJ_DOAR_CITIRE } from "@/lib/doar-citire";
 
 /**
  * Inter — fontul celorlalte aplicații de pe dumitru.cloud.
@@ -68,6 +69,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="ro" className={inter.variable}>
       <body>
+        {DOAR_CITIRE && (
+          <div
+            role="status"
+            className="bg-amber-100 px-4 py-2 text-center text-sm font-medium text-amber-900"
+          >
+            {MESAJ_DOAR_CITIRE}
+          </div>
+        )}
         {areSesiune && (
           <Suspense fallback={<AppHeaderSchelet />}>
             <AppHeaderSlot />
