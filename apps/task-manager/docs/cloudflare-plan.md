@@ -218,3 +218,6 @@ Utilizatorul e logat pe Cloudflare, Vercel și Supabase în Chrome și a cerut c
   - **Dependențe:** `@supabase/ssr` scos; `@supabase/supabase-js` rămâne doar ca dependență de dezvoltare, pentru scripturile locale de import (`scripts/supabase-dump.ts` păstrează dumpul vechi din Supabase).
   - **Teste:** 607, dintre care 107 noi pe D1 adevărat.
   - **Data intrărilor din jurnalul de noutăți** se mută pe ziua trecerii.
+- **Proba publicată și Workers Builds legat (24.10.2026).**
+  - Workers Builds pe ramura `cloudflare`: rădăcina `apps/task-manager`, `npx opennextjs-cloudflare build` / `deploy`, fără build-uri pentru alte ramuri. Un push pe `cloudflare` publică pe sarcini-cf.dumitru.cloud.
+  - Reimportul (`scripts/import-d1.mjs` fără `--cu-parole`) păstrează amprentele deja aflate în D1, deci nu mai e nevoie de funcția de export decât dacă cineva își schimbă parola pe Vercel înainte de trecere.
