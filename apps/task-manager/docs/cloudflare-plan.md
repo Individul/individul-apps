@@ -231,3 +231,7 @@ Utilizatorul e logat pe Cloudflare, Vercel și Supabase în Chrome și a cerut c
   - Scrieri făcute și anulate: sarcină (cu pas, comentariu, ștergere în cascadă), fișier de petiție (urcat, descărcat, șters și din R2), zi de ședințe, inculpat, contravenient, bifă la informări, transfer. Toate în jurnal, pe numele omului.
   - PDF-ul de marți are aceeași mărime ca în producție.
   - Găsit pe drum și reparat pe `main` (`de1b8b5`): ora din istoricul sarcinii și din jurnal se formata pe fusul mașinii (eroarea de hidratare #418).
+- **Copia de pe Worker verificată (24.10.2026).**
+  - Jetonul `BACKUP_GITHUB_TOKEN` pus de utilizator: fine-grained, doar pentru `task-manager-backup`, cu „Contents: Read and write”.
+  - „Rulează copia acum” a scris `proba-cloudflare/db/2026-10-24.json` (18 tabele, 3 438 de rânduri). Copia Vercel din aceeași zi a rămas neatinsă.
+  - Reparat pe drum: cererile către GitHub nu aveau `User-Agent`. Node îl punea singur, Workers nu, iar GitHub refuză fără el. Refuzurile care nu vin ca JSON își arată acum și textul.
