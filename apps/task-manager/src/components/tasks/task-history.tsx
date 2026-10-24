@@ -8,6 +8,7 @@ import { CheckCircle2, Circle, Clock, Pencil, Plus, X } from "lucide-react";
 import { PRIORITY_LABEL, STATUS_LABEL } from "@/components/tasks/meta";
 import { cn } from "@/lib/utils";
 import type { AuditEntry, TaskPriority, TaskStatus } from "@/lib/types";
+import { laChisinau } from "@/lib/periods";
 
 const TONE: Record<string, string> = {
   green: "bg-emerald-50 text-emerald-600",
@@ -129,9 +130,9 @@ export function TaskHistory({ entries }: { entries: AuditEntry[] }) {
                 )}
                 <p
                   className="mt-0.5 text-xs text-muted-foreground"
-                  title={format(parseISO(e.created_at), "d MMM yyyy, HH:mm")}
+                  title={format(laChisinau(e.created_at), "d MMM yyyy, HH:mm")}
                 >
-                  {format(parseISO(e.created_at), "d MMM yyyy, HH:mm", { locale: ro })}
+                  {format(laChisinau(e.created_at), "d MMM yyyy, HH:mm", { locale: ro })}
                 </p>
               </div>
             </li>

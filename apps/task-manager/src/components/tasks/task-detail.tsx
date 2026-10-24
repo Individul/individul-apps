@@ -30,6 +30,7 @@ import type {
   TaskPriority,
   TaskStatus,
 } from "@/lib/types";
+import { laChisinau } from "@/lib/periods";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
@@ -211,7 +212,7 @@ export function TaskDetail({
 
             <div className="space-y-1.5">
               <FieldLabel>Creat</FieldLabel>
-              <dd>{format(parseISO(task.created_at), "d MMM yyyy")}</dd>
+              <dd>{format(laChisinau(task.created_at), "d MMM yyyy")}</dd>
             </div>
           </dl>
         </aside>

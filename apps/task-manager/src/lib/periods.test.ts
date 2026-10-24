@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { rangeForPeriod, rangeFromISO, rangeLabelRo, toISODate, todayInChisinau } from "./periods";
+import { format } from "date-fns";
+import { laChisinau } from "./periods";
 
 describe("rangeForPeriod", () => {
   const ref = new Date(2026, 6, 30); // joi, 30 iulie 2026
@@ -105,5 +107,17 @@ describe("rangeFromISO", () => {
     const r = rangeFromISO("2026-10-01", "2026-10-31");
     expect(r.from.getHours()).toBe(0);
     expect(r.to.getHours()).toBe(23);
+  });
+});
+
+describe("laChisinau", () => {
+  it("dă ora Chișinăului oricare ar fi fusul mașinii (aici UTC)", () => {
+    expect(format(laChisinau("2026-09-14T08:40:00.000Z"), "d MMM yyyy, HH:mm")).toBe("14 Sep 2026, 11:40");
+  });
+  it("ține seama de ora de iarnă", () => {
+    expect(format(laChisinau("2026-12-01T08:40:00Z"), "HH:mm")).toBe("10:40");
+  });
+  it("mută ziua la miezul nopții de aici, nu la cel de la Greenwich", () => {
+    expect(format(laChisinau("2026-09-30T22:30:00Z"), "yyyy-MM-dd")).toBe("2026-10-01");
   });
 });
