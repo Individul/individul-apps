@@ -20,6 +20,7 @@ import {
 import { STATUS_LABEL as PETITION_STATUS_LABEL } from "@/components/petitions/meta";
 import { cn } from "@/lib/utils";
 import type { AuditEntry } from "@/lib/types";
+import { laChisinau } from "@/lib/periods";
 
 // Iconița spune din ce modul e intrarea, culoarea spune ce s-a întâmplat.
 // Verbul e oricum scris în frază, deci culoarea nu poartă singură înțelesul.
@@ -232,12 +233,12 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
   // Grupare pe zile (intrările vin deja sortate descrescător după dată).
   const groups: { key: string; label: string; items: AuditEntry[] }[] = [];
   for (const e of entries) {
-    const key = format(parseISO(e.created_at), "yyyy-MM-dd");
+    const key = format(laChisinau(e.created_at), "yyyy-MM-dd");
     const last = groups[groups.length - 1];
     if (!last || last.key !== key) {
       groups.push({
         key,
-        label: format(parseISO(e.created_at), "d MMMM yyyy", { locale: ro }),
+        label: format(laChisinau(e.created_at), "d MMMM yyyy", { locale: ro }),
         items: [e],
       });
     } else {
@@ -273,7 +274,7 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
                     </p>
                     <p
                       className="mt-0.5 text-xs text-muted-foreground"
-                      title={format(parseISO(e.created_at), "d MMM yyyy, HH:mm")}
+                      title={format(laChisinau(e.created_at), "d MMM yyyy, HH:mm")}
                     >
                       {formatDistanceToNow(parseISO(e.created_at), {
                         addSuffix: true,

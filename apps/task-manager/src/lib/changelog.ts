@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
+    text: "În istoricul unei sarcini, ora fiecărei schimbări apare de la bun început cea a Chișinăului. Până acum pagina se deschidea pentru o clipă cu ora serverului, cu trei ore în urmă, și abia apoi se corecta. La fel ora de la trecerea mouse-ului peste rândurile jurnalului din Administrare, care rămânea greșită.",
+  },
+  {
+    date: "2026-10-24",
     text: "La conectare, după o parolă greșită numele de utilizator rămâne scris — se golește doar parola. La fel în „Profilul meu”: dacă salvarea nu reușește (de pildă, username-ul e deja folosit), ce ai scris rămâne în câmpuri, nu se întoarce la valorile vechi.",
   },
   {

@@ -185,3 +185,38 @@ export function readAnchor(value: string | string[] | undefined, azi: Date): Dat
 export function ziuaChisinau(instant: Date | string): string {
   return toISODate(todayInChisinau(typeof instant === "string" ? new Date(instant) : instant));
 }
+
+/**
+ * Ora de perete a Chișinăului pentru un instant din bază, ca dată „locală",
+ * gata de formatat: `format(laChisinau(x), "d MMM yyyy, HH:mm")`.
+ *
+ * `format` din date-fns citește ora pe fusul mașinii. Serverul merge pe UTC,
+ * browserul pe ora omului, deci același rând din istoric ieșea pe server
+ * „08:40" și în browser „11:40": pagina sosea cu ora greșită, iar React o
+ * corecta la încărcare, cu eroarea de hidratare #418. Un atribut `title` nu-l
+ * mai corecta nimeni, deci rămânea cu trei ore în urmă. Cu ora citită de la
+ * `Intl` pe fusul Chișinăului, ambele părți scriu același text.
+ */
+export function laChisinau(instant: Date | string): Date {
+  const d = typeof instant === "string" ? new Date(instant) : instant;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: FUS,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(d);
+  const camp = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((p) => p.type === type)?.value);
+  return new Date(
+    camp("year"),
+    camp("month") - 1,
+    camp("day"),
+    camp("hour"),
+    camp("minute"),
+    camp("second"),
+  );
+}
