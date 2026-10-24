@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppHeaderSchelet, AppHeaderSlot } from "@/components/layout/app-header-slot";
 import { ANTET_SESIUNE } from "@/lib/session-header";
@@ -75,7 +74,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         {children}
         <Toaster richColors position="top-right" />
-        <SpeedInsights />
       </body>
     </html>
   );

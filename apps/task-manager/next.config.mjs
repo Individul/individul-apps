@@ -31,35 +31,31 @@ const nextConfig = {
   },
 
   /**
-   * Fonturile pentru PDF, cărate explicit în funcția care le citește.
+   * Fonturile PDF-ului intră în cod, ca text base64.
    *
-   * `/raport-saptamanal/pdf` deschide `src/fonts/*.ttf` cu `fs` la fiecare
-   * cerere, iar în funcția serverless ajung doar fișierele pe care Next le
-   * *urmărește*. Fișierele citite la rulare nu se văd în niciun import, deci
-   * regula generală e că nu ajung — local merge oricum, fiindcă acolo repo-ul
-   * întreg e pe disc, exact felul de defect care trece de tot ce poți încerca
-   * de pe calculatorul tău și cade la prima descărcare din producție.
-   *
-   * Măsurat, nu presupus: ștergând intrarea asta și reconstruind, fonturile
-   * *tot* apar în trace — analizorul lui Next reușește azi să evalueze
-   * `path.join(process.cwd(), "src", "fonts")` și numele scrise alături. Deci
-   * intrarea nu repară nimic acum; e o ancoră. Norocul ăla ține de o
-   * euristică pe cod: o refactorizare care compune numele fișierului dintr-o
-   * variabilă îl orbește, iar pierderea n-ar da nicio eroare la build —
-   * doar butonul „Descarcă PDF" ar începe să întoarcă 500 în producție.
-   *
-   * Calea e relativă la rădăcina proiectului, iar fișierele își păstrează
-   * poziția în funcție — de aceea ruta le caută tot sub `process.cwd()`.
-   *
-   * Verificabil înainte de deploy: după `npm run build`, ambele `.ttf` trebuie
-   * să fie în `.next/server/app/raport-saptamanal/pdf/route.js.nft.json`,
-   * lista după care Vercel împachetează funcția.
-   *
-   * Stă la rădăcină, nu sub `experimental`: din Next 15 acolo e ignorată, cu
-   * doar un avertisment la build, deci ancora ar fi dispărut fără zgomot.
+   * Pe Workers nu există disc: `/raport-saptamanal/pdf` nu mai are de unde
+   * citi `src/fonts/*.ttf` la cerere, cum făcea pe Vercel. Importate, fonturile
+   * ajung în pachetul Worker-ului și merg la fel sub `next dev`, fără o a doua
+   * cale de citire doar pentru local. Costul: circa 1,1 MB în pachet, din cei
+   * 10 MB permiși.
    */
-  outputFileTracingIncludes: {
-    "/raport-saptamanal/pdf": ["./src/fonts/*.ttf"],
+  webpack(config) {
+    // `asset` cu inline mereu, nu `asset/inline`: Next dă tuturor modulelor
+    // „asset" un `filename`, iar `asset/inline` refuză opțiunea și pică build-ul.
+    config.module.rules.push({
+      test: /\.ttf$/,
+      type: "asset",
+      parser: { dataUrlCondition: () => true },
+    });
+    return config;
   },
 };
+
+// Sub `next dev`, `getCloudflareContext()` primește legăturile din
+// wrangler.toml (D1, R2) simulate local, ca în Worker.
+if (process.env.NODE_ENV === "development") {
+  const { initOpenNextCloudflareForDev } = await import("@opennextjs/cloudflare");
+  initOpenNextCloudflareForDev();
+}
+
 export default nextConfig;

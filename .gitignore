@@ -40,6 +40,11 @@ Thumbs.db
 .vercel/
 .next/
 
+# Cloudflare (OpenNext, wrangler)
+.open-next/
+.wrangler/
+.dev.vars*
+
 # Claude
 .claude/
 .worktrees/

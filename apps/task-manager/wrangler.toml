@@ -1,0 +1,35 @@
+# Aplicația de sarcini pe Cloudflare Workers, prin OpenNext.
+#
+# Fără cache incremental pe R2 și fără legătura de auto-referință din șablonul
+# OpenNext: toate paginile sunt dinamice (le citește sesiunea), deci n-ar avea
+# ce păstra — doar un bucket și o legătură în plus de întreținut.
+
+name = "sarcini"
+main = ".open-next/worker.js"
+# Data trebuie să fie cel mult cea a runtime-ului din wrangler-ul instalat;
+# una mai nouă e refuzată la `wrangler dev`.
+compatibility_date = "2026-10-15"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sarcini"
+database_id = "b585bf44-efcc-443e-a21b-95643163178e"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "FISIERE"
+bucket_name = "sarcini-fisiere"
+
+# Adresa de probă. `sarcini.dumitru.cloud` rămâne pe Vercel până în ziua
+# trecerii; atunci se adaugă aici, cu confirmarea utilizatorului.
+[[routes]]
+pattern = "sarcini-cf.dumitru.cloud"
+custom_domain = true
