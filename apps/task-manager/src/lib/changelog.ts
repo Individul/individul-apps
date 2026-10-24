@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
+    text: "La conectare, după o parolă greșită numele de utilizator rămâne scris — se golește doar parola. La fel în „Profilul meu”: dacă salvarea nu reușește (de pildă, username-ul e deja folosit), ce ai scris rămâne în câmpuri, nu se întoarce la valorile vechi.",
+  },
+  {
+    date: "2026-10-24",
     text: "La „Ședințe”, sub cifrele perioadei, intervalul se arată din nou corect — „1 octombrie 2026 – 31 octombrie 2026”, nu până la 1 noiembrie. Ziua de sfârșit se muta cu una înainte din cauza diferenței de oră dintre server și Chișinău, iar odată cu ea se putea număra o zi lucrătoare lipsă în plus.",
   },
   {

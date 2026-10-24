@@ -76,7 +76,7 @@ export function ProfileDialog({
               <Input
                 id="full_name"
                 name="full_name"
-                defaultValue={currentFullName}
+                defaultValue={state?.values?.full_name ?? currentFullName}
                 placeholder="Nume Prenume"
                 required
               />
@@ -86,7 +86,7 @@ export function ProfileDialog({
               <Input
                 id="username"
                 name="username"
-                defaultValue={currentUsername}
+                defaultValue={state?.values?.username ?? currentUsername}
                 placeholder="ex: dprisacaru"
                 autoComplete="username"
               />

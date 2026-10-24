@@ -29,8 +29,34 @@ export async function changePassword(
   return { success: true };
 }
 
+type ProfileState = {
+  error?: string;
+  success?: boolean;
+  values?: { full_name: string; username: string };
+};
+
+/**
+ * La eroare se întorc și valorile scrise: React 19 golește formularul după
+ * fiecare trimitere, iar un „username deja folosit" ar fi șters tot ce a scris
+ * omul, întorcându-l la valorile vechi.
+ */
 export async function updateProfile(
-  _prev: { error?: string; success?: boolean } | null,
+  prev: ProfileState | null,
+  formData: FormData,
+): Promise<ProfileState> {
+  const res = await saveProfile(prev, formData);
+  if (res.success) return res;
+  return {
+    ...res,
+    values: {
+      full_name: String(formData.get("full_name") || ""),
+      username: String(formData.get("username") || ""),
+    },
+  };
+}
+
+async function saveProfile(
+  _prev: ProfileState | null,
   formData: FormData,
 ): Promise<{ error?: string; success?: boolean }> {
   const fullName = String(formData.get("full_name") || "").trim();
