@@ -195,3 +195,10 @@ Utilizatorul e logat pe Cloudflare, Vercel și Supabase în Chrome și a cerut c
   - **Fonturile PDF** intră în cod prin webpack (`asset` cu inline mereu), ca `data:` URL în base64, nu prin regula `Data` din `wrangler.toml`. Next împachetează serverul cu webpack înainte ca wrangler să vadă ceva, deci un import `.ttf` trebuie rezolvat de webpack. Așa merge la fel și sub `next dev`.
   - **Workers Builds se leagă abia după etapa 4.** Până atunci aplicația citește din Supabase și are nevoie la build de `NEXT_PUBLIC_SUPABASE_URL` și de cheia `anon`. Cheia nu se introduce în panou, deci până atunci publicarea se face local: `npx opennextjs-cloudflare build` cu variabilele din `.env.local`, apoi `npx opennextjs-cloudflare deploy`. După etapa 4 aplicația nu mai are nevoie de nicio cheie la build, iar Workers Builds se leagă de ramura `cloudflare`, cu rădăcina `apps/task-manager`.
   - `.open-next/`, `.wrangler/` și `.dev.vars*` sunt ignorate din `.gitignore`-ul de la rădăcină, ca `apps/task-manager/.gitignore` să rămână neatins.
+- **Etapa 2 — gata (24.10.2026).**
+  - Schema în `src/lib/db/schema.ts`, migrarea generată de drizzle-kit în `migrations/0000_init.sql` (nume dat de drizzle-kit, nu `0001`), aplicată pe D1 cu `npx wrangler d1 migrations apply sarcini --remote`.
+  - Pe lângă cele 19 tabele mutate: `users` (în locul lui `auth.users`) și `sessions`.
+  - Importul de probă: 3 597 de rânduri în 20 de tabele, **identice câmp cu câmp** cu Supabase, inclusiv coloanele generate. Clipele sunt aduse la formatul `toISOString()` (milisecunde, `Z`); Postgres păstra microsecunde, iar ordinea pe text rămâne ordinea în timp.
+  - Fișierele: 411 (426,8 MB) în R2, fiecare verificat prin MD5, sub aceeași cheie ca `petition_attachments.path`.
+  - Scripturile, locale și necomise, în `apps/task-manager/scripts/`: `import-d1.mjs [--local] [--cu-parole]`, `verifica-import.mjs [--local]`, `sync-fisiere-r2.mjs`. Cer `.env.local` din depozitul principal și `CLOUDFLARE_API_TOKEN` în mediu; nu tipăresc date.
+  - Testele cu D1 adevărat folosesc `getPlatformProxy` din wrangler (`src/lib/db/test-db.ts`), în memorie.
