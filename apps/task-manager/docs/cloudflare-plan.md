@@ -241,6 +241,7 @@ Utilizatorul e logat pe Cloudflare, Vercel și Supabase în Chrome și a cerut c
   3. Domeniul `sarcini.dumitru.cloud`: șters CNAME-ul spre `cname.vercel-dns.com` (neproxiat, TTL auto), publicat Worker-ul cu domeniul (`3efc9a93`). Răspunsul vine de la Cloudflare (`cf-ray …-KIV`).
   4. `cloudflare` îmbinată în `main` (`a9f7876`). Workers Builds publică din `main`. `vercel.json` cu `git.deploymentEnabled: false` oprește publicările Vercel; producția Vercel rămâne versiunea „doar citire”.
   5. `BACKUP_MODE = "productie"`: copia de noapte (02:00 și 02:30 UTC) e a Worker-ului. Se verifică a doua zi în `backup_runs` și în repo, `db/2026-10-25.json`.
+- **Supabase trecut pe Free (24.10.2026, de utilizator).** Organizația „SED” are 2 proiecte, iar „Task” e întreg. Pe Free, un proiect fără activitate o săptămână intră pe pauză; pentru întoarcere se repornește întâi din panou (Project → Restore), câteva minute.
 - **Drumul înapoi (până la 23.11.2026):**
   - în DNS, la loc CNAME `sarcini` → `cname.vercel-dns.com`, neproxiat; din `wrangler.toml` se scoate ruta `sarcini.dumitru.cloud`, apoi `wrangler deploy`;
   - în Vercel → Deployments, se promovează versiunea dinainte de `b6e88ab` (fără „doar citire”, cu cronul copiei).
