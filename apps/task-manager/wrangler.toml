@@ -29,8 +29,14 @@ migrations_dir = "migrations"
 binding = "FISIERE"
 bucket_name = "sarcini-fisiere"
 
-# Adresa de probă. `sarcini.dumitru.cloud` rămâne pe Vercel până în ziua
-# trecerii; atunci se adaugă aici, cu confirmarea utilizatorului.
+# Adresa aplicației, de la trecerea de pe Vercel (24.10.2026). Întoarcerea:
+# se scoate de aici și se pune la loc în DNS CNAME `sarcini` →
+# `cname.vercel-dns.com`, neproxiat.
+[[routes]]
+pattern = "sarcini.dumitru.cloud"
+custom_domain = true
+
+# Adresa de probă, păstrată cât timp mai circulă linkuri spre ea.
 [[routes]]
 pattern = "sarcini-cf.dumitru.cloud"
 custom_domain = true
@@ -44,10 +50,10 @@ namespace_id = "1001"
 simple = { limit = 10, period = 60 }
 
 [vars]
-# „proba" cât timp sarcini.dumitru.cloud e pe Vercel: copia de pe Worker scrie
-# doar sub `proba-cloudflare/` în repo, iar cronul tace. „productie" din ziua
-# trecerii. Vezi `src/lib/backup-run.ts`.
-BACKUP_MODE = "proba"
+# „productie" din ziua trecerii (24.10.2026): copia de noapte e a Worker-ului.
+# „proba" scrie doar sub `proba-cloudflare/` și ține cronul oprit — pentru o
+# eventuală întoarcere pe Vercel. Vezi `src/lib/backup-run.ts`.
+BACKUP_MODE = "productie"
 GITHUB_BACKUP_REPO = "Individul/task-manager-backup"
 # Jetonul GitHub e secret, nu stă aici: npx wrangler secret put BACKUP_GITHUB_TOKEN
 

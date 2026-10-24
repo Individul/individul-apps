@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
+    text: "Aplicația s-a mutat pe Cloudflare. Adresa rămâne sarcini.dumitru.cloud, iar datele, fișierele și parolele sunt aceleași; trebuie doar să vă conectați din nou, o singură dată. Fișierele petițiilor se deschid ca până acum.",
+  },
+  {
+    date: "2026-10-24",
     text: "În istoricul unei sarcini, ora fiecărei schimbări apare de la bun început cea a Chișinăului. Până acum pagina se deschidea pentru o clipă cu ora serverului, cu trei ore în urmă, și abia apoi se corecta. La fel ora de la trecerea mouse-ului peste rândurile jurnalului din Administrare, care rămânea greșită.",
   },
   {
