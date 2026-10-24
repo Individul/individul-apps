@@ -90,7 +90,8 @@ export default async function SedintePage(props: {
         <Suspense fallback={null}>
           <PeriodReport
             period={period}
-            range={range}
+            de={toISODate(range.from)}
+            pana={toISODate(range.to)}
             hearings={hearings}
             inapoi={toISODate(shiftPeriod(period, anchor, -1))}
             inainte={esteCurenta ? null : toISODate(shiftPeriod(period, anchor, 1))}

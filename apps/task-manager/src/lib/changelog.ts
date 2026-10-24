@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-24",
+    text: "La „Ședințe”, sub cifrele perioadei, intervalul se arată din nou corect — „1 octombrie 2026 – 31 octombrie 2026”, nu până la 1 noiembrie. Ziua de sfârșit se muta cu una înainte din cauza diferenței de oră dintre server și Chișinău, iar odată cu ea se putea număra o zi lucrătoare lipsă în plus.",
+  },
+  {
     date: "2026-10-23",
     text: "La „Planificarea transferurilor” s-a adăugat al treilea temei, „30 zile”, pe lângă „Ședință de judecată” și „Decizie”. Transferul se face la prima zi programată, iar cele 30 de zile curg din ziua în care introduceți încheierea; în formular se scrie data încheierii și instanța (obligatorie). Pe rând se vede până când e termenul, iar dacă omul nu mai apucă să plece în cele 30 de zile, apare „termen depășit”, cu roșu. Coloana de dată se numește acum „Temeiul și data”.",
   },

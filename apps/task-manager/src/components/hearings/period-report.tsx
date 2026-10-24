@@ -16,14 +16,16 @@ import {
 import {
   PERIODS,
   parseISODate,
+  rangeFromISO,
   rangeLabelRo,
-  type DateRange,
   type Period,
 } from "@/lib/periods";
 
 interface PeriodReportProps {
   period: Period;
-  range: DateRange;
+  /** Capetele perioadei (AAAA-LL-ZZ) — text, nu `Date`; vezi `rangeFromISO`. */
+  de: string;
+  pana: string;
   hearings: Hearing[];
   /** Ancorele vecine, calculate pe server — vezi `PeriodNav`. */
   inapoi: string;
@@ -32,7 +34,8 @@ interface PeriodReportProps {
 
 export function PeriodReport({
   period,
-  range,
+  de,
+  pana,
   hearings,
   inapoi,
   inainte,
@@ -46,6 +49,7 @@ export function PeriodReport({
     router.push(`/sedinte?${q.toString()}`);
   };
 
+  const range = rangeFromISO(de, pana);
   const total = aggregate(hearings);
   const zileCuDate = hearings.length;
   const lipsa = missingWorkdays(range, hearings);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rangeForPeriod, toISODate, todayInChisinau } from "./periods";
+import { rangeForPeriod, rangeFromISO, rangeLabelRo, toISODate, todayInChisinau } from "./periods";
 
 describe("rangeForPeriod", () => {
   const ref = new Date(2026, 6, 30); // joi, 30 iulie 2026
@@ -91,5 +91,19 @@ describe("todayInChisinau", () => {
   it("trece peste marginea de an", () => {
     // 31 dec 2026, 22:30 UTC = 1 ianuarie 2027, 00:30 la Chișinău.
     expect(toISODate(todayInChisinau(new Date(Date.UTC(2026, 11, 31, 22, 30))))).toBe("2027-01-01");
+  });
+});
+
+describe("rangeFromISO", () => {
+  it("păstrează zilele scrise, oricare ar fi ora din capete", () => {
+    const r = rangeFromISO("2026-10-01", "2026-10-31");
+    expect(toISODate(r.from)).toBe("2026-10-01");
+    expect(toISODate(r.to)).toBe("2026-10-31");
+    expect(rangeLabelRo(r)).toBe("1 octombrie 2026 – 31 octombrie 2026");
+  });
+  it("acoperă ziua de sfârșit întreagă", () => {
+    const r = rangeFromISO("2026-10-01", "2026-10-31");
+    expect(r.from.getHours()).toBe(0);
+    expect(r.to.getHours()).toBe(23);
   });
 });

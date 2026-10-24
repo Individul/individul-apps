@@ -33,6 +33,19 @@ export interface DateRange {
   to: Date;
 }
 
+/**
+ * Reface un interval din capetele lui scrise ca AAAA-LL-ZZ, pe ceasul locului.
+ *
+ * Așa trece un interval de la server la o componentă din browser. Un `Date`
+ * trimis ca atare poartă clipa, nu ziua: serverul merge pe UTC, deci sfârșitul
+ * lui octombrie (31, 23:59 UTC) ajunge în browserul din Chișinău drept
+ * 1 noiembrie, ora 2 — iar eticheta și zilele lipsă se mută cu o zi. Ziua
+ * scrisă ca text nu are fus.
+ */
+export function rangeFromISO(de: string, pana: string): DateRange {
+  return { from: startOfDay(parseISODate(de)), to: endOfDay(parseISODate(pana)) };
+}
+
 /** Intervalul acoperit de o perioadă, raportat la ziua `ref`. */
 export function rangeForPeriod(period: Period, ref: Date = new Date()): DateRange {
   switch (period) {
