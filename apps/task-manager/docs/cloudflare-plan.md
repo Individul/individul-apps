@@ -221,3 +221,13 @@ Utilizatorul e logat pe Cloudflare, Vercel și Supabase în Chrome și a cerut c
 - **Proba publicată și Workers Builds legat (24.10.2026).**
   - Workers Builds pe ramura `cloudflare`: rădăcina `apps/task-manager`, `npx opennextjs-cloudflare build` / `deploy`, fără build-uri pentru alte ramuri. Un push pe `cloudflare` publică pe sarcini-cf.dumitru.cloud.
   - Reimportul (`scripts/import-d1.mjs` fără `--cu-parole`) păstrează amprentele deja aflate în D1, deci nu mai e nevoie de funcția de export decât dacă cineva își schimbă parola pe Vercel înainte de trecere.
+- **Proba verificată cu contul utilizatorului (24.10.2026).**
+  - Logarea cu parola veche merge.
+  - 9 din 14 pagini ies identice rând cu rând cu producția. Celelalte diferă doar unde trebuie:
+    - „Noutăți” și pagina de start: intrările noi de pe ramură;
+    - „Administrare”: butonul nou și „statistici” scos din text;
+    - „Petiții” și „Planificare”: aceleași rânduri, altă ordine la egalitate. La petiții, ordinea de pe D1 se potrivește cu Postgres în 84 din 92 de grupuri (restul erau arbitrare și acolo); la planuri, Postgres nu urma nicio regulă.
+  - Un fișier vechi descărcat de pe probă are aceeași amprentă SHA-256 ca originalul din Supabase.
+  - Scrieri făcute și anulate: sarcină (cu pas, comentariu, ștergere în cascadă), fișier de petiție (urcat, descărcat, șters și din R2), zi de ședințe, inculpat, contravenient, bifă la informări, transfer. Toate în jurnal, pe numele omului.
+  - PDF-ul de marți are aceeași mărime ca în producție.
+  - Găsit pe drum și reparat pe `main` (`de1b8b5`): ora din istoricul sarcinii și din jurnal se formata pe fusul mașinii (eroarea de hidratare #418).
