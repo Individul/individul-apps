@@ -167,7 +167,18 @@ function textField(
  * rulărilor trebuie să conțină strictul necesar ca s-o poți repara.
  */
 async function describe(res: Response, action: string, path: string): Promise<string> {
-  const detail = textField(await readJson(res), "message");
+  // Corpul se citește ca text o singură dată: un refuz al filtrului din fața
+  // API-ului (fără `User-Agent`, IP blocat) vine ca text simplu, nu ca JSON, iar
+  // fără primele lui cuvinte un 403 de acolo nu se deosebește de un token prost.
+  const raw = await res.text().catch(() => "");
+  let parsed: unknown = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = null;
+  }
+  const detail =
+    textField(parsed, "message") ?? (raw.trim() ? raw.trim().replace(/\s+/g, " ").slice(0, 200) : null);
   const spune = detail ? ` GitHub a răspuns: „${detail}".` : "";
 
   switch (res.status) {
