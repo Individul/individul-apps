@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
+    text: "La conectare, după o parolă greșită numele de utilizator rămâne scris — se golește doar parola. La fel în „Profilul meu”: dacă salvarea nu reușește (de pildă, username-ul e deja folosit), ce ai scris rămâne în câmpuri, nu se întoarce la valorile vechi.",
+  },
+  {
+    date: "2026-10-24",
     text: "Clopoțelul de notificări se uită acum singur după noutăți la fiecare jumătate de minut și ori de câte ori te întorci în fereastra aplicației. O notificare nouă poate apărea deci cu până la 30 de secunde întârziere, iar anunțul din colțul ecranului vine odată cu ea.",
   },
   {
