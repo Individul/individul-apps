@@ -2,20 +2,22 @@
  * Dumpul bazei de date: toate tabelele, într-un singur format.
  *
  * Stă aici, nu în rute, fiindcă îl folosesc amândouă copiile — cea zilnică
- * (cron, cheia de serviciu) și cea manuală (butonul adminului, sesiunea lui).
- * Butonul a salvat ani la rând cinci tabele din cincisprezece tocmai fiindcă
- * avea lista lui, pe care nimeni n-a mai atins-o când au apărut petițiile,
- * ședințele și transferurile. Un admin care-l apăsa credea că are tot; avea
- * sarcinile. A doua listă înseamnă că se repetă, deci nu există a doua listă.
+ * (cronul Worker-ului) și cea manuală (butonul adminului). Butonul a salvat ani
+ * la rând cinci tabele din cincisprezece tocmai fiindcă avea lista lui, pe care
+ * nimeni n-a mai atins-o când au apărut petițiile, ședințele și transferurile.
+ * Un admin care-l apăsa credea că are tot; avea sarcinile. A doua listă
+ * înseamnă că se repetă, deci nu există a doua listă.
  *
- * E fișier separat de `backup.ts` ca acela să rămână pur — fără Supabase, deci
- * importabil de oriunde și testabil fără mock-uri.
- *
- * Clientul vine ca parametru, nu se creează aici: cronul citește cu cheia de
- * serviciu (ocolește RLS), butonul cu sesiunea adminului (RLS se aplică).
+ * Citește din D1 prin Drizzle, deci valorile ies cu tipul lor — `true`/`false`,
+ * jurnalul ca obiect —, ca în dumpurile scrise pe vremea Supabase. Dreptul de
+ * a cere dumpul îl verifică cine cheamă (adminul sau cronul).
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { asc, getTableColumns, getTableName, is } from "drizzle-orm";
+import { SQLiteTable } from "drizzle-orm/sqlite-core";
+
+import type { Db } from "@/lib/db";
+import * as schema from "@/lib/db/schema";
 
 type Row = Record<string, unknown>;
 
@@ -28,10 +30,13 @@ export interface BackupTable {
 /**
  * Tabelele din copie și coloanele după care se ordonează.
  *
- * Lista trebuie să le cuprindă pe **toate** cele create în `supabase/migrations`,
- * afară de `backup_runs` (evidența copierii, nu date ale instituției). Nu e o
- * rugăminte: testul citește migrările și compară, deci un tabel nou uitat aici
- * pică la `npm test`, nu peste un an, când s-ar căuta în copie.
+ * Lista trebuie să le cuprindă pe **toate** tabelele din `lib/db/schema.ts`,
+ * afară de cele scrise anume în test (`backup_runs`, conturile și sesiunile).
+ * Nu e o rugăminte: testul citește schema și compară, deci un tabel nou uitat
+ * aici pică la `npm test`, nu peste un an, când s-ar căuta în copie.
+ *
+ * Tabelele `stat_*` nu mai sunt: statisticile au plecat în aplicația lor, iar
+ * datele lor rămân în dumpurile scrise înainte de mutarea pe Cloudflare.
  *
  * **Ordinea tabelelor** urmează cheile străine: părintele înaintea copilului
  * (`profiles` înaintea lui `tasks`, `petitions` înaintea atașamentelor). Dumpul
@@ -73,14 +78,9 @@ export const BACKUP_TABLES: readonly BackupTable[] = [
   { name: "defendants", order: ["last_name", "id"] },
   { name: "contraveners", order: ["decision_date", "id"] },
   { name: "releases", order: ["release_date", "id"] },
-  { name: "stat_reports", order: ["created_at", "id"] },
-  { name: "stat_values", order: ["report_id", "position", "id"] },
   { name: "notifications", order: ["created_at", "id"] },
   { name: "audit_log", order: ["created_at", "id"] },
 ];
-
-/** Rânduri pe pagină la citirea unui tabel. */
-const ROWS_PER_PAGE = 1000;
 
 /**
  * Versiunea formatului scris de aici.
@@ -91,40 +91,44 @@ const ROWS_PER_PAGE = 1000;
  */
 export const DUMP_VERSION = 2;
 
+/** Rânduri pe pagină la citirea unui tabel. */
+const ROWS_PER_PAGE = 1000;
+
+/** Tabelele schemei după numele lor din bază. */
+const TABLES_BY_NAME = new Map<string, SQLiteTable>(
+  (Object.values(schema) as unknown[])
+    .filter((t): t is SQLiteTable => is(t, SQLiteTable))
+    .map((t) => [getTableName(t), t]),
+);
+
 /**
  * Un tabel întreg, citit paginat.
  *
- * Paginarea nu e prudență de prisos: PostgREST are un plafon de rânduri pe
- * cerere (`max_rows`), iar un `select("*")` simplu s-ar opri tăcut la el. Un
- * backup tăiat la o mie de rânduri, care se dă drept complet, e chiar cazul de
- * evitat.
- *
- * Bucla se oprește la o pagină goală, nu la una „mai scurtă decât am cerut":
- * dacă plafonul serverului e sub `ROWS_PER_PAGE`, fiecare pagină vine scurtă,
- * iar oprirea la prima ar tăia tabelul exact ca varianta neparginată.
+ * Paginat ca pe vremea PostgREST, deși D1 n-are plafonul lui `max_rows`: o
+ * citire dintr-o bucată a unui tabel care crește ani la rând ar ține tot
+ * răspunsul în memorie deodată. Paginarea are nevoie de ordinea totală de mai
+ * sus — peste o ordine cu egalități ar putea sări sau dubla rânduri.
  */
-async function readTable(
-  supabase: SupabaseClient,
-  table: string,
-  order: readonly [string, ...string[]],
-): Promise<Row[]> {
-  const [first, ...rest] = order;
+async function readTable(db: Db, name: string, order: readonly [string, ...string[]]): Promise<Row[]> {
+  const table = TABLES_BY_NAME.get(name);
+  if (!table) throw new Error(`Tabelul „${name}" nu există în schemă.`);
+  const columns = getTableColumns(table);
+  const orderBy = order.map((c) => {
+    const column = Object.values(columns).find((col) => col.name === c);
+    if (!column) throw new Error(`Coloana „${name}.${c}" nu există în schemă.`);
+    return asc(column);
+  });
+
   const rows: Row[] = [];
-
-  for (let from = 0; ; ) {
-    let query = supabase.from(table).select("*").order(first, { ascending: true });
-    for (const column of rest) query = query.order(column, { ascending: true });
-
-    const { data, error } = await query.range(from, from + ROWS_PER_PAGE - 1);
-    if (error) {
-      throw new Error(`Citirea tabelului „${table}" a eșuat: ${error.message}`);
-    }
-
-    const batch: Row[] = data ?? [];
+  for (let offset = 0; ; offset += ROWS_PER_PAGE) {
+    const batch = (await db
+      .select()
+      .from(table)
+      .orderBy(...orderBy)
+      .limit(ROWS_PER_PAGE)
+      .offset(offset)) as Row[];
     if (batch.length === 0) return rows;
-
     rows.push(...batch);
-    from += batch.length;
   }
 }
 
@@ -142,7 +146,7 @@ async function readTable(
  * oprit. Fără ele ar rămâne un eșec fără urmă.
  */
 export async function buildDump(
-  supabase: SupabaseClient,
+  db: Db,
   now: Date,
   onTable?: (tables: number, rows: number) => void,
 ): Promise<string> {
@@ -154,7 +158,7 @@ export async function buildDump(
   // ar ține în memorie cincisprezece tabele pe jumătate citite, iar dumpul e
   // oricum ieftin — câțiva megabiți de text.
   for (const [index, table] of BACKUP_TABLES.entries()) {
-    const read = await readTable(supabase, table.name, table.order);
+    const read = await readTable(db, table.name, table.order);
     data[table.name] = read;
     counts[table.name] = read.length;
     rows += read.length;

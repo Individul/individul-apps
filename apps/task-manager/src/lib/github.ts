@@ -5,7 +5,7 @@
  *
  * Motivul e mai tare decât igiena obișnuită: mesajele de eroare de aici ajung în
  * `backup_runs.error`, de unde panoul de pe `/admin` le pune pe ecran, iar
- * răspunsul rutei de cron le duce în jurnalul din Vercel. Un token scăpat
+ * evidența rulărilor le duce în jurnalul Worker-ului și pe pagina de administrare. Un token scăpat
  * într-un mesaj ar ajunge deodată afișat în pagină și scris în jurnale.
  *
  * Cum se ține regula, ca să poată fi verificată prin citire, nu prin încredere:
@@ -44,7 +44,8 @@ interface PutBody {
 }
 
 const UNDE_SE_SETEAZA =
-  ` Se setează în Vercel → Settings → Environment Variables (vezi README, secțiunea „Copie de siguranță").`;
+  ` Depozitul se scrie în wrangler.toml ([vars]); jetonul e secret al Worker-ului: ` +
+  `npx wrangler secret put BACKUP_GITHUB_TOKEN.`;
 
 /**
  * Ultima plasă înainte ca un text să iasă din modul.
@@ -91,9 +92,9 @@ function loadConfig(): Config | string {
   const repo = parseRepo(process.env.GITHUB_BACKUP_REPO);
   if (typeof repo === "string") return repo;
 
-  const token = (process.env.GITHUB_BACKUP_TOKEN ?? "").trim();
+  const token = (process.env.BACKUP_GITHUB_TOKEN ?? "").trim();
   if (!token) {
-    return `GITHUB_BACKUP_TOKEN nu e configurat, deci copia nu poate scrie în repo.${UNDE_SE_SETEAZA}`;
+    return `BACKUP_GITHUB_TOKEN nu e configurat, deci copia nu poate scrie în repo.${UNDE_SE_SETEAZA}`;
   }
 
   return { ...repo, token };
@@ -112,12 +113,19 @@ export function contentsUrl(repo: Repo, path: string): string {
   return `${API}/repos/${owner}/${name}/contents/${encoded}`;
 }
 
-/** Singurul loc din aplicație în care tokenul e pus într-un antet. */
-function apiHeaders(token: string): Record<string, string> {
+/**
+ * Singurul loc din aplicație în care tokenul e pus într-un antet.
+ *
+ * `User-Agent` e cerut de GitHub: fără el, orice cerere primește 403, oricât
+ * de bun ar fi tokenul. Pe Vercel îl punea singur `fetch` din Node; `fetch` din
+ * Workers nu pune niciunul, iar 403-ul arăta exact ca un token fără drepturi.
+ */
+export function apiHeaders(token: string): Record<string, string> {
   return {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
+    "User-Agent": "sarcini-backup",
   };
 }
 
@@ -159,14 +167,25 @@ function textField(
  * rulărilor trebuie să conțină strictul necesar ca s-o poți repara.
  */
 async function describe(res: Response, action: string, path: string): Promise<string> {
-  const detail = textField(await readJson(res), "message");
+  // Corpul se citește ca text o singură dată: un refuz al filtrului din fața
+  // API-ului (fără `User-Agent`, IP blocat) vine ca text simplu, nu ca JSON, iar
+  // fără primele lui cuvinte un 403 de acolo nu se deosebește de un token prost.
+  const raw = await res.text().catch(() => "");
+  let parsed: unknown = null;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = null;
+  }
+  const detail =
+    textField(parsed, "message") ?? (raw.trim() ? raw.trim().replace(/\s+/g, " ").slice(0, 200) : null);
   const spune = detail ? ` GitHub a răspuns: „${detail}".` : "";
 
   switch (res.status) {
     case 401:
       return (
         `GitHub a refuzat autentificarea la ${action} „${path}". Tokenul e greșit sau ` +
-        `expirat — înlocuiește GITHUB_BACKUP_TOKEN în Vercel.${spune}`
+        `expirat — înlocuiește-l: npx wrangler secret put BACKUP_GITHUB_TOKEN.${spune}`
       );
     case 403:
       return (

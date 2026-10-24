@@ -23,7 +23,7 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
-    text: "Aplicația s-a mutat pe Cloudflare. Pe vechea adresă se mai poate doar citi, iar o bandă galbenă spune asta; lucrul continuă pe sarcini.dumitru.cloud, cu aceeași parolă.",
+    text: "Aplicația s-a mutat pe Cloudflare. Adresa rămâne sarcini.dumitru.cloud, iar datele, fișierele și parolele sunt aceleași; trebuie doar să vă conectați din nou, o singură dată. Fișierele petițiilor se deschid ca până acum.",
   },
   {
     date: "2026-10-24",
@@ -32,6 +32,15 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
     text: "La conectare, după o parolă greșită numele de utilizator rămâne scris — se golește doar parola. La fel în „Profilul meu”: dacă salvarea nu reușește (de pildă, username-ul e deja folosit), ce ai scris rămâne în câmpuri, nu se întoarce la valorile vechi.",
+  },
+  {
+    date: "2026-10-24",
+    text: "Clopoțelul de notificări se uită acum singur după noutăți la fiecare jumătate de minut și ori de câte ori te întorci în fereastra aplicației. O notificare nouă poate apărea deci cu până la 30 de secunde întârziere, iar anunțul din colțul ecranului vine odată cu ea.",
+  },
+  {
+    date: "2026-10-24",
+    doarAdmin: true,
+    text: "În Administrare, la „Backup & restaurare”, a apărut butonul „Rulează copia acum”: face pe loc aceeași copie ca cea de noapte și spune la final câte rânduri și fișiere a scris. Statisticile nu mai intră în copie — au plecat în aplicația lor, iar datele lor rămân în copiile de dinainte.",
   },
   {
     date: "2026-10-24",

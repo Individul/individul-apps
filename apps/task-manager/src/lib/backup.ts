@@ -174,7 +174,7 @@ const RUNNING_WINDOW_MS = 5 * 60_000;
  * Ruta taie deja la 2000 de caractere la scriere, dar asta e plasa serverului,
  * nu a paginii: 2000 de caractere într-o bandă de avertizare rămân un zid de
  * text. Aici se taie la cât se citește dintr-o privire, iar restul se caută în
- * jurnalul din Vercel — unde oricum e întreg.
+ * jurnalul Worker-ului — unde oricum e întreg.
  */
 const MAX_ERROR_CHARS = 240;
 
@@ -205,30 +205,29 @@ function isRunning(run: BackupRun, now: Date): boolean {
 
 const HINTS: Record<BackupStateKind, string> = {
   niciodata:
-    "Programarea zilnică nu s-a declanșat încă niciodată: verifică Vercel → Settings → " +
-    "Cron Jobs și dacă `CRON_SECRET` e setat în Environment Variables.",
+    "Programarea zilnică nu s-a declanșat încă niciodată: verifică în Cloudflare → " +
+    "Workers → sarcini → Settings → Triggers că există cronurile și că `BACKUP_MODE` " +
+    "e „productie”.",
   "in-curs":
     "O rulare e în curs chiar acum — reîncarcă pagina peste un minut ca să vezi cum " +
     "s-a încheiat.",
-  // Jurnalul unei rulări de cron se deschide din pagina cronului, nu căutându-l
-  // prin deploy-uri: butonul „View Logs" de lângă el duce direct la jurnalul
-  // filtrat pe rută. Un drum mai lung ar cere să ghicești întâi care deploy a
-  // rulat copia de azi-noapte.
+  // Jurnalul unei rulări de cron e în Observability, filtrat pe evenimentul
+  // „scheduled": acolo ajunge rezumatul fiecărei rulări, lângă eroarea ei.
   "nicio-reusita":
-    "Cronul pornește, dar rularea nu ajunge la capăt. Deschide jurnalul rulării din " +
-    "Vercel → Settings → Cron Jobs → View Logs (filtrat pe /api/backup).",
+    "Cronul pornește, dar rularea nu ajunge la capăt. Deschide jurnalul din " +
+    "Cloudflare → Workers → sarcini → Observability (evenimentele „scheduled”).",
   // Fraza nu se sprijină pe data de dinaintea ei („de atunci n-a mai…"): când
   // rândul reușitei are un timestamp ilizibil, data lipsește din pagină și
   // referința ar rămâne în aer.
   oprit:
     "Nu mai pornește nicio rulare: nu rularea cade, ci programarea nu se declanșează. " +
-    "Verifică Vercel → Settings → Cron Jobs.",
+    "Verifică în Cloudflare → Workers → sarcini → Settings → Triggers.",
   esuat:
-    "Cronul pornește, dar rulările de după au eșuat. Deschide jurnalul rulării din " +
-    "Vercel → Settings → Cron Jobs → View Logs (filtrat pe /api/backup).",
+    "Cronul pornește, dar rulările de după au eșuat. Deschide jurnalul din " +
+    "Cloudflare → Workers → sarcini → Observability (evenimentele „scheduled”).",
   "esuare-recenta":
     "Copia e încă recentă, deci nu e urgent — dar dacă eșecul se repetă câteva nopți " +
-    "la rând nu mai ești acoperit. Verifică jurnalul rulării în Vercel.",
+    "la rând nu mai ești acoperit. Verifică jurnalul Worker-ului în Cloudflare.",
   "in-regula": "",
 };
 

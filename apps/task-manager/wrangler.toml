@@ -1,0 +1,63 @@
+# Aplicația de sarcini pe Cloudflare Workers, prin OpenNext.
+#
+# Fără cache incremental pe R2 și fără legătura de auto-referință din șablonul
+# OpenNext: toate paginile sunt dinamice (le citește sesiunea), deci n-ar avea
+# ce păstra — doar un bucket și o legătură în plus de întreținut.
+
+name = "sarcini"
+# `worker.ts` înfășoară handlerul OpenNext și adaugă cronul copiei.
+main = "worker.ts"
+# Data trebuie să fie cel mult cea a runtime-ului din wrangler-ul instalat;
+# una mai nouă e refuzată la `wrangler dev`.
+compatibility_date = "2026-10-15"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sarcini"
+database_id = "b585bf44-efcc-443e-a21b-95643163178e"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "FISIERE"
+bucket_name = "sarcini-fisiere"
+
+# Adresa aplicației, de la trecerea de pe Vercel (24.10.2026). Întoarcerea:
+# se scoate de aici și se pune la loc în DNS CNAME `sarcini` →
+# `cname.vercel-dns.com`, neproxiat.
+[[routes]]
+pattern = "sarcini.dumitru.cloud"
+custom_domain = true
+
+# Adresa de probă, păstrată cât timp mai circulă linkuri spre ea.
+[[routes]]
+pattern = "sarcini-cf.dumitru.cloud"
+custom_domain = true
+
+# Încercările de logare: Supabase le limita singur; aici o face Cloudflare.
+# Zece pe minut de pe aceeași adresă ajung unui om care greșește parola, dar
+# opresc ghicitul parolelor prin încercări repetate.
+[[ratelimits]]
+name = "LOGIN_LIMIT"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
+
+[vars]
+# „productie" din ziua trecerii (24.10.2026): copia de noapte e a Worker-ului.
+# „proba" scrie doar sub `proba-cloudflare/` și ține cronul oprit — pentru o
+# eventuală întoarcere pe Vercel. Vezi `src/lib/backup-run.ts`.
+BACKUP_MODE = "productie"
+GITHUB_BACKUP_REPO = "Individul/task-manager-backup"
+# Jetonul GitHub e secret, nu stă aici: npx wrangler secret put BACKUP_GITHUB_TOKEN
+
+# Copia de noapte, de două ori, ca pe Vercel: a doua e plasa pentru o primă
+# rulare întreruptă și iese imediat dacă prima a reușit. Ore UTC.
+[triggers]
+crons = ["0 2 * * *", "30 2 * * *"]

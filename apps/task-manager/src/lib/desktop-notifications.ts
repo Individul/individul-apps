@@ -3,9 +3,9 @@ import type { Notification as AppNotification } from "./types";
 /**
  * Anunțuri în colțul ecranului, ca la poșta electronică.
  *
- * Partea grea era să afli că a apărut ceva; asta se face deja prin Supabase
- * Realtime, în clopoțel. Aici rămâne doar transformarea evenimentului în anunț
- * de sistem.
+ * Partea grea era să afli că a apărut ceva; asta o face clopoțelul, care
+ * verifică la 30 de secunde ce a sosit. Aici rămâne doar transformarea unei
+ * notificări noi în anunț de sistem.
  *
  * Limita, spusă pe față: merge doar cât timp o filă cu aplicația e deschisă
  * undeva în browser. Cu fila închisă n-ajunge nimic — pentru asta ar fi nevoie
@@ -80,8 +80,8 @@ export function show(n: AppNotification, onOpen?: (href: string) => void): void 
   //
   // În try/catch fiindcă pe Chrome de Android constructorul aruncă TypeError —
   // acolo anunțurile cer un service worker — deși verificarea de suport trece.
-  // Fără gardă, excepția cădea în mijlocul canalului de timp real, la fiecare
-  // eveniment; anunțul pe ecran e un bonus, nu ceva pentru care se moare.
+  // Fără gardă, excepția cădea în mijlocul verificării periodice, la fiecare
+  // notificare nouă; anunțul pe ecran e un bonus, nu ceva pentru care se moare.
   let anunt: Notification;
   try {
     anunt = new Notification(TITLE, {

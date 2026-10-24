@@ -1,6 +1,29 @@
-import { cache } from "react";
+/**
+ * Citirile paginilor, din D1.
+ *
+ * Funcțiile păstrează numele și forma rezultatelor de pe vremea Supabase, ca
+ * paginile și componentele să nu afle de schimbare. Trei lucruri pe care le
+ * făcea baza și pe care acum le face codul de aici:
+ *
+ * - **dreptul de citire.** Aproape totul e „orice om conectat citește", iar
+ *   paginile nu se deschid fără sesiune (middleware). Excepțiile — jurnalul și
+ *   copiile, doar pentru admin; notificările, doar ale tale — filtrează aici,
+ *   explicit: o interogare fără filtru nu mai e oprită de nimeni;
+ * - **relațiile încorporate** (`assignee:profiles(*)`, `tags(*)`…) se adună din
+ *   câteva interogări trimise deodată, într-un `batch`;
+ * - **ordinea textelor.** Postgres ordona după colaționarea ICU `en-US`, iar
+ *   SQLite compară octeți („Ș" ar ajunge după „Z"). Ordonarea pe nume se face
+ *   deci în JavaScript, cu același ICU. Valorile nule merg la coadă, ca în
+ *   Postgres la ordinea crescătoare.
+ */
 
-import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
+import { and, asc, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
+
+import { getDb } from "@/lib/db";
+import * as s from "@/lib/db/schema";
+import { getActor, getCurrentUserId as currentUserId } from "@/lib/auth/server";
+import { canReadAuditLog, canReadBackupRuns } from "@/lib/acl";
 import {
   COLOANE_PETITIE,
   COLOANE_SARCINA,
@@ -26,222 +49,264 @@ import type { Obligation } from "./obligations";
 import type { Defendant } from "./defendants";
 import type { Contravener } from "./contraveners";
 
+/* ------------------------------------------------------------ ordinea */
+
+const ICU = new Intl.Collator("en-US");
+
+/** `order by <col>` din Postgres: ICU `en-US`, nulele la coadă. */
+export function byText<T>(get: (row: T) => string | null | undefined) {
+  return (a: T, b: T) => {
+    const x = get(a);
+    const y = get(b);
+    if (x == null) return y == null ? 0 : 1;
+    if (y == null) return -1;
+    return ICU.compare(x, y);
+  };
+}
+
+/** Rândurile din D1 au tipul din schemă; paginile vechi așteaptă tipurile lor. */
+const as = <T>(rows: unknown) => rows as T;
+
+/* ------------------------------------------------------------ oamenii */
+
+export const getCurrentUserId = currentUserId;
+
+/**
+ * Profilul celui conectat.
+ *
+ * Învelit în `cache` din React: antetul stă în layout, iar unele pagini au și
+ * ele nevoie de profil ca să știe dacă e admin. Fără învelișul acesta, aceeași
+ * randare ar cere de două ori același lucru. `cache` ține răspunsul cât ține o
+ * singură randare; între cereri nu păstrează nimic, deci nimeni nu poate primi
+ * profilul altuia.
+ */
+export const getCurrentProfile = cache(async function getCurrentProfile(): Promise<Profile | null> {
+  const uid = await getCurrentUserId();
+  if (!uid) return null;
+  const row = await getDb().select().from(s.profiles).where(eq(s.profiles.id, uid)).get();
+  return as<Profile | null>(row ?? null);
+});
+
+export async function getProfiles(): Promise<Profile[]> {
+  const rows = await getDb().select().from(s.profiles);
+  return as<Profile[]>(rows.sort(byText((p) => p.full_name)));
+}
+
+export async function getTags(): Promise<Tag[]> {
+  const rows = await getDb().select().from(s.tags);
+  return rows.sort(byText((t) => t.name));
+}
+
+/* ------------------------------------------------------------ sarcinile */
+
+/** Etichetele fiecărei sarcini, în ordinea în care au fost puse. */
+async function tagsByTask(taskIds?: string[]): Promise<Map<string, Tag[]>> {
+  const db = getDb();
+  const rows = await db
+    .select({ task_id: s.taskTags.task_id, id: s.tags.id, name: s.tags.name, color: s.tags.color })
+    .from(s.taskTags)
+    .innerJoin(s.tags, eq(s.tags.id, s.taskTags.tag_id))
+    .where(taskIds ? inArray(s.taskTags.task_id, taskIds) : undefined)
+    .orderBy(sql`${s.taskTags}.rowid`);
+  const map = new Map<string, Tag[]>();
+  for (const { task_id, ...tag } of rows) {
+    const list = map.get(task_id) ?? [];
+    list.push(tag);
+    map.set(task_id, list);
+  }
+  return map;
+}
+
 export async function getTasks(): Promise<Task[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("tasks")
-    .select("*, assignee:profiles!tasks_assignee_id_fkey(*), tags(*)")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as unknown as Task[];
+  const db = getDb();
+  const [rows, people] = await db.batch([
+    db.select().from(s.tasks).orderBy(desc(s.tasks.created_at)),
+    db.select().from(s.profiles),
+  ]);
+  const tags = await tagsByTask();
+  const byId = new Map(people.map((p) => [p.id, p]));
+  return as<Task[]>(
+    rows.map((t) => ({
+      ...t,
+      assignee: t.assignee_id ? (byId.get(t.assignee_id) ?? null) : null,
+      tags: tags.get(t.id) ?? [],
+    })),
+  );
 }
 
 /**
  * Coloanele din care pagina de start scoate cifrele sarcinilor: statisticile
  * cardului (`taskStats`) plus defalcarea pe responsabil (`groupByAssignee`).
  *
- * O singură listă, din care ies și tipul, și șirul cerut bazei de date. Scrise
- * separat, cele două ar fi putut ajunge să spună lucruri diferite — adică exact
- * defectul pe care îl repară toată schimbarea asta: un câmp pe care codul îl
- * citește, interogarea nu-l aduce, iar el sosește `undefined` la fiecare rulare,
- * tăcut. Derivate dintr-o listă, nu se mai pot contrazice, iar un nume de
- * coloană scris greșit nu trece de `Pick`: cade la compilare, nu în producție.
+ * O singură listă, din care ies și tipul, și coloanele cerute bazei. Scrise
+ * separat, cele două ar fi putut ajunge să spună lucruri diferite: un câmp pe
+ * care codul îl citește, interogarea nu-l aduce, iar el sosește `undefined` la
+ * fiecare rulare, tăcut. Derivate dintr-o listă, nu se mai pot contrazice.
  */
 const TASK_COUNT_COLUMNS = ["status", "due_date", "assignee_id"] as const;
 export type TaskCountRow = Pick<Task, (typeof TASK_COUNT_COLUMNS)[number]>;
 
 /**
- * Sarcinile reduse la ce se numără pe pagina de start.
- *
- * Nu înlocuiește `getTasks`: /sarcini afișează rândurile întregi, cu responsabil
- * și etichete. Aici nu se afișează niciun rând, doar se numără, iar responsabilul
- * încorporat și etichetele erau cea mai mare parte din răspuns. Drumul dus-întors
- * e oricum scurt (Supabase și funcția stau amândouă la Frankfurt) — se câștigă la
- * serializare și la `JSON.parse`, și mai ales la cum arată asta peste încă un an
- * de registru.
- *
- * Aceeași ordonare ca `getTasks`, deși nicio cifră n-o citește: gruparea pe
- * responsabil păstrează ordinea de intrare când două persoane au același număr
- * și același nume, deci ordinea identică scutește demonstrația că tabelul iese
- * la fel.
+ * Sarcinile reduse la ce se numără pe pagina de start. Nu înlocuiește
+ * `getTasks`: /sarcini afișează rândurile întregi, cu responsabil și etichete.
+ * Aceeași ordonare ca `getTasks`: gruparea pe responsabil păstrează ordinea de
+ * intrare la egalitate, deci tabelul iese la fel.
  */
 export async function getTaskCounts(): Promise<TaskCountRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("tasks")
-    .select(TASK_COUNT_COLUMNS.join(", "))
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as unknown as TaskCountRow[];
+  const rows = await getDb()
+    .select({ status: s.tasks.status, due_date: s.tasks.due_date, assignee_id: s.tasks.assignee_id })
+    .from(s.tasks)
+    .orderBy(desc(s.tasks.created_at));
+  return rows;
 }
 
 export async function getTask(id: string): Promise<(Task & { comments: Comment[] }) | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("tasks")
-    .select(
-      "*, assignee:profiles!tasks_assignee_id_fkey(*), tags(*), comments(*, author:profiles!comments_author_id_fkey(*))",
-    )
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  // ordonează comentariile cronologic
-  const task = data as unknown as Task & { comments: Comment[] };
-  task.comments = (task.comments ?? []).sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-  );
-  return task;
+  const db = getDb();
+  const [task, comments, people] = await db.batch([
+    db.select().from(s.tasks).where(eq(s.tasks.id, id)),
+    db.select().from(s.comments).where(eq(s.comments.task_id, id)),
+    db.select().from(s.profiles),
+  ]);
+  if (!task[0]) return null;
+  const byId = new Map(people.map((p) => [p.id, p]));
+  const tags = await tagsByTask([id]);
+  const t = task[0];
+  return as<Task & { comments: Comment[] }>({
+    ...t,
+    assignee: t.assignee_id ? (byId.get(t.assignee_id) ?? null) : null,
+    tags: tags.get(id) ?? [],
+    // ordonează comentariile cronologic
+    comments: comments
+      .map((c) => ({ ...c, author: byId.get(c.author_id) }))
+      .sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()),
+  });
 }
 
+/**
+ * Istoricul sarcinii: rândurile ei din jurnal plus ale pașilor ei — ce făcea
+ * `task_history` (0011). La aceeași clipă, ordinea scrierii (`rowid`).
+ */
 export async function getTaskHistory(taskId: string): Promise<AuditEntry[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("task_history", { p_task_id: taskId });
-  // Grațios dacă migrarea 0009 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as AuditEntry[];
+  const rows = await getDb()
+    .select()
+    .from(s.auditLog)
+    .where(
+      or(
+        and(eq(s.auditLog.entity, "tasks"), eq(s.auditLog.entity_id, taskId)),
+        and(
+          eq(s.auditLog.entity, "subtasks"),
+          sql`json_extract(${s.auditLog.details}, '$.task_id') = ${taskId}`,
+        ),
+      ),
+    )
+    .orderBy(asc(s.auditLog.created_at), sql`${s.auditLog}.rowid`);
+  return as<AuditEntry[]>(rows);
 }
 
 export async function getSubtasks(taskId: string): Promise<Subtask[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("subtasks")
-    .select("*")
-    .eq("task_id", taskId)
-    .order("position", { ascending: true });
-  // Grațios dacă migrarea 0010 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as Subtask[];
+  return getDb()
+    .select()
+    .from(s.subtasks)
+    .where(eq(s.subtasks.task_id, taskId))
+    .orderBy(asc(s.subtasks.position), sql`${s.subtasks}.rowid`);
 }
 
-export async function getProfiles(): Promise<Profile[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("profiles").select("*").order("full_name");
-  if (error) throw error;
-  return (data ?? []) as Profile[];
-}
-
-export async function getTags(): Promise<Tag[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("tags").select("*").order("name");
-  if (error) throw error;
-  return (data ?? []) as Tag[];
-}
-
+/**
+ * Jurnalul, doar pentru admin — ca regula „audit select admin". Altcuiva îi
+ * întoarce o listă goală, cum îi întorcea și Postgres.
+ */
 export async function getAuditLog(
   limit = 100,
   /** Entitățile cerute; listă goală înseamnă tot jurnalul. */
   entities: AuditEntry["entity"][] = [],
 ): Promise<AuditEntry[]> {
-  const supabase = await createClient();
+  const me = await getActor();
+  if (!me || !canReadAuditLog(me)) return [];
   // Filtrul intră în interogare: altfel un modul puțin activ ar părea gol doar
   // pentru că ultimele N intrări aparțin altuia.
-  let query = supabase.from("audit_log").select("*");
-  if (entities.length) query = query.in("entity", entities);
-  const { data, error } = await query
-    .order("created_at", { ascending: false })
+  const rows = await getDb()
+    .select()
+    .from(s.auditLog)
+    .where(entities.length ? inArray(s.auditLog.entity, entities) : undefined)
+    // La aceeași clipă (rândurile unei singure acțiuni), în ordinea scrierii —
+    // cum le dădea și Postgres, măsurat pe jurnalul importat.
+    .orderBy(desc(s.auditLog.created_at), sql`${s.auditLog}.rowid asc`)
     .limit(limit);
-  // Tabela poate lipsi până se aplică migrarea 0007 — nu bloca pagina /admin.
-  if (error) return [];
-  return (data ?? []) as unknown as AuditEntry[];
+  return as<AuditEntry[]>(rows);
 }
 
-/**
- * Profilul celui conectat.
- *
- * Învelit în `cache` din React: antetul stă acum în layout, iar unele pagini au
- * și ele nevoie de profil ca să știe dacă e admin. Fără învelișul acesta,
- * aceeași randare ar cere de două ori același lucru — și, mai scump, ar face de
- * două ori `getUser()`, care întreabă serverul Supabase prin rețea. `cache`
- * ține răspunsul cât ține o singură randare; între cereri nu păstrează nimic,
- * deci nimeni nu poate primi profilul altuia.
- */
-/**
- * Identitatea celui conectat, sau `null`.
- *
- * Scoasă separat fiindcă antetul trebuie să atârne de sesiune, nu de profil:
- * un cont fără rând în `profiles` — se întâmplă la un utilizator abia creat —
- * ar rămâne altfel fără bară, deci și fără butonul de deconectare, adică fără
- * nicio ieșire.
- *
- * `cache` o face să coste un singur drum prin rețea pe randare, oricâți o cer:
- * `getUser()` întreabă serverul Supabase, nu citește doar cookie-ul.
- */
-export const getCurrentUserId = cache(async function getCurrentUserId(): Promise<string | null> {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  return data.user?.id ?? null;
-});
+/* ------------------------------------------------------------ notificările */
 
-export const getCurrentProfile = cache(async function getCurrentProfile(): Promise<Profile | null> {
-  const supabase = await createClient();
-  const uid = await getCurrentUserId();
-  if (!uid) return null;
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
-  if (error) throw error;
-  return (data ?? null) as Profile | null;
-});
-
-/** Ultimele înștiințări. Memorate pe durata randării, ca profilul de mai sus. */
+/**
+ * Ultimele înștiințări ale celui conectat. Filtrul pe `user_id` ține locul
+ * regulii „notifications select own": fără el, fiecare le-ar vedea pe ale
+ * tuturor.
+ */
 export const getNotifications = cache(async function getNotifications(
   limit = 20,
 ): Promise<Notification[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("notifications")
-    .select("*")
-    .order("created_at", { ascending: false })
+  const uid = await getCurrentUserId();
+  if (!uid) return [];
+  const rows = await getDb()
+    .select()
+    .from(s.notifications)
+    .where(eq(s.notifications.user_id, uid))
+    .orderBy(desc(s.notifications.created_at), sql`${s.notifications}.rowid asc`)
     .limit(limit);
-  if (error) return [];
-  return (data ?? []) as unknown as Notification[];
+  return as<Notification[]>(rows);
 });
+
+export const getUnreadCount = cache(async function getUnreadCount(): Promise<number> {
+  const uid = await getCurrentUserId();
+  if (!uid) return 0;
+  const row = await getDb()
+    .select({ n: sql<number>`count(*)` })
+    .from(s.notifications)
+    .where(and(eq(s.notifications.user_id, uid), eq(s.notifications.read, false)))
+    .get();
+  return row?.n ?? 0;
+});
+
+/* ------------------------------------------------------------ petițiile */
 
 /**
  * Petițiile pentru listă.
  *
- * Fără profilul responsabilului încorporat în fiecare rând. Măsurat pe datele
- * din producție: cele 348 de petiții cântăreau 320 KB la fiecare deschidere a
- * paginii, din care 67 erau chiar profilul acela — repetat de 348 de ori, deși
- * în total există patru profiluri, cu totul 717 octeți. Pagina cere oricum
- * lista lor separat, prin `getProfiles()`, deci lista își caută responsabilul
- * acolo. Aceleași 67 KB se economisesc și pe drumul către browser, iar
- * interogarea a scăzut de la 263 la 108 ms.
- *
- * `assignee_id` rămâne, fiindcă după el se filtrează și se face defalcarea.
+ * Fără profilul responsabilului încorporat în fiecare rând: pagina cere oricum
+ * lista profilurilor separat, prin `getProfiles()`, deci lista își caută
+ * responsabilul acolo. `assignee_id` rămâne, fiindcă după el se filtrează și se
+ * face defalcarea.
  */
 export async function getPetitions(): Promise<Petition[]> {
-  const supabase = await createClient();
-  const base = "*";
-
-  // Încercăm cu fișierele atașate; dacă migrarea 0013 nu e aplicată, relația
-  // nu există și reluăm fără ea (lista trebuie să funcționeze oricum).
-  const withFiles = await supabase
-    .from("petitions")
-    .select(`${base}, petition_attachments(id, path, name, kind)`)
-    .order("response_deadline", { ascending: true });
-
-  let rows = withFiles.data;
-  if (withFiles.error) {
-    const plain = await supabase
-      .from("petitions")
-      .select(base)
-      .order("response_deadline", { ascending: true });
-    // Grațios dacă migrarea 0012 nu e încă aplicată.
-    if (plain.error) return [];
-    rows = plain.data;
+  const db = getDb();
+  const [rows, files] = await db.batch([
+    db.select().from(s.petitions).orderBy(asc(s.petitions.response_deadline)),
+    db
+      .select({
+        petition_id: s.petitionAttachments.petition_id,
+        id: s.petitionAttachments.id,
+        path: s.petitionAttachments.path,
+        name: s.petitionAttachments.name,
+        kind: s.petitionAttachments.kind,
+      })
+      .from(s.petitionAttachments)
+      .orderBy(sql`${s.petitionAttachments}.rowid`),
+  ]);
+  const byPetition = new Map<string, NonNullable<Petition["attachments"]>>();
+  for (const { petition_id, ...f } of files) {
+    const list = byPetition.get(petition_id) ?? [];
+    list.push(f);
+    byPetition.set(petition_id, list);
   }
-
-  return (
-    (rows ?? []) as unknown as (Petition & {
-      petition_attachments?: NonNullable<Petition["attachments"]>;
-    })[]
-  ).map(({ petition_attachments: atts, ...p }) => ({
-    ...p,
-    // Scanarea petiției înaintea răspunsului: e cea căutată din listă.
-    attachments: [...(atts ?? [])].sort((a, b) =>
-      a.kind === b.kind ? 0 : a.kind === "petitie" ? -1 : 1,
-    ),
-  }));
+  return as<Petition[]>(
+    rows.map((p) => ({
+      ...p,
+      // Scanarea petiției înaintea răspunsului: e cea căutată din listă.
+      attachments: [...(byPetition.get(p.id) ?? [])].sort((a, b) =>
+        a.kind === b.kind ? 0 : a.kind === "petitie" ? -1 : 1,
+      ),
+    })),
+  );
 }
 
 /**
@@ -251,272 +316,167 @@ export async function getPetitions(): Promise<Petition[]> {
 const PETITION_COUNT_COLUMNS = ["status", "response_deadline", "assignee_id"] as const;
 export type PetitionCountRow = Pick<Petition, (typeof PETITION_COUNT_COLUMNS)[number]>;
 
-/**
- * Petițiile reduse la ce se numără pe pagina de start.
- *
- * Fără fișierele atașate și fără responsabilul încorporat: pagina de start nu
- * deschide nicio scanare și nu scrie niciun nume din rândul petiției. Registrul
- * are deja peste trei sute de petiții și crește cu fiecare lună, deci tocmai
- * aici se strânge costul.
- *
- * Eroarea nu se aruncă, la fel ca în `getPetitions`: dacă migrarea 0012 nu e
- * aplicată, tabela lipsește, iar pagina de start trebuie să se deschidă oricum —
- * cu zerouri, nu cu o eroare.
- */
+/** Petițiile reduse la ce se numără pe pagina de start. */
 export async function getPetitionCounts(): Promise<PetitionCountRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("petitions")
-    .select(PETITION_COUNT_COLUMNS.join(", "))
-    .order("response_deadline", { ascending: true });
-  if (error) return [];
-  return (data ?? []) as unknown as PetitionCountRow[];
+  const rows = await getDb()
+    .select({
+      status: s.petitions.status,
+      response_deadline: s.petitions.response_deadline,
+      assignee_id: s.petitions.assignee_id,
+    })
+    .from(s.petitions)
+    .orderBy(asc(s.petitions.response_deadline));
+  return rows;
 }
 
-/** Câte înștiințări necitite. Memorată pe durata randării. */
-export const getUnreadCount = cache(async function getUnreadCount(): Promise<number> {
-  const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("read", false);
-  if (error) return 0;
-  return count ?? 0;
-});
+/* ------------------------------------------------------------ registrele */
 
 export async function getHearings(from: string, to: string): Promise<Hearing[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("hearings")
-    .select("*")
-    .gte("session_date", from)
-    .lte("session_date", to)
-    .order("session_date", { ascending: false });
-  // Grațios dacă migrarea 0018 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as Hearing[];
+  const rows = await getDb()
+    .select()
+    .from(s.hearings)
+    .where(and(gte(s.hearings.session_date, from), lte(s.hearings.session_date, to)))
+    .orderBy(desc(s.hearings.session_date));
+  return as<Hearing[]>(rows);
 }
 
 export async function getHearing(date: string): Promise<Hearing | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("hearings")
-    .select("*")
-    .eq("session_date", date)
-    .maybeSingle();
-  if (error) return null;
-  return (data ?? null) as Hearing | null;
+  const row = await getDb().select().from(s.hearings).where(eq(s.hearings.session_date, date)).get();
+  return as<Hearing | null>(row ?? null);
 }
 
-/**
- * Registrul eliberărilor, cu tot cu răspunsul la întrebarea „a putut fi citit?".
- *
- * Nu doar rândurile, fiindcă lista goală ar fi ambiguă. Fără migrarea 0026
- * tabela nu există, interogarea cade, iar zero rânduri s-ar aduna în
- * `eliberati: 0` — o cifră care arată exact ca o săptămână în care n-a ieșit
- * nimeni. Celelalte trei cifre ale raportului ar fi corecte, deci nimănui nu
- * i-ar trece prin cap să se îndoiască tocmai de a patra: un zero convingător e
- * mai rău decât o pagină căzută, fiindcă ajunge tipărit.
- *
- * Eroarea tot nu se aruncă — cele trei cifre bune trebuie văzute — dar
- * `available: false` obligă pagina să scrie „—" în loc de „0" și să spună de ce.
- */
 export interface ReleaseRegistry {
   rows: Release[];
   /** Fals doar dacă interogarea a eșuat; o săptămână fără eliberări e `[]` cu `true`. */
   available: boolean;
 }
 
-/** Eliberările din interval, zilele noi întâi — ca la ședințe. */
 export async function getReleases(from: string, to: string): Promise<ReleaseRegistry> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("releases")
-    .select("*")
-    .gte("release_date", from)
-    .lte("release_date", to)
-    .order("release_date", { ascending: false });
-  if (error) return { rows: [], available: false };
-  return { rows: (data ?? []) as unknown as Release[], available: true };
+  try {
+    const rows = await getDb()
+      .select()
+      .from(s.releases)
+      .where(and(gte(s.releases.release_date, from), lte(s.releases.release_date, to)))
+      .orderBy(desc(s.releases.release_date));
+    return { rows: as<Release[]>(rows), available: true };
+  } catch {
+    return { rows: [], available: false };
+  }
 }
 
-/**
- * Registrul întreg, zilele noi întâi, iar în aceeași zi penitenciarele în ordine
- * crescătoare — ordinea în care le caută cineva care citește ziua.
- *
- * Eroarea nu se citește: dacă migrarea 0020 nu e încă aplicată, `data` e null și
- * pagina se deschide goală în loc să crape.
- */
 export async function getTransfers(): Promise<Transfer[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("transfers")
-    .select("*")
-    .order("transfer_date", { ascending: false })
-    .order("institution", { ascending: true });
-  return (data ?? []) as unknown as Transfer[];
+  const rows = await getDb()
+    .select()
+    .from(s.transfers)
+    .orderBy(desc(s.transfers.transfer_date), asc(s.transfers.institution));
+  return as<Transfer[]>(rows);
 }
 
-/**
- * Ce citesc banda de transferuri și filtrul de lună — `aggregate` și
- * `byInstitution`. O listă, două întrebuințări; vezi `TASK_COUNT_COLUMNS`.
- */
 const TRANSFER_COUNT_COLUMNS = ["transfer_date", "institution", "plecati", "sositi"] as const;
 export type TransferCountRow = Pick<Transfer, (typeof TRANSFER_COUNT_COLUMNS)[number]>;
 
-/**
- * Transferurile reduse la ce se numără pe pagina de start.
- *
- * `total` lipsește deși e coloană în baza de date: `aggregate` îl recalculează
- * din plecați și sosiți, deci ar fi al treilea număr adus ca să fie ignorat.
- *
- * Eroarea nu se citește, la fel ca în `getTransfers`: fără migrarea 0020 banda
- * rămâne goală în loc să rupă pagina.
- */
 export async function getTransferCounts(): Promise<TransferCountRow[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("transfers")
-    .select(TRANSFER_COUNT_COLUMNS.join(", "))
-    .order("transfer_date", { ascending: false })
-    .order("institution", { ascending: true });
-  return (data ?? []) as unknown as TransferCountRow[];
+  return getDb()
+    .select({
+      transfer_date: s.transfers.transfer_date,
+      institution: s.transfers.institution,
+      plecati: s.transfers.plecati,
+      sositi: s.transfers.sositi,
+    })
+    .from(s.transfers)
+    .orderBy(desc(s.transfers.transfer_date), asc(s.transfers.institution));
 }
 
-/**
- * Ultima rulare a copiei automate și ultima care a reușit.
- *
- * Două rânduri, nu unul, fiindcă sunt două întrebări diferite: când a reușit
- * ultima copie și dacă ultima încercare a căzut. Se pot suprapune — când
- * ultima rulare a și reușit, e același rând — dar de obicei nu, iar tocmai
- * nepotrivirea lor spune ce se întâmplă.
- *
- * Nu se citesc ultimele N rânduri ca să se caute reușita între ele: dacă
- * backupul e stricat de o lună, reușita e la treizeci de rânduri în urmă și
- * n-ar fi în felie. Interogarea filtrată o găsește oricât de departe ar fi,
- * pe indexul de `started_at`.
- *
- * Eroarea nu se aruncă: dacă migrarea 0022 nu e încă aplicată, tabela lipsește
- * și pagina de administrare trebuie să se deschidă oricum. Rezultatul — două
- * `null` — se citește ca „n-a rulat niciodată", ceea ce e și adevărat: fără
- * tabelă, ruta n-are unde scrie o rulare.
- */
+/** Ultima rulare a copiei și ultima reușită — doar pentru admin, ca regula „backup_runs select". */
 export async function getLastBackupRun(): Promise<{
   last: BackupRun | null;
   lastSuccess: BackupRun | null;
 }> {
-  const supabase = await createClient();
-  const columns = "started_at, finished_at, ok, files_uploaded, files_pending, error";
-
-  const [last, lastSuccess] = await Promise.all([
-    supabase
-      .from("backup_runs")
-      .select(columns)
-      .order("started_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("backup_runs")
-      .select(columns)
-      .eq("ok", true)
-      .order("started_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  return {
-    last: (last.data ?? null) as BackupRun | null,
-    lastSuccess: (lastSuccess.data ?? null) as BackupRun | null,
+  const me = await getActor();
+  if (!me || !canReadBackupRuns(me)) return { last: null, lastSuccess: null };
+  const db = getDb();
+  const columns = {
+    started_at: s.backupRuns.started_at,
+    finished_at: s.backupRuns.finished_at,
+    ok: s.backupRuns.ok,
+    files_uploaded: s.backupRuns.files_uploaded,
+    files_pending: s.backupRuns.files_pending,
+    error: s.backupRuns.error,
   };
+  const [last, lastSuccess] = await db.batch([
+    db.select(columns).from(s.backupRuns).orderBy(desc(s.backupRuns.started_at)).limit(1),
+    db
+      .select(columns)
+      .from(s.backupRuns)
+      .where(eq(s.backupRuns.ok, true))
+      .orderBy(desc(s.backupRuns.started_at))
+      .limit(1),
+  ]);
+  return { last: last[0] ?? null, lastSuccess: lastSuccess[0] ?? null };
 }
 
+/**
+ * Planificarea transferurilor, după ziua ședinței. Cei fără ședință (temeiul
+ * „decizie" sau „30 zile") vin la coadă, ca în Postgres — `nulls last`, scris,
+ * fiindcă SQLite i-ar fi pus primii.
+ */
 export async function getTransferPlans(): Promise<TransferPlan[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("transfer_plans")
-    .select("*")
-    .order("hearing_date", { ascending: true });
-  // Grațios dacă migrarea 0021 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as TransferPlan[];
+  const rows = await getDb()
+    .select()
+    .from(s.transferPlans)
+    .orderBy(sql`${s.transferPlans.hearing_date} asc nulls last`);
+  return as<TransferPlan[]>(rows);
 }
 
-/** Obligațiile active, cu termenele deja bifate — starea se calculează în cod. */
 export async function getObligations(): Promise<{
   obligations: Obligation[];
   completed: Map<string, Set<string>>;
 }> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("obligations")
-    .select("*")
-    .eq("active", true)
-    .order("position");
-  // Grațios dacă migrarea 0023 nu e încă aplicată.
-  if (error) return { obligations: [], completed: new Map() };
-
-  const { data: done } = await supabase
-    .from("obligation_completions")
-    .select("obligation_id, due_date");
+  const db = getDb();
+  const [rows, done] = await db.batch([
+    db.select().from(s.obligations).where(eq(s.obligations.active, true)).orderBy(asc(s.obligations.position)),
+    db
+      .select({ obligation_id: s.obligationCompletions.obligation_id, due_date: s.obligationCompletions.due_date })
+      .from(s.obligationCompletions),
+  ]);
 
   const completed = new Map<string, Set<string>>();
-  for (const row of done ?? []) {
-    const key = row.obligation_id as string;
-    const set = completed.get(key) ?? new Set<string>();
-    set.add(row.due_date as string);
-    completed.set(key, set);
+  for (const row of done) {
+    const set = completed.get(row.obligation_id) ?? new Set<string>();
+    set.add(row.due_date);
+    completed.set(row.obligation_id, set);
   }
-
-  return { obligations: (data ?? []) as unknown as Obligation[], completed };
+  return { obligations: as<Obligation[]>(rows), completed };
 }
 
 export async function getDefendants(): Promise<Defendant[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("defendants")
-    .select("*")
-    .order("last_name");
-  // Grațios dacă migrarea 0025 nu e încă aplicată.
-  if (error) return [];
-  return (data ?? []) as unknown as Defendant[];
+  const rows = await getDb().select().from(s.defendants);
+  return as<Defendant[]>(rows.sort(byText((d) => d.last_name)));
 }
 
+/** Ordinea o dă `sortContraveners`, nu baza. */
 export async function getContraveners(): Promise<Contravener[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("contraveners").select("*");
-  // Grațios dacă migrarea 0031 nu e încă aplicată: modulul se deschide gol, nu
-  // cu o pagină de eroare. Ordinea o dă `sortContraveners`, nu baza.
-  if (error) return [];
-  return (data ?? []) as unknown as Contravener[];
+  return as<Contravener[]>(await getDb().select().from(s.contraveners));
 }
 
-/**
- * Sarcinile și petițiile din care se face raportul de activitate.
- *
- * Se aduc toate, nu doar cele din perioadă: raportul spune și câte rămâneau
- * neîncheiate în ultima zi, iar la întrebarea asta răspund tocmai rândurile
- * vechi, din afara intervalului. O filtrare după perioadă ar tăia exact ce
- * trebuie numărat.
- *
- * Rămâne cinstit cât registrul e mic — sub o sută de sarcini și sub patru sute
- * de petiții, din care se aduc șase, respectiv șapte coloane. Când numărul va
- * crește destul cât să se simtă, socoteala se mută într-o interogare de-a bazei;
- * până atunci, o funcție SQL în plus e mai mult de întreținut decât de câștigat.
- */
+/* ------------------------------------------------------------ rapoartele */
+
 export async function getSarciniRaport(): Promise<SarcinaRaport[]> {
-  const supabase = await createClient();
+  const rows = await getDb().select().from(s.tasks);
   // Etichetele se cer pe lângă coloane: ele spun ce fel de lucrare a fost, iar
   // raportul le arată în dreptul fiecărei sarcini încheiate.
-  const { data, error } = await supabase
-    .from("tasks")
-    .select(`${COLOANE_SARCINA.join(",")},tags(id,name,color)`);
-  if (error) throw error;
-  return (data ?? []) as unknown as SarcinaRaport[];
+  const tags = await tagsByTask();
+  return as<SarcinaRaport[]>(
+    rows.map((t) => ({
+      ...Object.fromEntries(COLOANE_SARCINA.map((c) => [c, t[c as keyof typeof t]])),
+      tags: tags.get(t.id) ?? [],
+    })),
+  );
 }
 
 export async function getPetitiiRaport(): Promise<PetitieRaport[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("petitions").select(COLOANE_PETITIE.join(","));
-  if (error) throw error;
-  return (data ?? []) as unknown as PetitieRaport[];
+  const rows = await getDb().select().from(s.petitions);
+  return as<PetitieRaport[]>(
+    rows.map((p) => Object.fromEntries(COLOANE_PETITIE.map((c) => [c, p[c as keyof typeof p]]))),
+  );
 }

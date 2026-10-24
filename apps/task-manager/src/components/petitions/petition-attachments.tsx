@@ -7,19 +7,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   listAttachments,
-  recordAttachment,
+  uploadAttachment,
   deleteAttachment,
   getAttachmentUrl,
 } from "@/app/petitii/attachment-actions";
 import { openAttachment } from "./open-attachment";
-import { createClient } from "@/lib/supabase/client";
 import {
   ACCEPT_ATTR,
   KIND_LABEL,
   formatBytes,
-  storageKey,
   validateAttachment,
-  attachmentDisplayName,
   type AttachmentKind,
 } from "@/lib/attachments";
 import type { PetitionAttachment } from "@/lib/types";
@@ -34,9 +31,13 @@ const EMPTY_LABEL: Record<AttachmentKind, string> = {
 
 interface PetitionAttachmentsProps {
   petitionId: string;
-  /** Folosite pentru numele automat al fișierului: „M-535-26-Ion-Popescu.pdf". */
-  petitionNumber: string;
-  petitioner: string;
+  /**
+   * Primite încă de la fereastra petiției, dar nefolosite: numele automat al
+   * fișierului („M-535-26-Ion-Popescu.pdf") îl compune acum serverul, din
+   * petiția salvată, ca să nu depindă de ce trimite browserul.
+   */
+  petitionNumber?: string;
+  petitioner?: string;
   canEdit: boolean;
   /**
    * Se cheamă când s-a atașat sau s-a șters un fișier.
@@ -57,8 +58,6 @@ interface PetitionAttachmentsProps {
 
 export function PetitionAttachments({
   petitionId,
-  petitionNumber,
-  petitioner,
   canEdit,
   onSchimbare,
 }: PetitionAttachmentsProps) {
@@ -114,35 +113,15 @@ export function PetitionAttachments({
 
     setBusy(true);
     try {
-      const supabase = createClient();
-      const path = storageKey(petitionId, file.name);
-      // Fără `upsert`: bucketul nu are politică de `update`, iar calea e oricum unică.
-      const up = await supabase.storage
-        .from("petitions")
-        .upload(path, file, { contentType: file.type });
-      if (up.error) {
-        toast.error(up.error.message);
-        return;
-      }
-      // Numele afișat/descărcat e generat automat; indicele ține cont de toate
-      // fișierele petiției, ca două scanări să nu ajungă cu același nume.
-      const displayName = attachmentDisplayName(
-        petitionNumber,
-        petitioner,
-        file.name,
-        items.length + 1,
-      );
-      const res = await recordAttachment({
-        petitionId,
-        kind,
-        path,
-        name: displayName,
-        mime: file.type,
-        size: file.size,
-      });
+      // Fișierul trece prin server, care verifică dreptul, îl scrie în R2 și
+      // abia apoi îi face rândul; dacă rândul nu intră, scoate și obiectul.
+      // Numele afișat („M-535-26-Ion-Popescu.pdf") îl compune tot serverul.
+      const form = new FormData();
+      form.set("petitionId", petitionId);
+      form.set("kind", kind);
+      form.set("file", file);
+      const res = await uploadAttachment(form);
       if (res.error) {
-        // Rândul n-a intrat → scoatem obiectul, fără orfani.
-        await supabase.storage.from("petitions").remove([path]);
         toast.error(res.error);
         return;
       }

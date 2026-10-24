@@ -15,16 +15,12 @@
  * pentru ecran și pentru hârtie deopotrivă — vezi comentariul din
  * `lib/weekly-report.ts` despre „8 restanțe într-un loc, 1 în altul".
  *
- * Sesiunea o cere middleware-ul, care acoperă toate căile în afară de `/login`,
- * `/auth` și `/api/backup`. Ruta nu-și mai verifică o dată utilizatorul, dar
- * depinde de el: interogările merg pe sesiunea lui, prin RLS. Dacă ruta ar
- * ajunge vreodată publică, n-ar da o eroare — ar da un PDF plin de zerouri,
- * ceea ce e mult mai rău. Nu o adăuga la excepțiile din
- * `lib/supabase/middleware.ts`.
+ * Sesiunea o cere middleware-ul, iar ruta o verifică și ea. Pe Supabase, o
+ * rută ajunsă din greșeală publică dădea un PDF plin de zerouri — regulile RLS
+ * nu lăsau nimic să iasă fără sesiune. Pe D1 n-ar mai da zerouri, ci cifrele
+ * adevărate, deci verificarea de aici nu e o dublură.
  */
 
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 
 import { NextResponse, type NextRequest } from "next/server";
 import fontkit from "@pdf-lib/fontkit";
@@ -34,10 +30,12 @@ import { ro } from "date-fns/locale";
 
 import { missingWorkdays } from "@/lib/hearings";
 import { FUS, parseISODate, rangeLabelRo, toISODate, todayInChisinau } from "@/lib/periods";
-import { getCurrentProfile, getHearings, getReleases, getTransfers } from "@/lib/queries";
+import { getCurrentProfile, getCurrentUserId, getHearings, getReleases, getTransfers } from "@/lib/queries";
 import { readWeek, reportWeek, weeklyFigures } from "@/lib/weekly-report";
+import notoBold from "@/fonts/NotoSans-Bold.ttf";
+import notoRegular from "@/fonts/NotoSans-Regular.ttf";
 
-// `fs` și fontkit cer Node, nu runtime-ul Edge. Scris explicit, ca o schimbare
+// fontkit cere Node, nu runtime-ul Edge. Scris explicit, ca o schimbare
 // de configurație să nu mute ruta pe Edge fără să observe nimeni.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,29 +50,27 @@ export const dynamic = "force-dynamic";
  * deci cele 190 KB pe fișier s-ar plăti la fiecare descărcare. Licența — SIL
  * Open Font License 1.1 — stă alături, în `src/fonts/OFL.txt`.
  *
- * Calea pleacă din `process.cwd()`, iar fișierele ajung lângă ea în funcția de
- * pe Vercel prin `outputFileTracingIncludes` — vezi `next.config.mjs`, unde e
- * scris de ce nu se întâmplă asta de la sine.
+ * Fonturile vin ca import, adică în pachetul Worker-ului (regula `.ttf` din
+ * `next.config.mjs`): pe Workers nu există disc de pe care să fie citite.
  */
-const FONT_DIR = path.join(process.cwd(), "src", "fonts");
 
 /**
- * Octeții fonturilor, citiți o dată per instanță.
+ * Octeții fonturilor, decodați o dată per instanță.
  *
- * 860 KB de pe disc la fiecare descărcare ar fi risipă: fișierele nu se schimbă
- * decât la un deploy, care oricum pornește o instanță nouă. Se ține minte doar
- * materialul brut — `embedFont` se cheamă separat pentru fiecare document,
- * fiindcă fontul încorporat aparține documentului în care a intrat.
+ * Importul dă un `data:` URL în base64; decodarea a 860 KB la fiecare
+ * descărcare ar fi risipă. Se ține minte doar materialul brut — `embedFont` se
+ * cheamă separat pentru fiecare document, fiindcă fontul încorporat aparține
+ * documentului în care a intrat.
  */
-let fontBytes: { regular: Buffer; bold: Buffer } | null = null;
+let fontBytes: { regular: Uint8Array; bold: Uint8Array } | null = null;
 
-async function loadFontBytes(): Promise<{ regular: Buffer; bold: Buffer }> {
+function decodeDataUrl(url: string): Uint8Array {
+  return Buffer.from(url.slice(url.indexOf(",") + 1), "base64");
+}
+
+async function loadFontBytes(): Promise<{ regular: Uint8Array; bold: Uint8Array }> {
   if (!fontBytes) {
-    const [regular, bold] = await Promise.all([
-      readFile(path.join(FONT_DIR, "NotoSans-Regular.ttf")),
-      readFile(path.join(FONT_DIR, "NotoSans-Bold.ttf")),
-    ]);
-    fontBytes = { regular, bold };
+    fontBytes = { regular: decodeDataUrl(notoRegular), bold: decodeDataUrl(notoBold) };
   }
   return fontBytes;
 }
@@ -145,6 +141,9 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
 /* -------------------------------------------------------------------- ruta */
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  if (!(await getCurrentUserId())) {
+    return NextResponse.json({ error: "Neautentificat." }, { status: 401 });
+  }
   // O singură citire a ceasului, ca în pagină: la 23:59:59 săptămâna și zilele
   // lipsă s-ar putea calcula de-o parte și de alta a miezului nopții.
   const now = new Date();

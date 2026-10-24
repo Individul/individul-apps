@@ -3,12 +3,10 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppHeaderSchelet, AppHeaderSlot } from "@/components/layout/app-header-slot";
 import { ANTET_SESIUNE } from "@/lib/session-header";
 import "./globals.css";
-import { DOAR_CITIRE, MESAJ_DOAR_CITIRE } from "@/lib/doar-citire";
 
 /**
  * Inter — fontul celorlalte aplicații de pe dumitru.cloud.
@@ -57,8 +55,8 @@ export const metadata: Metadata = {
  * alături desenează conținutul pe loc.
  *
  * Layout-ul rădăcină nu se re-randează la navigare, deci datele antetului sunt
- * cele de la deschiderea aplicației. Nu e o scăpare: clopoțelul e abonat la
- * schimbări în timp real și se ține singur la zi, iar numele din profil se
+ * cele de la deschiderea aplicației. Nu e o scăpare: clopoțelul se
+ * verifică singur la 30 de secunde și se ține la zi, iar numele din profil se
  * împrospătează prin `router.refresh()` după salvare.
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -69,14 +67,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="ro" className={inter.variable}>
       <body>
-        {DOAR_CITIRE && (
-          <div
-            role="status"
-            className="bg-amber-100 px-4 py-2 text-center text-sm font-medium text-amber-900"
-          >
-            {MESAJ_DOAR_CITIRE}
-          </div>
-        )}
         {areSesiune && (
           <Suspense fallback={<AppHeaderSchelet />}>
             <AppHeaderSlot />
@@ -84,7 +74,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         {children}
         <Toaster richColors position="top-right" />
-        <SpeedInsights />
       </body>
     </html>
   );

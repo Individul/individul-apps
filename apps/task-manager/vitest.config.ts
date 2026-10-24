@@ -21,6 +21,9 @@ process.env.TZ = "UTC";
 // Vitest rulează doar testele unitare din src/. Testele E2E (e2e/*.spec.ts)
 // sunt Playwright și se rulează separat cu `npm run test:e2e`.
 export default defineConfig({
+  // Ca în tsconfig: modulele de date și cele de logare se importă între ele
+  // cu `@/`, iar testele lor le încarcă așa cum le încarcă și aplicația.
+  resolve: { alias: { "@": new URL("./src", import.meta.url).pathname } },
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],

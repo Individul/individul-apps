@@ -5,13 +5,11 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BACKUP_TABLES, DUMP_VERSION } from "./backup-dump";
 
-const MIGRATIONS = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "supabase",
-  "migrations",
-);
+/**
+ * Migrările D1, nu cele din `supabase/`: de la mutarea pe Cloudflare, ele
+ * spun ce tabele există în bază. Tabelele `stat_*` au rămas în Supabase.
+ */
+const MIGRATIONS = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "migrations");
 
 /**
  * `create table [if not exists] [schema.]nume`.
@@ -21,17 +19,20 @@ const MIGRATIONS = join(
  * aplicației și n-are ce căuta în copie.
  */
 const CREATE_TABLE =
-  /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:([a-z_][a-z0-9_]*)\.)?([a-z_][a-z0-9_]*)/gi;
+  /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:`?([a-z_][a-z0-9_]*)`?\.)?`?([a-z_][a-z0-9_]*)`?/gi;
 
 /**
- * Singurul tabel din migrări care **nu** intră în dump: `backup_runs` e
- * evidența copierii, nu date ale instituției — la o restaurare, istoricul
- * rulărilor n-are ce să-ți spună.
+ * Tabelele din migrări care **nu** intră în dump:
+ * - `backup_runs` e evidența copierii, nu date ale instituției — la o
+ *   restaurare, istoricul rulărilor n-are ce să-ți spună;
+ * - `users` ține amprentele parolelor, iar `sessions` amprentele sesiunilor:
+ *   un repo de copii nu e locul lor, cum nici `auth.users` nu intra în copie
+ *   pe vremea Supabase. Conturile se refac din Administrare.
  *
- * Scris aici anume, nu lăsat să lipsească pe tăcute: o excepție nescrisă nu se
- * deosebește de un tabel uitat, adică exact bugul pe care testul îl păzește.
+ * Scrise aici anume, nu lăsate să lipsească pe tăcute: o excepție nescrisă nu
+ * se deosebește de un tabel uitat, adică exact bugul pe care testul îl păzește.
  */
-const IN_AFARA_COPIEI = ["backup_runs"];
+const IN_AFARA_COPIEI = ["backup_runs", "users", "sessions"];
 
 /** Tabelele declarate în migrări, sursa adevărului despre ce există în bază. */
 function tabeleDinMigrari(): string[] {
@@ -130,8 +131,6 @@ describe("lista tabelelor din copie", () => {
       ["hearings", "profiles"],
       ["transfers", "profiles"],
       ["transfer_plans", "profiles"],
-      ["stat_reports", "profiles"],
-      ["stat_values", "stat_reports"],
       ["notifications", "profiles"],
       ["notifications", "tasks"],
       ["notifications", "petitions"],
@@ -147,7 +146,7 @@ describe("lista tabelelor din copie", () => {
   });
 
   it("modulele apărute după butonul vechi sunt în listă", () => {
-    // Bugul reparat: petițiile, ședințele, transferurile și statisticile
+    // Bugul reparat: petițiile, ședințele și transferurile
     // existau de un an în aplicație și lipseau din backup.
     expect(names).toEqual(
       expect.arrayContaining([
@@ -156,8 +155,6 @@ describe("lista tabelelor din copie", () => {
         "hearings",
         "transfers",
         "transfer_plans",
-        "stat_reports",
-        "stat_values",
         "subtasks",
         "notifications",
         "audit_log",
