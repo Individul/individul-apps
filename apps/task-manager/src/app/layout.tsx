@@ -55,8 +55,8 @@ export const metadata: Metadata = {
  * alături desenează conținutul pe loc.
  *
  * Layout-ul rădăcină nu se re-randează la navigare, deci datele antetului sunt
- * cele de la deschiderea aplicației. Nu e o scăpare: clopoțelul e abonat la
- * schimbări în timp real și se ține singur la zi, iar numele din profil se
+ * cele de la deschiderea aplicației. Nu e o scăpare: clopoțelul se
+ * verifică singur la 30 de secunde și se ține la zi, iar numele din profil se
  * împrospătează prin `router.refresh()` după salvare.
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

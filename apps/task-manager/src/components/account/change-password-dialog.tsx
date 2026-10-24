@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect, useRef } from "react";
+import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import {
@@ -33,7 +33,7 @@ interface ChangePasswordDialogProps {
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
-  const [state, formAction] = useFormState(changePassword, null);
+  const [state, formAction] = useActionState(changePassword, null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {

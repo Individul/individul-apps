@@ -15,12 +15,10 @@
  * pentru ecran și pentru hârtie deopotrivă — vezi comentariul din
  * `lib/weekly-report.ts` despre „8 restanțe într-un loc, 1 în altul".
  *
- * Sesiunea o cere middleware-ul, care acoperă toate căile în afară de `/login`,
- * `/auth` și `/api/backup`. Ruta nu-și mai verifică o dată utilizatorul, dar
- * depinde de el: interogările merg pe sesiunea lui, prin RLS. Dacă ruta ar
- * ajunge vreodată publică, n-ar da o eroare — ar da un PDF plin de zerouri,
- * ceea ce e mult mai rău. Nu o adăuga la excepțiile din
- * `lib/supabase/middleware.ts`.
+ * Sesiunea o cere middleware-ul, iar ruta o verifică și ea. Pe Supabase, o
+ * rută ajunsă din greșeală publică dădea un PDF plin de zerouri — regulile RLS
+ * nu lăsau nimic să iasă fără sesiune. Pe D1 n-ar mai da zerouri, ci cifrele
+ * adevărate, deci verificarea de aici nu e o dublură.
  */
 
 
@@ -32,7 +30,7 @@ import { ro } from "date-fns/locale";
 
 import { missingWorkdays } from "@/lib/hearings";
 import { FUS, parseISODate, rangeLabelRo, toISODate, todayInChisinau } from "@/lib/periods";
-import { getCurrentProfile, getHearings, getReleases, getTransfers } from "@/lib/queries";
+import { getCurrentProfile, getCurrentUserId, getHearings, getReleases, getTransfers } from "@/lib/queries";
 import { readWeek, reportWeek, weeklyFigures } from "@/lib/weekly-report";
 import notoBold from "@/fonts/NotoSans-Bold.ttf";
 import notoRegular from "@/fonts/NotoSans-Regular.ttf";
@@ -143,6 +141,9 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
 /* -------------------------------------------------------------------- ruta */
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  if (!(await getCurrentUserId())) {
+    return NextResponse.json({ error: "Neautentificat." }, { status: 401 });
+  }
   // O singură citire a ceasului, ca în pagină: la 23:59:59 săptămâna și zilele
   // lipsă s-ar putea calcula de-o parte și de alta a miezului nopții.
   const now = new Date();

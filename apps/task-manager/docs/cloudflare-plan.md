@@ -202,3 +202,19 @@ Utilizatorul e logat pe Cloudflare, Vercel și Supabase în Chrome și a cerut c
   - Fișierele: 411 (426,8 MB) în R2, fiecare verificat prin MD5, sub aceeași cheie ca `petition_attachments.path`.
   - Scripturile, locale și necomise, în `apps/task-manager/scripts/`: `import-d1.mjs [--local] [--cu-parole]`, `verifica-import.mjs [--local]`, `sync-fisiere-r2.mjs`. Cer `.env.local` din depozitul principal și `CLOUDFLARE_API_TOKEN` în mediu; nu tipăresc date.
   - Testele cu D1 adevărat folosesc `getPlatformProxy` din wrangler (`src/lib/db/test-db.ts`), în memorie.
+- **Etapele 3–7 — gata în cod, verificate local (24.10.2026).** Etapele 3 și 4 se publică împreună: cu logarea proprie, regulile RLS din Supabase nu-l mai recunosc pe om, deci citirile din Supabase s-ar opri.
+  - **Logarea:** `src/lib/auth/` — bcrypt (`bcryptjs`), sesiuni de 30 de zile cu amprenta SHA-256 a jetonului în D1, prelungite de middleware, plus limita de 10 încercări pe minut pe IP (legătura `LOGIN_LIMIT`). Amprentele celor 5 conturi au fost importate prin funcția temporară `public.export_auth_hashes()`. Funcția a fost **ștearsă imediat după**, iar ștergerea e verificată: `PGRST202` cu cheia de serviciu, absentă din lista RPC.
+  - **Accesul și auditul:** `src/lib/acl.ts` și `src/lib/audit.ts`. Fiecare modul are logica în `src/lib/data/<modul>.ts`, cu `(db, actor)` ca parametri, iar acțiunile din `app/**/actions.ts` sunt învelișuri subțiri. Fiecare acțiune refuză fără sesiune; e necesar, fiindcă Next permite chemarea oricărei acțiuni printr-un POST la orice pagină, inclusiv `/login`.
+  - **Citirile:** `src/lib/queries.ts` ordonează textele cu ICU `en-US`, ca colaționarea bazei Supabase (`en_US.UTF-8`, ICU).
+    - Comparate cu interogările vechi pe aceleași date: 17 din 21 ies identic. Celelalte 4 au aceleași rânduri și diferă doar la egalitate (petiții cu același termen, planuri cu aceeași zi, istoric în aceeași clipă), unde ordinea din Postgres era arbitrară.
+    - Importul scrie tabelele în ordinea fizică din Postgres: etichetele unei sarcini și atașamentele ies în ordinea în care au fost puse.
+  - **Fișierele:** ruta `GET /fisiere/<cheie>` verifică sesiunea și rândul din `petition_attachments`. Încărcarea trece prin server.
+  - **Notificările:** clopoțelul verifică la 30 de secunde și la revenirea în fereastră.
+  - **Backup-ul:** `src/lib/backup-run.ts`, chemat de handlerul `scheduled` din `worker.ts` și de butonul „Rulează copia acum”.
+    - Cu `BACKUP_MODE = "proba"`, dumpul se scrie sub `proba-cloudflare/`, fișierele doar se numără și cronul tace, ca să nu suprascrie copia de pe Vercel.
+    - La trecere: `BACKUP_MODE = "productie"`.
+    - Dumpul nu mai conține `stat_*`, `users` și `sessions`.
+    - Jetonul: `npx wrangler secret put BACKUP_GITHUB_TOKEN` (îl pune utilizatorul).
+  - **Dependențe:** `@supabase/ssr` scos; `@supabase/supabase-js` rămâne doar ca dependență de dezvoltare, pentru scripturile locale de import (`scripts/supabase-dump.ts` păstrează dumpul vechi din Supabase).
+  - **Teste:** 607, dintre care 107 noi pe D1 adevărat.
+  - **Data intrărilor din jurnalul de noutăți** se mută pe ziua trecerii.

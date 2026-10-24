@@ -38,6 +38,7 @@ export default function LoginPage() {
               type="text"
               autoComplete="username"
               placeholder="email@exemplu.com sau username"
+              defaultValue={state?.identifier}
               required
             />
           </div>

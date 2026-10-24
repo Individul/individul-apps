@@ -166,7 +166,7 @@ describe("starea copiei, pentru pagina de administrare", () => {
     expect(s.lastSuccessAt).toBeNull();
     expect(s.daysSince).toBeNull();
     expect(s.filesPending).toBe(0);
-    expect(s.hint).toContain("Cron Jobs");
+    expect(s.hint).toContain("Triggers");
   });
 
   it("rulări fără nicio reușită trimit la jurnalul rulării", () => {
@@ -174,7 +174,7 @@ describe("starea copiei, pentru pagina de administrare", () => {
     expect(s.kind).toBe("nicio-reusita");
     expect(s.level).toBe("warn");
     expect(s.error).toBe("GitHub a răspuns 401.");
-    expect(s.hint).toContain("/api/backup");
+    expect(s.hint).toContain("Observability");
   });
 
   it("o copie de azi-noapte nu scoate nicio bandă", () => {
@@ -195,7 +195,7 @@ describe("starea copiei, pentru pagina de administrare", () => {
       expect(s.kind).toBe("oprit");
       expect(s.level).toBe("warn");
       expect(s.daysSince).toBe(5);
-      expect(s.hint).toContain("Cron Jobs");
+      expect(s.hint).toContain("Triggers");
     });
 
     it("ultima rulare a eșuat — programarea pornește, rularea cade", () => {
@@ -205,7 +205,7 @@ describe("starea copiei, pentru pagina de administrare", () => {
       );
       expect(s.kind).toBe("esuat");
       expect(s.level).toBe("warn");
-      expect(s.hint).toContain("/api/backup");
+      expect(s.hint).toContain("Observability");
     });
 
     it("cele două stări nu trimit omul în același loc", () => {

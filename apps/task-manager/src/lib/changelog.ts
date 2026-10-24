@@ -23,6 +23,15 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
+    text: "Clopoțelul de notificări se uită acum singur după noutăți la fiecare jumătate de minut și ori de câte ori te întorci în fereastra aplicației. O notificare nouă poate apărea deci cu până la 30 de secunde întârziere, iar anunțul din colțul ecranului vine odată cu ea.",
+  },
+  {
+    date: "2026-10-24",
+    doarAdmin: true,
+    text: "În Administrare, la „Backup & restaurare”, a apărut butonul „Rulează copia acum”: face pe loc aceeași copie ca cea de noapte și spune la final câte rânduri și fișiere a scris. Statisticile nu mai intră în copie — au plecat în aplicația lor, iar datele lor rămân în copiile de dinainte.",
+  },
+  {
+    date: "2026-10-24",
     text: "La „Ședințe”, sub cifrele perioadei, intervalul se arată din nou corect — „1 octombrie 2026 – 31 octombrie 2026”, nu până la 1 noiembrie. Ziua de sfârșit se muta cu una înainte din cauza diferenței de oră dintre server și Chișinău, iar odată cu ea se putea număra o zi lucrătoare lipsă în plus.",
   },
   {

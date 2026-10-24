@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, BellRing, BellOff } from "lucide-react";
@@ -15,11 +15,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
 import * as desktop from "@/lib/desktop-notifications";
 import {
   markAllNotificationsRead,
   markNotificationRead,
+  pollNotifications,
 } from "@/app/notifications/actions";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/lib/types";
@@ -58,30 +58,63 @@ export function NotificationBell({
     });
   }, []);
 
+  /**
+   * Notificările noi, verificate la 30 de secunde și la revenirea în fereastră.
+   *
+   * Pe Supabase sosea fiecare pe loc, printr-un abonament în timp real; pe
+   * Cloudflare nu există un asemenea canal, iar o întârziere de jumătate de
+   * minut e neglijabilă pentru ce anunță clopoțelul. Reperul e cea mai nouă
+   * notificare deja văzută — clipa scrisă de server, nu ceasul browserului,
+   * care poate merge înainte sau în urmă.
+   *
+   * Anunțul de sistem apare doar pentru ce a sosit de la verificarea de
+   * dinainte. La prima verificare fără reper (clopoțel gol la deschidere)
+   * nimic nu e „nou": e doar ce exista deja.
+   */
+  const reper = useRef<string | null>(initialItems[0]?.created_at ?? null);
+  const amorsat = useRef(initialItems.length > 0);
+
   useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const n = payload.new as Notification;
-          setItems((prev) => [n, ...prev].slice(0, 20));
-          setUnread((u) => u + 1);
-          // Anunțul de sistem se decide singur dacă apare: tace când
-          // utilizatorul e chiar pe aplicație sau n-a cerut anunțuri.
-          desktop.show(n, (href) => router.push(href));
-        },
-      )
-      .subscribe();
+    let oprit = false;
+    let inCurs = false;
+
+    const verifica = async () => {
+      if (inCurs) return;
+      inCurs = true;
+      try {
+        const res = await pollNotifications(reper.current);
+        if (oprit || "error" in res) return;
+        if (res.fresh.length > 0) {
+          reper.current = res.fresh[0].created_at;
+          if (amorsat.current) {
+            // Cele mai vechi întâi, ca anunțurile să apară în ordinea sosirii.
+            for (const n of [...res.fresh].reverse()) desktop.show(n, (href) => router.push(href));
+          }
+          setItems((prev) => {
+            const vazute = new Set(prev.map((n) => n.id));
+            return [...res.fresh.filter((n) => !vazute.has(n.id)), ...prev].slice(0, 20);
+          });
+        }
+        amorsat.current = true;
+        setUnread(res.unread);
+      } catch {
+        // O verificare ratată (rețea, repornire) se reia peste 30 de secunde.
+      } finally {
+        inCurs = false;
+      }
+    };
+
+    const interval = setInterval(verifica, 30_000);
+    const laRevenire = () => {
+      if (document.visibilityState === "visible") void verifica();
+    };
+    document.addEventListener("visibilitychange", laRevenire);
+    window.addEventListener("focus", laRevenire);
     return () => {
-      supabase.removeChannel(channel);
+      oprit = true;
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", laRevenire);
+      window.removeEventListener("focus", laRevenire);
     };
   }, [userId, router]);
 

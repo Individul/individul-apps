@@ -6,6 +6,7 @@ import { getCurrentProfile, getProfiles, getAuditLog, getLastBackupRun } from "@
 import { BackupStatus } from "@/components/admin/backup-status";
 import { UserRoleTable } from "@/components/admin/user-role-table";
 import { RestoreBackup } from "@/components/admin/restore-backup";
+import { RunBackup } from "@/components/admin/run-backup";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 import { AuditTable } from "@/components/admin/audit-table";
 import { AuditTabs } from "@/components/admin/audit-tabs";
@@ -75,7 +76,7 @@ export default async function AdminPage(props: {
           <h2 className="text-lg font-semibold">Backup &amp; restaurare</h2>
           <p className="text-sm text-muted-foreground">
             Descarcă baza de date întreagă (sarcini, petiții, ședințe, transferuri,
-            statistici, audit) ca fișier JSON. Fără conturi și fără fișierele atașate —
+            audit) ca fișier JSON. Fără conturi și fără fișierele atașate —
             pe acelea le duce copia automată de noapte, împreună cu notificările
             tuturor. Restaurarea automată acoperă doar formatul vechi; pentru un fișier
             de azi, vezi procedura din README.
@@ -86,6 +87,7 @@ export default async function AdminPage(props: {
                 <Download className="mr-2 h-4 w-4" /> Descarcă backup (JSON)
               </Button>
             </a>
+            <RunBackup />
             <RestoreBackup />
           </div>
         </section>

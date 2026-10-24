@@ -5,7 +5,7 @@
  *
  * Motivul e mai tare decât igiena obișnuită: mesajele de eroare de aici ajung în
  * `backup_runs.error`, de unde panoul de pe `/admin` le pune pe ecran, iar
- * răspunsul rutei de cron le duce în jurnalul din Vercel. Un token scăpat
+ * evidența rulărilor le duce în jurnalul Worker-ului și pe pagina de administrare. Un token scăpat
  * într-un mesaj ar ajunge deodată afișat în pagină și scris în jurnale.
  *
  * Cum se ține regula, ca să poată fi verificată prin citire, nu prin încredere:
@@ -44,7 +44,8 @@ interface PutBody {
 }
 
 const UNDE_SE_SETEAZA =
-  ` Se setează în Vercel → Settings → Environment Variables (vezi README, secțiunea „Copie de siguranță").`;
+  ` Depozitul se scrie în wrangler.toml ([vars]); jetonul e secret al Worker-ului: ` +
+  `npx wrangler secret put BACKUP_GITHUB_TOKEN.`;
 
 /**
  * Ultima plasă înainte ca un text să iasă din modul.
@@ -91,9 +92,9 @@ function loadConfig(): Config | string {
   const repo = parseRepo(process.env.GITHUB_BACKUP_REPO);
   if (typeof repo === "string") return repo;
 
-  const token = (process.env.GITHUB_BACKUP_TOKEN ?? "").trim();
+  const token = (process.env.BACKUP_GITHUB_TOKEN ?? "").trim();
   if (!token) {
-    return `GITHUB_BACKUP_TOKEN nu e configurat, deci copia nu poate scrie în repo.${UNDE_SE_SETEAZA}`;
+    return `BACKUP_GITHUB_TOKEN nu e configurat, deci copia nu poate scrie în repo.${UNDE_SE_SETEAZA}`;
   }
 
   return { ...repo, token };
@@ -166,7 +167,7 @@ async function describe(res: Response, action: string, path: string): Promise<st
     case 401:
       return (
         `GitHub a refuzat autentificarea la ${action} „${path}". Tokenul e greșit sau ` +
-        `expirat — înlocuiește GITHUB_BACKUP_TOKEN în Vercel.${spune}`
+        `expirat — înlocuiește-l: npx wrangler secret put BACKUP_GITHUB_TOKEN.${spune}`
       );
     case 403:
       return (
