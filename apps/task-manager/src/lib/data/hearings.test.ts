@@ -5,7 +5,7 @@ import { createTestDb } from "@/lib/db/test-db";
 import type { Db } from "@/lib/db";
 import * as s from "@/lib/db/schema";
 import * as h from "./hearings";
-import { ADMIN, ANA, BOB, seedPeople } from "./test-helpers";
+import { ANA, BOB, seedPeople } from "./test-helpers";
 
 let db: Db;
 let dispose: () => Promise<void>;
@@ -60,16 +60,5 @@ describe("ședințele", () => {
 
   it("refuză cifrele negative", async () => {
     expect((await h.saveHearing(db, ANA, zi({ tc_petrecute: "-1" }))).error).toMatch(/negativ/);
-  });
-
-  it("doar adminul șterge ziua", async () => {
-    await h.saveHearing(db, ANA, zi());
-    expect(await h.deleteHearing(db, ANA, "2026-10-01")).toEqual({
-      error: "Ziua nu există sau nu ai dreptul s-o ștergi.",
-    });
-    expect(await h.deleteHearing(db, null, "2026-10-01")).toEqual({ error: "Neautentificat." });
-    expect(await h.deleteHearing(db, ADMIN, "2026-10-01")).toEqual({ success: true });
-    expect(await db.select().from(s.hearings)).toEqual([]);
-    expect((await audit()).at(-1)?.action).toBe("DELETE");
   });
 });

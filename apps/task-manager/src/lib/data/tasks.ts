@@ -22,12 +22,15 @@ import {
   canUpdateComment,
   canUpdateTask,
   canWriteSubtasks,
+  canWriteTags,
   type Actor,
 } from "@/lib/acl";
 import {
   auditContext,
   auditInsert,
   commentAudit,
+  inBucati,
+  RANDURI_PE_INSTRUCTIUNE,
   subtaskAudit,
   tagAudit,
   taskAudit,
@@ -41,7 +44,7 @@ import { hasChanges } from "@/lib/changes";
 import { notify } from "@/lib/notify";
 import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { isDispatchStep, isResponseStep, templateStepsForTags } from "@/lib/subtask-templates";
-import { namesOf, runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, namesOf, RAND_DISPARUT, runBatch } from "./common";
 
 export const STATUS_LABEL = {
   todo: "De făcut",
@@ -153,8 +156,10 @@ function subtaskInserts(db: Db, ctx: AuditContext, rows: ReturnType<typeof templ
   const at = ctx.at;
   const full = rows.map((r) => ({ ...r, done_at: null, created_at: at }));
   return [
-    db.insert(subtasks).values(full),
-    auditInsert(db, ctx, full.map((r) => subtaskAudit("INSERT", null, r))),
+    // În bucăți, ca jurnalul: D1 primește cel mult 100 de parametri pe
+    // instrucțiune, iar un rând de subsarcină are 7.
+    ...inBucati(full, RANDURI_PE_INSTRUCTIUNE).map((parte) => db.insert(subtasks).values(parte)),
+    ...auditInsert(db, ctx, full.map((r) => subtaskAudit("INSERT", null, r))),
   ];
 }
 
@@ -298,10 +303,13 @@ export async function deleteTask(db: Db, me: Actor | null, id: string): Promise<
     ...links.map((l) => taskTagAudit("DELETE", l)),
   ];
 
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(tasks).where(eq(tasks.id, id)),
-    auditInsert(db, ctx, [...cascaded, taskAudit("DELETE", prev, null, () => null)]),
-  ]);
+    ctx,
+    [...cascaded, taskAudit("DELETE", prev, null, () => null)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
 
   await notify(db, me, "deleted", {
     id,
@@ -363,7 +371,7 @@ export async function createTag(db: Db, me: Actor | null, name: string, color: s
   if (!trimmed) return { error: "Numele etichetei e obligatoriu." };
   if (!me) return { error: NEAUTENTIFICAT };
   // Doar adminul poate crea etichete (regula „tags insert admin").
-  if (!me.isAdmin) return { error: "Doar adminul poate crea etichete." };
+  if (!canWriteTags(me)) return { error: "Doar adminul poate crea etichete." };
 
   const tag = { id: crypto.randomUUID(), name: trimmed, color };
   try {
@@ -387,16 +395,19 @@ export async function updateTag(
   const trimmed = name.trim();
   if (!trimmed) return { error: "Numele etichetei e obligatoriu." };
   if (!me) return { error: NEAUTENTIFICAT };
-  if (!me.isAdmin) return { error: "Doar adminul poate modifica etichete." };
+  if (!canWriteTags(me)) return { error: "Doar adminul poate modifica etichete." };
 
   const prev = await db.select().from(tags).where(eq(tags.id, id)).get();
   if (!prev) return { error: "Etichetă inexistentă sau fără permisiune." };
   const next = { ...prev, name: trimmed, color };
   try {
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db.update(tags).set({ name: trimmed, color }).where(eq(tags.id, id)),
-      auditInsert(db, auditContext(me), [tagAudit("UPDATE", next)]),
-    ]);
+      auditContext(me),
+      [tagAudit("UPDATE", next)],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
     if (isUniqueViolation(e)) return { error: "Există deja o etichetă cu acest nume." };
     return { error: e instanceof Error ? e.message : "Eroare la salvarea etichetei." };
@@ -406,17 +417,20 @@ export async function updateTag(
 
 export async function deleteTag(db: Db, me: Actor | null, id: string): Promise<ActionResult> {
   if (!me) return { error: NEAUTENTIFICAT };
-  if (!me.isAdmin) return { error: "Doar adminul poate șterge etichete." };
+  if (!canWriteTags(me)) return { error: "Doar adminul poate șterge etichete." };
 
   const prev = await db.select().from(tags).where(eq(tags.id, id)).get();
   if (!prev) return { error: "Etichetă inexistentă sau fără permisiune." };
   // task_tags are ON DELETE CASCADE → eticheta se elimină automat de pe sarcini,
   // iar fiecare legătură ruptă intră în jurnal, cum o trecea și Postgres.
   const links = await db.select().from(taskTags).where(eq(taskTags.tag_id, id));
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(tags).where(eq(tags.id, id)),
-    auditInsert(db, auditContext(me), [...links.map((l) => taskTagAudit("DELETE", l)), tagAudit("DELETE", prev)]),
-  ]);
+    auditContext(me),
+    [...links.map((l) => taskTagAudit("DELETE", l)), tagAudit("DELETE", prev)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }
 
@@ -442,10 +456,13 @@ export async function detachTag(db: Db, me: Actor | null, taskId: string, tagId:
   const where = and(eq(taskTags.task_id, taskId), eq(taskTags.tag_id, tagId));
   const existing = await db.select().from(taskTags).where(where);
   if (existing.length === 0) return { success: true };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(taskTags).where(where),
-    auditInsert(db, auditContext(me), existing.map((l) => taskTagAudit("DELETE", l))),
-  ]);
+    auditContext(me),
+    existing.map((l) => taskTagAudit("DELETE", l)),
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }
 
@@ -482,10 +499,13 @@ export async function editComment(db: Db, me: Actor | null, commentId: string, b
   if (!me) return { error: NEAUTENTIFICAT };
   const prev = await db.select().from(comments).where(eq(comments.id, commentId)).get();
   if (!prev || !canUpdateComment(me, prev)) return { error: "Comentariu inexistent sau fără permisiune." };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.update(comments).set({ body: trimmed }).where(eq(comments.id, commentId)),
-    auditInsert(db, auditContext(me), [commentAudit("UPDATE", prev)]),
-  ]);
+    auditContext(me),
+    [commentAudit("UPDATE", prev)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }
 
@@ -493,10 +513,13 @@ export async function deleteComment(db: Db, me: Actor | null, commentId: string)
   if (!me) return { error: NEAUTENTIFICAT };
   const prev = await db.select().from(comments).where(eq(comments.id, commentId)).get();
   if (!prev || !canDeleteCommentRow(me, prev)) return { error: "Comentariu inexistent sau fără permisiune." };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(comments).where(eq(comments.id, commentId)),
-    auditInsert(db, auditContext(me), [commentAudit("DELETE", prev)]),
-  ]);
+    auditContext(me),
+    [commentAudit("DELETE", prev)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }
 
@@ -568,10 +591,13 @@ export async function deleteSubtask(db: Db, me: Actor | null, id: string): Promi
   if (!prev || !task || !canWriteSubtasks(me, task)) {
     return { error: "Pasul nu mai există sau nu ai dreptul să-l ștergi." };
   }
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(subtasks).where(eq(subtasks.id, id)),
-    auditInsert(db, auditContext(me), [subtaskAudit("DELETE", prev, null)]),
-  ]);
+    auditContext(me),
+    [subtaskAudit("DELETE", prev, null)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return {};
 }
 

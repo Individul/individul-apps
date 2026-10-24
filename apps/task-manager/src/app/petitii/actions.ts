@@ -13,6 +13,7 @@ import { getActor } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 import * as data from "@/lib/data/petitions";
 import { getFileStore } from "@/lib/storage";
+import { sigur } from "@/lib/sigur";
 
 export type { PetitionInput } from "@/lib/data/petitions";
 
@@ -27,25 +28,25 @@ export async function createPetition(
   numberPrefix: string,
   input: data.PetitionInput,
 ): Promise<data.CreatePetitionResult> {
-  const res = await data.createPetition(getDb(), await getActor(), numberPrefix, input);
+  const res = await sigur(async () => data.createPetition(getDb(), await getActor(), numberPrefix, input));
   if (res.success) refresh();
   return res;
 }
 
 export async function updatePetition(id: string, number: string, input: data.PetitionInput): Promise<Result> {
-  const res = await data.updatePetition(getDb(), await getActor(), id, number, input);
+  const res = await sigur(async () => data.updatePetition(getDb(), await getActor(), id, number, input));
   if (res.success) refresh();
   return res;
 }
 
 export async function deletePetition(id: string): Promise<Result> {
-  const res = await data.deletePetition(getDb(), getFileStore(), await getActor(), id);
+  const res = await sigur(async () => data.deletePetition(getDb(), getFileStore(), await getActor(), id));
   if (res.success) refresh();
   return res;
 }
 
 export async function finalizePetition(id: string): Promise<Result> {
-  const res = await data.finalizePetition(getDb(), await getActor(), id);
+  const res = await sigur(async () => data.finalizePetition(getDb(), await getActor(), id));
   if (res.success) refresh();
   return res;
 }

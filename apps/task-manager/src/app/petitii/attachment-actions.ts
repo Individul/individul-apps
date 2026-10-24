@@ -14,6 +14,7 @@ import * as data from "@/lib/data/attachments";
 import { getFileStore } from "@/lib/storage";
 import type { AttachmentKind } from "@/lib/attachments";
 import type { PetitionAttachment } from "@/lib/types";
+import { sigur } from "@/lib/sigur";
 
 type Result = { error?: string; success?: boolean };
 
@@ -25,17 +26,19 @@ export async function listAttachments(petitionId: string): Promise<PetitionAttac
 export async function uploadAttachment(form: FormData): Promise<Result> {
   const file = form.get("file");
   if (!(file instanceof File)) return { error: "Niciun fișier primit." };
-  const res = await data.uploadAttachment(getDb(), getFileStore(), await getActor(), {
-    petitionId: String(form.get("petitionId") ?? ""),
-    kind: String(form.get("kind") ?? "") as AttachmentKind,
-    file,
-  });
+  const res = await sigur(async () =>
+    data.uploadAttachment(getDb(), getFileStore(), await getActor(), {
+      petitionId: String(form.get("petitionId") ?? ""),
+      kind: String(form.get("kind") ?? "") as AttachmentKind,
+      file,
+    }),
+  );
   if (res.success) revalidatePath("/petitii");
   return res;
 }
 
 export async function deleteAttachment(id: string): Promise<Result> {
-  const res = await data.deleteAttachment(getDb(), getFileStore(), await getActor(), id);
+  const res = await sigur(async () => data.deleteAttachment(getDb(), getFileStore(), await getActor(), id));
   if (res.success) revalidatePath("/petitii");
   return res;
 }

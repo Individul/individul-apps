@@ -22,7 +22,7 @@ import { attachmentDisplayName, storageKey, validateAttachment, type AttachmentK
 import type { Db } from "@/lib/db";
 import { petitionAttachments, petitions } from "@/lib/db/schema";
 import type { PetitionAttachment } from "@/lib/types";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 /** Ce folosim din R2; un `R2Bucket` îl îndeplinește întocmai. */
 export interface FileStore {
@@ -128,10 +128,13 @@ export async function deleteAttachment(
   const petition = await db.select().from(petitions).where(eq(petitions.id, row.petition_id)).get();
   if (!petition || !canModifyPetitionFiles(me, petition)) return { error: FARA_DREPT_FISIER };
 
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(petitionAttachments).where(eq(petitionAttachments.id, id)),
-    auditInsert(db, auditContext(me), [attachmentAudit("DELETE", row, petition.number)]),
-  ]);
+    auditContext(me),
+    [attachmentAudit("DELETE", row, petition.number)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   // Rândul a dispărut → scoatem și obiectul, ca să nu rămână orfan.
   await removeObjects(files, [row.path]);
   return { success: true };

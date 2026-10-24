@@ -8,19 +8,14 @@ import { getActor } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 import * as data from "@/lib/data/hearings";
 import type { HearingInput } from "@/lib/data/hearings";
+import { sigur } from "@/lib/sigur";
 
 export type { HearingInput } from "@/lib/data/hearings";
 
 type Result = { error?: string; success?: boolean };
 
 export async function saveHearing(input: HearingInput): Promise<Result> {
-  const res = await data.saveHearing(getDb(), await getActor(), input);
-  if (res.success) revalidatePath("/sedinte");
-  return res;
-}
-
-export async function deleteHearing(date: string): Promise<Result> {
-  const res = await data.deleteHearing(getDb(), await getActor(), date);
+  const res = await sigur(async () => data.saveHearing(getDb(), await getActor(), input));
   if (res.success) revalidatePath("/sedinte");
   return res;
 }

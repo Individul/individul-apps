@@ -120,13 +120,18 @@ export function PetitionAttachments({
       form.set("petitionId", petitionId);
       form.set("kind", kind);
       form.set("file", file);
-      const res = await uploadAttachment(form);
+      // Cererea poate să nu ajungă la capăt: rețea căzută, fișier respins de
+      // server înainte de acțiune, filă rămasă pe o versiune veche. Fără mesaj,
+      // butonul revenea la normal și omul credea că fișierul a urcat.
+      const res = await uploadAttachment(form).catch(() => ({
+        error: "Fișierul n-a putut fi urcat. Verifică legătura și încearcă din nou; dacă nu merge, reîncarcă pagina.",
+      }));
       if (res.error) {
         toast.error(res.error);
         return;
       }
       toast.success("Fișier atașat");
-      await reload();
+      await reload().catch(() => {});
       onSchimbare?.();
     } finally {
       setBusy(false);
@@ -154,6 +159,8 @@ export function PetitionAttachments({
       // Content-Disposition e „attachment", deci navigarea declanșează salvarea
       // fără să părăsim pagina.
       window.location.href = url;
+    } catch {
+      toast.error("Nu s-a putut descărca fișierul. Încearcă din nou; dacă nu merge, reîncarcă pagina.");
     } finally {
       setBusy(false);
     }
@@ -163,13 +170,15 @@ export function PetitionAttachments({
     if (!window.confirm("Ștergi acest fișier?")) return;
     setBusy(true);
     try {
-      const res = await deleteAttachment(a.id);
+      const res = await deleteAttachment(a.id).catch(() => ({
+        error: "Fișierul n-a putut fi șters. Încearcă din nou; dacă nu merge, reîncarcă pagina.",
+      }));
       if (res.error) {
         toast.error(res.error);
         return;
       }
       toast.success("Fișier șters");
-      await reload();
+      await reload().catch(() => {});
       onSchimbare?.();
     } finally {
       setBusy(false);

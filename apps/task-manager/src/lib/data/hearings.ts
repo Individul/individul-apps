@@ -10,12 +10,12 @@
 
 import { eq } from "drizzle-orm";
 
-import { NEAUTENTIFICAT, canDeleteRegistry, canWriteRegistry, type Actor } from "@/lib/acl";
+import { NEAUTENTIFICAT, canWriteRegistry, type Actor } from "@/lib/acl";
 import { auditContext, auditInsert, hearingAudit } from "@/lib/audit";
 import { isUniqueViolation, type Db } from "@/lib/db";
 import { hearings } from "@/lib/db/schema";
 import type { HearingCounts } from "@/lib/hearings";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 /** Cifrele vin din formular ca text; negativul și non-numericul cad aici. */
 function toCount(value: unknown, label: string): number | string {
@@ -72,13 +72,16 @@ export async function saveHearing(db: Db, me: Actor | null, input: HearingInput)
 
   if (existing) {
     const next = { ...existing, ...values, updated_at: ctx.at };
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db
         .update(hearings)
         .set({ ...values, updated_at: ctx.at })
         .where(eq(hearings.id, existing.id)),
-      auditInsert(db, ctx, [hearingAudit("UPDATE", existing, next)]),
-    ]);
+      ctx,
+      [hearingAudit("UPDATE", existing, next)],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } else {
     const row = {
       id: crypto.randomUUID(),
@@ -98,17 +101,5 @@ export async function saveHearing(db: Db, me: Actor | null, input: HearingInput)
       return { error: e instanceof Error ? e.message : "Eroare la salvarea zilei." };
     }
   }
-  return { success: true };
-}
-
-export async function deleteHearing(db: Db, me: Actor | null, date: string): Promise<ActionResult> {
-  if (!me) return { error: NEAUTENTIFICAT };
-  const prev = await db.select().from(hearings).where(eq(hearings.session_date, date)).get();
-  // Ca RLS: membrului i se pare că ziua nu există, fiindcă nu o poate atinge.
-  if (!prev || !canDeleteRegistry(me)) return { error: "Ziua nu există sau nu ai dreptul s-o ștergi." };
-  await runBatch(db, [
-    db.delete(hearings).where(eq(hearings.id, prev.id)),
-    auditInsert(db, auditContext(me), [hearingAudit("DELETE", prev, null)]),
-  ]);
   return { success: true };
 }

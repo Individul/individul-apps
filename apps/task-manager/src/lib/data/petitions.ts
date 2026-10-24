@@ -29,7 +29,7 @@ import { notifyPetition } from "@/lib/notify-petition";
 import { todayInChisinau, toISODate } from "@/lib/periods";
 import type { PetitionStatus, PetitionerType } from "@/lib/types";
 import { STATUS_LABEL } from "@/components/petitions/meta";
-import { namesOf, runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, namesOf, RAND_DISPARUT, runBatch } from "./common";
 import { removeObjects, type FileStore } from "./attachments";
 
 /** La creare întoarcem și identitatea rândului, ca dialogul să treacă direct
@@ -161,10 +161,13 @@ export async function updatePetition(
 
   const nameOf = await namesOf(db, [prev.assignee_id, next.assignee_id]);
   try {
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db.update(petitions).set(writable(next)).where(eq(petitions.id, id)),
-      auditInsert(db, ctx, [petitionAudit("UPDATE", prev, next, nameOf)]),
-    ]);
+      ctx,
+      [petitionAudit("UPDATE", prev, next, nameOf)],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
     if (isUniqueViolation(e)) return { error: NUMAR_DUBLU };
     return { error: e instanceof Error ? e.message : "Eroare la salvarea petiției." };
@@ -200,13 +203,16 @@ export async function deletePetition(
     .from(petitionAttachments)
     .where(eq(petitionAttachments.petition_id, id));
   const ctx = auditContext(me);
-  await runBatch(db, [
-    db.delete(petitions).where(eq(petitions.id, id)),
-    auditInsert(db, ctx, [
-      ...attachments.map((a) => attachmentAudit("DELETE", a, prev.number)),
-      petitionAudit("DELETE", prev, null, () => null),
-    ]),
+  const atins = await modificaCuJurnal(db, db.delete(petitions).where(eq(petitions.id, id)), ctx, [
+    // Triggerul din Postgres scria aici `number: null`: la ștergerea în
+    // cascadă petiția nu mai exista când căuta numărul. Aici numărul e știut
+    // dinainte și se păstrează, ca jurnalul să spună al cui era fișierul.
+    // Nimic nu citește valoarea nulă, deci diferența e doar un câștig.
+    ...attachments.map((a) => attachmentAudit("DELETE", a, prev.number)),
+    petitionAudit("DELETE", prev, null, () => null),
   ]);
+  // Ștearsă de altcineva în aceeași clipă: fișierele le-a scos deja acela.
+  if (!atins) return { error: RAND_DISPARUT };
   // Rândurile au plecat în cascadă; obiectele din R2 nu pleacă singure. În
   // Supabase rămâneau orfane în bucket — aici se scot, după ce baza a confirmat.
   await removeObjects(files, attachments.map((a) => a.path));
@@ -237,10 +243,13 @@ export async function finalizePetition(db: Db, me: Actor | null, id: string): Pr
     response_date: prev.response_date ?? today(),
     updated_at: ctx.at,
   };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.update(petitions).set(writable(next)).where(eq(petitions.id, id)),
-    auditInsert(db, ctx, [petitionAudit("UPDATE", prev, next, () => null)]),
-  ]);
+    ctx,
+    [petitionAudit("UPDATE", prev, next, () => null)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
 
   await notifyPetition(
     db,

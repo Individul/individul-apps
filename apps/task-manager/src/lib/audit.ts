@@ -16,6 +16,8 @@
  *   era aceeași în toată tranzacția.
  */
 
+import { sql } from "drizzle-orm";
+
 import type { Actor } from "@/lib/acl";
 import type { Db } from "@/lib/db";
 import { auditLog } from "@/lib/db/schema";
@@ -190,11 +192,6 @@ export function transferPlanAudit(op: AuditOp, oldRow: Row | null, newRow: Row |
   return { action: op, entity: "transfer_plans", entity_id: rec.id as string, details: det };
 }
 
-/** `record_obligation_audit` (0023), ramura `obligations`. */
-export function obligationAudit(op: AuditOp, rec: Row): AuditDraft {
-  return { action: op, entity: "obligations", entity_id: rec.id as string, details: { title: rec.title } };
-}
-
 /** `record_obligation_audit`, ramura `obligation_completions` (doar insert și delete). */
 export function completionAudit(op: "INSERT" | "DELETE", rec: Row, obligationTitle: string | null): AuditDraft {
   return {
@@ -246,18 +243,70 @@ export function contravenerAudit(op: AuditOp, oldRow: Row | null, newRow: Row | 
 
 /* ------------------------------------------------------------ scrierea */
 
-/** Inserarea rândurilor de jurnal, de pus în același `batch` cu schimbarea. */
+/**
+ * Câte rânduri de jurnal încap într-o instrucțiune. D1 primește cel mult 100
+ * de parametri pe instrucțiune, iar un rând are 8; peste 12 rânduri (de pildă
+ * ștergerea unei sarcini cu multe comentarii și subsarcini) cererea era
+ * refuzată și acțiunea eșua întreagă.
+ */
+export const RANDURI_PE_INSTRUCTIUNE = 12;
+
+/** Lista tăiată în bucăți de cel mult `n`. */
+export function inBucati<T>(xs: T[], n: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < xs.length; i += n) out.push(xs.slice(i, i + n));
+  return out;
+}
+
+function randJurnal(ctx: AuditContext, d: AuditDraft) {
+  return {
+    id: crypto.randomUUID(),
+    actor_id: ctx.actor?.id ?? null,
+    actor_name: ctx.actor?.name ?? null,
+    action: d.action,
+    entity: d.entity,
+    entity_id: d.entity_id,
+    details: d.details,
+    created_at: ctx.at,
+  };
+}
+
+/**
+ * Inserarea rândurilor de jurnal, de pus în același `batch` cu schimbarea.
+ * Întoarce una sau mai multe instrucțiuni (vezi `RANDURI_PE_INSTRUCTIUNE`);
+ * `runBatch` le primește așa cum sunt.
+ */
 export function auditInsert(db: Db, ctx: AuditContext, drafts: AuditDraft[]) {
-  return db.insert(auditLog).values(
-    drafts.map((d) => ({
-      id: crypto.randomUUID(),
-      actor_id: ctx.actor?.id ?? null,
-      actor_name: ctx.actor?.name ?? null,
-      action: d.action,
-      entity: d.entity,
-      entity_id: d.entity_id,
-      details: d.details,
-      created_at: ctx.at,
-    })),
+  return inBucati(drafts, RANDURI_PE_INSTRUCTIUNE).map((parte) =>
+    db.insert(auditLog).values(parte.map((d) => randJurnal(ctx, d))),
   );
+}
+
+/**
+ * Jurnalul unei modificări care poate să nu mai găsească rândul: se scrie doar
+ * dacă instrucțiunea de dinaintea lui, din același `batch`, a atins ceva.
+ *
+ * Verificarea „rândul există" se face înainte de lot, deci între ea și lot
+ * altcineva îl poate șterge. Fără condiție, `UPDATE`/`DELETE` nu atingea nimic,
+ * dar jurnalul scria totuși schimbarea (iar o anulare dublă scria două
+ * ștergeri). `changes()` e numărul de rânduri atinse de instrucțiunea
+ * anterioară pe aceeași legătură; lotul D1 e o singură tranzacție, deci nu se
+ * poate strecura nimic între ele. La mai multe bucăți, a doua se uită la
+ * prima: dacă prima n-a scris, nici ea nu scrie.
+ */
+export function auditDupaSchimbare(db: Db, ctx: AuditContext, drafts: AuditDraft[]) {
+  return inBucati(drafts, RANDURI_PE_INSTRUCTIUNE).map((parte) => {
+    const valori = parte.map((d) => {
+      const r = randJurnal(ctx, d);
+      return sql`(${r.id}, ${r.actor_id}, ${r.actor_name}, ${r.action}, ${r.entity}, ${r.entity_id}, ${JSON.stringify(r.details)}, ${r.created_at})`;
+    });
+    // O singură listă `values`, nu `select … union all select …`: D1 refuză
+    // mai mult de câteva select-uri unite, iar lista nu are limita asta.
+    // Coloanele urmează ordinea din tabel: insert-ul le numește pe toate.
+    return db
+      .insert(auditLog)
+      .select(
+        sql`select column1, column2, column3, column4, column5, column6, column7, column8 from (values ${sql.join(valori, sql`, `)}) where changes() > 0`,
+      );
+  });
 }

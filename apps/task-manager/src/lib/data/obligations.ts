@@ -13,7 +13,7 @@ import { NEAUTENTIFICAT, canWriteCompletions, type Actor } from "@/lib/acl";
 import { auditContext, auditInsert, completionAudit } from "@/lib/audit";
 import { isUniqueViolation, type Db } from "@/lib/db";
 import { obligationCompletions, obligations } from "@/lib/db/schema";
-import { runBatch } from "./common";
+import { modificaCuJurnal, runBatch } from "./common";
 
 type Result = { error?: string; success?: boolean; removed?: string };
 
@@ -91,12 +91,15 @@ export async function undoObligationDone(db: Db, me: Actor | null, obligationId:
   if (!latest) return { error: "Nu există nicio bifă de scos." };
 
   const title = await titleOf(db, obligationId);
-  const deleted = await db.batch([
-    db.delete(obligationCompletions).where(eq(obligationCompletions.id, latest.id)).returning(),
-    auditInsert(db, auditContext(me), [completionAudit("DELETE", latest, title)]),
-  ]);
+  const sters = await modificaCuJurnal(
+    db,
+    db.delete(obligationCompletions).where(eq(obligationCompletions.id, latest.id)),
+    auditContext(me),
+    [completionAudit("DELETE", latest, title)],
+  );
   // Doi oameni au apăsat anularea în același moment: al doilea nu mai are ce
-  // șterge, iar un „succes" aici ar ascunde că bifa dispăruse deja.
-  if (deleted[0].length === 0) return { error: "Bifa nu mai există." };
+  // șterge. Un „succes" aici ar ascunde că bifa dispăruse deja, iar jurnalul
+  // ar fi primit a doua ștergere a aceleiași bife.
+  if (!sters) return { error: "Bifa nu mai există." };
   return { success: true, removed: latest.due_date };
 }

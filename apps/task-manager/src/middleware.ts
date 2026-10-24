@@ -15,6 +15,14 @@ import { ANTET_SESIUNE } from "@/lib/session-header";
  * loc care poate și trimite cookie-ul nou.
  */
 export async function middleware(request: NextRequest) {
+  // O adresă cu un „%" fără cele două cifre după el (tăiată sau scrisă de mână)
+  // nu e o pagină. Next o decodează la potrivirea rutei, înaintea oricărui cod
+  // al nostru, și răspunde 500, ca la o defecțiune a serverului. Aici se poate
+  // spune adevărul: nu există.
+  if (!caleDecodabila(request.nextUrl.pathname)) {
+    return new NextResponse("Pagină inexistentă.", { status: 404 });
+  }
+
   const token = request.cookies.get(SESSION_COOKIE)?.value;
 
   // Cronometrat: din browser se vede cât din așteptare e verificarea sesiunii
@@ -60,6 +68,16 @@ export async function middleware(request: NextRequest) {
   }
   raspuns.headers.set("Server-Timing", timing);
   return raspuns;
+}
+
+/** Fiecare segment al căii se decodează, cum îl decodează Next la potrivire. */
+export function caleDecodabila(cale: string): boolean {
+  try {
+    for (const segment of cale.split("/")) decodeURIComponent(segment);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export const config = {

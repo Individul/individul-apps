@@ -14,7 +14,7 @@ import { isUniqueViolation, type Db } from "@/lib/db";
 import { profiles, users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/auth/password";
 import { deleteOtherSessions } from "@/lib/auth/session";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 const USERNAME = /^[a-z0-9._-]{3,30}$/;
 const USERNAME_INVALID = "Username invalid: 3-30 caractere, doar litere, cifre, . _ -";
@@ -58,10 +58,13 @@ export async function updateProfile(
   if (!prev || !canUpdateProfile(me, prev.id)) return { error: "Nu s-a putut actualiza profilul." };
   const next = { ...prev, full_name: fullName, username };
   try {
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db.update(profiles).set({ full_name: fullName, username }).where(eq(profiles.id, me.id)),
-      auditInsert(db, auditContext(me), [profileAudit("UPDATE", next)]),
-    ]);
+      auditContext(me),
+      [profileAudit("UPDATE", next)],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
     if (isUniqueViolation(e)) return { error: "Username-ul e deja folosit." };
     return { error: e instanceof Error ? e.message : "Nu s-a putut actualiza profilul." };
@@ -83,10 +86,13 @@ export async function setUserRole(
 
   const prev = await db.select().from(profiles).where(eq(profiles.id, userId)).get();
   if (!prev) return { error: "Fără permisiune sau utilizator inexistent." };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.update(profiles).set({ role }).where(eq(profiles.id, userId)),
-    auditInsert(db, auditContext(me), [profileAudit("UPDATE", { ...prev, role })]),
-  ]);
+    auditContext(me),
+    [profileAudit("UPDATE", { ...prev, role })],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }
 

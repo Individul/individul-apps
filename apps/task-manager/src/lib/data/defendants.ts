@@ -14,7 +14,7 @@ import type { Db } from "@/lib/db";
 import { defendants } from "@/lib/db/schema";
 import { isCourt } from "@/lib/courts";
 import { ziValida } from "@/lib/periods";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 type DefendantRow = typeof defendants.$inferSelect;
 
@@ -67,10 +67,13 @@ async function updateRow(
   const ctx = auditContext(me);
   const full = { ...patch, updated_by: me.id, updated_at: ctx.at };
   try {
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db.update(defendants).set(full).where(eq(defendants.id, id)),
-      auditInsert(db, ctx, [defendantAudit("UPDATE", prev, { ...prev, ...full })]),
-    ]);
+      ctx,
+      [defendantAudit("UPDATE", prev, { ...prev, ...full })],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Eroare la salvare." };
   }
@@ -158,9 +161,12 @@ export async function deleteDefendant(db: Db, me: Actor | null, id: string): Pro
   if (!me) return { error: NEAUTENTIFICAT };
   const prev = await db.select().from(defendants).where(eq(defendants.id, id)).get();
   if (!prev || !canDeleteRegistry(me)) return { error: "Însemnarea nu există sau nu ai dreptul." };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(defendants).where(eq(defendants.id, id)),
-    auditInsert(db, auditContext(me), [defendantAudit("DELETE", prev, null)]),
-  ]);
+    auditContext(me),
+    [defendantAudit("DELETE", prev, null)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }

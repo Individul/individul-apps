@@ -9,6 +9,7 @@ import * as account from "@/lib/data/account";
 import * as restore from "@/lib/data/restore";
 import { NEAUTENTIFICAT, canBackup } from "@/lib/acl";
 import { backupMode, runNightlyBackup, type BackupSummary } from "@/lib/backup-run";
+import { sigur } from "@/lib/sigur";
 
 function refresh() {
   revalidatePath("/admin");
@@ -20,7 +21,7 @@ export async function setUserRole(
   userId: string,
   role: "admin" | "member",
 ): Promise<{ error?: string; success?: boolean }> {
-  const res = await account.setUserRole(getDb(), await getActor(), userId, role);
+  const res = await sigur(async () => account.setUserRole(getDb(), await getActor(), userId, role));
   if (res.success) refresh();
   return res;
 }
@@ -33,7 +34,7 @@ export async function restoreBackup(payload: unknown): Promise<{
   error?: string;
   inserted?: { tasks: number; tags: number; task_tags: number; comments: number };
 }> {
-  const res = await restore.restoreBackup(getDb(), await getActor(), payload);
+  const res = await sigur(async () => restore.restoreBackup(getDb(), await getActor(), payload));
   if (!res.error) refresh();
   return res;
 }
@@ -45,7 +46,7 @@ export async function createUser(input: {
   username: string;
   password: string;
 }): Promise<{ error?: string; success?: boolean }> {
-  const res = await account.createUser(getDb(), await getActor(), input);
+  const res = await sigur(async () => account.createUser(getDb(), await getActor(), input));
   if (res.success) refresh();
   return res;
 }

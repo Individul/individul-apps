@@ -17,7 +17,7 @@ import { isCourt } from "@/lib/courts";
 import { INSTITUTIONS } from "@/lib/transfers";
 import type { TransferBasis } from "@/lib/transfer-plans";
 import { todayInChisinau, toISODate } from "@/lib/periods";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 type PlanRow = typeof transferPlans.$inferSelect;
 
@@ -77,10 +77,13 @@ async function updateRow(db: Db, me: Actor, prev: PlanRow, patch: Partial<PlanRo
   const ctx = auditContext(me);
   const full = { ...patch, updated_by: me.id, updated_at: ctx.at };
   try {
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db.update(transferPlans).set(full).where(eq(transferPlans.id, prev.id)),
-      auditInsert(db, ctx, [transferPlanAudit("UPDATE", prev, { ...prev, ...full })]),
-    ]);
+      ctx,
+      [transferPlanAudit("UPDATE", prev, { ...prev, ...full })],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Eroare la salvare." };
   }
@@ -213,9 +216,12 @@ export async function deletePlan(db: Db, me: Actor | null, id: string): Promise<
   if (!me) return { error: NEAUTENTIFICAT };
   const prev = await getPlan(db, id);
   if (!prev || !canDeleteRegistry(me)) return { error: "Însemnarea nu există sau nu ai dreptul." };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(transferPlans).where(eq(transferPlans.id, id)),
-    auditInsert(db, auditContext(me), [transferPlanAudit("DELETE", prev, null)]),
-  ]);
+    auditContext(me),
+    [transferPlanAudit("DELETE", prev, null)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }

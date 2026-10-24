@@ -8,6 +8,7 @@ import { getDb } from "@/lib/db";
 import { checkLogin } from "@/lib/auth/login";
 import { createSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { sessionCookieOptions } from "@/lib/auth/server";
+import { sigur } from "@/lib/sigur";
 
 /**
  * Limita de încercări, pe adresa de unde vine cererea.
@@ -40,10 +41,11 @@ export async function signInWithPassword(
   }
 
   const db = getDb();
-  const result = await checkLogin(db, identifier, password);
-  if ("error" in result) return { ...result, identifier };
+  const result = await sigur(() => checkLogin(db, identifier, password));
+  if ("error" in result) return { error: result.error, identifier };
 
-  const { token, expiresAt } = await createSession(db, result.userId);
-  (await cookies()).set(SESSION_COOKIE, token, sessionCookieOptions(expiresAt));
+  const sesiune = await sigur(() => createSession(db, result.userId));
+  if ("error" in sesiune) return { error: sesiune.error, identifier };
+  (await cookies()).set(SESSION_COOKIE, sesiune.token, sessionCookieOptions(sesiune.expiresAt));
   redirect("/");
 }

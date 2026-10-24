@@ -1,9 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    // Permite backup-uri mai mari la restaurare (upload prin server action).
+    // Permite backup-uri mai mari la restaurare și atașamente de până la 10 MB
+    // (upload prin server action). Limita cuprinde toată cererea, nu doar
+    // fișierul: un PDF de 9,9 MB plus plicul `FormData` trecea de 10 MB și era
+    // respins înainte să ajungă la acțiune. De aici megaoctetul în plus.
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: "11mb",
     },
 
     /**

@@ -8,23 +8,24 @@ import { getActor } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 import * as data from "@/lib/data/contraveners";
 import type { ContravenerInput } from "@/lib/contraveners";
+import { sigur } from "@/lib/sigur";
 
 type Result = { error?: string; success?: boolean };
 
 export async function saveContravener(id: string | null, input: ContravenerInput): Promise<Result> {
-  const res = await data.saveContravener(getDb(), await getActor(), id, input);
+  const res = await sigur(async () => data.saveContravener(getDb(), await getActor(), id, input));
   if (res.success) revalidatePath("/contravenienti");
   return res;
 }
 
 export async function deleteContravener(id: string): Promise<Result> {
-  const res = await data.deleteContravener(getDb(), await getActor(), id);
+  const res = await sigur(async () => data.deleteContravener(getDb(), await getActor(), id));
   if (res.success) revalidatePath("/contravenienti");
   return res;
 }
 
 export async function setContravenerInformed(id: string, informed: boolean): Promise<Result> {
-  const res = await data.setContravenerInformed(getDb(), await getActor(), id, informed);
+  const res = await sigur(async () => data.setContravenerInformed(getDb(), await getActor(), id, informed));
   if (res.success) revalidatePath("/contravenienti");
   return res;
 }

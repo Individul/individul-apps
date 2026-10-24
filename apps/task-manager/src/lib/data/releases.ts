@@ -12,7 +12,7 @@ import { NEAUTENTIFICAT, canWriteRegistry, type Actor } from "@/lib/acl";
 import { auditContext, auditInsert, releaseAudit } from "@/lib/audit";
 import { isUniqueViolation, type Db } from "@/lib/db";
 import { releases } from "@/lib/db/schema";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 const LIPSA =
   "Ziua nu s-a putut salva — probabil nu mai ai dreptul s-o scrii. Reîncarcă pagina.";
@@ -76,10 +76,13 @@ export async function saveRelease(
   try {
     if (existing) {
       const patch = { ...values, created_by: existing.created_by ?? me.id, updated_at: ctx.at };
-      await runBatch(db, [
+      const atins = await modificaCuJurnal(
+        db,
         db.update(releases).set(patch).where(eq(releases.id, existing.id)),
-        auditInsert(db, ctx, [releaseAudit("UPDATE", existing, { ...existing, ...patch })]),
-      ]);
+        ctx,
+        [releaseAudit("UPDATE", existing, { ...existing, ...patch })],
+      );
+      if (!atins) return { error: RAND_DISPARUT };
     } else {
       const row = {
         id: crypto.randomUUID(),

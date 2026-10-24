@@ -13,7 +13,7 @@ import { auditContext, auditInsert, transferAudit } from "@/lib/audit";
 import { isUniqueViolation, type Db } from "@/lib/db";
 import { transfers } from "@/lib/db/schema";
 import { INSTITUTIONS } from "@/lib/transfers";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 /**
  * Ciocnirea cu cheia unică (zi + penitenciar + tip) nu e o defecțiune, ci cazul
@@ -130,10 +130,13 @@ export async function updateTransfer(
   const ctx = auditContext(me);
   const patch = { ...values, updated_by: me.id, updated_at: ctx.at };
   try {
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db.update(transfers).set(patch).where(eq(transfers.id, id)),
-      auditInsert(db, ctx, [transferAudit("UPDATE", prev, { ...prev, ...patch })]),
-    ]);
+      ctx,
+      [transferAudit("UPDATE", prev, { ...prev, ...patch })],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
     // Mutarea rândului peste unul existent (altă zi, alt penitenciar, alt tip).
     if (isUniqueViolation(e)) return { error: DUPLICAT };
@@ -146,9 +149,12 @@ export async function deleteTransfer(db: Db, me: Actor | null, id: string): Prom
   if (!me) return { error: NEAUTENTIFICAT };
   const prev = await db.select().from(transfers).where(eq(transfers.id, id)).get();
   if (!prev || !canDeleteRegistry(me)) return { error: LIPSA_LA_STERGERE };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(transfers).where(eq(transfers.id, id)),
-    auditInsert(db, auditContext(me), [transferAudit("DELETE", prev, null)]),
-  ]);
+    auditContext(me),
+    [transferAudit("DELETE", prev, null)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }

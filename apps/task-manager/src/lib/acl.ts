@@ -75,12 +75,6 @@ export const canDeleteTaskRow = (me: Actor, row: { created_by: string }) =>
 /** „tags insert/update/delete admin". */
 export const canWriteTags = (me: Actor) => me.isAdmin;
 
-/**
- * „task_tags all authenticated": oricine conectat leagă sau dezleagă etichete.
- * Așa era; restrângerea ar fi o schimbare de reguli, nu o mutare.
- */
-export const canWriteTaskTags = (_me: Actor) => true;
-
 /* ---------------------------------------------------------- comments (0001, 0006) */
 
 /** „comments insert own or admin". */
@@ -130,16 +124,10 @@ export const canDeleteRegistry = (me: Actor) => me.isAdmin;
 
 /* ---------------------------------------------------------- obligations (0023) */
 
-/** „obligations write": doar adminul definește informările. */
-export const canWriteObligations = (me: Actor) => me.isAdmin;
-
 /** „completions insert/delete": oricine conectat bifează și debifează. */
 export const canWriteCompletions = (_me: Actor) => true;
 
 /* ---------------------------------------------------------- evidența */
-
-/** „notifications select/update/delete own". */
-export const canTouchNotification = (me: Actor, row: { user_id: string }) => me.id === row.user_id;
 
 /** „audit select admin". */
 export const canReadAuditLog = (me: Actor) => me.isAdmin;

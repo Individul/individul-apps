@@ -95,6 +95,22 @@ describe("sarcinile: dreptul de a scrie", () => {
     expect(await db.select().from(s.tasks)).toEqual([]);
   });
 
+  it("o sarcină cu multe comentarii se șterge, cu tot jurnalul cascadei", async () => {
+    await t.createTask(db, ADMIN, input());
+    const task = await onlyTask();
+    // 20 de comentarii + sarcina = 21 de rânduri de jurnal, 168 de parametri:
+    // într-o singură instrucțiune, D1 refuza (limita e 100).
+    await db.insert(s.comments).values(
+      Array.from({ length: 20 }, (_, i) => ({ id: crypto.randomUUID(), task_id: task.id, author_id: ANA.id, body: `c${i}` })),
+    );
+    expect(await t.deleteTask(db, ADMIN, task.id)).toEqual({ success: true });
+    expect(await db.select().from(s.tasks)).toEqual([]);
+    expect((await audit("comments")).filter((r) => r.action === "DELETE")).toHaveLength(20);
+    // A doua ștergere, ca de la un al doilea om în aceeași clipă, nu mai
+    // găsește sarcina și nu mai scrie nimic.
+    expect((await t.deleteTask(db, ADMIN, task.id)).error).toBeTruthy();
+  });
+
   it("finalizarea și semnul CSJ urmează regula de modificare", async () => {
     await t.createTask(db, ANA, input({ assignee_id: ANA.id }));
     const task = await onlyTask();

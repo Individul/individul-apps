@@ -8,6 +8,7 @@ import { getActor } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 import * as data from "@/lib/data/transfers";
 import type { TransferInput } from "@/lib/data/transfers";
+import { sigur } from "@/lib/sigur";
 
 export type { TransferInput } from "@/lib/data/transfers";
 
@@ -20,19 +21,19 @@ function revalidate() {
 }
 
 export async function createTransfer(input: TransferInput): Promise<Result> {
-  const res = await data.createTransfer(getDb(), await getActor(), input);
+  const res = await sigur(async () => data.createTransfer(getDb(), await getActor(), input));
   if (res.success) revalidate();
   return res;
 }
 
 export async function updateTransfer(id: string, input: TransferInput): Promise<Result> {
-  const res = await data.updateTransfer(getDb(), await getActor(), id, input);
+  const res = await sigur(async () => data.updateTransfer(getDb(), await getActor(), id, input));
   if (res.success) revalidate();
   return res;
 }
 
 export async function deleteTransfer(id: string): Promise<Result> {
-  const res = await data.deleteTransfer(getDb(), await getActor(), id);
+  const res = await sigur(async () => data.deleteTransfer(getDb(), await getActor(), id));
   if (res.success) revalidate();
   return res;
 }

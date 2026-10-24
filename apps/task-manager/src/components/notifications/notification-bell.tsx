@@ -109,6 +109,11 @@ export function NotificationBell({
   useEffect(() => {
     let oprit = false;
     let inCurs = false;
+    // Verificări ratate la rând. O filă rămasă fără sesiune (ieșire din altă
+    // filă, sesiune expirată) primea refuz la fiecare jumătate de minut, cât
+    // stătea deschisă. După trei ratări, ceasul nu mai verifică; o face doar
+    // întoarcerea în fereastră, iar o reușită repornește ritmul obișnuit.
+    let ratari = 0;
 
     const dupaEsec = async () => {
       const acum = await versiuneaServerului();
@@ -121,12 +126,17 @@ export function NotificationBell({
       });
     };
 
-    const verifica = async () => {
-      if (inCurs || invechita.current) return;
+    const verifica = async (dinCeas = false) => {
+      if (inCurs || invechita.current || (dinCeas && ratari >= 3)) return;
       inCurs = true;
       try {
         const res = await pollNotifications(reper.current);
-        if (oprit || "error" in res) return;
+        if (oprit) return;
+        if ("error" in res) {
+          ratari++;
+          return;
+        }
+        ratari = 0;
         if (res.fresh.length > 0) {
           reper.current = res.fresh[0].created_at;
           if (amorsat.current) {
@@ -143,13 +153,14 @@ export function NotificationBell({
       } catch {
         // O verificare ratată (rețea, repornire) se reia peste 30 de secunde.
         // Dacă motivul e o publicare nouă, anunțul o spune.
+        ratari++;
         void dupaEsec();
       } finally {
         inCurs = false;
       }
     };
 
-    const interval = setInterval(verifica, 30_000);
+    const interval = setInterval(() => void verifica(true), 30_000);
     const laRevenire = () => {
       if (document.visibilityState === "visible") void verifica();
     };

@@ -5,17 +5,20 @@ import { revalidatePath } from "next/cache";
 import { getActor, getSessionToken } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 import * as data from "@/lib/data/account";
+import { sigur } from "@/lib/sigur";
 
 export async function changePassword(
   _prev: { error?: string; success?: boolean } | null,
   formData: FormData,
 ): Promise<{ error?: string; success?: boolean }> {
-  return data.changePassword(
-    getDb(),
-    await getActor(),
-    String(formData.get("password") || ""),
-    String(formData.get("confirm") || ""),
-    await getSessionToken(),
+  return sigur(async () =>
+    data.changePassword(
+      getDb(),
+      await getActor(),
+      String(formData.get("password") || ""),
+      String(formData.get("confirm") || ""),
+      await getSessionToken(),
+    ),
   );
 }
 
@@ -32,7 +35,7 @@ export async function updateProfile(
     full_name: String(formData.get("full_name") || ""),
     username: String(formData.get("username") || ""),
   };
-  const res = await data.updateProfile(getDb(), await getActor(), values.full_name, values.username);
+  const res = await sigur(async () => data.updateProfile(getDb(), await getActor(), values.full_name, values.username));
   if (res.success) {
     revalidatePath("/");
     revalidatePath("/sarcini");

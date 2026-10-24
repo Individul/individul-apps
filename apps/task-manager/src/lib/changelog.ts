@@ -23,6 +23,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
+    text: "Când o salvare nu reușește din cauza serverului sau a legăturii, apare un mesaj și pagina rămâne cum era. Până acum, în cazuri rare, toată pagina se înlocuia cu un ecran de eroare fără niciun buton; acum, dacă totuși ceva scapă, pagina arată „Ceva n-a mers”, cu „Încearcă din nou” și „Reîncarcă pagina”, iar meniul de sus rămâne.",
+  },
+  {
+    date: "2026-10-24",
+    text: "La petiții, un fișier de aproape 10 MB se urcă acum fără probleme (înainte era respins fără explicație), iar o încărcare sau o ștergere de fișier care nu reușește spune asta. Dacă doi colegi șterg sau modifică același rând în aceeași clipă, al doilea primește „Înregistrarea nu mai există”, nu „salvat”, iar jurnalul din Administrare nu mai primește o schimbare care nu s-a făcut.",
+  },
+  {
+    date: "2026-10-24",
     text: "Când aplicația primește o versiune nouă cât timp o aveți deschisă, apare un anunț „Aplicația a fost actualizată”, cu butonul „Reîncarcă”. Până la reîncărcare, salvările din fila aceea nu mai merg; înainte eșuau fără nicio explicație.",
   },
   {

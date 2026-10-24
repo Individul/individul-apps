@@ -12,7 +12,7 @@ import { inArray } from "drizzle-orm";
 
 import type { Db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
-import type { NameOf } from "@/lib/audit";
+import { auditDupaSchimbare, type AuditContext, type AuditDraft, type NameOf } from "@/lib/audit";
 
 export type ActionResult = { error?: string; success?: boolean };
 
@@ -38,7 +38,33 @@ type Statement = Parameters<Db["batch"]>[0][number];
  * Scrierile unei acțiuni, toate sau niciuna: un singur `batch` D1 e o singură
  * tranzacție. Așa schimbarea și rândul ei din jurnal nu se pot despărți.
  */
-export async function runBatch(db: Db, statements: Statement[]): Promise<void> {
-  if (statements.length === 0) return;
-  await db.batch(statements as [Statement, ...Statement[]]);
+export async function runBatch(db: Db, statements: (Statement | Statement[])[]): Promise<void> {
+  // `auditInsert` poate întoarce mai multe instrucțiuni; aici se aplatizează.
+  const toate = statements.flat();
+  if (toate.length === 0) return;
+  await db.batch(toate as [Statement, ...Statement[]]);
+}
+
+export const RAND_DISPARUT = "Înregistrarea nu mai există: probabil a fost ștearsă între timp. Reîncarcă pagina.";
+
+/** Câte rânduri a atins o instrucțiune `UPDATE`/`DELETE` dintr-un lot D1. */
+function randuriAtinse(rezultat: unknown): number {
+  return (rezultat as { meta?: { changes?: number } } | undefined)?.meta?.changes ?? 0;
+}
+
+/**
+ * O modificare a unui rând deja citit, cu jurnalul ei, toate sau niciuna.
+ *
+ * Întoarce `false` când rândul a dispărut între citire și scriere (l-a șters
+ * altcineva în aceeași clipă). Atunci nici jurnalul nu se scrie, iar acțiunea
+ * spune asta, în loc de un „salvat" despre nimic.
+ */
+export async function modificaCuJurnal(
+  db: Db,
+  modificare: Statement,
+  ctx: AuditContext,
+  drafts: AuditDraft[],
+): Promise<boolean> {
+  const [rezultat] = await db.batch([modificare, ...auditDupaSchimbare(db, ctx, drafts)]);
+  return randuriAtinse(rezultat) > 0;
 }

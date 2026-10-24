@@ -14,7 +14,7 @@ import type { Db } from "@/lib/db";
 import { contraveners } from "@/lib/db/schema";
 import { prescriptieOf, validateContravener, type ContravenerInput } from "@/lib/contraveners";
 import { todayInChisinau, toISODate } from "@/lib/periods";
-import { runBatch, type ActionResult } from "./common";
+import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 type ContravenerRow = typeof contraveners.$inferSelect;
 
@@ -29,10 +29,13 @@ async function updateRow(
   const ctx = auditContext(me);
   const full = { ...patch, updated_by: me.id, updated_at: ctx.at };
   try {
-    await runBatch(db, [
+    const atins = await modificaCuJurnal(
+      db,
       db.update(contraveners).set(full).where(eq(contraveners.id, prev.id)),
-      auditInsert(db, ctx, [contravenerAudit("UPDATE", prev, { ...prev, ...full })]),
-    ]);
+      ctx,
+      [contravenerAudit("UPDATE", prev, { ...prev, ...full })],
+    );
+    if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Eroare la salvare." };
   }
@@ -99,10 +102,13 @@ export async function deleteContravener(db: Db, me: Actor | null, id: string): P
   // Ca RLS: ștergerea e doar a adminului; celorlalți li se spune același lucru
   // ca pentru un rând inexistent.
   if (!prev || !canDeleteRegistry(me)) return { error: "Însemnarea nu există sau nu ai dreptul." };
-  await runBatch(db, [
+  const atins = await modificaCuJurnal(
+    db,
     db.delete(contraveners).where(eq(contraveners.id, id)),
-    auditInsert(db, auditContext(me), [contravenerAudit("DELETE", prev, null)]),
-  ]);
+    auditContext(me),
+    [contravenerAudit("DELETE", prev, null)],
+  );
+  if (!atins) return { error: RAND_DISPARUT };
   return { success: true };
 }
 

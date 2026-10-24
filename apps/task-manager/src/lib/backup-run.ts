@@ -18,10 +18,11 @@
  *    spune cât a mai rămas. Semnalul de alarmă e restanța care nu scade de la o
  *    zi la alta, nu existența ei.
  *
- * **Modul de probă.** Cât timp `sarcini.dumitru.cloud` e încă pe Vercel, copia
- * de acolo scrie în fiecare noapte `db/AAAA-LL-ZZ.json` și `manifest.json`.
- * O copie de pe Worker scrisă în aceleași locuri ar înlocui datele adevărate cu
- * cele din baza de probă. De aceea `BACKUP_MODE = "proba"` scrie dumpul sub
+ * **Modul de probă.** A servit cât timp `sarcini.dumitru.cloud` era încă pe
+ * Vercel (până la 24.10.2026), a cărui copie scria în fiecare noapte
+ * `db/AAAA-LL-ZZ.json` și `manifest.json`. O copie de pe Worker scrisă în
+ * aceleași locuri ar fi înlocuit datele adevărate cu cele din baza de probă.
+ * Rămâne pentru o eventuală întoarcere pe Vercel; producția e pe „productie". De aceea `BACKUP_MODE = "proba"` scrie dumpul sub
  * `proba-cloudflare/`, nu urcă fișiere și nu atinge manifestul — doar numără
  * ce ar urca. Cronul nu rulează deloc în probă; doar butonul.
  */
