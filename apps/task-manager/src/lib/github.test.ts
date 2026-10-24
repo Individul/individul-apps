@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contentsUrl, parseRepo, putBody, redact } from "./github";
+import { apiHeaders, contentsUrl, parseRepo, putBody, redact } from "./github";
 
 // Doar logica pură. Cererile către GitHub nu se imită aici: un test care verifică
 // că apelăm o machetă scrisă tot de noi n-ar spune nimic despre ce acceptă API-ul
@@ -115,5 +115,11 @@ describe("ascunderea tokenului din texte", () => {
   it("un token gol nu ciopârțește mesajul", () => {
     // Fără garda asta, căutarea unui șir gol ar tăia textul între toate literele.
     expect(redact("404 la scriere", "")).toBe("404 la scriere");
+  });
+});
+
+describe("antetele cererilor", () => {
+  it("trimit User-Agent: fără el GitHub răspunde 403, iar Workers nu-l pune singur", () => {
+    expect(apiHeaders("t")["User-Agent"]).toBeTruthy();
   });
 });

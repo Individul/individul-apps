@@ -113,12 +113,19 @@ export function contentsUrl(repo: Repo, path: string): string {
   return `${API}/repos/${owner}/${name}/contents/${encoded}`;
 }
 
-/** Singurul loc din aplicație în care tokenul e pus într-un antet. */
-function apiHeaders(token: string): Record<string, string> {
+/**
+ * Singurul loc din aplicație în care tokenul e pus într-un antet.
+ *
+ * `User-Agent` e cerut de GitHub: fără el, orice cerere primește 403, oricât
+ * de bun ar fi tokenul. Pe Vercel îl punea singur `fetch` din Node; `fetch` din
+ * Workers nu pune niciunul, iar 403-ul arăta exact ca un token fără drepturi.
+ */
+export function apiHeaders(token: string): Record<string, string> {
   return {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
+    "User-Agent": "sarcini-backup",
   };
 }
 
