@@ -23,6 +23,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-24",
+    text: "Când aplicația primește o versiune nouă cât timp o aveți deschisă, apare un anunț „Aplicația a fost actualizată”, cu butonul „Reîncarcă”. Până la reîncărcare, salvările din fila aceea nu mai merg; înainte eșuau fără nicio explicație.",
+  },
+  {
+    date: "2026-10-24",
+    text: "La „Preveniți și inculpați”, o dată care nu există în calendar (de pildă 30 februarie) e refuzată cu un mesaj clar, la data stabilirii, a măsurii preventive și a condamnării. Până acum o asemenea dată la condamnare trecea și se salva.",
+  },
+  {
+    date: "2026-10-24",
     text: "Aplicația s-a mutat pe Cloudflare. Adresa rămâne sarcini.dumitru.cloud, iar datele, fișierele și parolele sunt aceleași; trebuie doar să vă conectați din nou, o singură dată. Fișierele petițiilor se deschid ca până acum.",
   },
   {

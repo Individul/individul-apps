@@ -82,6 +82,22 @@ export function parseISODate(s: string): Date {
   return new Date(`${s}T12:00:00`);
 }
 
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * O zi AAAA-LL-ZZ care chiar există. „2026-02-30" trece de tipar și chiar de
+ * `Date.parse`, dar nu de aici. Datele acțiunilor vin din câmpuri de formular,
+ * însă o acțiune se poate chema și fără formular.
+ */
+export function ziValida(s: string): boolean {
+  if (!ISO.test(s)) return false;
+  const d = parseISODate(s);
+  if (Number.isNaN(d.getTime())) return false;
+  // V8 rostogolește „30 februarie" la 2 martie fără să se plângă. Scrisă la
+  // loc, ziua trebuie să iasă identică, altfel data nu există.
+  return toISODate(d) === s;
+}
+
 /** Singurul fus în care lucrează instituția; ceasul serverului nu contează. */
 export const FUS = "Europe/Chisinau";
 

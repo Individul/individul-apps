@@ -9,6 +9,7 @@ import { checkLogin, DATE_GRESITE } from "./login";
 import { verifyPassword } from "./password";
 import {
   createSession,
+  deleteExpiredSessions,
   deleteOtherSessions,
   deleteSession,
   hashToken,
@@ -114,6 +115,16 @@ describe("sesiunile", () => {
     expect(await validateSession(db, b.token)).toBeNull();
     await deleteSession(db, a.token);
     expect(await validateSession(db, a.token)).toBeNull();
+  });
+
+  it("cronul șterge doar sesiunile expirate", async () => {
+    const t0 = new Date("2026-05-01T00:00:00Z");
+    const veche = await createSession(db, "u-ana", t0);
+    const noua = await createSession(db, "u-ana", new Date(t0.getTime() + 20 * DAY));
+    await deleteExpiredSessions(db, new Date(t0.getTime() + (SESSION_DAYS + 1) * DAY));
+    const ids = (await db.select().from(s.sessions)).map((r) => r.id);
+    expect(ids).not.toContain(await hashToken(veche.token));
+    expect(ids).toContain(await hashToken(noua.token));
   });
 
   it("ștergerea contului închide toate sesiunile lui", async () => {

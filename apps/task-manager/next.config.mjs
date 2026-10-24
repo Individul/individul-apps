@@ -31,6 +31,40 @@ const nextConfig = {
   },
 
   /**
+   * Antetele de securitate, pe fiecare răspuns al aplicației.
+   *
+   * Pe Vercel, HSTS-ul îl punea platforma; Cloudflare nu pune nimic din toate
+   * acestea, deci le cerem aici.
+   * - HSTS: browserul nu mai încearcă niciodată HTTP pe adresa asta, nici la
+   *   prima tastare. Valoarea e cea trimisă de Vercel.
+   * - Încadrarea interzisă (`X-Frame-Options` pentru browserele vechi,
+   *   `frame-ancestors` pentru cele noi): alt site nu poate pune aplicația
+   *   într-un cadru invizibil peste butoanele lui. Aplicația nu se încadrează
+   *   nici singură: fișierele se deschid în filă nouă.
+   * - `nosniff`: browserul ține de tipul declarat al unui fișier și nu ghicește
+   *   altul, deci un atașament nu poate fi luat drept script.
+   * - `same-origin`: adresele interne (căi, parametri) nu pleacă spre alte
+   *   site-uri când se urmează o legătură.
+   * Fără o politică CSP întreagă: scripturile inline ale Next ar cere nonce-uri
+   * pe fiecare pagină, iar o greșeală acolo ar opri aplicația, nu un atacator.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Strict-Transport-Security", value: "max-age=63072000" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "same-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
+
+  /**
    * Fonturile PDF-ului intră în cod, ca text base64.
    *
    * Pe Workers nu există disc: `/raport-saptamanal/pdf` nu mai are de unde

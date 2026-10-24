@@ -49,10 +49,21 @@ describe("inculpații", () => {
     expect((await only()).preventive_measure_on).toBeNull();
   });
 
+  it("refuză zilele inexistente înainte de orice scriere", async () => {
+    expect((await d.saveDefendant(db, ANA, null, om({ established_on: "2026-02-30" }))).error).toMatch(
+      /stabilirii nu e o zi/,
+    );
+    const faraZi = om({ preventive_measure: true, preventive_measure_on: "2026-04-31" });
+    expect((await d.saveDefendant(db, ANA, null, faraZi)).error).toMatch(/măsurii preventive nu e o zi/);
+    expect(await db.select().from(s.defendants)).toEqual([]);
+  });
+
   it("trecerea la condamnat și înapoi, cu jurnalul stării", async () => {
     await d.saveDefendant(db, ANA, null, om());
     const row = await only();
     expect((await d.markConvicted(db, BOB, row.id, "3 august")).error).toMatch(/AAAA-LL-ZZ/);
+    // Forma e bună, iar `Date.parse` o primește; ziua tot nu există.
+    expect((await d.markConvicted(db, BOB, row.id, "2026-02-30")).error).toMatch(/nu e o zi care există/);
     expect(await d.markConvicted(db, BOB, row.id, "2026-10-01")).toEqual({ success: true });
     expect(await d.undoConvicted(db, BOB, row.id)).toEqual({ success: true });
     const audit = await db.select().from(s.auditLog).orderBy(sql`rowid`);

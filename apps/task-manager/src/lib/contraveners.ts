@@ -1,6 +1,6 @@
 import { addDays, addYears, differenceInCalendarDays } from "date-fns";
 
-import { parseISODate, toISODate } from "./periods";
+import { parseISODate, toISODate, ziValida } from "./periods";
 import { fold } from "./text";
 
 /** Un rând din registrul contravenienților (migrarea 0031). */
@@ -49,18 +49,6 @@ export interface ContravenerInput {
  */
 export const MAX_ARREST_DAYS = 60;
 
-const ISO = /^\d{4}-\d{2}-\d{2}$/;
-
-/** O zi AAAA-LL-ZZ care chiar există — „2026-02-30" trece de tipar, dar nu de aici. */
-function ziValida(s: string): boolean {
-  if (!ISO.test(s)) return false;
-  const d = new Date(`${s}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return false;
-  // V8 rostogolește „30 februarie" la 2 martie fără să se plângă. Scrisă la
-  // loc, ziua trebuie să iasă identică, altfel data nu există.
-  const inapoi = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  return inapoi === s;
-}
 
 /**
  * Ce e greșit în formular, sau `null` dacă se poate salva.

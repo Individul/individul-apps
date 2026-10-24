@@ -13,6 +13,7 @@ import { auditContext, auditInsert, defendantAudit } from "@/lib/audit";
 import type { Db } from "@/lib/db";
 import { defendants } from "@/lib/db/schema";
 import { isCourt } from "@/lib/courts";
+import { ziValida } from "@/lib/periods";
 import { runBatch, type ActionResult } from "./common";
 
 type DefendantRow = typeof defendants.$inferSelect;
@@ -40,6 +41,10 @@ function validate(input: DefendantInput): string | null {
     return "Alege tipul de penitenciar.";
   }
   if (!input.established_on) return "Data stabilirii e obligatorie.";
+  if (!ziValida(input.established_on)) return "Data stabilirii nu e o zi care există.";
+  if (input.preventive_measure && input.preventive_measure_on && !ziValida(input.preventive_measure_on)) {
+    return "Data măsurii preventive nu e o zi care există.";
+  }
   // Instanța e opțională, dar dacă e dată trebuie să fie una din listă: altfel
   // aceeași judecătorie ar ajunge scrisă în trei feluri în două evidențe.
   if (input.court && !isCourt(input.court)) return "Alege instanța din listă.";
@@ -134,9 +139,11 @@ export async function markConvicted(
   // Data vine dintr-un câmp scris de mână, deci forma se verifică aici: altfel
   // „3 august" ar ajunge la bază și s-ar întoarce cu o eroare a bazei, pe care
   // cel care a scris n-are cum s-o lege de ce a greșit.
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(convictedOn) || Number.isNaN(Date.parse(convictedOn))) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(convictedOn)) {
     return { error: "Data trebuie scrisă ca AAAA-LL-ZZ, de pildă 2026-08-03." };
   }
+  // Separat de tipar: „2026-02-30" are forma bună, iar `Date.parse` o primește.
+  if (!ziValida(convictedOn)) return { error: "Data condamnării nu e o zi care există." };
   if (!me) return { error: NEAUTENTIFICAT };
   return updateRow(db, me, id, { status: "condamnat", convicted_on: convictedOn });
 }

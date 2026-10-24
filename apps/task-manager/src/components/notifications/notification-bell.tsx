@@ -28,6 +28,20 @@ function relativeTime(iso: string): string {
   return formatDistanceToNow(parseISO(iso), { addSuffix: true, locale: ro });
 }
 
+/** Versiunea Worker-ului care răspunde acum; `null` dacă nu se poate afla. */
+async function versiuneaServerului(): Promise<string | null> {
+  try {
+    const res = await fetch("/versiune", { cache: "no-store" });
+    if (!res.ok) return null;
+    const { versiune } = (await res.json()) as { versiune?: unknown };
+    return typeof versiune === "string" ? versiune : null;
+  } catch {
+    // Rețea căzută, sesiune expirată (vine pagina de logare, nu JSON): nu
+    // știm nimic despre versiune, deci nu anunțăm nimic.
+    return null;
+  }
+}
+
 interface NotificationBellProps {
   initialItems: Notification[];
   initialUnread: number;
@@ -74,12 +88,41 @@ export function NotificationBell({
   const reper = useRef<string | null>(initialItems[0]?.created_at ?? null);
   const amorsat = useRef(initialItems.length > 0);
 
+  /**
+   * Versiunea aplicației din care s-a încărcat pagina.
+   *
+   * La fiecare publicare, Next schimbă identificatorii acțiunilor de server,
+   * iar o filă deschisă dinainte primește 404 la orice salvare. Clopoțelul
+   * verifică singur, deci el observă primul. Când o verificare pică, compară
+   * versiunea de acum cu cea de la deschidere. Dacă diferă, cere o singură
+   * dată reîncărcarea paginii și nu mai verifică degeaba.
+   */
+  const versiune = useRef<string | null>(null);
+  const invechita = useRef(false);
+
+  useEffect(() => {
+    void versiuneaServerului().then((v) => {
+      versiune.current = v;
+    });
+  }, []);
+
   useEffect(() => {
     let oprit = false;
     let inCurs = false;
 
+    const dupaEsec = async () => {
+      const acum = await versiuneaServerului();
+      if (oprit || invechita.current || !acum || !versiune.current || acum === versiune.current) return;
+      invechita.current = true;
+      toast("Aplicația a fost actualizată.", {
+        description: "Reîncarcă pagina: până atunci, salvările din fila asta nu vor merge.",
+        duration: Infinity,
+        action: { label: "Reîncarcă", onClick: () => window.location.reload() },
+      });
+    };
+
     const verifica = async () => {
-      if (inCurs) return;
+      if (inCurs || invechita.current) return;
       inCurs = true;
       try {
         const res = await pollNotifications(reper.current);
@@ -99,6 +142,8 @@ export function NotificationBell({
         setUnread(res.unread);
       } catch {
         // O verificare ratată (rețea, repornire) se reia peste 30 de secunde.
+        // Dacă motivul e o publicare nouă, anunțul o spune.
+        void dupaEsec();
       } finally {
         inCurs = false;
       }
