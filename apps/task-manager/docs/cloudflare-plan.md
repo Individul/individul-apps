@@ -235,3 +235,15 @@ Utilizatorul e logat pe Cloudflare, Vercel și Supabase în Chrome și a cerut c
   - Jetonul `BACKUP_GITHUB_TOKEN` pus de utilizator: fine-grained, doar pentru `task-manager-backup`, cu „Contents: Read and write”.
   - „Rulează copia acum” a scris `proba-cloudflare/db/2026-10-24.json` (18 tabele, 3 438 de rânduri). Copia Vercel din aceeași zi a rămas neatinsă.
   - Reparat pe drum: cererile către GitHub nu aveau `User-Agent`. Node îl punea singur, Workers nu, iar GitHub refuză fără el. Refuzurile care nu vin ca JSON își arată acum și textul.
+- **Trecerea — făcută (24.10.2026, ~09:03–09:15 UTC).** Fiecare pas ireversibil a fost confirmat separat de utilizator, chiar în momentul lui.
+  1. Vercel în modul „doar citire” (`b6e88ab`, pe `main`): bandă galbenă, orice POST în afară de logare și ieșire primește 503, cronul copiei scos din `vercel.json`.
+  2. Reimport complet în D1, cu amprentele refăcute prin funcția temporară. Un cont fusese modificat după exportul de dimineață. Funcția a fost **ștearsă și verificată** (`PGRST202`). D1 identic cu Supabase; R2 cu toate cele 411 fișiere.
+  3. Domeniul `sarcini.dumitru.cloud`: șters CNAME-ul spre `cname.vercel-dns.com` (neproxiat, TTL auto), publicat Worker-ul cu domeniul (`3efc9a93`). Răspunsul vine de la Cloudflare (`cf-ray …-KIV`).
+  4. `cloudflare` îmbinată în `main` (`a9f7876`). Workers Builds publică din `main`. `vercel.json` cu `git.deploymentEnabled: false` oprește publicările Vercel; producția Vercel rămâne versiunea „doar citire”.
+  5. `BACKUP_MODE = "productie"`: copia de noapte (02:00 și 02:30 UTC) e a Worker-ului. Se verifică a doua zi în `backup_runs` și în repo, `db/2026-10-25.json`.
+- **Drumul înapoi (până la 23.11.2026):**
+  - în DNS, la loc CNAME `sarcini` → `cname.vercel-dns.com`, neproxiat; din `wrangler.toml` se scoate ruta `sarcini.dumitru.cloud`, apoi `wrangler deploy`;
+  - în Vercel → Deployments, se promovează versiunea dinainte de `b6e88ab` (fără „doar citire”, cu cronul copiei).
+
+  Datele scrise între timp în D1 nu se întorc singure în Supabase.
+- **După 30 de zile**, cu confirmarea utilizatorului: oprirea proiectului Vercel și a celui Supabase, ștergerea ramurii `cloudflare` și scoaterea `vercel.json`.
