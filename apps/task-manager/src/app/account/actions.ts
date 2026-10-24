@@ -17,7 +17,7 @@ export async function changePassword(
     return { error: "Parolele nu coincid." };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -43,7 +43,7 @@ export async function updateProfile(
     return { error: "Username invalid: 3-30 caractere, doar litere, cifre, . _ -" };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

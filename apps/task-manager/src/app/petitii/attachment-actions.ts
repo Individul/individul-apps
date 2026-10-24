@@ -7,7 +7,7 @@ import type { PetitionAttachment } from "@/lib/types";
 type Result = { error?: string; success?: boolean };
 
 export async function listAttachments(petitionId: string): Promise<PetitionAttachment[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("petition_attachments")
     .select("*")
@@ -26,7 +26,7 @@ export async function recordAttachment(input: {
   mime: string;
   size: number;
 }): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -49,7 +49,7 @@ export async function recordAttachment(input: {
 }
 
 export async function deleteAttachment(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: row } = await supabase
     .from("petition_attachments")
@@ -79,7 +79,7 @@ export async function getAttachmentUrl(
   path: string,
   downloadAs?: string,
 ): Promise<{ url?: string; error?: string }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.storage
     .from("petitions")
     .createSignedUrl(path, 60, downloadAs ? { download: downloadAs } : undefined);

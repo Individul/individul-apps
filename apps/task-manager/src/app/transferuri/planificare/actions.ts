@@ -68,7 +68,7 @@ export async function savePlan(id: string | null, input: PlanInput): Promise<Res
   const problem = validate(input, azi);
   if (problem) return { error: problem };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -127,7 +127,7 @@ export async function savePlan(id: string | null, input: PlanInput): Promise<Res
 
 /** Încheiat după ședință: iese din listă, dar rămâne în evidență. */
 export async function setPlanDone(id: string, done: boolean): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -159,7 +159,7 @@ export async function setPlanDone(id: string, done: boolean): Promise<Result> {
  * iar atunci bifa ar fi ajuns pe ședința veche, care nu mai există.
  */
 export async function setPlanNotified(id: string, notified: boolean): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -219,7 +219,7 @@ export async function setPlanNotified(id: string, notified: boolean): Promise<Re
 }
 
 export async function deletePlan(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("transfer_plans")
     .delete()

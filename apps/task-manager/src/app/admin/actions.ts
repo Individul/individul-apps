@@ -10,7 +10,7 @@ export async function setUserRole(
   role: "admin" | "member",
 ): Promise<{ error?: string; success?: boolean }> {
   if (role !== "admin" && role !== "member") return { error: "Rol invalid." };
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Nu-ți poți retrograda propriul rol (protecție și în cod, nu doar în UI).
   const { data: userData } = await supabase.auth.getUser();
@@ -43,7 +43,7 @@ type RestoreResult = {
 // azi au cincisprezece tabele și sunt refuzate aici — vezi `restoreRefusal`
 // pentru motiv.
 export async function restoreBackup(payload: unknown): Promise<RestoreResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
@@ -130,7 +130,7 @@ export async function createUser(input: {
   if (password.length < 8) return { error: "Parola trebuie să aibă minim 8 caractere." };
 
   // Apelantul trebuie să fie admin.
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -14,7 +14,7 @@ export async function notifyPetition(
   const direct = recipientsFor(type, petition, actorId);
   // best-effort: notificările nu trebuie să blocheze niciodată acțiunea de bază.
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     let observers: string[] = [];
     if (includeAdmins) {

@@ -21,7 +21,7 @@ export async function notify(
   const direct = recipientsFor(type, task, actorId);
   // best-effort: notificările nu trebuie să blocheze niciodată acțiunea de bază.
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     let observers: string[] = [];
     if (includeAdmins) {

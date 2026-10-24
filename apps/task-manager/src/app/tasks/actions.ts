@@ -51,7 +51,7 @@ export async function createTask(input: TaskInput, tagIds: string[] = []): Promi
   const parsed = taskSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Date invalide." };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -99,7 +99,7 @@ export async function updateTask(
   const parsed = taskSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Date invalide." };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -156,7 +156,7 @@ export async function updateTask(
 }
 
 export async function deleteTask(id: string): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -199,7 +199,7 @@ export async function deleteTask(id: string): Promise<ActionResult> {
  * responsabilul): fără drept, actualizarea atinge zero rânduri.
  */
 export async function setTaskAppealedCsj(id: string, appealed: boolean): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return { error: "Neautentificat." };
 
@@ -220,7 +220,7 @@ export async function setTaskAppealedCsj(id: string, appealed: boolean): Promise
 // politica RLS `tasks update` (admin OR created_by OR assignee); dacă userul nu
 // are drept, update-ul afectează 0 rânduri și întoarcem eroare.
 export async function finalizeTask(id: string): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -262,7 +262,7 @@ export async function finalizeTask(id: string): Promise<ActionResult> {
 export async function createTag(name: string, color: string): Promise<{ error?: string; tag?: { id: string; name: string; color: string } }> {
   const trimmed = name.trim();
   if (!trimmed) return { error: "Numele etichetei e obligatoriu." };
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Doar adminul poate crea etichete (impus și de RLS).
   const { data: userData } = await supabase.auth.getUser();
@@ -298,7 +298,7 @@ export async function updateTag(
 ): Promise<{ error?: string; success?: boolean }> {
   const trimmed = name.trim();
   if (!trimmed) return { error: "Numele etichetei e obligatoriu." };
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
@@ -328,7 +328,7 @@ export async function updateTag(
 }
 
 export async function deleteTag(id: string): Promise<{ error?: string; success?: boolean }> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
@@ -350,7 +350,7 @@ export async function deleteTag(id: string): Promise<{ error?: string; success?:
 }
 
 export async function attachTag(taskId: string, tagId: string): Promise<{ error?: string; success?: boolean }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("task_tags").insert({ task_id: taskId, tag_id: tagId });
   // Dublu-click pe aceeași etichetă = ciocnire pe cheia primară. Starea dorită
   // — eticheta atașată — există deja, deci e o reușită, nu o eroare de arătat.
@@ -362,7 +362,7 @@ export async function attachTag(taskId: string, tagId: string): Promise<{ error?
 }
 
 export async function detachTag(taskId: string, tagId: string): Promise<{ error?: string; success?: boolean }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("task_tags")
     .delete()
@@ -378,7 +378,7 @@ export async function detachTag(taskId: string, tagId: string): Promise<{ error?
 export async function addComment(taskId: string, body: string): Promise<{ error?: string; success?: boolean }> {
   const trimmed = body.trim();
   if (!trimmed) return { error: "Comentariul nu poate fi gol." };
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -413,7 +413,7 @@ export async function addComment(taskId: string, body: string): Promise<{ error?
 export async function editComment(commentId: string, taskId: string, body: string): Promise<{ error?: string; success?: boolean }> {
   const trimmed = body.trim();
   if (!trimmed) return { error: "Comentariul nu poate fi gol." };
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("comments")
     .update({ body: trimmed })
@@ -426,7 +426,7 @@ export async function editComment(commentId: string, taskId: string, body: strin
 }
 
 export async function deleteComment(commentId: string, taskId: string): Promise<{ error?: string; success?: boolean }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("comments")
     .delete()
@@ -443,7 +443,7 @@ export async function deleteComment(commentId: string, taskId: string): Promise<
 export async function addSubtask(taskId: string, title: string): Promise<{ error?: string }> {
   const trimmed = title.trim();
   if (!trimmed) return { error: "Pasul nu poate fi gol." };
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: last } = await supabase
     .from("subtasks")
     .select("position")
@@ -465,7 +465,7 @@ export async function toggleSubtask(
   taskId: string,
   done: boolean,
 ): Promise<{ error?: string }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: updated, error } = await supabase
     .from("subtasks")
     .update({ done, done_at: done ? new Date().toISOString() : null })
@@ -520,7 +520,7 @@ export async function toggleSubtask(
 }
 
 export async function deleteSubtask(id: string, taskId: string): Promise<{ error?: string }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   // Singura ștergere din fișier pe care RLS o poate filtra CHIAR AZI: scrierea
   // pe subsarcini cere drept de editare pe sarcină. Fără `.select()`, un membru
   // fără drept primea „succes" iar pasul rămânea la locul lui.
@@ -537,7 +537,7 @@ export async function deleteSubtask(id: string, taskId: string): Promise<{ error
 export async function applyTemplateSubtasks(
   taskId: string,
 ): Promise<{ error?: string; added?: number }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: task } = await supabase
     .from("tasks")
     .select("tags(name)")

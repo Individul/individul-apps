@@ -16,7 +16,8 @@ import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function TaskDetailPage({ params }: { params: { id: string } }) {
+export default async function TaskDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const [task, profiles, allTags, currentProfile, history, subtasks, notifications, unread] =
     await Promise.all([
       getTask(params.id),

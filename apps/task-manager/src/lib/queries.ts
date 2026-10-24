@@ -27,7 +27,7 @@ import type { Defendant } from "./defendants";
 import type { Contravener } from "./contraveners";
 
 export async function getTasks(): Promise<Task[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("tasks")
     .select("*, assignee:profiles!tasks_assignee_id_fkey(*), tags(*)")
@@ -66,7 +66,7 @@ export type TaskCountRow = Pick<Task, (typeof TASK_COUNT_COLUMNS)[number]>;
  * la fel.
  */
 export async function getTaskCounts(): Promise<TaskCountRow[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("tasks")
     .select(TASK_COUNT_COLUMNS.join(", "))
@@ -76,7 +76,7 @@ export async function getTaskCounts(): Promise<TaskCountRow[]> {
 }
 
 export async function getTask(id: string): Promise<(Task & { comments: Comment[] }) | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("tasks")
     .select(
@@ -95,7 +95,7 @@ export async function getTask(id: string): Promise<(Task & { comments: Comment[]
 }
 
 export async function getTaskHistory(taskId: string): Promise<AuditEntry[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("task_history", { p_task_id: taskId });
   // Grațios dacă migrarea 0009 nu e încă aplicată.
   if (error) return [];
@@ -103,7 +103,7 @@ export async function getTaskHistory(taskId: string): Promise<AuditEntry[]> {
 }
 
 export async function getSubtasks(taskId: string): Promise<Subtask[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("subtasks")
     .select("*")
@@ -115,14 +115,14 @@ export async function getSubtasks(taskId: string): Promise<Subtask[]> {
 }
 
 export async function getProfiles(): Promise<Profile[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("profiles").select("*").order("full_name");
   if (error) throw error;
   return (data ?? []) as Profile[];
 }
 
 export async function getTags(): Promise<Tag[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("tags").select("*").order("name");
   if (error) throw error;
   return (data ?? []) as Tag[];
@@ -133,7 +133,7 @@ export async function getAuditLog(
   /** Entitățile cerute; listă goală înseamnă tot jurnalul. */
   entities: AuditEntry["entity"][] = [],
 ): Promise<AuditEntry[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   // Filtrul intră în interogare: altfel un modul puțin activ ar părea gol doar
   // pentru că ultimele N intrări aparțin altuia.
   let query = supabase.from("audit_log").select("*");
@@ -168,13 +168,13 @@ export async function getAuditLog(
  * `getUser()` întreabă serverul Supabase, nu citește doar cookie-ul.
  */
 export const getCurrentUserId = cache(async function getCurrentUserId(): Promise<string | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   return data.user?.id ?? null;
 });
 
 export const getCurrentProfile = cache(async function getCurrentProfile(): Promise<Profile | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const uid = await getCurrentUserId();
   if (!uid) return null;
   const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
@@ -186,7 +186,7 @@ export const getCurrentProfile = cache(async function getCurrentProfile(): Promi
 export const getNotifications = cache(async function getNotifications(
   limit = 20,
 ): Promise<Notification[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("notifications")
     .select("*")
@@ -210,7 +210,7 @@ export const getNotifications = cache(async function getNotifications(
  * `assignee_id` rămâne, fiindcă după el se filtrează și se face defalcarea.
  */
 export async function getPetitions(): Promise<Petition[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const base = "*";
 
   // Încercăm cu fișierele atașate; dacă migrarea 0013 nu e aplicată, relația
@@ -264,7 +264,7 @@ export type PetitionCountRow = Pick<Petition, (typeof PETITION_COUNT_COLUMNS)[nu
  * cu zerouri, nu cu o eroare.
  */
 export async function getPetitionCounts(): Promise<PetitionCountRow[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("petitions")
     .select(PETITION_COUNT_COLUMNS.join(", "))
@@ -275,7 +275,7 @@ export async function getPetitionCounts(): Promise<PetitionCountRow[]> {
 
 /** Câte înștiințări necitite. Memorată pe durata randării. */
 export const getUnreadCount = cache(async function getUnreadCount(): Promise<number> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { count, error } = await supabase
     .from("notifications")
     .select("id", { count: "exact", head: true })
@@ -285,7 +285,7 @@ export const getUnreadCount = cache(async function getUnreadCount(): Promise<num
 });
 
 export async function getHearings(from: string, to: string): Promise<Hearing[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("hearings")
     .select("*")
@@ -298,7 +298,7 @@ export async function getHearings(from: string, to: string): Promise<Hearing[]> 
 }
 
 export async function getHearing(date: string): Promise<Hearing | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("hearings")
     .select("*")
@@ -329,7 +329,7 @@ export interface ReleaseRegistry {
 
 /** Eliberările din interval, zilele noi întâi — ca la ședințe. */
 export async function getReleases(from: string, to: string): Promise<ReleaseRegistry> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("releases")
     .select("*")
@@ -348,7 +348,7 @@ export async function getReleases(from: string, to: string): Promise<ReleaseRegi
  * pagina se deschide goală în loc să crape.
  */
 export async function getTransfers(): Promise<Transfer[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("transfers")
     .select("*")
@@ -374,7 +374,7 @@ export type TransferCountRow = Pick<Transfer, (typeof TRANSFER_COUNT_COLUMNS)[nu
  * rămâne goală în loc să rupă pagina.
  */
 export async function getTransferCounts(): Promise<TransferCountRow[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("transfers")
     .select(TRANSFER_COUNT_COLUMNS.join(", "))
@@ -405,7 +405,7 @@ export async function getLastBackupRun(): Promise<{
   last: BackupRun | null;
   lastSuccess: BackupRun | null;
 }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const columns = "started_at, finished_at, ok, files_uploaded, files_pending, error";
 
   const [last, lastSuccess] = await Promise.all([
@@ -431,7 +431,7 @@ export async function getLastBackupRun(): Promise<{
 }
 
 export async function getTransferPlans(): Promise<TransferPlan[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("transfer_plans")
     .select("*")
@@ -446,7 +446,7 @@ export async function getObligations(): Promise<{
   obligations: Obligation[];
   completed: Map<string, Set<string>>;
 }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("obligations")
     .select("*")
@@ -471,7 +471,7 @@ export async function getObligations(): Promise<{
 }
 
 export async function getDefendants(): Promise<Defendant[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("defendants")
     .select("*")
@@ -482,7 +482,7 @@ export async function getDefendants(): Promise<Defendant[]> {
 }
 
 export async function getContraveners(): Promise<Contravener[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("contraveners").select("*");
   // Grațios dacă migrarea 0031 nu e încă aplicată: modulul se deschide gol, nu
   // cu o pagină de eroare. Ordinea o dă `sortContraveners`, nu baza.
@@ -504,7 +504,7 @@ export async function getContraveners(): Promise<Contravener[]> {
  * până atunci, o funcție SQL în plus e mai mult de întreținut decât de câștigat.
  */
 export async function getSarciniRaport(): Promise<SarcinaRaport[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   // Etichetele se cer pe lângă coloane: ele spun ce fel de lucrare a fost, iar
   // raportul le arată în dreptul fiecărei sarcini încheiate.
   const { data, error } = await supabase
@@ -515,7 +515,7 @@ export async function getSarciniRaport(): Promise<SarcinaRaport[]> {
 }
 
 export async function getPetitiiRaport(): Promise<PetitieRaport[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("petitions").select(COLOANE_PETITIE.join(","));
   if (error) throw error;
   return (data ?? []) as unknown as PetitieRaport[];

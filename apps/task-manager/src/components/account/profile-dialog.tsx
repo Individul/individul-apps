@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect } from "react";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -50,7 +50,7 @@ export function ProfileDialog({
   onOpenChange,
 }: ProfileDialogProps) {
   const router = useRouter();
-  const [state, formAction] = useFormState(updateProfile, null);
+  const [state, formAction] = useActionState(updateProfile, null);
 
   useEffect(() => {
     if (state?.success) {

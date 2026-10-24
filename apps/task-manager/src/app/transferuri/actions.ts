@@ -90,7 +90,7 @@ export async function createTransfer(input: TransferInput): Promise<Result> {
   const values = validate(input);
   if (typeof values === "string") return { error: values };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -111,7 +111,7 @@ export async function updateTransfer(id: string, input: TransferInput): Promise<
   const values = validate(input);
   if (typeof values === "string") return { error: values };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -135,7 +135,7 @@ export async function updateTransfer(id: string, input: TransferInput): Promise<
 }
 
 export async function deleteTransfer(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("transfers").delete().eq("id", id).select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: LIPSA_LA_STERGERE };

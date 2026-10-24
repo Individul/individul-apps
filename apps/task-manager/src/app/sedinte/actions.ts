@@ -45,7 +45,7 @@ export async function saveHearing(input: HearingInput): Promise<Result> {
     counts[f.key] = parsed;
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -95,7 +95,7 @@ export async function saveHearing(input: HearingInput): Promise<Result> {
 }
 
 export async function deleteHearing(date: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("hearings")
     .delete()

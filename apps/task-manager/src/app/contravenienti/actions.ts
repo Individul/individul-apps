@@ -17,7 +17,7 @@ export async function saveContravener(
   const problem = validateContravener(input, toISODate(todayInChisinau()));
   if (problem) return { error: problem };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -49,7 +49,7 @@ export async function saveContravener(
 }
 
 export async function deleteContravener(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("contraveners").delete().eq("id", id).select();
   if (error) return { error: error.message };
   // RLS lasă ștergerea doar adminului; celorlalți le întoarce zero rânduri, nu
@@ -69,7 +69,7 @@ export async function deleteContravener(id: string): Promise<Result> {
  * Scoaterea bifei merge oricând — e felul de a îndrepta o apăsare greșită.
  */
 export async function setContravenerInformed(id: string, informed: boolean): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };

@@ -40,7 +40,7 @@ export async function saveDefendant(
   const problem = validate(input);
   if (problem) return { error: problem };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -92,7 +92,7 @@ export async function markConvicted(id: string, convictedOn: string): Promise<Re
     return { error: "Data trebuie scrisă ca AAAA-LL-ZZ, de pildă 2026-08-03." };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -113,7 +113,7 @@ export async function markConvicted(id: string, convictedOn: string): Promise<Re
 
 /** Readuce în lista de lucru o trecere făcută din greșeală. */
 export async function undoConvicted(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -133,7 +133,7 @@ export async function undoConvicted(id: string): Promise<Result> {
 }
 
 export async function deleteDefendant(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("defendants").delete().eq("id", id).select();
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: "Însemnarea nu există sau nu ai dreptul." };

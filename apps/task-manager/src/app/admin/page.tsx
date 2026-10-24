@@ -14,11 +14,10 @@ import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: { modul?: string };
+export default async function AdminPage(props: {
+  searchParams: Promise<{ modul?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const me = await getCurrentProfile();
   if (me?.role !== "admin") redirect("/");
   const auditModule = readAuditModule(searchParams.modul);

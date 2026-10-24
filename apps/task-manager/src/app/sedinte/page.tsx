@@ -22,11 +22,10 @@ function readPeriod(value: string | undefined): Period {
   return PERIODS.some((p) => p.value === value) ? (value as Period) : "luna";
 }
 
-export default async function SedintePage({
-  searchParams,
-}: {
-  searchParams: { perioada?: string; zi?: string; la?: string | string[] };
+export default async function SedintePage(props: {
+  searchParams: Promise<{ perioada?: string; zi?: string; la?: string | string[] }>;
 }) {
+  const searchParams = await props.searchParams;
   const period = readPeriod(searchParams.perioada);
   // Ora Republicii Moldova, nu ceasul serverului: pe Vercel el merge pe UTC, iar
   // noaptea până la ora 3 „azi" ar fi ziua de ieri — atât la ziua de introdus,

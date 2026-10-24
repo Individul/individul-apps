@@ -45,7 +45,7 @@ export async function saveRelease(date: string, count: unknown, note: string): P
   const cifra = toCount(count);
   if (typeof cifra === "string") return { error: cifra };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };

@@ -60,10 +60,10 @@ export const metadata: Metadata = {
  * schimbări în timp real și se ține singur la zi, iar numele din profil se
  * împrospătează prin `router.refresh()` după salvare.
  */
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Doar ca să știm dacă rezervăm locul barei. Fără indiciul ăsta, pagina de
   // autentificare ar arăta o clipă un schelet de bară, care apoi dispare.
-  const areSesiune = headers().get(ANTET_SESIUNE) === "1";
+  const areSesiune = (await headers()).get(ANTET_SESIUNE) === "1";
 
   return (
     <html lang="ro" className={inter.variable}>

@@ -61,7 +61,7 @@ export async function createPetition(
   if (!prefix) return { error: "Numărul de înregistrare e obligatoriu." };
   if (!input.petitioner.trim()) return { error: "Petiționarul e obligatoriu." };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -105,7 +105,7 @@ export async function updatePetition(
   if (!number.trim()) return { error: "Numărul de înregistrare e obligatoriu." };
   if (!input.petitioner.trim()) return { error: "Petiționarul e obligatoriu." };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   const nt = normalize(input);
@@ -166,7 +166,7 @@ export async function updatePetition(
 }
 
 export async function deletePetition(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
 
@@ -203,7 +203,7 @@ export async function deletePetition(id: string): Promise<Result> {
 // răspunsului cu ziua curentă dacă lipsește. Dreptul e impus de RLS
 // (admin / creator / responsabil) — dacă lipsește, update-ul atinge 0 rânduri.
 export async function finalizePetition(id: string): Promise<Result> {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;

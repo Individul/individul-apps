@@ -3,13 +3,12 @@ import { PetitionsWorkspace } from "@/components/petitions/petitions-workspace";
 
 export const dynamic = "force-dynamic";
 
-export default async function PetitiiPage({
-  searchParams,
-}: {
+export default async function PetitiiPage(props: {
   // `string[]`, nu `string`, când parametrul apare de mai multe ori în adresă —
   // așa îl dă Next. Se ia prima valoare, ca la raportul săptămânal.
-  searchParams: { petitie?: string | string[] };
+  searchParams: Promise<{ petitie?: string | string[] }>;
 }) {
+  const searchParams = await props.searchParams;
   const [petitions, profiles, currentProfile] = await Promise.all([
     getPetitions(),
     getProfiles(),

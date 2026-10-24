@@ -22,11 +22,10 @@ function readPeriod(value: string | undefined): Period {
   return PERIODS.some((p) => p.value === value) ? (value as Period) : "luna";
 }
 
-export default async function RaportSedintePage({
-  searchParams,
-}: {
-  searchParams: { perioada?: string; la?: string | string[] };
+export default async function RaportSedintePage(props: {
+  searchParams: Promise<{ perioada?: string; la?: string | string[] }>;
 }) {
+  const searchParams = await props.searchParams;
   const period = readPeriod(searchParams.perioada);
 
   /*

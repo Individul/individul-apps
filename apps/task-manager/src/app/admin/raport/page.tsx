@@ -28,11 +28,10 @@ function readPeriod(value: string | undefined): Period {
   return PERIODS.some((p) => p.value === value) ? (value as Period) : "luna";
 }
 
-export default async function RaportActivitatePage({
-  searchParams,
-}: {
-  searchParams: { perioada?: string; la?: string | string[] };
+export default async function RaportActivitatePage(props: {
+  searchParams: Promise<{ perioada?: string; la?: string | string[] }>;
 }) {
+  const searchParams = await props.searchParams;
   const me = await getCurrentProfile();
   if (me?.role !== "admin") redirect("/");
 

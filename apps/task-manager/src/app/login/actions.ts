@@ -11,7 +11,7 @@ export async function signInWithPassword(
   const password = String(formData.get("password") || "");
   if (!identifier || !password) return { error: "Introdu email/username și parolă." };
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fără "@" => tratăm ca username și îl rezolvăm la emailul contului.
   let email = identifier;

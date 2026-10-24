@@ -18,7 +18,7 @@ export async function markObligationDone(
 ): Promise<Result> {
   if (!obligationId || !dueDate) return { error: "Lipsește obligația sau termenul." };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { error: "Neautentificat." };
@@ -55,7 +55,7 @@ export async function markObligationDone(
 export async function undoObligationDone(obligationId: string): Promise<Result> {
   if (!obligationId) return { error: "Lipsește obligația." };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: latest, error: lookupError } = await supabase
     .from("obligation_completions")
     .select("id, due_date")

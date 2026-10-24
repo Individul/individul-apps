@@ -28,7 +28,7 @@ import {
 export async function searchAll(query: string): Promise<SearchGroup[]> {
   if (query.trim().length < MIN_QUERY) return [];
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [tasks, petitions, plans, defendants, contraveners, profiles] = await Promise.all([
     supabase

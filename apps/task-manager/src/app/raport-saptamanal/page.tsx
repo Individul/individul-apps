@@ -15,14 +15,13 @@ export const dynamic = "force-dynamic";
 
 const weekHref = (week: DateRange) => `/raport-saptamanal?saptamana=${toISODate(week.from)}`;
 
-export default async function RaportSaptamanalPage({
-  searchParams,
-}: {
+export default async function RaportSaptamanalPage(props: {
   // `string[]`, nu `string`, când parametrul apare de mai multe ori în adresă:
   // așa îl dă Next, iar `readWeek` ia prima valoare — exact ca
   // `URLSearchParams.get()` în ruta PDF, ca cele două să nu poată diverge.
-  searchParams: { saptamana?: string | string[] };
+  searchParams: Promise<{ saptamana?: string | string[] }>;
 }) {
+  const searchParams = await props.searchParams;
   // O singură citire a ceasului pentru toată pagina: la 23:59:59 săptămâna și
   // zilele lipsă s-ar putea calcula de-o parte și de alta a miezului nopții.
   const now = new Date();
