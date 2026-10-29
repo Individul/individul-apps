@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "Iconițe: fiecare modul are acum o iconiță a lui, aceeași pe tabul din meniul de sus și pe cardul de pe Acasă (Sarcini, Petiții, Transferuri). Pe taburi apar doar pe ecranele late, de la 1400 px, ca meniul să încapă în continuare pe un singur rând. Lângă „Acasă” stă acum sigla aplicației, aceeași cu cea din fila browserului.",
+  },
+  {
+    date: "2026-10-29",
     text: "Culori mai ușor de citit. La Petiții, starea „În examinare” are acum un punct albastru, ca „În lucru” de la Sarcini. Până acum era de aceeași culoare cu „scadent”, așa că o petiție cu termen liniștit părea în întârziere. La Sarcini, etichetele cu culori deschise (de pildă „Informare MAI” sau „Interpol”) au acum text închis în loc de alb, ca să se poată citi. Culoarea etichetei rămâne cea aleasă.",
   },
   {

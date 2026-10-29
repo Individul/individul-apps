@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import { Pagina } from "@/components/layout/pagina";
+import { MODULE_ICON } from "@/components/layout/module-icons";
 
 import { getTaskCounts, getPetitionCounts, getProfiles, getCurrentProfile, getTransferCounts, getObligations } from "@/lib/queries";
 import {
@@ -214,6 +215,7 @@ export default async function HubPage() {
         <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           <ModuleCard
             href="/sarcini"
+            icon={MODULE_ICON["/sarcini"]}
             title="Sarcini"
             description={
               isAdmin
@@ -225,6 +227,7 @@ export default async function HubPage() {
           />
           <ModuleCard
             href="/petitii"
+            icon={MODULE_ICON["/petitii"]}
             title="Petiții"
             description={
               isAdmin

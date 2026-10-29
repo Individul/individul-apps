@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ModuleTabs } from "@/components/layout/module-tabs";
+import { Sigla } from "@/components/layout/sigla";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,8 @@ export function AppHeader({ profile, notifications, unread }: AppHeaderProps) {
   return (
     <header className="no-print border-b bg-card">
       <div className="mx-auto flex max-w-[1536px] flex-wrap items-center gap-3 p-4 xl:px-10">
-        <Link href="/" className="text-sm font-medium">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium">
+          <Sigla />
           Acasă
         </Link>
         <ModuleTabs />

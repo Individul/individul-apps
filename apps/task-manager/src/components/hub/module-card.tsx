@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
@@ -40,9 +41,12 @@ export function ModuleCard({
   description,
   stats,
   breakdown,
+  icon: Icon,
 }: {
   href: string;
   title: string;
+  /** Aceeași iconiță ca tabul modulului din meniul de sus (`MODULE_ICON`). */
+  icon?: LucideIcon;
   description: string;
   stats: ModuleCardStat[];
   /** Defalcare pe responsabil (doar pentru admin). Lipsă → cardul arată doar cifrele. */
@@ -54,7 +58,10 @@ export function ModuleCard({
       href={href}
       className="block rounded-xl border bg-card p-6 transition-colors hover:border-foreground/20 hover:bg-muted/40"
     >
-      <h2 className="text-xl font-medium">{title}</h2>
+      <h2 className="flex items-center gap-2 text-xl font-medium">
+        {Icon && <Icon aria-hidden className="h-5 w-5 shrink-0 text-muted-foreground" />}
+        {title}
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       {/* Numărul de coloane urmează câte cifre are cardul: șase la sarcini,
           cinci la petiții. Fixat pe cinci, a șasea cădea singură pe alt rând. */}

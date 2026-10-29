@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowDown, ArrowUp, CalendarDays } from "lucide-react";
 import { institutionLabel, type InstitutionCounts, type TransferTotals } from "@/lib/transfers";
 import { cn } from "@/lib/utils";
+import { MODULE_ICON } from "@/components/layout/module-icons";
+
+const IconTransferuri = MODULE_ICON["/transferuri"];
 
 /**
  * Transferurile, alături de cardurile de modul.
@@ -42,7 +45,10 @@ export function TransferBand({
         className,
       )}
     >
-      <h2 className="text-xl font-medium">Transferuri</h2>
+      <h2 className="flex items-center gap-2 text-xl font-medium">
+        <IconTransferuri aria-hidden className="h-5 w-5 shrink-0 text-muted-foreground" />
+        Transferuri
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Transferurile deținuților între penitenciare, în luna curentă.
       </p>

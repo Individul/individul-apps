@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { MODULE_ICON } from "@/components/layout/module-icons";
 
 const MODULES = [
   { href: "/sarcini", label: "Sarcini", matchPrefixes: ["/sarcini", "/tasks"] },
@@ -48,17 +49,24 @@ export function ModuleTabs() {
         const active = m.matchPrefixes.some(
           (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
         );
+        const Icon = MODULE_ICON[m.href];
         return (
           <Link
             key={m.href}
             href={m.href}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm transition-colors",
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors",
               active
                 ? "bg-muted font-medium text-foreground"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
           >
+            {/* Doar de la 1400px. Cu iconițe filele fac ~840px în loc de ~685,
+                iar sub pragul ăsta antetul nu mai încape pe un rând: la 1280px,
+                un laptop obișnuit, sărea pe două (măsurat pe probă). Pe telefon
+                filele se pliază oricum pe patru rânduri; acolo eticheta
+                singură face treaba. Cardurile de pe Acasă le arată mereu. */}
+            {Icon && <Icon aria-hidden className="hidden h-4 w-4 shrink-0 min-[1400px]:block" />}
             {m.label}
           </Link>
         );

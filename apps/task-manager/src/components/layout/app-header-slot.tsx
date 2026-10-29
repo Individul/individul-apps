@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { ModuleTabs } from "@/components/layout/module-tabs";
+import { Sigla } from "@/components/layout/sigla";
 import {
   getCurrentProfile,
   getCurrentUserId,
@@ -49,7 +50,10 @@ export function AppHeaderSchelet() {
   return (
     <header className="no-print border-b bg-card">
       <div className="mx-auto flex max-w-[1536px] flex-wrap items-center gap-3 p-4 xl:px-10">
-        <span className="text-sm font-medium">Acasă</span>
+        <span className="inline-flex items-center gap-2 text-sm font-medium">
+          <Sigla />
+          Acasă
+        </span>
         <ModuleTabs />
         {/* Aceeași formă ca blocul din dreapta al barei adevărate: clopoțelul și
             meniul de cont, cu aceeași pliere pe ecrane înguste. Până la meniul
