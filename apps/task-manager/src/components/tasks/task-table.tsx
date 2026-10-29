@@ -21,10 +21,9 @@ import {
   TaskActionsMenu,
   STATUS_META,
   STATUS_DOT,
-  PRIORITY_META,
-  PRIORITY_BAR,
   initials,
   isOverdue,
+  termenSarcina,
   waitingDays,
 } from "@/components/tasks/columns";
 import { TaskFiltersBar } from "@/components/tasks/task-filters-bar";
@@ -37,6 +36,8 @@ import { cn } from "@/lib/utils";
 import type { Profile, Tag, Task } from "@/lib/types";
 import { LegendaBanda } from "@/components/legenda-banda";
 import { stilEtichetaPlina } from "@/lib/tag-colors";
+import { CULORI_TERMEN, legendaTermen } from "@/lib/culori-termen";
+import { PriorityMark } from "@/components/tasks/priority-mark";
 
 interface TaskTableProps {
   tasks: Task[];
@@ -218,6 +219,7 @@ export function TaskTable({
           <div className="min-w-[720px] divide-y">
             {rows.map((row) => {
               const t = row.original;
+              const termen = termenSarcina(t);
               return (
                 <div
                   key={row.id}
@@ -225,13 +227,14 @@ export function TaskTable({
                   className="flex cursor-pointer items-stretch transition-colors hover:bg-muted/50"
                 >
                   <span
-                    aria-label={PRIORITY_META[t.priority].label}
-                    title={PRIORITY_META[t.priority].label}
-                    className={cn("w-1 shrink-0", PRIORITY_BAR[t.priority])}
+                    aria-label={termen.eticheta}
+                    title={termen.eticheta}
+                    className={cn("w-1 shrink-0", CULORI_TERMEN[termen.stare].bara)}
                   />
                   <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2">
                     {/* Sarcină */}
                     <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <PriorityMark priority={t.priority} pastreazaLoc />
                       <Link
                         href={`/tasks/${t.id}`}
                         onClick={(e) => e.stopPropagation()}
@@ -297,7 +300,7 @@ export function TaskTable({
                     {/* Termen */}
                     <div className="w-24 shrink-0 text-[13px]">
                       {t.due_date ? (
-                        <span className={cn(isOverdue(t) && "text-red-600")}>
+                        <span className={cn(isOverdue(t) && CULORI_TERMEN.restant.text)}>
                           {format(parseISO(t.due_date), "d MMM yyyy", { locale: ro })}
                         </span>
                       ) : (
@@ -331,13 +334,14 @@ export function TaskTable({
         )}
       </div>
       {rows.length > 0 && (
-        <LegendaBanda
-          titlu="Banda din stânga arată prioritatea"
-          culori={(["high", "medium", "low"] as const).map((k) => ({
-            clasa: PRIORITY_BAR[k],
-            text: PRIORITY_META[k].label.toLowerCase(),
-          }))}
-        />
+        <LegendaBanda titlu="Banda din stânga arată termenul" culori={legendaTermen(7, "finalizată")}>
+          <span className="inline-flex items-center gap-1">
+            <PriorityMark priority="high" /> prioritate ridicată
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <PriorityMark priority="low" /> scăzută
+          </span>
+        </LegendaBanda>
       )}
 
       <TaskFormDialog

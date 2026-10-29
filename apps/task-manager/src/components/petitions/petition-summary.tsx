@@ -2,6 +2,7 @@ import { STATUS_DOT } from "@/components/petitions/meta";
 import { isPetitionOverdue } from "@/lib/hub-stats";
 import { cn } from "@/lib/utils";
 import type { Petition } from "@/lib/types";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
 
 function Stat({ label, value, dot }: { label: string; value: number; dot?: string }) {
   return (
@@ -41,7 +42,7 @@ export function PetitionSummary({
 
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">Restante</span>
-        <span className={cn("font-medium tabular-nums", overdue > 0 && "text-red-600")}>
+        <span className={cn("font-medium tabular-nums", overdue > 0 && CULORI_TERMEN.restant.text)}>
           {overdue}
         </span>
       </div>

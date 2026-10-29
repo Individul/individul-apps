@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "La Sarcini, banda colorată din stânga rândurilor arată acum termenul, ca la Petiții: roșu pentru restantă, chihlimbariu pentru scadentă în 7 zile, gri pentru în termen, verde pentru finalizată. Până acum arăta prioritatea, iar roșul de acolo („ridicată”) se confunda cu roșul restanțelor. Prioritatea se vede acum ca o săgeată lângă titlu: ↑ ridicată, ↓ scăzută, nimic pentru medie, care e cea obișnuită. În pagina unei sarcini, insigna „Ridicată” nu mai e roșie.",
+  },
+  {
+    date: "2026-10-29",
     text: "Iconițe: fiecare modul are acum o iconiță a lui, aceeași pe tabul din meniul de sus și pe cardul de pe Acasă (Sarcini, Petiții, Transferuri). Pe taburi apar doar pe ecranele late, de la 1400 px, ca meniul să încapă în continuare pe un singur rând. Lângă „Acasă” stă acum sigla aplicației, aceeași cu cea din fila browserului.",
   },
   {

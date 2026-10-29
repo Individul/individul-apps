@@ -4,6 +4,7 @@ import { STATUS_DOT } from "@/components/petitions/meta";
 import { cn } from "@/lib/utils";
 import { filterPetitions, type PetitionFilter } from "@/lib/petition-filters";
 import type { Petition } from "@/lib/types";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
 
 interface View {
   key: string;
@@ -42,8 +43,8 @@ export function PetitionQuickViews({
           },
         ]
       : []),
-    { key: "overdue", label: "Restante", filter: { due: "overdue" }, dot: "bg-red-400", danger: true },
-    { key: "soon", label: "Scadente 5 zile", filter: { due: "soon" }, dot: "bg-amber-400" },
+    { key: "overdue", label: "Restante", filter: { due: "overdue" }, dot: CULORI_TERMEN.restant.punct, danger: true },
+    { key: "soon", label: "Scadente 5 zile", filter: { due: "soon" }, dot: CULORI_TERMEN.scadent.punct },
     {
       key: "in_examinare",
       label: "În examinare",

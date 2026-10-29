@@ -3,6 +3,7 @@ import { avatarColor } from "@/lib/avatar-color";
 import { countsByAssignee, isPetitionOverdue } from "@/lib/hub-stats";
 import { cn } from "@/lib/utils";
 import type { Petition, Profile } from "@/lib/types";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -48,7 +49,7 @@ export function PetitionAssigneeBreakdown({
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm">{r.name}</div>
                 {r.overdue > 0 && (
-                  <div className="text-xs tabular-nums text-red-600">{r.overdue} restante</div>
+                  <div className={cn("text-xs tabular-nums", CULORI_TERMEN.restant.text)}>{r.overdue} restante</div>
                 )}
               </div>
               <span className="ml-auto shrink-0 text-sm tabular-nums text-muted-foreground">

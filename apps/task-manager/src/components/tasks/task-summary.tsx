@@ -2,6 +2,7 @@ import { STATUS_DOT, STATUS_OPTIONS } from "@/components/tasks/meta";
 import { isTaskOverdue } from "@/lib/hub-stats";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/types";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
 
 function Stat({ label, value, dot }: { label: string; value: number; dot?: string }) {
   return (
@@ -50,7 +51,7 @@ export function TaskSummary({ tasks, label = "Rezumat" }: { tasks: Task[]; label
 
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">Restante</span>
-        <span className={cn("font-medium tabular-nums", overdue > 0 && "text-red-600")}>
+        <span className={cn("font-medium tabular-nums", overdue > 0 && CULORI_TERMEN.restant.text)}>
           {overdue}
         </span>
       </div>

@@ -4,6 +4,7 @@ import { STATUS_DOT, STATUS_OPTIONS } from "@/components/tasks/meta";
 import { cn } from "@/lib/utils";
 import { filterTasks, type TaskFilter } from "@/lib/task-filters";
 import type { Task } from "@/lib/types";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
 
 interface View {
   key: string;
@@ -43,8 +44,8 @@ export function QuickViews({ tasks, currentUserId, filter, onFilterChange }: Qui
           },
         ]
       : []),
-    { key: "overdue", label: "Restante", filter: { due: "overdue" }, dot: "bg-red-400", danger: true },
-    { key: "soon", label: "Scadente 7 zile", filter: { due: "soon" }, dot: "bg-amber-400" },
+    { key: "overdue", label: "Restante", filter: { due: "overdue" }, dot: CULORI_TERMEN.restant.punct, danger: true },
+    { key: "soon", label: "Scadente 7 zile", filter: { due: "soon" }, dot: CULORI_TERMEN.scadent.punct },
     // Rândurile de stare ies din hărți, nu se scriu aici: lista scrisă de mână
     // a ratat deja o stare o dată („în așteptare" se putea seta, dar nu filtra),
     // iar punctele își aleseseră singure alte nuanțe decât restul paginii.

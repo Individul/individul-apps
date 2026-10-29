@@ -34,6 +34,7 @@ import { filterPetitions, type PetitionFilter } from "@/lib/petition-filters";
 import { cn } from "@/lib/utils";
 import type { Petition, PetitionStatus, Profile } from "@/lib/types";
 import { LegendaBanda } from "@/components/legenda-banda";
+import { CULORI_TERMEN, legendaTermen } from "@/lib/culori-termen";
 
 function initials(name: string | null): string {
   if (!name) return "?";
@@ -43,10 +44,10 @@ function initials(name: string | null): string {
 
 // Marginea de urgență a rândului, echivalentul benzii de prioritate de la sarcini.
 const URGENCY_BAR = {
-  overdue: "bg-red-500",
-  soon: "bg-amber-500",
-  open: "bg-slate-300",
-  solved: "bg-green-500",
+  overdue: CULORI_TERMEN.restant.bara,
+  soon: CULORI_TERMEN.scadent.bara,
+  open: CULORI_TERMEN.inTermen.bara,
+  solved: CULORI_TERMEN.gata.bara,
 } as const;
 
 type UrgencyKey = keyof typeof URGENCY_BAR;
@@ -472,8 +473,8 @@ export function PetitionsList({
                       {p.response_deadline ? (
                         <span
                           className={cn(
-                            overdue && "font-medium text-red-600",
-                            soon && "text-amber-600",
+                            overdue && cn("font-medium", CULORI_TERMEN.restant.text),
+                            soon && CULORI_TERMEN.scadent.text,
                           )}
                         >
                           {format(parseISO(p.response_deadline), "d MMM yyyy", { locale: ro })}
@@ -522,12 +523,7 @@ export function PetitionsList({
       {rows.length > 0 && (
         <LegendaBanda
           titlu="Banda din stânga arată termenul"
-          culori={[
-            { clasa: URGENCY_BAR.overdue, text: "restant" },
-            { clasa: URGENCY_BAR.soon, text: "scadent în 5 zile" },
-            { clasa: URGENCY_BAR.open, text: "în termen" },
-            { clasa: URGENCY_BAR.solved, text: "soluționat" },
-          ]}
+          culori={legendaTermen(5, "soluționat")}
         />
       )}
 

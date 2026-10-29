@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
 
 export interface ModuleCardStat {
   label: string;
@@ -76,8 +77,8 @@ export function ModuleCard({
             <div
               className={cn(
                 "text-2xl font-medium tabular-nums",
-                s.tone === "danger" && s.value > 0 && "text-red-600",
-                s.tone === "warning" && s.value > 0 && "text-amber-600",
+                s.tone === "danger" && s.value > 0 && CULORI_TERMEN.restant.text,
+                s.tone === "warning" && s.value > 0 && CULORI_TERMEN.scadent.text,
               )}
             >
               {s.value}
@@ -153,8 +154,8 @@ export function ModuleCard({
                       "py-1 text-right text-xs tabular-nums",
                       // Zerourile se estompează: privirea merge la ce chiar există.
                       value === 0 && "text-muted-foreground/40",
-                      value > 0 && stats[i]?.tone === "warning" && "text-amber-600",
-                      value > 0 && stats[i]?.tone === "danger" && "text-red-600",
+                      value > 0 && stats[i]?.tone === "warning" && CULORI_TERMEN.scadent.text,
+                      value > 0 && stats[i]?.tone === "danger" && CULORI_TERMEN.restant.text,
                     )}
                   >
                     {value}

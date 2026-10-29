@@ -23,6 +23,9 @@ import { PRIORITY_ORDER } from "@/lib/task-filters";
 import { canEditTask, canDeleteTask, canFinalizeTask } from "@/lib/permissions";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
 import { stilEtichetaPlina } from "@/lib/tag-colors";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
+export { termenSarcina } from "@/lib/task-termen";
+import { PriorityMark } from "@/components/tasks/priority-mark";
 
 // Numele vin din `@/lib/status-labels`, culorile rămân aici: numele se arată
 // și în căutare, culorile nu.
@@ -41,17 +44,17 @@ export const STATUS_META: Record<TaskStatus, { label: string; className: string 
     ]),
   ) as Record<TaskStatus, { label: string; className: string }>;
 
+/**
+ * Insigna prioritații, în tonuri neutre: mai apăsat cu cât e mai mare.
+ * Fără roșu și chihlimbariu, care la noi spun ceva despre termen, nu despre
+ * importanță (vezi `CULORI_TERMEN` și `PriorityMark`, 29.10.2026).
+ */
 export const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> = {
-  low: { label: "Scăzută", className: "border-transparent bg-slate-100 text-slate-700" },
-  medium: { label: "Medie", className: "border-transparent bg-amber-100 text-amber-800" },
-  high: { label: "Ridicată", className: "border-transparent bg-red-100 text-red-700" },
+  low: { label: "Scăzută", className: "border-input bg-transparent text-muted-foreground" },
+  medium: { label: "Medie", className: "border-transparent bg-slate-100 text-slate-700" },
+  high: { label: "Ridicată", className: "border-transparent bg-slate-800 text-white" },
 };
 
-export const PRIORITY_BAR: Record<TaskPriority, string> = {
-  high: "bg-red-500",
-  medium: "bg-amber-500",
-  low: "bg-slate-300",
-};
 
 export const STATUS_DOT: Record<TaskStatus, string> = {
   todo: "bg-slate-400",
@@ -185,13 +188,7 @@ export function makeColumns({
     id: "priority",
     accessorFn: (task) => PRIORITY_ORDER[task.priority],
     header: ({ column }) => <SortableHeader column={column} label="Prioritate" />,
-    cell: ({ row }) => (
-      <span
-        aria-label={PRIORITY_META[row.original.priority].label}
-        title={PRIORITY_META[row.original.priority].label}
-        className={cn("block h-6 w-1 rounded-full", PRIORITY_BAR[row.original.priority])}
-      />
-    ),
+    cell: ({ row }) => <PriorityMark priority={row.original.priority} />,
   },
   {
     accessorKey: "title",
@@ -258,7 +255,7 @@ export function makeColumns({
     cell: ({ row }) => {
       if (!row.original.due_date) return <span className="text-muted-foreground">—</span>;
       return (
-        <span className={cn(isOverdue(row.original) && "text-red-600")}>
+        <span className={cn(isOverdue(row.original) && CULORI_TERMEN.restant.text)}>
           {format(parseISO(row.original.due_date), "d MMM yyyy", { locale: ro })}
         </span>
       );

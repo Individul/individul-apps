@@ -32,6 +32,8 @@ import type {
   TaskStatus,
 } from "@/lib/types";
 import { laChisinau } from "@/lib/periods";
+import { CULORI_TERMEN } from "@/lib/culori-termen";
+import { PRIORITY_META } from "@/components/tasks/columns";
 
 const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   todo: { label: "De făcut", className: "border-transparent bg-slate-100 text-slate-700" },
@@ -41,12 +43,6 @@ const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
     className: "border-transparent bg-violet-100 text-violet-700",
   },
   done: { label: "Finalizat", className: "border-transparent bg-green-100 text-green-700" },
-};
-
-const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> = {
-  low: { label: "Scăzută", className: "border-transparent bg-slate-100 text-slate-700" },
-  medium: { label: "Medie", className: "border-transparent bg-amber-100 text-amber-800" },
-  high: { label: "Ridicată", className: "border-transparent bg-red-100 text-red-700" },
 };
 
 function initials(name: string | null | undefined): string {
@@ -202,7 +198,7 @@ export function TaskDetail({
 
             <div className="space-y-1.5">
               <FieldLabel>Termen</FieldLabel>
-              <dd className={cn(overdue && "font-medium text-red-600")}>
+              <dd className={cn(overdue && cn("font-medium", CULORI_TERMEN.restant.text))}>
                 {task.due_date ? (
                   format(parseISO(task.due_date), "d MMM yyyy", { locale: ro })
                 ) : (
