@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "La „Planificarea transferurilor”, în fiecare zi de transfer persoanele apar acum după numărul penitenciarului, de la cel mai mic la cel mai mare, ca cei duși la același penitenciar să stea unul sub altul. La același penitenciar, întâi data mai apropiată, apoi după nume. Ordinea e aceeași pe ecran și pe lista tipărită.",
+  },
+  {
+    date: "2026-10-29",
     text: "La „Planificarea transferurilor” se poate tipări lista celor preconizați pentru transfer: butonul „Tipărește” scoate pe hârtie un tabel pe fiecare zi de transfer (nr., numele, instanța, penitenciarul, temeiul și data, observațiile) și totalul. Iconița de imprimantă din capul unei zile tipărește doar ziua aceea, de pildă pentru escortă. Dacă ai căutat ceva, se tipărește doar ce s-a găsit, iar foaia o spune.",
   },
   {

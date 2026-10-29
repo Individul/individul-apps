@@ -102,6 +102,30 @@ describe("groupByTransferDay", () => {
     expect(groups).toEqual([]);
   });
 
+  it("în aceeași zi, după penitenciar, de la numărul mic la cel mare", () => {
+    const groups = groupByTransferDay(
+      [
+        plan({ id: "p13", institution: 13, hearing_date: "2026-08-05" }),
+        plan({ id: "p2", institution: 2, hearing_date: "2026-08-14" }),
+        plan({ id: "p11", institution: 11, hearing_date: "2026-08-06" }),
+      ],
+      azi,
+    );
+    expect(groups[0].plans.map((p) => p.id)).toEqual(["p2", "p11", "p13"]);
+  });
+
+  it("la același penitenciar, data, apoi numele", () => {
+    const groups = groupByTransferDay(
+      [
+        plan({ id: "zamfir", last_name: "Zamfir", hearing_date: "2026-08-05" }),
+        plan({ id: "tarziu", last_name: "Arnaut", hearing_date: "2026-08-14" }),
+        plan({ id: "arnaut", last_name: "Arnaut", hearing_date: "2026-08-05" }),
+      ],
+      azi,
+    );
+    expect(groups[0].plans.map((p) => p.id)).toEqual(["arnaut", "zamfir", "tarziu"]);
+  });
+
   it("în aceeași zi, ședințele mai apropiate primele", () => {
     const groups = groupByTransferDay(
       [

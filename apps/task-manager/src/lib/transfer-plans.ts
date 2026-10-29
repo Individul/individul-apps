@@ -184,6 +184,11 @@ export interface PlanGroup {
 /**
  * Grupează planurile neîncheiate pe ziua de transfer calculată, cronologic.
  * Cele fără zi posibilă ies primele: sunt singurele care cer o acțiune azi.
+ *
+ * În fiecare zi, după numărul penitenciarului, de la cel mic la cel mare
+ * (29.10.2026, cererea lui Dumitru): oamenii duși la același penitenciar
+ * stau unul sub altul, pe ecran și pe lista tipărită pentru escortă. La același
+ * penitenciar, data mai apropiată întâi, apoi după nume.
  */
 export function groupByTransferDay(
   plans: TransferPlan[],
@@ -201,7 +206,12 @@ export function groupByTransferDay(
 
   const groups = [...byDay].map(([day, list]) => ({
     day,
-    plans: [...list].sort((a, b) => (planDate(a) ?? "").localeCompare(planDate(b) ?? "")),
+    plans: [...list].sort(
+      (a, b) =>
+        a.institution - b.institution ||
+        (planDate(a) ?? "").localeCompare(planDate(b) ?? "") ||
+        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "ro"),
+    ),
   }));
 
   return groups.sort((a, b) => {
