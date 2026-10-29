@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-29",
+    text: "La „Planificarea transferurilor” se poate tipări lista celor preconizați pentru transfer: butonul „Tipărește” scoate pe hârtie un tabel pe fiecare zi de transfer (nr., numele, instanța, penitenciarul, temeiul și data, observațiile) și totalul. Iconița de imprimantă din capul unei zile tipărește doar ziua aceea, de pildă pentru escortă. Dacă ai căutat ceva, se tipărește doar ce s-a găsit, iar foaia o spune.",
+  },
+  {
     date: "2026-10-24",
     text: "Când o salvare nu reușește din cauza serverului sau a legăturii, apare un mesaj și pagina rămâne cum era. Până acum, în cazuri rare, toată pagina se înlocuia cu un ecran de eroare fără niciun buton; acum, dacă totuși ceva scapă, pagina arată „Ceva n-a mers”, cu „Încearcă din nou” și „Reîncarcă pagina”, iar meniul de sus rămâne.",
   },

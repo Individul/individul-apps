@@ -1,21 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { AlertTriangle, Check, MailCheck, Plus, Undo2 } from "lucide-react";
+import { AlertTriangle, Check, MailCheck, Plus, Printer, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlanDialog } from "@/components/transfers/plan-dialog";
+import { dataPlanului, ziuaTransferului } from "@/components/transfers/plan-format";
+import { PlanPrint } from "@/components/transfers/plan-print";
 import { setPlanDone, setPlanNotified } from "@/app/transferuri/planificare/actions";
 import {
   esteInstiintat,
   groupByTransferDay,
   matchesPlan,
-  planDate,
   termenDepasit,
   termenLimita,
   type TransferPlan,
@@ -23,21 +24,6 @@ import {
 import { institutionLabel } from "@/lib/transfers";
 import { parseISODate } from "@/lib/periods";
 
-/**
- * Data de care atârnă planificarea, spusă cu numele ei.
- *
- * „Ședința" și „decizia" cer transferul în direcții opuse — una înainte, alta
- * după — deci un rând care arată doar o dată, fără să spună care, s-ar citi
- * greșit exact când contează.
- */
-function dataPlanului(p: TransferPlan): string {
-  const iso = planDate(p);
-  if (!iso) return "—";
-  const zi = format(parseISODate(iso), "d MMM yyyy", { locale: ro });
-  if (p.basis === "decizie") return `decizie, ${zi}`;
-  if (p.basis === "termen30") return `încheiere, ${zi}`;
-  return `ședință, ${zi}`;
-}
 import { cn } from "@/lib/utils";
 
 export function PlanList({
@@ -52,6 +38,32 @@ export function PlanList({
   const [editing, setEditing] = useState<TransferPlan | null>(null);
   const [search, setSearch] = useState("");
   const [, startTransition] = useTransition();
+  /**
+   * Ce se tipărește: `undefined` = tot ce se vede acum, altfel ziua unui grup
+   * (`null` e grupul fără zi de transfer). Se alege din butonul grupului, se
+   * tipărește, iar după tipărire revine la tot. Ctrl+P tipărește tot, fiindcă
+   * starea de bază e „tot".
+   */
+  const [ziTiparita, setZiTiparita] = useState<string | null | undefined>(undefined);
+  const [deTiparit, setDeTiparit] = useState(false);
+
+  useEffect(() => {
+    if (!deTiparit) return;
+    // Efectul rulează după ce React a scris lista aleasă în pagină, iar tiparul
+    // își face singur așezarea din DOM; `setTimeout`, nu `requestAnimationFrame`,
+    // fiindcă acela nu pornește într-o filă ascunsă.
+    const id = setTimeout(() => {
+      window.print();
+      setDeTiparit(false);
+      setZiTiparita(undefined);
+    }, 0);
+    return () => clearTimeout(id);
+  }, [deTiparit]);
+
+  const tipareste = (zi: string | null | undefined) => {
+    setZiTiparita(zi);
+    setDeTiparit(true);
+  };
 
   const cautare = search.trim() !== "";
   // Căutarea se aplică înainte de grupare, ca grupurile fără niciun rând
@@ -107,8 +119,23 @@ export function PlanList({
     });
   };
 
+  const grupeTiparite = ziTiparita === undefined ? groups : groups.filter((g) => g.day === ziTiparita);
+  const selectieTiparita = [
+    ziTiparita !== undefined
+      ? ziTiparita === null
+        ? "Doar persoanele fără zi de transfer înainte de ședință"
+        : `Doar transferul din ${ziuaTransferului(ziTiparita)}`
+      : null,
+    cautare ? `Selecție după căutarea „${search.trim()}”` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ") || null;
+
   return (
     <div className="space-y-4">
+      <PlanPrint groups={grupeTiparite} selectie={selectieTiparita} />
+      {/* Tot ce urmează e lista de lucru, cu butoane: pe hârtie iese PlanPrint. */}
+      <div className="space-y-4 print:hidden">
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
@@ -128,8 +155,19 @@ export function PlanList({
         </p>
         <Button
           type="button"
+          variant="outline"
           size="sm"
           className="ml-auto h-7"
+          disabled={groups.length === 0}
+          title={cautare ? "Tipărește persoanele găsite" : "Tipărește lista celor preconizați pentru transfer"}
+          onClick={() => tipareste(undefined)}
+        >
+          <Printer className="mr-1 h-3.5 w-3.5" /> Tipărește
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className="h-7"
           onClick={() => {
             setEditing(null);
             setOpen(true);
@@ -211,14 +249,20 @@ export function PlanList({
                   )}
                 </>
               ) : (
-                <span className="font-medium">
-                  Transfer pe{" "}
-                  {format(parseISODate(group.day!), "EEEE, d MMMM yyyy", { locale: ro })}
-                </span>
+                <span className="font-medium">Transfer pe {ziuaTransferului(group.day!)}</span>
               )}
               <span className="ml-auto tabular-nums text-muted-foreground">
                 {group.plans.length}
               </span>
+              <button
+                type="button"
+                onClick={() => tipareste(group.day)}
+                title="Tipărește doar această zi"
+                aria-label={imposibil ? "Tipărește persoanele fără zi de transfer" : `Tipărește transferul din ${ziuaTransferului(group.day!)}`}
+                className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground"
+              >
+                <Printer className="h-3.5 w-3.5" aria-hidden />
+              </button>
             </header>
 
             <div className="divide-y">
@@ -358,6 +402,7 @@ export function PlanList({
       )}
 
       <PlanDialog open={open} onOpenChange={setOpen} plan={editing} isAdmin={isAdmin} />
+      </div>
     </div>
   );
 }

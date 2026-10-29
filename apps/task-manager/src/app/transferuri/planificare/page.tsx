@@ -12,8 +12,9 @@ export default async function PlanificarePage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-4 xl:px-10">
-      <div>
+    <main className="mx-auto max-w-5xl space-y-6 p-4 xl:px-10 print:max-w-none print:space-y-0 print:p-0">
+      {/* Titlul paginii nu se tipărește: lista tipărită are antetul ei (PlanPrint). */}
+      <div className="print:hidden">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold">Planificarea transferurilor</h1>
           <Link
