@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, KeyRound, LogOut, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronDown, KeyRound, LogOut, Monitor, Moon, Sun, UserRound } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -9,9 +9,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { citesteTema, salveazaTema, urmaresteSistemul, type Tema } from "@/lib/tema";
 import { ProfileDialog } from "@/components/account/profile-dialog";
 import { ChangePasswordDialog } from "@/components/account/change-password-dialog";
 import type { Profile } from "@/lib/types";
@@ -37,6 +40,13 @@ import type { Profile } from "@/lib/types";
 export function UserMenu({ profile }: { profile: Profile | null }) {
   const [profilDeschis, setProfilDeschis] = useState(false);
   const [parolaDeschisa, setParolaDeschisa] = useState(false);
+  // „sistem" până la montare: pe server nu există `localStorage`. Clasa `dark`
+  // e oricum pusă deja de scriptul din <head>; aici se citește doar bifa.
+  const [tema, setTema] = useState<Tema>("sistem");
+  useEffect(() => {
+    setTema(citesteTema());
+    return urmaresteSistemul();
+  }, []);
 
   const nume = profile?.full_name?.trim() || "Contul meu";
 
@@ -90,6 +100,33 @@ export function UserMenu({ profile }: { profile: Profile | null }) {
             <KeyRound className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />
             Schimbă parola
           </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Tema stă aici, nu în bară: o alegi o dată și nu te mai gândești la
+              ea, ca la parolă. Pe dispozitiv, nu în cont (vezi `lib/tema`). */}
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Temă</DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            value={tema}
+            onValueChange={(v) => {
+              const t = v as Tema;
+              setTema(t);
+              salveazaTema(t);
+            }}
+          >
+            <DropdownMenuRadioItem value="sistem" className="cursor-pointer">
+              <Monitor className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />
+              Ca sistemul
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="luminos" className="cursor-pointer">
+              <Sun className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />
+              Luminoasă
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="intunecat" className="cursor-pointer">
+              <Moon className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />
+              Întunecată
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
 
           <DropdownMenuSeparator />
 

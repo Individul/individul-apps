@@ -325,7 +325,7 @@ export function TaskFormDialog({
                       }
                       className={cn(
                         "rounded-full border px-2 py-0.5 text-xs transition hover:opacity-80",
-                        active && "font-medium",
+                        active ? "font-medium" : "eticheta-contur",
                       )}
                       style={
                         active ? stilEtichetaPlina(tag.color) : stilEtichetaContur(tag.color)

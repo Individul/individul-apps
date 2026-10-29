@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { Inter } from "next/font/google";
-import { Toaster } from "sonner";
 
 import { AppHeaderSchelet, AppHeaderSlot } from "@/components/layout/app-header-slot";
 import { ANTET_SESIUNE } from "@/lib/session-header";
+import { SCRIPT_TEMA } from "@/lib/tema";
+import { ToasterTema } from "@/components/layout/toaster-tema";
 import "./globals.css";
 
 /**
@@ -65,7 +66,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const areSesiune = (await headers()).get(ANTET_SESIUNE) === "1";
 
   return (
-    <html lang="ro" className={inter.variable}>
+    // `suppressHydrationWarning`: scriptul de temă pune `dark` pe <html> înainte
+    // ca React să ajungă aici, deci clasa diferă dinadins de cea de pe server.
+    <html lang="ro" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
       <body>
         {areSesiune && (
           <Suspense fallback={<AppHeaderSchelet />}>
@@ -73,7 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Suspense>
         )}
         {children}
-        <Toaster richColors position="top-right" />
+        <ToasterTema />
       </body>
     </html>
   );

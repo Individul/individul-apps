@@ -259,7 +259,7 @@ export function PlanList({
                 onClick={() => tipareste(group.day)}
                 title="Tipărește doar această zi"
                 aria-label={imposibil ? "Tipărește persoanele fără zi de transfer" : `Tipărește transferul din ${ziuaTransferului(group.day!)}`}
-                className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-black/5 hover:text-foreground"
+                className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Printer className="h-3.5 w-3.5" aria-hidden />
               </button>

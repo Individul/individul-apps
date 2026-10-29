@@ -104,7 +104,7 @@ export function ContravenerList({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 border-amber-300 bg-white px-2 text-xs hover:bg-amber-100"
+              className="h-7 border-amber-300 bg-card px-2 text-xs hover:bg-amber-100"
               onClick={() => setFilter("de_informat")}
             >
               Arată-le

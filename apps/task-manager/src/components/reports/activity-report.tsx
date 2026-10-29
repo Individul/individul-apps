@@ -47,7 +47,7 @@ function Lista({ titlu, coloana }: { titlu: string; coloana: Coloana }) {
               {x.etichete.map((e) => (
                 <span
                   key={e.id}
-                  className="ml-2 inline-block rounded-full border px-2 py-px align-middle text-[11px] font-medium"
+                  className="eticheta-contur ml-2 inline-block rounded-full border px-2 py-px align-middle text-[11px] font-medium"
                   style={stilEtichetaContur(e.color)}
                 >
                   {e.name}

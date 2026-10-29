@@ -52,7 +52,7 @@ export const STATUS_META: Record<TaskStatus, { label: string; className: string 
 export const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> = {
   low: { label: "Scăzută", className: "border-input bg-transparent text-muted-foreground" },
   medium: { label: "Medie", className: "border-transparent bg-slate-100 text-slate-700" },
-  high: { label: "Ridicată", className: "border-transparent bg-slate-800 text-white" },
+  high: { label: "Ridicată", className: "border-transparent bg-foreground text-background" },
 };
 
 

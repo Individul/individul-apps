@@ -16,6 +16,8 @@ import type { CSSProperties } from "react";
 
 /** Textul aplicației (`--foreground`, #1A1B1E). */
 const TEXT_INCHIS = "#1a1b1e";
+/** Cardul în modul întunecat (`--card` sub `.dark`, #1A1B1E). */
+const CARD_INTUNECAT = "#1a1b1e";
 const ALB = "#ffffff";
 /** Pragul WCAG AA pentru text obișnuit. */
 const PRAG = 4.5;
@@ -63,12 +65,37 @@ export function culoarePeAlb(culoare: string): string {
   return TEXT_INCHIS;
 }
 
+/**
+ * Aceeași nuanță, deschisă spre alb până se citește pe cardul întunecat.
+ * Perechea lui `culoarePeAlb`, pentru modul întunecat.
+ */
+export function culoarePeIntunecat(culoare: string): string {
+  const c = rgb(culoare);
+  if (!c) return "#e6e7ea";
+  for (let k = 0; k <= 1; k += 0.05) {
+    const hex = `#${c.map((x) => Math.round(x + (255 - x) * k).toString(16).padStart(2, "0")).join("")}`;
+    if (contrast(hex, CARD_INTUNECAT) >= PRAG) return hex;
+  }
+  return "#e6e7ea";
+}
+
 /** Eticheta plină: fondul și conturul în culoarea ei, textul lizibil. */
 export function stilEtichetaPlina(culoare: string): CSSProperties {
   return { backgroundColor: culoare, borderColor: culoare, color: textPeCuloare(culoare) };
 }
 
-/** Eticheta cu contur: conturul în culoarea ei, textul în nuanța închisă. */
+/**
+ * Eticheta cu contur: conturul în culoarea ei, textul în nuanța lizibilă.
+ *
+ * Pe fond alb nuanța se închide, pe fond întunecat se deschide. Stilul nu
+ * știe tema (se scrie și pe server), deci le dă pe amândouă: `color` pentru
+ * tema luminoasă și `--eticheta-intunecat` pentru regula `.dark .eticheta-contur`
+ * din globals.css. Elementul trebuie să poarte clasa `eticheta-contur`.
+ */
 export function stilEtichetaContur(culoare: string): CSSProperties {
-  return { borderColor: culoare, color: culoarePeAlb(culoare) };
+  return {
+    borderColor: culoare,
+    color: culoarePeAlb(culoare),
+    ["--eticheta-intunecat" as string]: culoarePeIntunecat(culoare),
+  };
 }

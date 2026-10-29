@@ -90,6 +90,56 @@
   }
 }
 
+/*
+ * Modul întunecat (29.10.2026).
+ *
+ * Se pornește cu clasa `dark` pe <html>, pusă de scriptul din `layout.tsx`
+ * după alegerea din meniul utilizatorului (Sistem / Luminos / Întunecat).
+ *
+ * Doar pe ecran: tot ce se tipărește (planificarea transferurilor, raportul de
+ * marți, raportul de ședințe) iese pe hârtie albă, cu text negru, oricare ar
+ * fi tema. Sub `@media print` rămân deci valorile de mai sus.
+ *
+ * Accentul nu rămâne bleumarin: #1F3A5F pe un fond aproape negru nu se mai
+ * vede. Se deschide la un albastru din aceeași familie, cu textul butonului
+ * închis. Culorile categoriale ale graficelor (`--chart-*`) nu se schimbă:
+ * ordinea și nuanțele lor sunt validate ca perechi, iar pe fond închis toate
+ * trec de 3:1.
+ */
+@media screen {
+  .dark {
+    --background: 225 8% 7%; /* #111214 */
+    --foreground: 220 9% 91%; /* #E6E7EA */
+    --card: 225 7% 11%; /* #1A1B1E */
+    --card-foreground: 220 9% 91%;
+    --popover: 225 7% 11%;
+    --popover-foreground: 220 9% 91%;
+    --primary: 213 62% 64%; /* #6A9BDB */
+    --primary-foreground: 222 47% 11%;
+    --secondary: 225 6% 16%;
+    --secondary-foreground: 220 9% 91%;
+    --muted: 225 6% 16%; /* #26282C */
+    --muted-foreground: 220 8% 64%; /* #9DA1AA */
+    --accent: 225 6% 16%;
+    --accent-foreground: 220 9% 91%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 160 64% 52%;
+    --success-bg: 160 60% 12%;
+    --border: 225 6% 20%; /* #303237 */
+    --input: 225 6% 22%;
+    --ring: 213 62% 64%;
+    color-scheme: dark;
+  }
+
+  /* Textul etichetelor cu contur: nuanța deschisă, calculată în
+     `stilEtichetaContur`. `!important` fiindcă varianta pentru fond alb vine
+     ca stil scris pe element. */
+  .dark .eticheta-contur {
+    color: var(--eticheta-intunecat) !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

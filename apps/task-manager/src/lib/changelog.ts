@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "Modul întunecat. Din meniul contului (sus, în dreapta, la numele tău) poți alege tema: „Ca sistemul” (implicit, urmează setarea calculatorului sau a telefonului), „Luminoasă” sau „Întunecată”. Alegerea se ține minte pe fiecare dispozitiv. Ce se tipărește iese mereu pe hârtie albă, oricare ar fi tema.",
+  },
+  {
+    date: "2026-10-29",
     text: "La Sarcini, banda colorată din stânga rândurilor arată acum termenul, ca la Petiții: roșu pentru restantă, chihlimbariu pentru scadentă în 7 zile, gri pentru în termen, verde pentru finalizată. Până acum arăta prioritatea, iar roșul de acolo („ridicată”) se confunda cu roșul restanțelor. Prioritatea se vede acum ca o săgeată lângă titlu: ↑ ridicată, ↓ scăzută, nimic pentru medie, care e cea obișnuită. În pagina unei sarcini, insigna „Ridicată” nu mai e roșie.",
   },
   {
