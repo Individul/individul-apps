@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "Culori mai ușor de citit. La Petiții, starea „În examinare” are acum un punct albastru, ca „În lucru” de la Sarcini. Până acum era de aceeași culoare cu „scadent”, așa că o petiție cu termen liniștit părea în întârziere. La Sarcini, etichetele cu culori deschise (de pildă „Informare MAI” sau „Interpol”) au acum text închis în loc de alb, ca să se poată citi. Culoarea etichetei rămâne cea aleasă.",
+  },
+  {
+    date: "2026-10-29",
     text: "Mici retușuri de aspect. La Sarcini și Petiții, lunile termenelor sunt scrise acum în română („14 aug 2026”, nu „14 Aug 2026”). Toate paginile încep din aceeași margine cu meniul de sus, așa că titlul nu mai sare la stânga sau la dreapta când treci dintr-un tab în altul. Sub tabelele de la Sarcini și Petiții, o legendă scurtă spune ce înseamnă banda colorată din stânga rândurilor. O adresă greșită arată acum „Pagina nu există”, cu butonul „Înapoi la Acasă”, în loc de pagina neagră în engleză.",
   },
   {

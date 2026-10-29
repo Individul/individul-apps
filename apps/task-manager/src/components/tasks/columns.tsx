@@ -22,6 +22,7 @@ import { isTaskOverdue } from "@/lib/hub-stats";
 import { PRIORITY_ORDER } from "@/lib/task-filters";
 import { canEditTask, canDeleteTask, canFinalizeTask } from "@/lib/permissions";
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
+import { stilEtichetaPlina } from "@/lib/tag-colors";
 
 // Numele vin din `@/lib/status-labels`, culorile rămân aici: numele se arată
 // și în căutare, culorile nu.
@@ -205,8 +206,8 @@ export function makeColumns({
             {row.original.tags!.map((tag) => (
               <Badge
                 key={tag.id}
-                className="border-transparent text-white"
-                style={{ backgroundColor: tag.color }}
+                className="border-transparent"
+                style={stilEtichetaPlina(tag.color)}
               >
                 {tag.name}
               </Badge>

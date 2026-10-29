@@ -36,6 +36,7 @@ import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
 import type { Profile, Tag, Task } from "@/lib/types";
 import { LegendaBanda } from "@/components/legenda-banda";
+import { stilEtichetaPlina } from "@/lib/tag-colors";
 
 interface TaskTableProps {
   tasks: Task[];
@@ -246,8 +247,8 @@ export function TaskTable({
                           {t.tags!.map((tag) => (
                             <span
                               key={tag.id}
-                              className="rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
-                              style={{ backgroundColor: tag.color }}
+                              className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                              style={stilEtichetaPlina(tag.color)}
                             >
                               {tag.name}
                             </span>

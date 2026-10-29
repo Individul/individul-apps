@@ -12,6 +12,7 @@ import { ManageTagsDialog } from "@/components/tasks/manage-tags-dialog";
 import { cn } from "@/lib/utils";
 import type { TaskFilter } from "@/lib/task-filters";
 import type { Tag, Task } from "@/lib/types";
+import { stilEtichetaContur, stilEtichetaPlina } from "@/lib/tag-colors";
 
 const DEFAULT_COLOR = "#64748b";
 
@@ -94,12 +95,10 @@ export function TagsPanel({ allTags, tasks, filter, onFilterChange, isAdmin }: T
                 onClick={() => toggle(tag.id)}
                 className={cn(
                   "rounded-full border px-2.5 py-0.5 text-xs transition hover:opacity-80",
-                  active && "font-medium text-white",
+                  active && "font-medium",
                 )}
                 style={
-                  active
-                    ? { backgroundColor: tag.color, borderColor: tag.color }
-                    : { borderColor: tag.color, color: tag.color }
+                  active ? stilEtichetaPlina(tag.color) : stilEtichetaContur(tag.color)
                 }
               >
                 {tag.name}

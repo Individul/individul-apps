@@ -30,6 +30,7 @@ import { taskSchema, type TaskInput } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "@/components/tasks/meta";
 import type { Profile, Tag, Task, TaskPriority, TaskStatus } from "@/lib/types";
+import { stilEtichetaContur, stilEtichetaPlina } from "@/lib/tag-colors";
 
 const UNASSIGNED = "unassigned";
 
@@ -324,12 +325,10 @@ export function TaskFormDialog({
                       }
                       className={cn(
                         "rounded-full border px-2 py-0.5 text-xs transition hover:opacity-80",
-                        active && "font-medium text-white",
+                        active && "font-medium",
                       )}
                       style={
-                        active
-                          ? { backgroundColor: tag.color, borderColor: tag.color }
-                          : { borderColor: tag.color, color: tag.color }
+                        active ? stilEtichetaPlina(tag.color) : stilEtichetaContur(tag.color)
                       }
                     >
                       {tag.name}

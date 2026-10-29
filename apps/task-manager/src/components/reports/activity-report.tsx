@@ -1,5 +1,6 @@
 import { formatDateRo } from "@/lib/periods";
 import type { Coloana, Raport } from "@/lib/raport-activitate";
+import { stilEtichetaContur } from "@/lib/tag-colors";
 
 function Numar({ n }: { n: number }) {
   // Zero scris palid: ochiul trece peste el și rămâne la cifrele care spun ceva.
@@ -47,7 +48,7 @@ function Lista({ titlu, coloana }: { titlu: string; coloana: Coloana }) {
                 <span
                   key={e.id}
                   className="ml-2 inline-block rounded-full border px-2 py-px align-middle text-[11px] font-medium"
-                  style={{ borderColor: e.color, color: e.color }}
+                  style={stilEtichetaContur(e.color)}
                 >
                   {e.name}
                 </span>

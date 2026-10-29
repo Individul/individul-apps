@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { attachTag, detachTag } from "@/app/tasks/actions";
 import type { Tag } from "@/lib/types";
+import { stilEtichetaPlina } from "@/lib/tag-colors";
 
 interface TagPickerProps {
   taskId: string;
@@ -59,8 +60,8 @@ export function TagPicker({ taskId, taskTags, allTags }: TagPickerProps) {
       {taskTags.map((tag) => (
         <Badge
           key={tag.id}
-          className="gap-1 border-transparent pr-1 text-white"
-          style={{ backgroundColor: tag.color }}
+          className="gap-1 border-transparent pr-1"
+          style={stilEtichetaPlina(tag.color)}
         >
           {tag.name}
           <button

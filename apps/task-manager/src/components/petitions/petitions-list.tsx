@@ -525,7 +525,7 @@ export function PetitionsList({
           culori={[
             { clasa: URGENCY_BAR.overdue, text: "restant" },
             { clasa: URGENCY_BAR.soon, text: "scadent în 5 zile" },
-            { clasa: URGENCY_BAR.open, text: "în examinare" },
+            { clasa: URGENCY_BAR.open, text: "în termen" },
             { clasa: URGENCY_BAR.solved, text: "soluționat" },
           ]}
         />

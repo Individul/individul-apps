@@ -6,8 +6,13 @@ import { PETITION_STATUS_LABEL } from "@/lib/status-labels";
 // Reluat, nu rescris: aceleași cuvinte le arată și căutarea.
 export const STATUS_LABEL = PETITION_STATUS_LABEL;
 
+/**
+ * Albastru, ca „În lucru" la sarcini: e o stare de lucru, nu o alarmă.
+ * Chihlimbariul îl folosea și banda „scadent în 5 zile", deci un rând
+ * cu termen liniștit părea în întârziere (29.10.2026).
+ */
 export const STATUS_DOT: Record<PetitionStatus, string> = {
-  in_examinare: "bg-amber-500",
+  in_examinare: "bg-blue-500",
   solutionat: "bg-green-600",
 };
 
