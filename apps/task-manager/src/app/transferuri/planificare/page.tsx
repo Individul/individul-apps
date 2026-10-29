@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getCurrentProfile, getTransferPlans } from "@/lib/queries";
 import { PlanList } from "@/components/transfers/plan-list";
+import { Pagina } from "@/components/layout/pagina";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export default async function PlanificarePage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-4 xl:px-10 print:max-w-none print:space-y-0 print:p-0">
+    <Pagina latime="ingusta" className="space-y-6 print:max-w-none print:space-y-0" cadru="print:max-w-none print:p-0">
       {/* Titlul paginii nu se tipărește: lista tipărită are antetul ei (PlanPrint). */}
       <div className="print:hidden">
         <div className="flex flex-wrap items-center gap-3">
@@ -31,6 +32,6 @@ export default async function PlanificarePage() {
       </div>
 
       <PlanList plans={plans} isAdmin={profile?.role === "admin"} />
-    </main>
+    </Pagina>
   );
 }

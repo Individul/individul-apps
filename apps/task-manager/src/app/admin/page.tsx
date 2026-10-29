@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BarChart3, Download } from "lucide-react";
+import { Pagina } from "@/components/layout/pagina";
 
 import { getCurrentProfile, getProfiles, getAuditLog, getLastBackupRun } from "@/lib/queries";
 import { BackupStatus } from "@/components/admin/backup-status";
@@ -31,7 +32,7 @@ export default async function AdminPage(props: {
   // celui care citește n-are ce căuta într-o judecată despre vechimea copiei.
   const now = new Date();
   return (
-    <main className="mx-auto max-w-[1536px] p-4 xl:px-10">
+    <Pagina latime="lata">
     <Link href="/sarcini">
       <Button variant="ghost" size="sm" className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la sarcini
@@ -104,6 +105,6 @@ export default async function AdminPage(props: {
         </section>
       </aside>
     </div>
-    </main>
+    </Pagina>
   );
 }

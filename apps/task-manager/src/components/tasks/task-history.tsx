@@ -20,7 +20,7 @@ const TONE: Record<string, string> = {
 function fmtDue(v: unknown): string {
   if (!v) return "fără termen";
   try {
-    return format(parseISO(String(v)), "d MMM yyyy");
+    return format(parseISO(String(v)), "d MMM yyyy", { locale: ro });
   } catch {
     return String(v);
   }
@@ -130,7 +130,7 @@ export function TaskHistory({ entries }: { entries: AuditEntry[] }) {
                 )}
                 <p
                   className="mt-0.5 text-xs text-muted-foreground"
-                  title={format(laChisinau(e.created_at), "d MMM yyyy, HH:mm")}
+                  title={format(laChisinau(e.created_at), "d MMM yyyy, HH:mm", { locale: ro })}
                 >
                   {format(laChisinau(e.created_at), "d MMM yyyy, HH:mm", { locale: ro })}
                 </p>

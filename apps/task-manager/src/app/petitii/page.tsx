@@ -1,5 +1,6 @@
 import { getPetitions, getProfiles, getCurrentProfile } from "@/lib/queries";
 import { PetitionsWorkspace } from "@/components/petitions/petitions-workspace";
+import { Pagina } from "@/components/layout/pagina";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function PetitiiPage(props: {
   const isAdmin = currentProfile?.role === "admin";
 
   return (
-    <main className="mx-auto max-w-[1536px] p-4 xl:px-10">
+    <Pagina latime="lata">
       <h1 className="mb-4 text-2xl font-semibold">Petiții</h1>
       <PetitionsWorkspace
         petitions={petitions}
@@ -31,6 +32,6 @@ export default async function PetitiiPage(props: {
             : searchParams.petitie
         }
       />
-    </main>
+    </Pagina>
   );
 }

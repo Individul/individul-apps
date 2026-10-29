@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "Mici retușuri de aspect. La Sarcini și Petiții, lunile termenelor sunt scrise acum în română („14 aug 2026”, nu „14 Aug 2026”). Toate paginile încep din aceeași margine cu meniul de sus, așa că titlul nu mai sare la stânga sau la dreapta când treci dintr-un tab în altul. Sub tabelele de la Sarcini și Petiții, o legendă scurtă spune ce înseamnă banda colorată din stânga rândurilor. O adresă greșită arată acum „Pagina nu există”, cu butonul „Înapoi la Acasă”, în loc de pagina neagră în engleză.",
+  },
+  {
+    date: "2026-10-29",
     text: "La „Planificarea transferurilor”, persoanele cu temeiul „30 zile” au acum scris „30 zile” în coloana „Temeiul și data”, ca în formular, în loc de „încheiere”. Data de lângă rămâne data încheierii. La fel și pe lista tipărită.",
   },
   {

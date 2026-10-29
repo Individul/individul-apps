@@ -274,7 +274,7 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
                     </p>
                     <p
                       className="mt-0.5 text-xs text-muted-foreground"
-                      title={format(laChisinau(e.created_at), "d MMM yyyy, HH:mm")}
+                      title={format(laChisinau(e.created_at), "d MMM yyyy, HH:mm", { locale: ro })}
                     >
                       {formatDistanceToNow(parseISO(e.created_at), {
                         addSuffix: true,

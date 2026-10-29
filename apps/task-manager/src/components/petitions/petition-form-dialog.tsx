@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { ro } from "date-fns/locale";
 import { toast } from "sonner";
 
 import {
@@ -322,7 +323,7 @@ export function PetitionFormDialog({
               />
               {deadline && (
                 <p className="text-xs text-muted-foreground">
-                  Termen (27 zile): {format(deadline, "d MMM yyyy")}
+                  Termen (27 zile): {format(deadline, "d MMM yyyy", { locale: ro })}
                 </p>
               )}
             </div>

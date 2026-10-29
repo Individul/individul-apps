@@ -11,6 +11,7 @@ import {
   type Table as ReactTable,
 } from "@tanstack/react-table";
 import { format, parseISO } from "date-fns";
+import { ro } from "date-fns/locale";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,6 +35,7 @@ import { filterTasks, type TaskFilter } from "@/lib/task-filters";
 import { avatarColor } from "@/lib/avatar-color";
 import { cn } from "@/lib/utils";
 import type { Profile, Tag, Task } from "@/lib/types";
+import { LegendaBanda } from "@/components/legenda-banda";
 
 interface TaskTableProps {
   tasks: Task[];
@@ -295,7 +297,7 @@ export function TaskTable({
                     <div className="w-24 shrink-0 text-[13px]">
                       {t.due_date ? (
                         <span className={cn(isOverdue(t) && "text-red-600")}>
-                          {format(parseISO(t.due_date), "d MMM yyyy")}
+                          {format(parseISO(t.due_date), "d MMM yyyy", { locale: ro })}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
@@ -327,6 +329,15 @@ export function TaskTable({
           </div>
         )}
       </div>
+      {rows.length > 0 && (
+        <LegendaBanda
+          titlu="Banda din stânga arată prioritatea"
+          culori={(["high", "medium", "low"] as const).map((k) => ({
+            clasa: PRIORITY_BAR[k],
+            text: PRIORITY_META[k].label.toLowerCase(),
+          }))}
+        />
+      )}
 
       <TaskFormDialog
         profiles={profiles}

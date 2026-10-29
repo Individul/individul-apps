@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentProfile, getTransfers } from "@/lib/queries";
 import { TransfersWorkspace } from "@/components/transfers/transfers-workspace";
 import { toISODate } from "@/lib/periods";
+import { Pagina } from "@/components/layout/pagina";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function TransferuriPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-4 xl:px-10">
+    <Pagina latime="ingusta" className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Transferuri</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -40,6 +41,6 @@ export default async function TransferuriPage() {
         today={toISODate(new Date())}
         isAdmin={profile?.role === "admin"}
       />
-    </main>
+    </Pagina>
   );
 }

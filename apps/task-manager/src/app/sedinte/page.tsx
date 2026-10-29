@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { Pagina } from "@/components/layout/pagina";
 
 import { getHearing, getHearings } from "@/lib/queries";
 import { DailyForm } from "@/components/hearings/daily-form";
@@ -55,7 +56,7 @@ export default async function SedintePage(props: {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-4 xl:px-10">
+    <Pagina latime="ingusta" className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Ședințe de judecată</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -98,6 +99,6 @@ export default async function SedintePage(props: {
           />
         </Suspense>
       </section>
-    </main>
+    </Pagina>
   );
 }

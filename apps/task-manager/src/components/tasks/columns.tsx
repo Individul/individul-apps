@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { TASK_STATUS_LABEL } from "@/lib/status-labels";
 import { format, parseISO } from "date-fns";
+import { ro } from "date-fns/locale";
 import { ArrowUpDown, CheckCircle2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 
@@ -257,7 +258,7 @@ export function makeColumns({
       if (!row.original.due_date) return <span className="text-muted-foreground">—</span>;
       return (
         <span className={cn(isOverdue(row.original) && "text-red-600")}>
-          {format(parseISO(row.original.due_date), "d MMM yyyy")}
+          {format(parseISO(row.original.due_date), "d MMM yyyy", { locale: ro })}
         </span>
       );
     },

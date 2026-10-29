@@ -1,5 +1,6 @@
 import { getTasks, getProfiles, getTags, getCurrentProfile } from "@/lib/queries";
 import { TasksWorkspace } from "@/components/tasks/tasks-workspace";
+import { Pagina } from "@/components/layout/pagina";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function SarciniPage() {
   const isAdmin = currentProfile?.role === "admin";
 
   return (
-    <main className="mx-auto max-w-[1536px] p-4 xl:px-10">
+    <Pagina latime="lata">
       <h1 className="mb-4 text-2xl font-semibold">Sarcini</h1>
       <TasksWorkspace
         tasks={tasks}
@@ -23,6 +24,6 @@ export default async function SarciniPage() {
         currentUserId={currentUserId}
         isAdmin={isAdmin}
       />
-    </main>
+    </Pagina>
   );
 }

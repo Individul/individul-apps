@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
+import { Pagina } from "@/components/layout/pagina";
 
 import { getTaskCounts, getPetitionCounts, getProfiles, getCurrentProfile, getTransferCounts, getObligations } from "@/lib/queries";
 import {
@@ -160,7 +161,7 @@ export default async function HubPage() {
         avea prea mult de străbătut de la un capăt la altul. Pe laptop nu se
         schimbă nimic: acolo pagina e oricum mai îngustă de 1536px.
       */}
-      <main className="mx-auto max-w-[1536px] p-4 xl:px-10">
+      <Pagina latime="lata">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">
             {profile?.full_name ? `Bun venit, ${profile.full_name}` : "Acasă"}
@@ -241,7 +242,7 @@ export default async function HubPage() {
           />
         </div>
         <ChangelogSection esteAdmin={isAdmin} />
-      </main>
+      </Pagina>
     </>
   );
 }

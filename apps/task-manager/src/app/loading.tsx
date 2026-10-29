@@ -40,7 +40,7 @@
  */
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-6xl p-4 xl:px-10" aria-busy="true" aria-live="polite">
+    <main className="mx-auto max-w-[1536px] p-4 xl:px-10" aria-busy="true" aria-live="polite">
       {/* Pentru cititoarele de ecran, un cuvânt; restul e doar desen. */}
       <span className="sr-only">Se încarcă…</span>
       <div aria-hidden className="animate-pulse space-y-6">

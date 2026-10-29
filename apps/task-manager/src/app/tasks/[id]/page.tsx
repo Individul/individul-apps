@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Pagina } from "@/components/layout/pagina";
 import {
   getTask,
   getProfiles,
@@ -35,7 +36,7 @@ export default async function TaskDetailPage(props: { params: Promise<{ id: stri
   const isAdmin = currentProfile?.role === "admin";
 
   return (
-    <main className="mx-auto max-w-6xl p-4 xl:px-10">
+    <Pagina latime="ingusta">
       <Link href="/sarcini">
         <Button variant="ghost" size="sm" className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la sarcini
@@ -50,6 +51,6 @@ export default async function TaskDetailPage(props: { params: Promise<{ id: stri
         currentUserId={currentUserId}
         isAdmin={isAdmin}
       />
-    </main>
+    </Pagina>
   );
 }

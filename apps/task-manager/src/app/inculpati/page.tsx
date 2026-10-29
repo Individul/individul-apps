@@ -1,5 +1,6 @@
 import { getCurrentProfile, getDefendants } from "@/lib/queries";
 import { DefendantList } from "@/components/defendants/defendant-list";
+import { Pagina } from "@/components/layout/pagina";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function InculpatiPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-4 xl:px-10">
+    <Pagina latime="ingusta" className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Preveniți și inculpați</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -20,6 +21,6 @@ export default async function InculpatiPage() {
       </div>
 
       <DefendantList defendants={defendants} isAdmin={profile?.role === "admin"} />
-    </main>
+    </Pagina>
   );
 }

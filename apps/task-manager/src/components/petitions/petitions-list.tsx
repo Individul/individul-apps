@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
+import { ro } from "date-fns/locale";
 import {
   ArrowDown,
   ArrowUp,
@@ -32,6 +33,7 @@ import { canDeletePetition, canEditPetition } from "@/lib/permissions";
 import { filterPetitions, type PetitionFilter } from "@/lib/petition-filters";
 import { cn } from "@/lib/utils";
 import type { Petition, PetitionStatus, Profile } from "@/lib/types";
+import { LegendaBanda } from "@/components/legenda-banda";
 
 function initials(name: string | null): string {
   if (!name) return "?";
@@ -474,7 +476,7 @@ export function PetitionsList({
                             soon && "text-amber-600",
                           )}
                         >
-                          {format(parseISO(p.response_deadline), "d MMM yyyy")}
+                          {format(parseISO(p.response_deadline), "d MMM yyyy", { locale: ro })}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
@@ -517,6 +519,17 @@ export function PetitionsList({
           </div>
         )}
       </div>
+      {rows.length > 0 && (
+        <LegendaBanda
+          titlu="Banda din stânga arată termenul"
+          culori={[
+            { clasa: URGENCY_BAR.overdue, text: "restant" },
+            { clasa: URGENCY_BAR.soon, text: "scadent în 5 zile" },
+            { clasa: URGENCY_BAR.open, text: "în examinare" },
+            { clasa: URGENCY_BAR.solved, text: "soluționat" },
+          ]}
+        />
+      )}
 
       <PetitionFormDialog
         profiles={profiles}

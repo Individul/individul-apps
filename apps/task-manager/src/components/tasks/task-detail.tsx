@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
+import { ro } from "date-fns/locale";
 import { CheckCircle2, Pencil, Scale } from "lucide-react";
 import { toast } from "sonner";
 
@@ -203,7 +204,7 @@ export function TaskDetail({
               <FieldLabel>Termen</FieldLabel>
               <dd className={cn(overdue && "font-medium text-red-600")}>
                 {task.due_date ? (
-                  format(parseISO(task.due_date), "d MMM yyyy")
+                  format(parseISO(task.due_date), "d MMM yyyy", { locale: ro })
                 ) : (
                   <span className="text-muted-foreground">Fără termen</span>
                 )}
@@ -212,7 +213,7 @@ export function TaskDetail({
 
             <div className="space-y-1.5">
               <FieldLabel>Creat</FieldLabel>
-              <dd>{format(laChisinau(task.created_at), "d MMM yyyy")}</dd>
+              <dd>{format(laChisinau(task.created_at), "d MMM yyyy", { locale: ro })}</dd>
             </div>
           </dl>
         </aside>
