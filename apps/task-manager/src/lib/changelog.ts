@@ -23,6 +23,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "La „Preveniți și inculpați” se poate tipări lista: butonul „Tipărește” scoate pe hârtie un tabel numerotat (numele, instanța, dosarul, categoria, tipul de penitenciar, data stabilirii, observațiile) și totalul. Se tipărește ce e pe ecran: toți, doar preveniții sau doar inculpații, după butonul ales, și numai cei găsiți, dacă ai căutat ceva; foaia o spune.",
+  },
+  {
+    date: "2026-10-29",
+    text: "Pagina de conectare scrie acum „Sarcini · Secția evidența deținuți”, cu sigla aplicației, în loc de „Task Manager”. Peste tot, „username” a devenit „nume de utilizator”: la conectare, în „Profilul meu” și la adăugarea unui utilizator.",
+  },
+  {
+    date: "2026-10-29",
     text: "Modul întunecat. Din meniul contului (sus, în dreapta, la numele tău) poți alege tema: „Ca sistemul” (implicit, urmează setarea calculatorului sau a telefonului), „Luminoasă” sau „Întunecată”. Alegerea se ține minte pe fiecare dispozitiv. Ce se tipărește iese mereu pe hârtie albă, oricare ar fi tema.",
   },
   {

@@ -14,7 +14,7 @@ export async function checkLogin(
   identifier: string,
   password: string,
 ): Promise<{ userId: string } | { error: string }> {
-  if (!identifier.trim() || !password) return { error: "Introdu email/username și parolă." };
+  if (!identifier.trim() || !password) return { error: "Introdu emailul sau numele de utilizator și parola." };
   const user = await findLoginUser(db, identifier);
   // Și pentru un nume inexistent se face o verificare bcrypt întreagă: altfel
   // timpul răspunsului ar spune din afară care nume există.

@@ -17,7 +17,7 @@ import { deleteOtherSessions } from "@/lib/auth/session";
 import { type ActionResult, modificaCuJurnal, RAND_DISPARUT, runBatch } from "./common";
 
 const USERNAME = /^[a-z0-9._-]{3,30}$/;
-const USERNAME_INVALID = "Username invalid: 3-30 caractere, doar litere, cifre, . _ -";
+const USERNAME_INVALID = "Nume de utilizator nevalid: 3–30 de caractere, doar litere, cifre și . _ -";
 
 export async function changePassword(
   db: Db,
@@ -66,7 +66,7 @@ export async function updateProfile(
     );
     if (!atins) return { error: RAND_DISPARUT };
   } catch (e) {
-    if (isUniqueViolation(e)) return { error: "Username-ul e deja folosit." };
+    if (isUniqueViolation(e)) return { error: "Numele de utilizator e deja folosit." };
     return { error: e instanceof Error ? e.message : "Nu s-a putut actualiza profilul." };
   }
   return { success: true };
@@ -121,7 +121,7 @@ export async function createUser(
     .from(profiles)
     .where(sql`lower(${profiles.username}) = ${username}`)
     .get();
-  if (taken) return { error: "Username-ul e deja folosit." };
+  if (taken) return { error: "Numele de utilizator e deja folosit." };
 
   const ctx = auditContext(me);
   const id = crypto.randomUUID();
@@ -141,7 +141,7 @@ export async function createUser(
       auditInsert(db, ctx, [profileAudit("INSERT", profile)]),
     ]);
   } catch (e) {
-    if (isUniqueViolation(e)) return { error: "Username-ul e deja folosit." };
+    if (isUniqueViolation(e)) return { error: "Numele de utilizator e deja folosit." };
     return { error: e instanceof Error ? e.message : "Nu s-a putut crea utilizatorul." };
   }
   return { success: true };

@@ -11,8 +11,9 @@ export default async function InculpatiPage() {
   ]);
 
   return (
-    <Pagina latime="ingusta" className="space-y-6">
-      <div>
+    <Pagina latime="ingusta" className="space-y-6 print:max-w-none print:space-y-0" cadru="print:max-w-none print:p-0">
+      {/* Titlul paginii nu se tipărește: foaia are antetul ei (DefendantPrint). */}
+      <div className="print:hidden">
         <h1 className="text-2xl font-semibold">Preveniți și inculpați</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Cu tip de penitenciar stabilit. Cine are măsură preventivă e prevenit, ceilalți

@@ -39,7 +39,7 @@ describe("conturile noi", () => {
 
   it("numele de utilizator rămâne unic", async () => {
     const input = { full_name: "Altul", username: "ION.NOU", password: "parola-buna-2" };
-    expect(await account.createUser(db, ADMIN, input)).toEqual({ error: "Username-ul e deja folosit." });
+    expect(await account.createUser(db, ADMIN, input)).toEqual({ error: "Numele de utilizator e deja folosit." });
   });
 
   it("refuză datele greșite înainte de orice scriere", async () => {
@@ -76,7 +76,7 @@ describe("profilul propriu și parola", () => {
   it("fiecare își schimbă doar profilul lui", async () => {
     expect(await account.updateProfile(db, ANA, "Ana P.", "ana.p")).toEqual({ success: true });
     expect((await db.select().from(s.profiles).where(eq(s.profiles.id, ANA.id)).get())?.full_name).toBe("Ana P.");
-    expect(await account.updateProfile(db, BOB, "Bob", "ana.p")).toEqual({ error: "Username-ul e deja folosit." });
+    expect(await account.updateProfile(db, BOB, "Bob", "ana.p")).toEqual({ error: "Numele de utilizator e deja folosit." });
   });
 
   it("parola nouă merge, cea veche nu, iar celelalte sesiuni se închid", async () => {

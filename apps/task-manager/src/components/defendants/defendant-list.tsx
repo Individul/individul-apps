@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { Gavel, Plus, Undo2 } from "lucide-react";
+import { Gavel, Plus, Printer, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DefendantDialog } from "@/components/defendants/defendant-dialog";
+import { DefendantPrint } from "@/components/defendants/defendant-print";
 import { markConvicted, undoConvicted } from "@/app/inculpati/actions";
 import {
   CATEGORY_FILTER_EMPTY,
@@ -88,6 +89,8 @@ export function DefendantList({
 
   return (
     <div className="space-y-4">
+      {/* Pe hârtie iese doar foaia `DefendantPrint` de la capăt; restul e de lucru. */}
+      <div className="space-y-4 print:hidden">
       {/*
         Cifrele rămân pe întreg registrul, nu urmează pastilele de mai jos.
         „În evidență" e ancora lor, iar o bandă care ar urma filtrul ar scrie,
@@ -152,10 +155,20 @@ export function DefendantList({
             </button>
           ))}
         </div>
+        {/* Tipărește ce e pe ecran: categoria aleasă și rezultatul căutării. */}
         <Button
           type="button"
           size="sm"
+          variant="outline"
           className="ml-auto"
+          onClick={() => window.print()}
+          disabled={activi.length === 0}
+        >
+          <Printer className="mr-1 h-4 w-4" /> Tipărește
+        </Button>
+        <Button
+          type="button"
+          size="sm"
           onClick={() => {
             setEditing(null);
             setOpen(true);
@@ -221,6 +234,10 @@ export function DefendantList({
           )}
         </div>
       )}
+
+      </div>
+
+      <DefendantPrint rows={activi} category={category} search={search} />
 
       <DefendantDialog
         open={open}

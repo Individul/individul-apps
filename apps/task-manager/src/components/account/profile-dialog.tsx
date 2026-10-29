@@ -67,7 +67,7 @@ export function ProfileDialog({
           <DialogHeader>
             <DialogTitle>Profilul meu</DialogTitle>
             <DialogDescription>
-              Numele apare pe task-uri și comentarii. Username-ul îl poți folosi la login.
+              Numele apare pe sarcini și la comentarii. Cu numele de utilizator te poți conecta.
             </DialogDescription>
           </DialogHeader>
           <form action={formAction} className="space-y-4">
@@ -82,7 +82,7 @@ export function ProfileDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Nume de utilizator</Label>
               <Input
                 id="username"
                 name="username"

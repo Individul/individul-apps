@@ -65,8 +65,8 @@ export function CreateUserDialog() {
           <DialogHeader>
             <DialogTitle>Adaugă utilizator</DialogTitle>
             <DialogDescription>
-              Se creează un cont cu username și parolă (fără email real). Utilizatorul se
-              loghează cu username-ul.
+              Se creează un cont cu nume de utilizator și parolă (fără email real). Omul se
+              conectează cu numele de utilizator.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -87,7 +87,7 @@ export function CreateUserDialog() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cu-username">Username</Label>
+              <Label htmlFor="cu-username">Nume de utilizator</Label>
               <Input
                 id="cu-username"
                 value={username}

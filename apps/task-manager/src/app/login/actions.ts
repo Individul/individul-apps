@@ -34,7 +34,7 @@ export async function signInWithPassword(
 ): Promise<{ error?: string; identifier?: string }> {
   const identifier = String(formData.get("identifier") || "").trim();
   const password = String(formData.get("password") || "");
-  if (!identifier || !password) return { error: "Introdu email/username și parolă.", identifier };
+  if (!identifier || !password) return { error: "Introdu emailul sau numele de utilizator și parola.", identifier };
 
   if (await tooManyAttempts()) {
     return { error: "Prea multe încercări. Așteaptă un minut și încearcă din nou.", identifier };
