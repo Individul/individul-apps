@@ -10,13 +10,16 @@ import { parseISODate } from "@/lib/periods";
  * „Ședința" și „decizia" cer transferul în direcții opuse — una înainte, alta
  * după — deci un rând care arată doar o dată, fără să spună care, s-ar citi
  * greșit exact când contează. Folosită și pe ecran, și pe lista tipărită.
+ *
+ * Temeiul se scrie cu numele din formular: „30 zile", nu „încheiere" (cererea
+ * lui Dumitru, 29.10.2026). Data rămâne a încheierii; termenul apare separat.
  */
 export function dataPlanului(p: TransferPlan): string {
   const iso = planDate(p);
   if (!iso) return "—";
   const zi = format(parseISODate(iso), "d MMM yyyy", { locale: ro });
   if (p.basis === "decizie") return `decizie, ${zi}`;
-  if (p.basis === "termen30") return `încheiere, ${zi}`;
+  if (p.basis === "termen30") return `30 zile, ${zi}`;
   return `ședință, ${zi}`;
 }
 

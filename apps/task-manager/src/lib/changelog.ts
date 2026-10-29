@@ -23,6 +23,10 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: "2026-10-29",
+    text: "La „Planificarea transferurilor”, persoanele cu temeiul „30 zile” au acum scris „30 zile” în coloana „Temeiul și data”, ca în formular, în loc de „încheiere”. Data de lângă rămâne data încheierii. La fel și pe lista tipărită.",
+  },
+  {
+    date: "2026-10-29",
     text: "La „Planificarea transferurilor”, în fiecare zi de transfer persoanele apar acum după numărul penitenciarului, de la cel mai mic la cel mai mare, ca cei duși la același penitenciar să stea unul sub altul. La același penitenciar, întâi data mai apropiată, apoi după nume. Ordinea e aceeași pe ecran și pe lista tipărită.",
   },
   {

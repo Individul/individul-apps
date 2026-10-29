@@ -184,8 +184,8 @@ export function PlanList({
           <span className="min-w-0 flex-1">Persoana și instanța</span>
           <span className="w-40 shrink-0">Penitenciarul</span>
           {/* „Temeiul și data", nu „Data ședinței": rândul poate arăta o
-              ședință, o decizie sau o încheiere, iar data spune care. Lată cât
-              să încapă „încheiere, 10 sep 2026" pe un rând. */}
+              ședință, o decizie sau 30 de zile, iar data spune care. Lată cât
+              să încapă „ședință, 10 sep 2026" pe un rând. */}
           <span className="w-36 shrink-0">Temeiul și data</span>
           {/* Lățime egală în antet și în rânduri, deși în grupurile obișnuite
               rămâne mai goală: la „de înștiințat" mai încape un buton, iar dacă
