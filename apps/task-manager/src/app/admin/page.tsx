@@ -11,23 +11,30 @@ import { RunBackup } from "@/components/admin/run-backup";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 import { AuditTable } from "@/components/admin/audit-table";
 import { AuditTabs } from "@/components/admin/audit-tabs";
+import { AuditSearch } from "@/components/admin/audit-search";
+import { cautaInJurnal } from "@/lib/audit-text";
 import { entitiesFor, readAuditModule } from "@/lib/audit-modules";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage(props: {
-  searchParams: Promise<{ modul?: string }>;
+  searchParams: Promise<{ modul?: string; cauta?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const me = await getCurrentProfile();
   if (me?.role !== "admin") redirect("/");
   const auditModule = readAuditModule(searchParams.modul);
-  const [profiles, audit, backup] = await Promise.all([
+  const cauta = (searchParams.cauta ?? "").trim().slice(0, 100);
+  const [profiles, jurnal, backup] = await Promise.all([
     getProfiles(),
-    getAuditLog(100, entitiesFor(auditModule)),
+    // La căutare se citește tot jurnalul modulului, nu doar ultimele 100: altfel
+    // o modificare de acum două luni n-ar fi găsită niciodată. E mic (~1 500 de
+    // rânduri în trei luni), iar plafonul ține citirea în frâu peste ani.
+    getAuditLog(cauta ? 20_000 : 100, entitiesFor(auditModule)),
     getLastBackupRun(),
   ]);
+  const audit = cauta ? cautaInJurnal(jurnal, cauta, 100) : jurnal;
   // Ceasul vine de la server, ca peste tot în aplicație: ora de pe calculatorul
   // celui care citește n-are ce căuta într-o judecată despre vechimea copiei.
   const now = new Date();
@@ -100,8 +107,18 @@ export default async function AdminPage(props: {
           <p className="text-sm text-muted-foreground">
             Ultimele modificări (cine, ce, când). Se înregistrează automat.
           </p>
+          <AuditSearch initial={cauta} />
           <AuditTabs active={auditModule} />
-          <AuditTable entries={audit} />
+          {cauta && (
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              {audit.length === 0
+                ? `Nimic găsit pentru „${cauta}”.`
+                : audit.length >= 100
+                  ? `Primele 100 de rezultate pentru „${cauta}”, cele mai noi întâi.`
+                  : `${audit.length} ${audit.length === 1 ? "rezultat" : "rezultate"} pentru „${cauta}”.`}
+            </p>
+          )}
+          <AuditTable entries={audit} gol={cauta ? null : undefined} />
         </section>
       </aside>
     </div>

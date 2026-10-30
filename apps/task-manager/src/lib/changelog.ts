@@ -22,6 +22,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-10-30",
+    doarAdmin: true,
+    text: "În Administrare, jurnalul de audit are acum o căutare. Caută în tot jurnalul modulului ales, nu doar în ultimele 100 de modificări: după nume („rosca” găsește „Roșca Daniel”), număr de petiție, titlul sarcinii, cine a făcut modificarea sau zi („26 iulie”). Diacriticele și majusculele nu contează, iar mai multe cuvinte pot fi scrise în orice ordine.",
+  },
+  {
     date: "2026-10-29",
     text: "La „Preveniți și inculpați” se poate tipări lista: butonul „Tipărește” scoate pe hârtie un tabel numerotat (numele, instanța, dosarul, categoria, tipul de penitenciar, data stabilirii, observațiile) și totalul. Se tipărește ce e pe ecran: toți, doar preveniții sau doar inculpații, după butonul ales, și numai cei găsiți, dacă ai căutat ceva; foaia o spune.",
   },
