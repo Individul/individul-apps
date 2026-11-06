@@ -22,6 +22,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "2026-11-06",
+    text: "La Petiții, unele poze JPG nu se puteau atașa: apărea „Fișierul n-a putut fi urcat”, oricât încercai. Nu era legătura, ci filtrul de securitate al Cloudflare, care lua din greșeală conținutul pozei drept un atac și oprea fișierul înainte să ajungă la aplicație. Fișierele pleacă acum pe alt drum, pe care filtrul nu-l mai încurcă. Dacă totuși un fișier e oprit de filtru, mesajul o spune.",
+  },
+  {
     date: "2026-10-30",
     doarAdmin: true,
     text: "În Administrare, jurnalul de audit are acum o căutare. Caută în tot jurnalul modulului ales, nu doar în ultimele 100 de modificări: după nume („rosca” găsește „Roșca Daniel”), număr de petiție, titlul sarcinii, cine a făcut modificarea sau zi („26 iulie”). Diacriticele și majusculele nu contează, iar mai multe cuvinte pot fi scrise în orice ordine.",

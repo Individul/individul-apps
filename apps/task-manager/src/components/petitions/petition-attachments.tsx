@@ -5,12 +5,8 @@ import { FileText, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  listAttachments,
-  uploadAttachment,
-  deleteAttachment,
-  getAttachmentUrl,
-} from "@/app/petitii/attachment-actions";
+import { listAttachments, deleteAttachment, getAttachmentUrl } from "@/app/petitii/attachment-actions";
+import { urcaFisier } from "@/lib/attachment-upload";
 import { openAttachment } from "./open-attachment";
 import {
   ACCEPT_ATTR,
@@ -116,16 +112,11 @@ export function PetitionAttachments({
       // Fișierul trece prin server, care verifică dreptul, îl scrie în R2 și
       // abia apoi îi face rândul; dacă rândul nu intră, scoate și obiectul.
       // Numele afișat („M-535-26-Ion-Popescu.pdf") îl compune tot serverul.
-      const form = new FormData();
-      form.set("petitionId", petitionId);
-      form.set("kind", kind);
-      form.set("file", file);
-      // Cererea poate să nu ajungă la capăt: rețea căzută, fișier respins de
-      // server înainte de acțiune, filă rămasă pe o versiune veche. Fără mesaj,
-      // butonul revenea la normal și omul credea că fișierul a urcat.
-      const res = await uploadAttachment(form).catch(() => ({
-        error: "Fișierul n-a putut fi urcat. Verifică legătura și încearcă din nou; dacă nu merge, reîncarcă pagina.",
-      }));
+      // Pleacă spre o rută obișnuită, nu printr-o acțiune de server: filtrul
+      // Cloudflare oprea unele poze (vezi `lib/attachment-upload.ts`).
+      // `urcaFisier` nu aruncă: orice eșec vine ca mesaj, ca omul să nu creadă
+      // că fișierul a urcat când n-a urcat.
+      const res = await urcaFisier(petitionId, kind, file);
       if (res.error) {
         toast.error(res.error);
         return;
